@@ -1,0 +1,2218 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Concerto Dealer Portal — katalog produk resmi untuk dealer & distributor Concerto Audio Indonesia.">
+<title>Concerto Dealer Portal</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN SYSTEM — Futuristic Luxe (single dark theme)
+   Deep near-black canvas · champagne gold accent · glass panels
+═══════════════════════════════════════════════════════ */
+:root {
+  color-scheme: dark;
+  --bg:          #070809;
+  --surface:     rgba(255,255,255,0.035);   /* glass */
+  --surface-solid:#0d0f13;
+  --surface2:    rgba(255,255,255,0.055);
+  --border:      rgba(255,255,255,0.09);
+  --hairline:    rgba(255,255,255,0.055);
+  --fg:          #f0f1f4;
+  --fg-muted:    #8b92a1;
+  --fg-dim:      #595f6b;
+  --accent:      #d8b26a;                    /* champagne gold */
+  --accent-hi:   #efcd8b;
+  --accent-deep: #a9823a;
+  --accent-lo:   rgba(216,178,106,0.11);
+  --accent-glow: rgba(216,178,106,0.28);
+  --cool:        #6fd3e6;                     /* futuristic micro-accent */
+  --red:         #e0675f;
+  --green:       #52c38a;
+
+  --r:    14px;
+  --r-sm: 9px;
+  --r-lg: 22px;
+  --shadow:    0 24px 60px rgba(0,0,0,0.55);
+  --shadow-sm: 0 10px 28px rgba(0,0,0,0.38);
+  --glow:      0 0 24px rgba(216,178,106,0.18);
+  --glass-bar: rgba(9,10,13,0.72);
+  --field:     rgba(255,255,255,0.04);
+
+  --f-display:  'Sora', system-ui, sans-serif;
+  --f-headline: 'Sora', system-ui, sans-serif;
+  --f-body:     'Inter', system-ui, sans-serif;
+  --f-mono:     'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* ── Light mode (luxe platinum + gold) — default follows system, toggle overrides ── */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg:          #ecedf1;
+    --surface:     rgba(255,255,255,0.72);
+    --surface-solid:#ffffff;
+    --surface2:    rgba(255,255,255,0.9);
+    --border:      rgba(20,24,32,0.12);
+    --hairline:    rgba(20,24,32,0.08);
+    --fg:          #15171d;
+    --fg-muted:    #5a616e;
+    --fg-dim:      #969cab;
+    --accent:      #a97d2c;
+    --accent-hi:   #c99f45;
+    --accent-deep: #8a6420;
+    --accent-lo:   rgba(169,125,44,0.12);
+    --accent-glow: rgba(169,125,44,0.22);
+    --shadow:      0 24px 60px rgba(30,34,45,0.14);
+    --shadow-sm:   0 10px 28px rgba(30,34,45,0.1);
+    --glow:        0 0 24px rgba(169,125,44,0.14);
+    --glass-bar:   rgba(255,255,255,0.74);
+    --field:       rgba(20,24,32,0.04);
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg:          #ecedf1;
+  --surface:     rgba(255,255,255,0.72);
+  --surface-solid:#ffffff;
+  --surface2:    rgba(255,255,255,0.9);
+  --border:      rgba(20,24,32,0.12);
+  --hairline:    rgba(20,24,32,0.08);
+  --fg:          #15171d;
+  --fg-muted:    #5a616e;
+  --fg-dim:      #969cab;
+  --accent:      #a97d2c;
+  --accent-hi:   #c99f45;
+  --accent-deep: #8a6420;
+  --accent-lo:   rgba(169,125,44,0.12);
+  --accent-glow: rgba(169,125,44,0.22);
+  --shadow:      0 24px 60px rgba(30,34,45,0.14);
+  --shadow-sm:   0 10px 28px rgba(30,34,45,0.1);
+  --glow:        0 0 24px rgba(169,125,44,0.14);
+  --glass-bar:   rgba(255,255,255,0.74);
+  --field:       rgba(20,24,32,0.04);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--f-body);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1100px 760px at 78% -12%, rgba(216,178,106,0.07), transparent 58%),
+    radial-gradient(900px 720px at -12% 112%, rgba(95,160,200,0.05), transparent 55%);
+  background-attachment: fixed;
+}
+::selection { background: var(--accent-lo); color: var(--accent-hi); }
+/* refined scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(216,178,106,0.3); background-clip: padding-box; }
+
+/* ── App Shell ── */
+.app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 56px 1fr;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── Topbar ── */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 100;
+}
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--f-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+  text-decoration: none;
+}
+.topbar-logo .dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.topbar-logo .dot svg { width: 14px; height: 14px; fill: #fff; }
+.topbar-logo span em { color: var(--accent); font-style: normal; }
+.topbar-spacer { flex: 1; }
+.topbar-badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+.theme-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--fg-muted);
+  display: flex; align-items: center;
+  transition: color .15s;
+}
+.theme-btn:hover { color: var(--fg); }
+.theme-btn svg { width: 16px; height: 16px; }
+
+/* ── Sidebar ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+.sidebar-section {
+  padding: 0 12px 12px;
+}
+.sidebar-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  padding: 0 8px 8px;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background .12s, color .12s;
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.sidebar-item:hover { background: var(--surface2); color: var(--fg); }
+.sidebar-item.active { background: var(--accent-lo); color: var(--accent); }
+.sidebar-item.active svg { stroke: var(--accent); }
+.sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 8px 12px; }
+
+.brand-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 13px; font-weight: 500;
+  color: var(--fg-muted);
+  transition: background .12s, color .12s;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.brand-nav-item:hover { background: var(--surface2); color: var(--fg); }
+.brand-nav-item.active { background: var(--accent-lo); color: var(--accent); }
+.brand-logo-mini {
+  width: 26px; height: 26px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-display);
+  font-size: 9px; font-weight: 800;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* ── Main Content ── */
+.main {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Views ── */
+.view { display: none; flex-direction: column; flex: 1; }
+.view.active { display: flex; }
+
+/* ── Dashboard View ── */
+.page-header {
+  padding: 28px 28px 0;
+}
+.page-title {
+  font-family: var(--f-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+.page-subtitle { color: var(--fg-muted); font-size: 13.5px; }
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 20px 28px 0;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+}
+.stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-muted); margin-bottom: 6px; }
+.stat-value { font-family: var(--f-display); font-size: 28px; font-weight: 700; color: var(--fg); font-variant-numeric: tabular-nums; }
+.stat-value span { font-size: 14px; color: var(--fg-muted); font-family: var(--f-body); font-weight: 400; }
+
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 28px 12px;
+}
+.section-title {
+  font-family: var(--f-display);
+  font-size: 15px; font-weight: 700;
+  color: var(--fg);
+}
+
+/* ── Brand Cards ── */
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 0 28px 28px;
+}
+.brand-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.brand-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.brand-card-header {
+  height: 90px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-display);
+  font-size: 26px; font-weight: 800;
+  letter-spacing: 0.04em;
+  position: relative;
+}
+.brand-card-body { padding: 14px 16px; }
+.brand-card-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.brand-card-desc { color: var(--fg-muted); font-size: 12.5px; line-height: 1.4; margin-bottom: 10px; }
+.brand-card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.product-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+.product-count strong { color: var(--accent); font-size: 14px; margin-right: 3px; }
+.tag {
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+/* ── Brand View ── */
+.brand-hero {
+  height: 140px;
+  display: flex; align-items: center;
+  padding: 0 28px;
+  position: relative;
+  overflow: hidden;
+}
+.brand-hero-content { position: relative; z-index: 1; }
+.brand-hero-name {
+  font-family: var(--f-display);
+  font-size: 36px; font-weight: 800;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+.brand-hero-tagline { font-size: 13.5px; opacity: .75; }
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--fg-muted);
+  font-size: 12.5px; font-weight: 500;
+  cursor: pointer;
+  transition: color .12s, border-color .12s;
+  margin: 20px 28px 0;
+  width: fit-content;
+}
+.back-btn:hover { color: var(--fg); border-color: var(--fg-muted); }
+.back-btn svg { width: 14px; height: 14px; }
+
+.filter-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 28px;
+  flex-wrap: wrap;
+}
+.filter-chip {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--fg-muted);
+  font-size: 12.5px; font-weight: 500;
+  cursor: pointer;
+  transition: all .12s;
+}
+.filter-chip:hover { border-color: var(--fg-muted); color: var(--fg); }
+.filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.products-grid {
+  padding: 0 28px 28px;
+}
+.line-group { margin-bottom: 28px; }
+.line-header {
+  display: flex; align-items: center; gap: 10px;
+  margin: 6px 0 14px;
+}
+.line-name {
+  font-family: var(--f-display);
+  font-size: 14px; font-weight: 700;
+  color: var(--fg);
+  letter-spacing: 0.02em;
+}
+.line-count {
+  font-size: 11px; font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-lo);
+  padding: 1px 8px; border-radius: 20px;
+}
+.line-header::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.line-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+.product-photo { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+.video-badge {
+  position: absolute; top: 8px; right: 8px;
+  background: var(--accent); border-radius: 4px;
+  padding: 2px 6px; font-size: 10px; font-weight: 700; color: #15100a;
+}
+.product-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.product-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.product-thumb {
+  width: 100%; aspect-ratio: 4/3;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.product-thumb-icon { font-size: 52px; opacity: .15; }
+.product-thumb-label {
+  position: absolute; bottom: 8px; left: 8px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+}
+.product-info { padding: 12px 14px; }
+.product-name { font-weight: 600; font-size: 13.5px; margin-bottom: 2px; }
+.product-model { color: var(--fg-muted); font-size: 12px; font-family: monospace; }
+.product-tags { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+
+/* ── Product Detail View ── */
+.product-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  padding: 24px 28px;
+  align-items: start;
+}
+.media-gallery { }
+.media-main {
+  width: 100%; aspect-ratio: 16/10;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 80px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.media-main-label {
+  position: absolute; top: 14px; left: 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: #fff;
+  background: rgba(0,0,0,.45);
+  padding: 3px 9px; border-radius: 4px;
+}
+.media-thumbnails { display: flex; gap: 8px; flex-wrap: wrap; }
+.media-thumb {
+  width: 72px; height: 56px;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color .12s;
+  position: relative;
+  overflow: hidden;
+}
+.media-thumb.active { border-color: var(--accent); }
+.media-thumb:hover { border-color: var(--fg-muted); }
+.media-thumb .play-icon {
+  position: absolute;
+  width: 20px; height: 20px;
+  background: rgba(200,147,58,.85);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  bottom: 4px; right: 4px;
+}
+.media-thumb .play-icon svg { width: 9px; height: 9px; fill: #fff; margin-left: 1px; }
+
+.product-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  position: sticky;
+  top: 72px;
+}
+.panel-header { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.panel-brand { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 4px; }
+.panel-name { font-family: var(--f-display); font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.panel-model { font-size: 12.5px; color: var(--fg-muted); font-family: monospace; }
+
+.specs-table { padding: 16px 20px; }
+.specs-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-muted); margin-bottom: 12px; }
+.spec-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+.spec-row:last-child { border-bottom: none; }
+.spec-key { color: var(--fg-muted); font-size: 12.5px; }
+.spec-val { font-size: 12.5px; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+
+.panel-tags { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ── Responsive ── */
+@media (max-width: 720px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 56px auto 1fr; }
+  .sidebar { display: none; }
+  .product-detail-layout { grid-template-columns: 1fr; }
+  .product-panel { position: static; }
+  .brands-grid { grid-template-columns: 1fr; }
+  .page-header, .brands-grid, .section-header,
+  .stats-row, .filter-bar, .products-grid,
+  .back-btn, .product-detail-layout { padding-left: 16px; padding-right: 16px; }
+  .brand-hero { padding: 0 16px; }
+}
+
+/* ── Utility ── */
+.text-accent { color: var(--accent); }
+
+/* ── Brand Logo ── */
+.logo-img { height: 38px; width: auto; display: block; }
+.landing-nav .logo-img { height: 58px; }
+@media (max-width: 720px) {
+  .logo-img { height: 32px; }
+  .landing-nav .logo-img { height: 46px; }
+}
+.topbar .logo-on-dark { display: block; }
+.topbar .logo-on-light { display: none; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .topbar .logo-on-dark { display: none; }
+  :root:not([data-theme="dark"]) .topbar .logo-on-light { display: block; }
+}
+:root[data-theme="light"] .topbar .logo-on-dark { display: none; }
+:root[data-theme="light"] .topbar .logo-on-light { display: block; }
+
+/* ── Landing Page ── */
+.app.app-hidden { display: none; }
+
+#landing {
+  position: fixed;
+  inset: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--bg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#landing.hidden-landing {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .55s ease;
+}
+#viz-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.landing-nav {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  padding: 20px 32px;
+}
+.landing-nav .topbar-logo { font-size: 17px; }
+.landing-hero {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+.pulse-rings {
+  position: absolute;
+  top: 44%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 440px; height: 440px;
+  max-width: 90vw;
+  z-index: -1;
+  pointer-events: none;
+}
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: pulse-out 4s ease-out infinite;
+}
+.pulse-ring:nth-child(2) { animation-delay: 1.3s; }
+.pulse-ring:nth-child(3) { animation-delay: 2.6s; }
+@keyframes pulse-out {
+  0%   { transform: scale(.35); opacity: .45; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+.eyebrow {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 22px;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: rise .7s ease forwards .2s;
+}
+.landing-title {
+  font-family: var(--f-headline);
+  font-size: clamp(52px, 12vw, 128px);
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  margin-bottom: 24px;
+  max-width: 14ch;
+}
+.landing-title .line { display: block; overflow: hidden; padding: 0.08em 0.04em; }
+.landing-title .line > span {
+  display: inline-block;
+  transform: translateY(110%);
+  animation: rise-up .9s cubic-bezier(.19,1,.22,1) forwards;
+}
+.landing-title .line:nth-child(1) > span { animation-delay: .3s; }
+.landing-title .line:nth-child(2) > span { animation-delay: .44s; }
+.landing-title em { color: var(--accent); font-style: normal; }
+@keyframes rise-up { to { transform: translateY(0); } }
+@keyframes rise { to { opacity: 1; transform: translateY(0); } }
+.landing-sub {
+  font-size: clamp(14px, 2vw, 17px);
+  color: var(--fg-muted);
+  max-width: 48ch;
+  line-height: 1.6;
+  margin-bottom: 34px;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: rise .8s ease forwards .7s;
+}
+.enter-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 30px;
+  background: var(--accent);
+  color: #15100a;
+  font-family: var(--f-body);
+  font-size: 15px; font-weight: 700;
+  border: none; border-radius: 40px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: rise .8s ease forwards .9s;
+  transition: transform .18s, box-shadow .3s;
+}
+.enter-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 40px rgba(200,147,58,.4);
+}
+.enter-btn svg { width: 17px; height: 17px; fill: #15100a; }
+.landing-brands {
+  position: relative;
+  z-index: 2;
+  padding: 24px 0 36px;
+  opacity: 0;
+  animation: rise 1s ease forwards 1.1s;
+}
+.landing-brands-label {
+  text-align: center;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 18px;
+}
+.marquee-wrap {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.marquee {
+  display: flex;
+  gap: 60px;
+  width: max-content;
+  animation: scroll-x 24s linear infinite;
+}
+.marquee span {
+  font-family: var(--f-display);
+  font-size: 26px; font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  opacity: .5;
+  white-space: nowrap;
+}
+@keyframes scroll-x { to { transform: translateX(-50%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring, .marquee { animation: none; }
+  .eyebrow, .landing-title .line > span, .landing-sub, .enter-btn, .landing-brands {
+    animation: none; opacity: 1; transform: none;
+  }
+}
+@media (max-width: 720px) {
+  .landing-nav { padding: 16px; }
+  .pulse-rings { width: 300px; height: 300px; }
+}
+
+/* ── Download button in product panel ── */
+.panel-actions { padding: 0 20px 16px; }
+.dl-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 11px;
+  background: var(--accent-lo); color: var(--accent);
+  border: 1px solid var(--accent); border-radius: var(--r-sm);
+  font-family: var(--f-body); font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.dl-btn:hover { background: var(--accent); color: #15100a; }
+.dl-btn:hover svg { stroke: #15100a; }
+.dl-btn svg { width: 16px; height: 16px; }
+
+/* ── Spec Sheet Modal (PDF preview) ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  z-index: 2000;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 28px 16px;
+}
+.modal-overlay.open { display: flex; }
+.sheet {
+  background: #fff;
+  color: #1a1a1a;
+  width: 100%;
+  max-width: 580px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0,0,0,.45);
+  animation: sheet-in .3s ease;
+}
+@keyframes sheet-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.sheet-accent { height: 5px; background: var(--accent); }
+.sheet-body { padding: 32px 36px; }
+.sheet-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  border-bottom: 1px solid #e8e8e8; padding-bottom: 16px; margin-bottom: 22px;
+}
+.sheet-org { font-size: 10px; font-weight: 700; letter-spacing: .12em; color: #a0a0a0; text-transform: uppercase; }
+.sheet-doc-type { font-size: 10px; font-weight: 700; letter-spacing: .12em; color: #b7873a; text-transform: uppercase; }
+.sheet-brand { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #b7873a; margin-bottom: 5px; }
+.sheet-name { font-family: var(--f-display); font-size: 27px; font-weight: 800; color: #111; margin-bottom: 3px; line-height: 1.05; }
+.sheet-model { font-family: monospace; font-size: 12.5px; color: #888; margin-bottom: 26px; }
+.sheet-section-title { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a0a0a0; margin-bottom: 10px; }
+.sheet-spec {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 9px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px;
+}
+.sheet-spec .k { color: #666; } .sheet-spec .v { font-weight: 600; color: #111; text-align: right; }
+.sheet-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 26px; }
+.sheet-photo {
+  aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; position: relative;
+  display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.sheet-photo span { font-size: 30px; opacity: .55; }
+.sheet-photo em {
+  position: absolute; bottom: 6px; left: 0; right: 0; text-align: center;
+  font-style: normal; font-size: 9px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; opacity: .85;
+}
+.sheet-photo-main {
+  width: 100%; aspect-ratio: 16/10; border-radius: 8px; overflow: hidden;
+  background: #f4f4f5; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.sheet-photo-main img { width: 100%; height: 100%; object-fit: contain; }
+.sheet-desc { font-size: 12.5px; color: #555; line-height: 1.6; margin-bottom: 22px; }
+.sheet-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 22px; }
+.sheet-tag { font-size: 11px; font-weight: 600; padding: 3px 11px; border-radius: 20px; background: #f6efe2; color: #8a6420; }
+.sheet-footer {
+  margin-top: 28px; padding-top: 16px; border-top: 1px solid #e8e8e8;
+  font-size: 11px; color: #a0a0a0; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.sheet-actions { display: flex; gap: 10px; padding: 0 36px 28px; }
+.sheet-btn {
+  flex: 1; padding: 12px; border-radius: 8px;
+  font-family: var(--f-body); font-size: 14px; font-weight: 600;
+  cursor: pointer; border: none;
+}
+.sheet-btn.primary { background: var(--accent); color: #15100a; }
+.sheet-btn.primary:hover { background: var(--accent-hi); }
+.sheet-btn.ghost { background: #eee; color: #444; }
+.sheet-btn.ghost:hover { background: #e2e2e2; }
+.sheet-note {
+  font-size: 11px; color: #999; text-align: center;
+  padding: 0 36px 22px; margin-top: -8px; line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FUTURISTIC LUXE — component layer (overrides base)
+═══════════════════════════════════════════════════════ */
+/* Topbar */
+.topbar {
+  background: var(--glass-bar);
+  -webkit-backdrop-filter: blur(20px) saturate(140%); backdrop-filter: blur(20px) saturate(140%);
+  border-bottom: 1px solid var(--hairline);
+}
+.topbar-badge {
+  font-family: var(--f-mono); font-size: 10px; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-lo); border: 1px solid rgba(216,178,106,0.25);
+}
+.topbar-status {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--fg-muted);
+}
+.topbar-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse-dot 2.2s infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.35} }
+@media (max-width: 560px){ .topbar-status { display:none; } }
+
+/* Sidebar */
+.sidebar {
+  background: var(--glass-bar);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-right: 1px solid var(--hairline);
+}
+.sidebar-label { font-family: var(--f-mono); letter-spacing: .2em; color: var(--fg-dim); }
+.sidebar-item, .brand-nav-item { transition: background .18s, color .18s; }
+.sidebar-item.active, .brand-nav-item.active {
+  background: linear-gradient(90deg, var(--accent-lo), transparent 85%);
+  color: var(--accent-hi); position: relative;
+}
+.sidebar-item.active::before, .brand-nav-item.active::before {
+  content:''; position:absolute; left:0; top:22%; bottom:22%; width:2px; border-radius:2px;
+  background: var(--accent); box-shadow: 0 0 10px var(--accent-glow);
+}
+.brand-logo-mini { border: 1px solid var(--border); font-family: var(--f-mono); }
+
+/* Headlines & data type */
+.page-title, .section-title, .brand-hero-name, .panel-name, .brand-card-name,
+.line-name, .stat-value { font-family: var(--f-display); }
+.page-title { letter-spacing: -0.015em; font-weight: 700; }
+.section-title { letter-spacing: .005em; font-weight: 600; }
+.product-model, .panel-model, .spec-val { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.product-model, .panel-model { color: var(--accent-deep); letter-spacing: .01em; }
+.stat-label, .specs-title, .sidebar-label, .line-count, .product-thumb-label,
+.filter-chip, .back-btn, .topbar-badge { font-family: var(--f-mono); }
+
+/* Stat cards */
+.stat-card { background: var(--surface); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--r); position: relative; overflow: hidden; }
+.stat-card::after { content:''; position:absolute; inset:0; background: linear-gradient(140deg, rgba(216,178,106,0.07), transparent 45%); pointer-events:none; }
+.stat-label { letter-spacing: .14em; }
+
+/* Brand & product cards: glass + hover glow */
+.brand-card, .product-card {
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.brand-card:hover { border-color: rgba(216,178,106,0.55); box-shadow: var(--shadow-sm), 0 0 30px rgba(216,178,106,0.12); transform: translateY(-3px); }
+.product-card:hover { border-color: rgba(216,178,106,0.55); box-shadow: var(--shadow-sm), 0 0 24px rgba(216,178,106,0.1); }
+.brand-card-header::after { content:''; position:absolute; left:0; right:0; bottom:0; height:1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity:.5; }
+.brand-card-header { position: relative; }
+.product-thumb-label { background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); letter-spacing: .08em; border: 1px solid rgba(255,255,255,0.08); }
+.video-badge { box-shadow: 0 0 12px var(--accent-glow); }
+
+/* Line headers */
+.line-name { font-weight: 600; }
+.line-count { letter-spacing: .04em; }
+
+/* Filters as pills */
+.filter-bar { gap: 9px; }
+.filter-chip { border-radius: 30px; letter-spacing: .05em; font-size: 11.5px; transition: all .18s; }
+.filter-chip:hover { border-color: var(--accent); color: var(--accent-hi); }
+.filter-chip.active { background: var(--accent); color: #0b0a06; border-color: var(--accent); box-shadow: 0 0 18px var(--accent-glow); }
+
+/* Product detail panel */
+.product-panel { background: var(--surface); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid var(--border); border-radius: var(--r); }
+.panel-brand { color: var(--accent); letter-spacing: .1em; font-family: var(--f-mono); }
+.specs-title { letter-spacing: .14em; }
+.media-main { border-radius: var(--r); border: 1px solid var(--border); background: var(--surface); }
+.media-main-label { font-family: var(--f-mono); letter-spacing: .06em; }
+.media-thumb { border-radius: var(--r-sm); }
+.media-thumb.active { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+
+/* Buttons */
+.back-btn { border-radius: 30px; letter-spacing: .05em; background: var(--surface); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.back-btn:hover { border-color: var(--accent); color: var(--accent-hi); }
+.dl-btn { border-radius: var(--r-sm); font-family: var(--f-mono); letter-spacing: .04em; }
+.dl-btn:hover { box-shadow: 0 0 18px var(--accent-glow); }
+
+/* Page header eyebrow spacing */
+.page-subtitle { color: var(--fg-muted); }
+
+/* ── Landing: futuristic luxe (always dark, independent of theme) ── */
+#landing {
+  background: #070809;
+  --fg: #f0f1f4; --fg-muted: #8b92a1; --fg-dim: #595f6b;
+  --accent: #d8b26a; --accent-hi: #efcd8b; --accent-deep: #a9823a;
+  --accent-lo: rgba(216,178,106,0.11); --accent-glow: rgba(216,178,106,0.28);
+  --border: rgba(255,255,255,0.09); --hairline: rgba(255,255,255,0.055);
+}
+#landing::before {
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(760px 480px at 50% 16%, rgba(216,178,106,0.10), transparent 62%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 72px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 72px);
+  -webkit-mask-image: radial-gradient(circle at 50% 42%, #000 15%, transparent 72%);
+  mask-image: radial-gradient(circle at 50% 42%, #000 15%, transparent 72%);
+}
+.landing-nav { border-bottom: 1px solid var(--hairline); }
+.eyebrow { font-family: var(--f-mono); color: var(--accent); letter-spacing: .34em; font-weight: 500; }
+.landing-title {
+  font-family: var(--f-display); text-transform: none; font-weight: 600;
+  font-size: clamp(44px, 8.5vw, 96px); line-height: 1.02; letter-spacing: -0.02em;
+  max-width: 16ch;
+}
+.landing-title .line { padding: 0.04em 0.02em; }
+.landing-title em {
+  font-style: normal; font-weight: 700;
+  background: linear-gradient(100deg, var(--accent-hi), var(--accent-deep));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.landing-sub { color: var(--fg-muted); max-width: 52ch; }
+.enter-btn {
+  background: linear-gradient(135deg, var(--accent-hi), var(--accent-deep));
+  color: #0b0a06; font-family: var(--f-body); font-weight: 700;
+  border-radius: 40px; box-shadow: 0 12px 34px rgba(216,178,106,0.28);
+}
+.enter-btn:hover { box-shadow: 0 16px 48px rgba(216,178,106,0.42); transform: translateY(-2px) scale(1.015); }
+.landing-brands-label { font-family: var(--f-mono); letter-spacing: .24em; color: var(--fg-dim); }
+.marquee span { font-family: var(--f-display); font-weight: 700; color: var(--fg-muted); opacity: .4; }
+.pulse-ring { border-color: rgba(216,178,106,0.5); }
+
+/* ── Semua Brand / Katalog ── */
+.catalog-controls { padding: 16px 28px 6px; display: flex; flex-direction: column; gap: 14px; }
+.catalog-search-wrap { position: relative; max-width: 520px; width: 100%; }
+.catalog-search-wrap svg { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--fg-muted); }
+.catalog-search {
+  width: 100%; padding: 12px 16px 12px 42px;
+  background: var(--field); border: 1px solid var(--border); border-radius: 30px;
+  color: var(--fg); font-family: var(--f-body); font-size: 14px; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.catalog-search::placeholder { color: var(--fg-dim); }
+.catalog-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-lo); }
+.catalog-chips { display: flex; gap: 9px; flex-wrap: wrap; }
+.catalog-count { padding: 4px 28px 0; font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; color: var(--fg-muted); }
+#catalog-results { padding: 16px 28px 28px; }
+.catalog-brand-block { margin-bottom: 32px; }
+.catalog-brand-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.catalog-brand-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 10px currentColor; flex-shrink: 0; }
+.catalog-brand-name { font-family: var(--f-display); font-weight: 700; font-size: 16px; color: var(--fg); }
+.catalog-open-brand { margin-left: auto; background: none; border: none; color: var(--accent); font-family: var(--f-mono); font-size: 11px; letter-spacing: .04em; cursor: pointer; padding: 5px 9px; border-radius: 6px; transition: background .15s; }
+.catalog-open-brand:hover { background: var(--accent-lo); }
+@media (max-width: 720px) {
+  .catalog-controls, .catalog-count, #catalog-results { padding-left: 16px; padding-right: 16px; }
+}
+
+/* theme toggle button polish */
+.theme-btn { background: var(--surface); border: 1px solid var(--border); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-radius: 50%; width: 34px; height: 34px; justify-content: center; }
+.theme-btn:hover { color: var(--accent-hi); border-color: var(--accent); }
+</style>
+<style>
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+</style>
+</head>
+<body>
+<!-- LANDING PAGE -->
+<section id="landing">
+  <canvas id="viz-canvas"></canvas>
+
+  <nav class="landing-nav">
+    <div class="topbar-logo">
+      <img id="logo-landing" class="logo-img" alt="Concerto Audio Indonesia">
+    </div>
+  </nav>
+
+  <div class="landing-hero">
+    <div class="pulse-rings">
+      <div class="pulse-ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="pulse-ring"></div>
+    </div>
+    <div class="eyebrow">Distributor Resmi · Car Audio Premium</div>
+    <h1 class="landing-title">
+      <span class="line"><span>Rasakan Suara</span></span>
+      <span class="line"><span>Tanpa <em>Kompromi</em></span></span>
+    </h1>
+    <p class="landing-sub">Portal katalog produk untuk dealer &amp; mitra Concerto Audio Indonesia. Jelajahi brand pilihan dunia — spesifikasi, foto, dan video, dalam satu tempat.</p>
+    <button class="enter-btn" onclick="enterPortal()">
+      Masuk Portal
+      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg>
+    </button>
+  </div>
+
+  <div class="landing-brands">
+    <div class="landing-brands-label">Our Official Support Brands</div>
+    <div class="marquee-wrap">
+      <div class="marquee" id="marquee"></div>
+    </div>
+  </div>
+</section>
+
+<div class="app app-hidden">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <a class="topbar-logo" href="#" onclick="backToLanding(); return false;" aria-label="Home — Concerto Audio Indonesia">
+      <img id="logo-top-dark" class="logo-img" alt="Concerto Audio Indonesia">
+    </a>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-status"><i></i>System Online</span>
+    <span class="topbar-badge">Dealer Portal</span>
+    <button class="theme-btn" onclick="toggleTheme()" title="Ganti mode terang/gelap" aria-label="Ganti tema">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="theme-icon">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Menu</div>
+      <button class="sidebar-item" id="nav-home" onclick="backToLanding()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5L12 3l9 6.5"/><path d="M5 10v10h14V10"/></svg>
+        Home
+      </button>
+      <button class="sidebar-item active" id="nav-dashboard" onclick="showView('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-item" id="nav-brands" onclick="openCatalog()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
+        Semua Brand
+      </button>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Brand</div>
+      <div id="brand-nav-list"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- VIEW: Dashboard -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-subtitle">Selamat datang di Concerto Dealer Portal — referensi produk resmi untuk dealer & mitra.</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Brand</div>
+          <div class="stat-value" id="stat-brands">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Produk</div>
+          <div class="stat-value" id="stat-products">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Product Line</div>
+          <div class="stat-value" id="stat-lines">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Terakhir Update</div>
+          <div class="stat-value" style="font-size:18px">Okt <span>2026</span></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Our Official Support Brands</div>
+      </div>
+
+      <div class="brands-grid" id="dashboard-brands"></div>
+    </div>
+
+    <!-- VIEW: Semua Brand (Katalog Lengkap) -->
+    <div class="view" id="view-catalog">
+      <div class="page-header">
+        <div class="page-title">Semua Brand</div>
+        <div class="page-subtitle">Katalog lengkap seluruh produk dari 6 brand dalam satu tempat. Cari model atau saring per brand.</div>
+      </div>
+      <div class="catalog-controls">
+        <div class="catalog-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="catalog-search" class="catalog-search" placeholder="Cari produk atau model… (mis. DSP, ML-C6.2, Aurum)" oninput="renderCatalog()" autocomplete="off">
+        </div>
+        <div class="catalog-chips" id="catalog-brand-chips"></div>
+      </div>
+      <div class="catalog-count" id="catalog-count"></div>
+      <div id="catalog-results"></div>
+    </div>
+
+    <!-- VIEW: Brand Detail -->
+    <div class="view" id="view-brand">
+      <button class="back-btn" onclick="showView('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Kembali ke Dashboard
+      </button>
+      <div class="brand-hero" id="brand-hero">
+        <div class="brand-hero-content">
+          <div class="brand-hero-name" id="brand-hero-name"></div>
+          <div class="brand-hero-tagline" id="brand-hero-tagline"></div>
+        </div>
+      </div>
+      <div class="filter-bar" id="product-filters"></div>
+      <div class="products-grid" id="products-grid"></div>
+    </div>
+
+    <!-- VIEW: Product Detail -->
+    <div class="view" id="view-product">
+      <button class="back-btn" id="product-back-btn" onclick="backToBrand()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Kembali ke <span id="product-back-label">Brand</span>
+      </button>
+      <div class="product-detail-layout">
+        <div class="media-gallery">
+          <div class="media-main" id="media-main"></div>
+          <div class="media-thumbnails" id="media-thumbs"></div>
+        </div>
+        <div class="product-panel">
+          <div class="panel-header">
+            <div class="panel-brand" id="panel-brand"></div>
+            <div class="panel-name" id="panel-name"></div>
+            <div class="panel-model" id="panel-model"></div>
+          </div>
+          <div class="specs-table">
+            <div class="specs-title">Spesifikasi</div>
+            <div id="specs-list"></div>
+          </div>
+          <div class="panel-actions">
+            <button class="dl-btn" onclick="openSpecSheet()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Unduh Spec Sheet (PDF)
+            </button>
+          </div>
+          <div class="panel-tags" id="panel-tags"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- SPEC SHEET MODAL -->
+<div class="modal-overlay" id="spec-modal" onclick="if(event.target===this)closeSpecSheet()">
+  <div class="sheet" id="sheet-content" role="dialog" aria-modal="true" aria-label="Spec sheet produk"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ══════════════════════════════════════════
+   BRAND ASSETS
+══════════════════════════════════════════ */
+const LOGO_WHITE = "data:image/png;base64,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";
+const LOGO_NAVY  = "data:image/png;base64,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";
+
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
+const BRANDS = [
+  {
+    id: 'audiocircle', name: 'Audiocircle', tagline: 'German Car Audio — Experience. Tradition. Innovation.',
+    color: '#c0392b', bg: 'linear-gradient(135deg,#140403 0%,#3a0d0a 100%)', text: '#fff', abbr: 'AC',
+    desc: 'Audio mobil asal Jerman dengan rentang lengkap dari Pro Line audiophile hingga seri plug & play untuk BMW dan Mercedes-Benz.',
+    lines: [
+      { name: 'Pro Line', products: [
+        { id:'ac-prow6c', name:'PRO-W6C NEO', model:'PRO-W6C NEO', category:'Speaker', emoji:'🔊', hasVideo:true,
+          desc:'Neo Magnet Driver, Titan 37mm Voice Coil Former CCA wire, Crystal Aluminum–Paper Compound Cone dengan W-Surround.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'180 W','SPL':'87 dB','Fs':'46 Hz','Freq. Response':'33 Hz – 5 kHz','Xmax':'±7 mm','Outer Diameter':'166 mm','Mounting Diameter':'143 mm','Mounting Depth':'83 mm','Weight':'1192 g'} },
+        { id:'ac-prom3c', name:'PRO-M3C', model:'PRO-M3C', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Multi-vented U-Yoke Neo Magnet Driver, Titan 25mm Voice Coil Former CCA wire, Crystal Aluminum–Paper Compound Cone.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'80 W','SPL':'86 dB','Fs':'87 Hz','Freq. Response':'80 Hz – 18 kHz','Xmax':'±2.5 mm','Outer Diameter':'91 mm','Mounting Diameter':'78 mm','Mounting Depth':'36 mm','Weight':'268 g'} },
+        { id:'ac-prot28', name:'PRO-T28', model:'PRO-T28', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Industry-leading design, hand-coated silk dome, stainless steel chamber dengan multipart housing.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'40 W','SPL':'92 dB','Fs':'650 Hz','Freq. Response':'1200 Hz – 35 kHz','Outer Diameter':'57 mm','Mounting Diameter':'52 mm','Mounting Depth':'37 mm','Weight':'392 g'} },
+        { id:'ac-prom3p', name:'PRO-M3P', model:'PRO-M3P', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Multi-vented U-Yoke Neo Magnet Driver, Full Aluminum Phase Plug, hand-coated multilayer paper cone W-Surround.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'80 W','SPL':'88 dB','Fs':'113 Hz','Freq. Response':'180 Hz – 18 kHz','Xmax':'±2.5 mm','Outer Diameter':'91 mm','Mounting Diameter':'78 mm','Mounting Depth':'36 mm','Weight':'230 g'} },
+        { id:'ac-prom3pnextel', name:'PRO-M3P Nextel', model:'PRO-M3P Nextel', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Versi Nextel dari PRO-M3P dengan crossover.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'80 W (with crossover)','Resonance Frequency':'97 Hz','Freq. Response':'85 Hz – 18 kHz','SPL':'88 dB','Qts':'0.4','Outer Diameter':'91 mm','Mounting Diameter':'78 mm','Mounting Depth':'35 mm','Weight':'227 g'} },
+      ]},
+      { name: 'Concerto Line', products: [
+        { id:'ac-clw6', name:'MIDBASS CL-W6', model:'CL-W6', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'Dibangun dengan magnet neodymium, basket aluminium, dan paper cone untuk suara hangat dan natural.',
+          specs:{'Handling Power':'180 W','Power Rating':'80 W','Min. Amplifier Power':'35 W','Sensitivity':'86 dB','Resonance Frequency':'38 Hz','Freq. Response':'35 Hz – 6 kHz','Impedansi':'4 / 5.4 / 7.3 Ω','External':'166 mm','Installation':'142 mm','Mounting Depth':'74 mm','Weight':'1253 g'} },
+        { id:'ac-clm3', name:'MIDRANGE CL-M3', model:'CL-M3', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Magnet neodymium, basket aluminium, paper cone untuk suara hangat dan natural.',
+          specs:{'Handling Power':'75 W','Power Rating':'35 W','Min. Amplifier Power':'15 W','Sensitivity':'86 dB','Resonance Frequency':'85 Hz','Freq. Response':'65 Hz – 15 kHz','Impedansi':'4 / 3.8 / 7.8 Ω','External':'90 mm','Installation':'72 mm','Mounting Depth':'39 mm','Weight':'87 g'} },
+        { id:'ac-clt27', name:'TWEETER CL-T27', model:'CL-T27', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Magnet neodymium, basket stainless steel, silk cone untuk suara halus dan detail.',
+          specs:{'Handling Power':'60 W','Power Rating':'5 W','Sensitivity':'88 dB','Resonance Frequency':'680 Hz','Freq. Response':'1800 Hz – 30 kHz','Impedansi':'3.8 / 4.2 / 5.1 Ω','External':'58 mm','Installation':'48 mm','Mounting Depth':'26 mm','Weight':'87 g'} },
+      ]},
+      { name: 'Berlin Line', products: [
+        { id:'ac-blw6', name:'BL-W6 MKIII', model:'BL-W6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" Mid woofer — seri kompetisi Berlin Line.',
+          specs:{'Peak Power Handling':'60 W','Power Rating':'30 W','Min. Amplifier Power':'15 W','Sensitivity':'89 dB','Freq. Response':'52 Hz – 6 kHz','Impedansi':'4 Ω','External Diameter':'166 mm','Fastening Diameter':'155 mm','Mounting Depth':'67 mm'} },
+        { id:'ac-blt26', name:'BL-T26 MKII', model:'BL-T26 MKII', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'26mm Silk Dome Tweeter.',
+          specs:{'Peak Power Handling':'30 W','Power Rating':'15 W','Min. Amplifier Power':'10 W','Sensitivity':'87 dB','Freq. Response':'850 Hz – 22 kHz','Impedansi':'4 Ω','External Diameter':'58 mm','Fastening Diameter':'49 mm','Mounting Depth':'22 mm'} },
+        { id:'ac-blm3', name:'BL-M3 MKII', model:'BL-M3 MKII', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'3.5" Midrange Speaker.',
+          specs:{'Handling Power':'75 W','SPL':'88 dB','Fs':'85 Hz','Freq. Response':'65 Hz – 15 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'82 mm','Mounting Depth':'42 mm'} },
+        { id:'ac-blx3', name:'BL-X3 3.5"', model:'BL-X3', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'3.5" Coaxial Speaker (per Pcs).',
+          specs:{'Handling Power':'100 W','SPL':'90 dB','Freq. Response':'80 Hz – 20 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'83 mm','Mounting Depth':'38 / 40 mm'} },
+      ]},
+      { name: 'Hamburg Line', products: [
+        { id:'ac-hlw6', name:'HL-W6 MKIII', model:'HL-W6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" Mid woofer Speaker.',
+          specs:{'Handling Power':'60 W','SPL':'89 dB','Freq. Response':'52 Hz – 6 kHz','Impedansi':'4 Ω','Outer Diameter':'166 mm','Fastening Diameter':'156 mm','Mounting Depth':'73.5 mm'} },
+        { id:'ac-hlw8', name:'HL-W8', model:'HL-W8', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'8" Slim Mid Woofer Speaker.',
+          specs:{'Handling Power':'100 W','SPL':'87 dB','Freq. Response':'42 Hz – 8 kHz','Impedansi':'4 Ω','Outer Diameter':'205 mm','Mounting Diameter':'194 mm','Mounting Depth':'57.5 mm'} },
+        { id:'ac-hlm3', name:'HL-M3 MKIII', model:'HL-M3 MKIII', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'3.5" Midrange Speaker.',
+          specs:{'Handling Power':'60 W','SPL':'84 dB','Freq. Response':'110 Hz – 20 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'82.7 mm','Mounting Depth':'34 mm'} },
+        { id:'ac-hlm2', name:'HL-M2', model:'HL-M2', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'2" Wide Midrange Speaker.',
+          specs:{'Handling Power':'40 W','SPL':'84 dB','Freq. Response':'132 Hz – 30 kHz','Impedansi':'4 Ω','Outer Diameter':'72 mm','Fastening Diameter':'64 mm','Mounting Depth':'29 mm'} },
+        { id:'ac-hlt25', name:'HL-T25 NP', model:'HL-T25 NP', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Tweeter Hamburg Line.',
+          specs:{'Peak Power Handling':'30 W','Power Rating':'15 W','Min. Amplifier Power':'10 W','Sensitivity':'87 dB','Freq. Response':'850 Hz – 22 kHz','Impedansi':'4 Ω','External Diameter':'45 mm','Fastening Diameter':'39 mm','Mounting Depth':'25.5 mm'} },
+        { id:'ac-hlt20', name:'HL-T20', model:'HL-T20', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'20mm Silk Dome Chamber Tweeter.',
+          specs:{'Handling Power':'20 W','SPL':'84 dB','Freq. Response':'1500 Hz – 22 kHz','Impedansi':'4 Ω','Outer Diameter':'42 mm','Inner Diameter':'35 mm','Mounting Depth':'17 mm'} },
+      ]},
+      { name: 'Munich Line', products: [
+        { id:'ac-mlc62', name:'ML-C6.2 MKIII', model:'ML-C6.2 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" Two Way Component — Black Aluminum Former, Nomex Spider, Carbon Fibre Cone, Custom Steel Basket, 25mm Silk Dome Tweeter, 2×12dB inline crossover.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'150 W','SPL':'90 dB','Freq. Response':'50 Hz – 20 kHz','Tweeter':'25 mm Silk Dome','Crossover':'2×12 dB Inline'} },
+        { id:'ac-mlc63', name:'ML-C6.3 MKIII', model:'ML-C6.3 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" Three Way Component — Carbon Fibre Cone, Custom Steel Basket, 25mm Silk Dome Tweeter, 3×12dB inline crossover.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'150 W','SPL':'90 dB','Freq. Response':'50 Hz – 20 kHz','Tweeter':'25 mm Silk Dome','Crossover':'3×12 dB Inline'} },
+        { id:'ac-mlpassive3', name:'Passive 3 Way', model:'ML Passive 3 Way', category:'Accessories', emoji:'🎚️', hasVideo:false,
+          desc:'Munich Line 3 Way Crossover.', specs:{'Type':'Passive Crossover','Config':'3 Way','Line':'Munich'} },
+        { id:'ac-mlpassive2', name:'Passive 2 Way', model:'ML Passive 2 Way', category:'Accessories', emoji:'🎚️', hasVideo:false,
+          desc:'Munich Line 2 Way Crossover.', specs:{'Type':'Passive Crossover','Config':'2 Way','Line':'Munich'} },
+      ]},
+      { name: 'Köln Line', products: [
+        { id:'ac-klc62', name:'KL-C6.2', model:'KL-C6.2', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" 2-Way Component Set premium dengan fokus kejernihan vokal dan soundstage luas.',
+          specs:{'Type':'6.5" 2-Way Component','Impedansi':'3 Ω','Freq. Response':'57 Hz – 20 kHz','Sensitivity':'88 dB','Rated Input (RMS)':'60 W','Music Power (Peak)':'120 W','Voice Coil':'25.5 mm ASV','Cone Material':'Paper Cone','Surround':'Rubber','Magnet':'85×32×15 mm Y30','Net Weight':'844 g','Xmax':'2.75 mm'} },
+      ]},
+      { name: 'Frankfurt Line', products: [
+        { id:'ac-flc62', name:'FL-C6.2 MKII', model:'FL-C6.2 MKII', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" Two Way Component — Pressed Paper Cone, Custom Steel Basket, 20mm Silk Dome Tweeter, Inline Crossover.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'120 W','SPL':'88 dB','Freq. Response':'50 Hz – 22 kHz','Tweeter':'20 mm Silk Dome'} },
+        { id:'ac-flx6', name:'FL-X6 MKII', model:'FL-X6 MKII', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" Coaxial Speaker — Pressed Paper Cone, Custom Steel Basket, 13mm Silk Dome Tweeter.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'120 W','SPL':'89 dB','Freq. Response':'50 Hz – 22 kHz','Outer Diameter':'166 mm','Fastening Diameter':'156 mm','Mounting Depth':'62 mm'} },
+      ]},
+      { name: 'Stuttgart Line', products: [
+        { id:'ac-slc62', name:'SL-C6.2 MKIV S', model:'SL-C6.2 MKIV S', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" Two Way Component — Reinforced PP Cone, Custom Steel Basket, 20mm Silk Dome Tweeter, Inline Crossover.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'100 W','SPL':'87 dB','Freq. Response':'65 Hz – 20 kHz','Tweeter':'20 mm Silk Dome'} },
+        { id:'ac-slx6', name:'SL-X6 MKIII', model:'SL-X6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'6.5" Coaxial Speaker — Reinforced PP Cone, PET Membrane Tweeter.',
+          specs:{'Impedansi':'4 Ω','Handling Power':'100 W','SPL':'87 dB','Freq. Response':'65 Hz – 20 kHz','Outer Diameter':'166 mm','Fastening Diameter':'156 mm','Mounting Depth':'67 mm'} },
+      ]},
+      { name: 'Subwoofer', products: [
+        { id:'ac-bls10', name:'BL-S10', model:'BL-S10', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'10" SQ Subwoofer — pasangan ideal untuk Berlin speaker series, Aluminum die cast basket, signature T-Yoke.',
+          specs:{'Handling Power':'500 W','Rated Power':'300 W','SPL':'83 dB','Freq. Response':'35 Hz – 3 kHz','Impedansi':'2×2 Ω','Fs':'28 Hz','Qts':'0.39','Vas':'26.7 L','Outer Diameter':'260 mm','Fastening Diameter':'246 mm','Mounting Depth':'141.5 mm'} },
+        { id:'ac-mls10', name:'ML-S10', model:'ML-S10', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'10" Power Subwoofer — reinforced metal cone, Dual 2 Ohm Voice Coil, dirancang untuk ported box.',
+          specs:{'Handling Power':'1200 W','Rated Power':'500 W','SPL':'86 dB','Freq. Response':'25 Hz – 250 Hz','Impedansi':'2×2 Ω','Fs':'28 Hz','Qts':'0.39','Vas':'26.7 L','Outer Diameter':'257 mm','Fastening Diameter':'245 mm','Mounting Depth':'145 mm'} },
+        { id:'ac-iqles10a', name:'IQ-LES10A', model:'IQ-LES10A', category:'Subwoofer', emoji:'📦', hasVideo:false,
+          desc:'10" Active Subwoofer Load Enclosure — built-in amplifier dengan kontrol gain, phase, dan low-pass.',
+          specs:{'Freq. Response':'40 Hz – 200 Hz','Operating Voltage':'9.5 – 16 VDC','Input Sensitivity':'180 mV','Peak Power Output':'350 W','RMS Power Output':'150 W','Impedansi':'4 Ω','Dimensions':'270 × 310 × 380 mm','Volume':'20.4 L'} },
+        { id:'ac-iquss8a', name:'IQ-USS8A', model:'IQ-USS8A', category:'Subwoofer', emoji:'📦', hasVideo:false,
+          desc:'8" Under-seat Active Subwoofer — desain slim, built-in amplifier, bass padat untuk bawah jok.',
+          specs:{'Freq. Response':'40 Hz – 200 Hz','Operating Voltage':'9.5 – 16 VDC','Input Sensitivity':'180 mV','Peak Power Output':'350 W','RMS Power Output':'150 W','Impedansi':'4 Ω'} },
+      ]},
+      { name: 'IQ Line — BMW', products: [
+        { id:'ac-iqc42bmwa', name:'IQ-C4.2 BMW Ver.A', model:'IQ-C4.2 BMW Ver.A', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'4" Two Way Component — BMW Plug & Play, Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
+          specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'BMW Plug & Play'} },
+        { id:'ac-iqc42bmwb', name:'IQ-C4.2 BMW Ver.B', model:'IQ-C4.2 BMW Ver.B', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'4" Two Way Component — BMW Plug & Play (Ver.B), Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
+          specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'BMW Plug & Play'} },
+        { id:'ac-iqx4bmw', name:'IQ-X4 BMW', model:'IQ-X4 BMW', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'4" Coaxial Speaker untuk rear door — BMW Plug & Play, Carbon Fibre Cone Die Cast Basket.',
+          specs:{'Impedansi':'4 Ω','Rated Power':'40 – 60 W','SPL':'87 dB','Freq. Response':'100 Hz – 20 kHz','Fitment':'BMW Plug & Play'} },
+        { id:'ac-iqs824bmw', name:'IQ-S8-2/4 BMW', model:'IQ-S8-2/4 BMW', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'8" Mid woofer — BMW Plug & Play, High Power Paper Cone Mid Woofer.',
+          specs:{'Impedansi':'2 / 4 Ω','Rated Power':'70 – 80 W','Handling Power':'200 W','SPL':'88 dB','Freq. Response':'33 Hz – 2000 Hz','Fitment':'BMW Plug & Play'} },
+      ]},
+      { name: 'IQ Line — Benz', products: [
+        { id:'ac-iqc42mb', name:'IQ-C4.2 MB', model:'IQ-C4.2 MB', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'4" Two Way Component — Mercedes Plug & Play, Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
+          specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'Mercedes-Benz Plug & Play'} },
+        { id:'ac-iqc52mb', name:'IQ-C5.2 MB', model:'IQ-C5.2 MB', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'5" Two Way Component — Mercedes Plug & Play, Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
+          specs:{'Impedansi':'4 Ω','Rated Power':'50 – 100 W','SPL':'90 dB','Freq. Response':'115 Hz – 30 kHz','Fitment':'Mercedes-Benz Plug & Play'} },
+        { id:'ac-iqm4cmb', name:'IQ-M4C MB', model:'IQ-M4C MB', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'4" Center Speaker (Pc) — Mercedes Plug & Play, Dual Voice Coil Center Speaker.',
+          specs:{'Impedansi':'4 Ω','Rated Power':'30 – 60 W','SPL':'83 dB','Freq. Response':'110 Hz – 10 kHz','Fitment':'Mercedes-Benz Plug & Play'} },
+      ]},
+      { name: 'Accessories', products: [
+        { id:'ac-deadening', name:'Sound Deadening', model:'AC Sound Deadening', category:'Accessories', emoji:'🧱', hasVideo:false,
+          desc:'Peredam Audio Circle.', specs:{'Weight':'2.2 mm','Dimension':'460 × 800 mm'} },
+        { id:'ac-microfiber', name:'Blue Crystal Microfiber', model:'AC Microfiber', category:'Accessories', emoji:'🧴', hasVideo:false,
+          desc:'Microfiber Low IMD untuk performa audio lebih jernih dan akurat.',
+          specs:{'Specification':'3g × 2 Cans/Box','Size':'63.5 × 21.5 × 16.5 cm','Quantity':'10 Boxes'} },
+      ]},
+    ]
+  },
+  {
+    id: 'masterstroke', name: 'Master Stroke', tagline: 'Powerful. Dynamic. Musical. — Hand Crafted in Italy',
+    color: '#6b5bd0', bg: 'linear-gradient(135deg,#0c0a1e 0%,#241d52 100%)', text: '#fff', abbr: 'MS',
+    desc: 'Seri audiophile hand-crafted dari Italia (GT Trading) dengan membran carbon fiber dan magnet neodymium untuk Sound Quality kelas tinggi.',
+    lines: [
+      { name: 'SQ Series', products: [
+        { id:'ms-mss6', name:'MSS6', model:'MSS6', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'SQ Woofer — Hand Crafted Audiophile series, High End.',
+          specs:{'Speaker Size':'6.6 inch','Impedansi':'4 Ω','DC Resistance':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance':'0.25 mH','Membrane':'Carbon fiber + resin','Magnet':'Neodymium','Net Weight':'1.38 kg','Qms':'6.64','Qts':'0.81','Resonance Frequency':'68 Hz','Freq. Response':'60 Hz – 4.5 kHz','Efficiency':'87 dB','Power (Hi-pass 1500Hz)':'200 W'} },
+        { id:'ms-mss3', name:'MSS3', model:'MSS3', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'SQ Midrange — Hand Crafted Audiophile series, High End.',
+          specs:{'Speaker Size':'4.3 inch','Impedansi':'4 Ω','DC Resistance':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance':'0.09 mH','Membrane':'Carbon fiber + resin','Magnet':'Neodymium','Net Weight':'0.36 kg','Qms':'6.08','Qts':'0.65','Resonance Frequency':'97 Hz','Freq. Response':'100 Hz – 12 kHz','Efficiency':'86 dB','Power (Hi-pass 1500Hz)':'70 W'} },
+      ]},
+      { name: 'MGL 3-Way Component', products: [
+        { id:'ms-mgl1', name:'MGL1', model:'MGL1', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Tweeter — concave metal diaphragm, CNC aluminium faceplate, 25mm copper voice coil, Neodymium magnet.',
+          specs:{'Rated Power':'20 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'1100 Hz – 40 kHz','Qms':'10.019','Magnet':'NdFeB','Mounting Depth':'26 mm','Mounting Diameter':'55 mm'} },
+        { id:'ms-mgl3', name:'MGL3', model:'MGL3', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Midrange — vented die cast aluminium chassis, Neodymium magnet, special treatment metal cone.',
+          specs:{'Rated Power':'30 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'145 Hz – 15 kHz','Qms':'5.381','Magnet':'NdFeB','Mounting Depth':'40 mm','Mounting Diameter':'73 mm'} },
+        { id:'ms-mgl6', name:'MGL6', model:'MGL6', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'Woofer — special treatment metal cone, CNC motor metal parts, large Ferrite magnet, vented die cast chassis.',
+          specs:{'Rated Power':'60 W','Impedansi':'4 Ω','Sensitivity':'88 dB','Freq. Response':'70 Hz – 5 kHz','Qms':'6.606','Magnet':'Ferrite','Mounting Depth':'73 mm','Mounting Diameter':'146 mm'} },
+      ]},
+    ]
+  },
+  {
+    id: 'steg', name: 'STEG', tagline: 'Made in Italy — High-End Car Audio Engineering',
+    color: '#178a4c', bg: 'linear-gradient(135deg,#02140a 0%,#063d1f 100%)', text: '#fff', abbr: 'ST',
+    desc: 'Brand Italia legendaris: speaker K-Series, tweeter AMT, DSP hi-res, amplifier DK Line, subwoofer, hingga peredam—engineering kelas referensi.',
+    lines: [
+      { name: 'K Series Speaker', products: [
+        { id:'st-k1c', name:'K1C', model:'K1C', category:'Tweeter', emoji:'🎺', hasVideo:false, desc:'K Series Tweeter (per Pair).', specs:{'Type':'Tweeter','Series':'K Series','Origin':'Design in Italy'} },
+        { id:'st-k3c', name:'K3C', model:'K3C', category:'Midrange', emoji:'🔉', hasVideo:false, desc:'K Series 3" Midrange (per Pair).', specs:{'Type':'3" Midrange','Series':'K Series','Origin':'Design in Italy'} },
+        { id:'st-k4c', name:'K4C', model:'K4C', category:'Midrange', emoji:'🔉', hasVideo:false, desc:'K Series 4" Midrange (per Pair).', specs:{'Type':'4" Midrange','Series':'K Series','Origin':'Design in Italy'} },
+        { id:'st-k6c', name:'K6C', model:'K6C', category:'Speaker', emoji:'🔊', hasVideo:false, desc:'K Series 6" Woofer (per Pair).', specs:{'Type':'6" Woofer','Series':'K Series','Origin':'Design in Italy'} },
+        { id:'st-k8c', name:'K8C', model:'K8C', category:'Speaker', emoji:'🔊', hasVideo:false, desc:'K Series 8" Woofer (per Pair).', specs:{'Type':'8" Woofer','Series':'K Series','Origin':'Design in Italy'} },
+      ]},
+      { name: 'Coaxial', products: [
+        { id:'st-q4c', name:'Q4C', model:'Q4C', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'Same Point Coaxial Speaker — vented die cast chassis, Neodymium magnet, 1.4" voice coil, 1.2" titanium dome tweeter.',
+          specs:{'Rated Power':'30 W','Impedansi':'4 Ω','Sensitivity':'95 dB','Freq. Response':'127 Hz – 20 kHz','Qms':'4.576','Qts':'0.285','Magnet':'NdFeB','Mounting Depth':'34 mm','Mounting Diameter':'81 mm'} },
+        { id:'st-ms650', name:'MS650', model:'MS650', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'Coaxial Speaker.',
+          specs:{'Nominal Power':'60 W','Impedansi':'4 Ω','Sensitivity':'88 dB','Freq. Response':'60 Hz – 20 kHz','Qms':'3.88','Qts':'0.78','Weight':'0.63 kg','Mounting Depth':'60 mm','Mounting Diameter':'142 mm'} },
+      ]},
+      { name: 'Tweeter', products: [
+        { id:'st-sst50', name:'SST50', model:'SST50', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'2.2" AMT Ultra Air Motion Tweeter — Advanced Air Motion Transformer, CNC aluminium panel, Neo magnet.',
+          specs:{'DCR Impedance':'3.2 Ω','Nominal Impedance':'4 Ω','Sensitivity':'89 dB','Fs':'3.3 kHz','Freq. Up To':'50 kHz','External Diameter':'55 mm','Installation Diameter':'42 mm','Installation Depth':'21.5 mm','Diaphragm':'Aluminum Foil'} },
+        { id:'st-sst90', name:'SST90', model:'SST90', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'3.5" AMT Ultra Air Motion Tweeter — Advanced Air Motion Transformer, high frequency beyond 35kHz, Neo magnet.',
+          specs:{'DCR Impedance':'3.2 Ω','Nominal Impedance':'4 Ω','Sensitivity':'92 dB','Fs':'2.5 kHz','Freq. Up To':'35 kHz','External Diameter':'90 mm','Installation Diameter':'68 mm','Installation Depth':'29.5 mm','Diaphragm':'Aluminum Foil'} },
+        { id:'st-sff1', name:'SFF1', model:'SFF1', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'1.8" Ultra ATMOS Sound Speaker — multi-choice installation, CNC aluminium panel, Neo magnet.',
+          specs:{'DCR Impedance':'3.0 Ω','Nominal Impedance':'4 Ω','Sensitivity':'83 dB','Fs':'165 Hz','Freq. Up To':'15 kHz','External Diameter':'70 mm','Installation Diameter':'58 mm','Installation Depth':'21 mm','Diaphragm':'Aluminum Foil'} },
+        { id:'st-mz650ctw', name:'MZ650C TW', model:'MZ650C TW', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Tweeter Speaker — Transparent Silk diaphragm.',
+          specs:{'Diaphragm':'Transparent Silk','Voice Coil':'28 mm','DC Impedance':'4 Ω','Continuous Power':'30 W','Freq. Response':'1300 Hz – 22 kHz','Sensitivity':'90 dB','Weight':'0.11 kg','Mounting Depth':'21 mm','Mounting Diameter':'49.5 mm'} },
+        { id:'st-mlg1tw', name:'MLG1TW', model:'MLG1TW', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Tweeter Speaker — copper voice coil, Neodymium magnet.',
+          specs:{'Voice Coil Diameter':'25 mm','Voice Coil Wire':'Copper','Magnet System':'Neodymium','Mounting Depth':'15 mm','Mounting Diameter':'44.5 mm'} },
+      ]},
+      { name: 'Midrange', products: [
+        { id:'st-ml35', name:'ML35', model:'ML35', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Midrange Speaker.',
+          specs:{'Voice Coil':'25 mm','Continuous Power':'30 W','DCR Impedance':'3.6 Ω','Sensitivity':'85 dB','Freq. Response':'100 Hz – 15 kHz','Qms':'3.78','Qts':'0.87','Weight':'0.225 kg','Mounting Depth':'41 mm','Mounting Diameter':'79 mm'} },
+        { id:'st-ms30', name:'MS30', model:'MS30', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Midrange Speaker — Special Composite Material cone.',
+          specs:{'Voice Coil':'25 mm','Continuous Power':'30 W','DCR Impedance':'3.6 Ω','Sensitivity':'88 dB','Freq. Response':'100 Hz – 20 kHz','Qms':'3.9','Qts':'0.46','Weight':'0.245 kg','Mounting Depth':'64 mm','Mounting Diameter':'144 mm'} },
+        { id:'st-sff3', name:'SFF3', model:'SFF3', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Midrange Speaker — vented die cast chassis, Neo magnet, customized rubber surround paper cone.',
+          specs:{'Impedansi':'4 Ω','Freq. Response':'125 Hz – 15 kHz','Rated Power':'30 W','Sensitivity':'87 dB','Qms':'1.584','Qts':'0.397','Magnet':'NdFeB','Mounting Diameter':'75 mm','Mounting Depth':'49 mm'} },
+      ]},
+      { name: 'DSP & DSP Amplifier', products: [
+        { id:'st-dsps6', name:'DSP-S6', model:'DSP-S6', category:'DSP', emoji:'💻', hasVideo:true,
+          desc:'OTG DSP Power Amplifier — High Level 6 In 8 Out, AKM7735 High Performance DSP Chip, 31-Band EQ.',
+          specs:{'DSP Chip':'AKM7735','Channel':'6CH + 8 RCA Out','Power Output':'6×35 W (4Ω)','Amplifier':'Class-D','EQ':'31-Band','Bluetooth':'5.1','Sampling Rate':'48 kHz','SNR':'≥100 dB','THD':'≤0.01%','Operating Voltage':'9 – 18 V'} },
+        { id:'st-ss16', name:'SS16', model:'SS16', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'HI-RES Digital Signal Processor 192kHz/32-bit — Dual-core DSPG ADSP21565, DAC ES9039PRO.',
+          specs:{'DSP Chip':'Dual-core DSPG ADSP21565','Resolution':'192 kHz / 32-bit','Output':'16 RCA Outputs','Bluetooth':'5.1 (aptX HD)','Freq. Range':'20 Hz – 80 kHz','SNR':'≥130 dB','THD':'<0.00001%','Operating Voltage':'6 – 26 V'} },
+        { id:'st-ssdsp16', name:'SS-DSP16 II', model:'SS-DSP16 II', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'OTG DSP Class D Amplifier — High Level 16 In 16 Out, 192kHz/32-bit, ADAU1452.',
+          specs:{'DSP Chip':'ADAU1452','Channel':'16 In 16 Out','Power Output':'16×80 W (4Ω)','Resolution':'192 kHz / 32-bit','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 16 V'} },
+        { id:'st-ssdsp12', name:'SS-DSP12', model:'SS-DSP12', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'OTG DSP Power Amplifier — High Level 12 In 12 Out, 192kHz/32-bit ADC, ADAU1452 Chip.',
+          specs:{'DSP Chip':'ADAU1452','Channel':'12 In 12 Out','Power Output':'12×80 W (4Ω)','Resolution':'192 kHz / 32-bit','SNR':'≥100 dB','THD':'≤0.01%','Net Weight':'4.2 kg','Size':'307 × 196 × 50 mm'} },
+        { id:'st-mdsp10d', name:'MDSP10D Limited Edition', model:'MDSP10D', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'OTG DSP Power Amplifier — High Level 8 In 10 Out, AKM7735 DSP Chip.',
+          specs:{'DSP Chip':'AKM7735','Channel':'8 In 10 Out','Power Output':'6×50 W/4Ω + 2×90 W/2Ω','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 17 V'} },
+        { id:'st-mdsp8', name:'MDSP8', model:'MDSP8', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'OTG DSP Power Amplifier — High Level 6 In 8 Out, AKM7735 High Performance DSP Chip.',
+          specs:{'DSP Chip':'AKM7735','Channel':'6 In 8 Out','Power Output':'6×50 W (4Ω)','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 18 V'} },
+      ]},
+      { name: 'DK Line Amplifier', products: [
+        { id:'st-dk754', name:'DK75.4', model:'DK75.4', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'4 Channel Power Amplifier — DK Line, Made in Italy.',
+          specs:{'Channel':'4CH','Output (4Ω)':'75 W × 4','Output (2Ω)':'125 W × 4','Bridged (4Ω)':'250 W × 2','SNR':'≥95 dB','Max Size':'283 × 176 × 50 mm'} },
+        { id:'st-dk2006', name:'DK200.6', model:'DK200.6', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'6 Channel Power Amplifier — DK Line, Made in Italy.',
+          specs:{'Channel':'6CH','Output (4Ω)':'200 W × 6','Output (2Ω)':'350 W × 6','Bridged (4Ω)':'700 W × 3','SNR':'≥95 dB','Max Size':'350.5 × 187 × 50 mm'} },
+        { id:'st-dk5001', name:'DK500.1', model:'DK500.1', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Mono Power Amplifier — DK Line, Made in Italy.',
+          specs:{'Channel':'1CH (Mono)','Output (4Ω)':'250 W','Output (2Ω)':'500 W','Output (1Ω)':'800 W','THD':'<0.1%','Low Pass Filter':'50 – 250 Hz','Max Size':'200.5 × 176 × 50 mm'} },
+        { id:'st-dk10001', name:'DK1000.1', model:'DK1000.1', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Mono Power Amplifier — DK Line, Made in Italy.',
+          specs:{'Channel':'1CH (Mono)','Output (4Ω)':'500 W','Output (2Ω)':'1000 W','Output (1Ω)':'1200 W','THD':'<0.1%','Low Pass Filter':'50 – 250 Hz','Max Size':'240.5 × 176 × 50 mm'} },
+      ]},
+      { name: 'Active Subwoofer', products: [
+        { id:'st-sa8w', name:'SA-8W', model:'SA-8W', category:'Subwoofer', emoji:'📦', hasVideo:false,
+          desc:'8 inch Stealth Active Subwoofer.',
+          specs:{'Subwoofer Size':'8 inch, 0.4 Ω','RMS Power':'200 W','THD':'<0.5%','Signal-to-Noise':'>95 dB','Freq. Response':'25 Hz – 150 Hz','Low Pass Filter':'50 Hz – 150 Hz','Subsonic Filter':'25 Hz','Dimensions':'285 × 210 × 70 mm'} },
+        { id:'st-s10', name:'S10', model:'S10', category:'Subwoofer', emoji:'📦', hasVideo:false,
+          desc:'10 inch Spare Tire Active Subwoofer.',
+          specs:{'Subwoofer Size':'10 inch, 0.4 Ω','RMS Power':'200 W','THD':'<0.5%','Signal-to-Noise':'>95 dB','Freq. Response':'25 Hz – 200 Hz','Low Pass Filter':'50 Hz – 200 Hz','Subsonic Filter':'25 Hz'} },
+      ]},
+      { name: 'Subwoofer', products: [
+        { id:'st-st10', name:'ST10', model:'ST10', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'10 inch Subwoofer.',
+          specs:{'Speaker Size':'10 inch','RMS Power':'200 W','Fo':'26 Hz','Impedansi':'2 Ω','Sensitivity':'84.5 dB','Freq. Range':'26 Hz – 1 kHz','Magnet':'53.4 Oz','Voice Coil':'2" Aluminum','Mounting Depth':'110 mm','Mounting Diameter':'232 mm'} },
+        { id:'st-st10pro', name:'ST10PRO', model:'ST10PRO', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'10 inch Subwoofer — Aluminum Alloy Bracket, Special Glass Fiber Basin.',
+          specs:{'Speaker Size':'10 inch','RMS Power':'400 W','Impedansi':'2 Ω','Magnet':'53.4 Oz','Voice Coil':'2" Aluminum','Mounting Depth':'112 mm','Magnet Diameter':'156 mm'} },
+        { id:'st-s8', name:'S8', model:'S8', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'8 inch Subwoofer.',
+          specs:{'Speaker Size':'8 inch','RMS Power':'150 W','Fo':'45 Hz','Impedansi':'4 + 4 Ω','Sensitivity':'81 dB','Freq. Range':'45 Hz – 1 kHz','Magnet':'58.5 Oz','Voice Coil':'2 inch','Mounting Depth':'120 mm','Mounting Diameter':'183 mm'} },
+        { id:'st-sq82se', name:'SQ8-2SE', model:'SQ8-2SE', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'8 inch Subwoofer.',
+          specs:{'Speaker Size':'8 inch','RMS Power':'300 W','Max Power':'600 W','Fo':'35 Hz','Impedansi':'2 + 2 Ω','Sensitivity':'83 dB','Freq. Range':'35 Hz – 500 Hz','Magnet':'40 Oz','Voice Coil':'2" TIL','Mounting Depth':'80 mm','Mounting Diameter':'182 mm'} },
+      ]},
+      { name: 'Subwoofer Speaker', products: [
+        { id:'st-sqw6', name:'SQW-6', model:'SQW-6', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'6" Subwoofer Speaker — Rubber honeycomb aluminum cone.',
+          specs:{'Size':'6"','RMS Power':'200 W','Voice Coil':'2.4" Aluminum','Magnet':'25.3 Oz','External Diameter':'153 mm','Installation Diameter':'135 mm','Installation Depth':'75 mm'} },
+        { id:'st-sqw8', name:'SQW-8', model:'SQW-8', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'8" Subwoofer Speaker — Rubber honeycomb aluminum cone.',
+          specs:{'Size':'8"','RMS Power':'200 W','Impedansi':'3 Ω','Voice Coil':'2.625" Aluminum','Magnet':'18.75 Oz','Freq. Response':'25 Hz – 500 Hz','Sensitivity':'84.68 dB','Outer Diameter':'206 mm','Mounting Depth':'80 – 110 mm'} },
+        { id:'st-sqw10', name:'SQW-10', model:'SQW-10', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'10" Subwoofer Speaker — Coming Soon.', specs:{'Size':'10"','Status':'Coming Soon'} },
+      ]},
+      { name: 'Subwoofer Enclosure', products: [
+        { id:'st-st10ppro', name:'ST10P-PRO', model:'ST10P-PRO', category:'Subwoofer', emoji:'📦', hasVideo:false,
+          desc:'10 inch Subwoofer Enclosure.',
+          specs:{'Speaker Size':'10 inch','RMS Power':'300 W','Impedansi':'2 Ω','Voice Coil':'2" Aluminum','Magnet':'53.4 Oz','Fo':'26 Hz','Sensitivity':'84.5 dB','Freq. Range':'26 Hz – 1 kHz','Size':'450 × 320 × 160 mm'} },
+      ]},
+      { name: 'Bluetooth Player', products: [
+        { id:'st-bt1', name:'BT1', model:'BT1', category:'DSP', emoji:'📲', hasVideo:false,
+          desc:'HiFi Bluetooth Player — HD Audio 24bit/96kHz, LDAC & aptX.',
+          specs:{'BT Module':'QCC5125','BT Protocol':'LDAC / aptX-HD / aptX','Sampling Rate':'96 kHz','Sampling Bit':'24-bit','Bluetooth':'5.1','Decoder Chip':'ES9018K2M','Output':'Optical + Coaxial + RCA','Power Supply':'DC 9 – 18 V','Size':'130 × 68 × 29 mm','Weight':'0.16 kg'} },
+      ]},
+      { name: 'Sound Deadening', products: [
+        { id:'st-x3', name:'STEG X3', model:'STEG X3', category:'Accessories', emoji:'🧱', hasVideo:false,
+          desc:'Sound Deadening — 6mm noise-isolating foam.',
+          specs:{'Material':'6 mm noise-isolating foam','Feature':'Fibre mesh, heatproof mastic adhesive','Water Resistant':'Yes','Size':'50 × 100 cm per sheet'} },
+        { id:'st-s8d', name:'STEG S-8', model:'STEG S-8', category:'Accessories', emoji:'🧱', hasVideo:false,
+          desc:'Sound Deadening — 6mm noise-isolating foam.',
+          specs:{'Material':'6 mm noise-isolating foam','Feature':'Fibre mesh, heatproof mastic adhesive','Water Resistant':'Yes','Size':'50 × 100 cm per sheet'} },
+        { id:'st-hoodliner', name:'Hoodliner', model:'STEG Hoodliner', category:'Accessories', emoji:'🧱', hasVideo:false,
+          desc:'Thermo-acoustic waterproof mat — polyester + urethane dengan aluminium top coat.',
+          specs:{'Type':'Thermo-acoustic mat','Temperature':'-40°C to +107°C','Heat Reflection':'97%','Dimensions':'140 × 82 cm','Thickness':'15 mm','Packaging':'1 box = 3 sheets'} },
+        { id:'st-s15', name:'STEG S-15', model:'STEG S-15', category:'Accessories', emoji:'🧱', hasVideo:false,
+          desc:'Sound Deadening — 15mm Egg Foam.',
+          specs:{'Material':'15 mm Egg Foam','Feature':'Decouple & isolate, compressible','Water Resistant':'Yes','Size':'90 × 50 cm per sheet'} },
+      ]},
+    ]
+  },
+  {
+    id: 'zelos', name: 'Zelos', tagline: 'ABYSS Audiophile — Handmade Pure Sound',
+    color: '#b8860b', bg: 'linear-gradient(135deg,#17120a 0%,#3d2f12 100%)', text: '#fff', abbr: 'ZL',
+    desc: 'Amplifier handmade audiophile (ABYSS) dengan komponen hi-end: Class A dan Class AB, dari modul Bluetooth hingga power amplifier prestise.',
+    lines: [
+      { name: 'Bluetooth Module', products: [
+        { id:'zl-hd54', name:'ZLS-HD5.4', model:'ZLS-HD5.4', category:'DSP', emoji:'📡', hasVideo:false,
+          desc:'High Resolution Bluetooth Module — handmade, Cirrus Logic CS8406, USB Codec PCM2912.',
+          specs:{'BT Chipset':'Dual Core QCC3083','Bluetooth':'5.3','Decoding':'SBC / AAC / AptX / AptX HD / LL / Adaptive / LC3','DAC':'Cirrus Logic CS8406','Sampling Rate':'32 kHz – 192 kHz','Resolution':'16 – 24 bit','USB Codec':'TI PCM2912','SNR':'ADC ~89 dB / DAC ~96 dB','THD':'0.01%'} },
+      ]},
+      { name: 'Class A Power Amplifier', products: [
+        { id:'zl-dualmono', name:'Dual Mono 180.2', model:'Dual Mono 180.2', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class A Power Amplifier — handmade Pure Sound.',
+          specs:{'Power Circuit':'Class A','Output (4Ω)':'2 × 100 W','Output (2Ω)':'2 × 150 W','Freq. Response':'10 Hz – 50 kHz','THD':'≤0.05%','Operating Voltage':'10 – 16 V','Input Impedance':'20 kΩ','SNR':'≥100 dB','Channel Separation':'80 dB','Fuse Rating':'80 A'} },
+        { id:'zl-aurum', name:'Aurum', model:'Aurum', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'New Technology Class A — Pure sound quality, warmth, and classic prestige.',
+          specs:{'Power Circuit':'Class A','Max Output':'200 W','Output (4Ω)':'114 W × 1 @1% / 103 W RMS','Output (2Ω)':'205 W × 1 @1% / 175 W RMS','Operating Voltage':'10 – 16 V','Freq. Response':'25 – 55 kHz','SNR':'>93 dB','THD':'<0.05%','Input Impedance':'10 kΩ','Dimensions':'263 × 145 × 50 mm','Weight':'2.7 kg'} },
+        { id:'zl-sq200', name:'SQ 200', model:'SQ 200', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'SQ Series Class A Power Amplifier.',
+          specs:{'Power Circuit':'Class A','Output (4Ω)':'2 × 130 W','Output (2Ω)':'2 × 190 W','Bridge (2Ω)':'1 × 360 W','Freq. Response':'10 Hz – 35 kHz','THD':'≤0.05%','Operating Voltage':'10 – 16 V','Input Impedance':'22 kΩ','SNR':'≥100 dB','Fuse Rating':'20 A × 3'} },
+        { id:'zl-sq400', name:'SQ 400', model:'SQ 400', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'SQ Series Class A Power Amplifier.',
+          specs:{'Power Circuit':'Class A','Output (4Ω)':'4 × 100 W','Output (2Ω)':'4 × 160 W','Bridge (2Ω)':'2 × 300 W','Freq. Response':'10 Hz – 35 kHz','THD':'≤0.05%','Operating Voltage':'10 – 16 V','Input Impedance':'22 kΩ','SNR':'≥100 dB','Fuse Rating':'30 A × 3'} },
+      ]},
+      { name: 'Class AB Power Amplifier', products: [
+        { id:'zl-tantalum', name:'Tantalum', model:'Tantalum', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'New Technology Class AB — highly efficient, stable powerful output.',
+          specs:{'Power Circuit':'Class AB','Max Output':'200 W','Output (4Ω)':'110 W × 1 @1% / 103 W RMS','Output (2Ω)':'200 W × 1 @1% / 170 W RMS','Operating Voltage':'10 – 16 V','Freq. Response':'20 – 55 kHz','SNR':'>93 dB','THD':'<0.05%','Input Impedance':'10 kΩ','Dimensions':'263 × 145 × 50 mm','Weight':'2.4 kg'} },
+        { id:'zl-argentum', name:'Argentum', model:'Argentum', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class AB Power Amplifier — crafted for pure sound.',
+          specs:{'Power Circuit':'Mosfet Class-AB','Output (4Ω)':'95 W × 4','Output (2Ω)':'170 W × 4','Bridge (2Ω)':'280 W × 2','Operating Voltage':'9 – 16 V','Power Supply':'PWM','SNR':'95 dB','THD':'<0.030%','Freq. Response':'10 Hz – 60 kHz','Weight':'3.15 kg','Dimensions':'210 × 50 × 295 mm'} },
+        { id:'zl-verdi2', name:'Verdi EVO+ 2CH', model:'Verdi EVO+ 2CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class AB Power Amplifier — Verdi EVO+ 2 Channel.',
+          specs:{'Power Circuit':'Class AB','Output (4Ω)':'2 × 320 W','Output (2Ω)':'2 × 500 W','Bridge (2Ω)':'1 × 1000 W','Freq. Response':'20 Hz – 20 kHz','THD':'≤0.05%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>500'} },
+        { id:'zl-verdi4', name:'Verdi EVO+ 4CH', model:'Verdi EVO+ 4CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class AB Power Amplifier — Verdi EVO+ 4 Channel.',
+          specs:{'Power Circuit':'Class AB','Output (4Ω)':'2 × 175 W','Output (2Ω)':'2 × 300 W','Bridge (2Ω)':'2 × 600 W','Freq. Response':'20 Hz – 20 kHz','THD':'≤0.05%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>500'} },
+        { id:'zl-mfa52', name:'MFA5 EVO+ 2CH', model:'MFA5 EVO+ 2CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class AB Power Amplifier — MFA5 EVO+ 2 Channel.',
+          specs:{'Power Circuit':'Class AB','Output (4Ω)':'2 × 230 W','Output (2Ω)':'2 × 380 W','Bridge (2Ω)':'1 × 560 W','Freq. Response':'5 Hz – 30 kHz','THD':'≤0.03%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>400'} },
+        { id:'zl-mfa54', name:'MFA5 EVO+ 4CH', model:'MFA5 EVO+ 4CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class AB Power Amplifier — MFA5 EVO+ 4 Channel.',
+          specs:{'Power Circuit':'Class AB','Output (4Ω)':'4 × 140 W','Output (2Ω)':'4 × 230 W','Bridge (2Ω)':'2 × 450 W','Freq. Response':'5 Hz – 30 kHz','THD':'≤0.03%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>400'} },
+        { id:'zl-mfa32', name:'MFA3 EVO+ 2CH', model:'MFA3 EVO+ 2CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class AB Power Amplifier — MFA3 EVO+ 2 Channel.',
+          specs:{'Power Circuit':'Class AB','Output (4Ω)':'2 × 120 W','Output (2Ω)':'2 × 200 W','Bridge (2Ω)':'1 × 400 W','Freq. Response':'20 Hz – 40 kHz','THD':'≤0.03%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>200'} },
+        { id:'zl-mfa34', name:'MFA3 EVO+ 4CH', model:'MFA3 EVO+ 4CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class AB Power Amplifier — MFA3 EVO+ 4 Channel.',
+          specs:{'Power Circuit':'Class AB','Output (4Ω)':'4 × 90 W','Output (2Ω)':'4 × 120 W','Bridge (2Ω)':'2 × 240 W','Freq. Response':'20 Hz – 40 kHz','THD':'≤0.03%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>200'} },
+        { id:'zl-mfa1', name:'MFA1 EVO+', model:'MFA1 EVO+', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Class AB 4CH Power Amplifier — MFA1 EVO+.',
+          specs:{'Power Circuit':'Class AB','Output (4Ω)':'4 × 72 W','Output (2Ω)':'4 × 130 W','Freq. Response':'10 Hz – 40 kHz','THD':'≤0.03%','Input Sensitivity':'200 mV – 4 V','Input Impedance':'20 kΩ','SNR':'≥100 dB','Damping Factor':'>200','Fuse Rating':'40 A × 1'} },
+      ]},
+    ]
+  },
+  {
+    id: 'dios', name: 'Diosdela Musica', tagline: 'Art of Sound — Protect Your System. Enhance Your Sound.',
+    color: '#d4a017', bg: 'linear-gradient(135deg,#120f05 0%,#2e2408 100%)', text: '#fff', abbr: 'DM',
+    desc: 'Aksesoris dan kabel premium: fuse silver composite, kabel RCA quadruple, power cable septuple, dan peredam—perlindungan sekaligus peningkat kualitas suara.',
+    lines: [
+      { name: 'Fuse Series', products: [
+        { id:'dm-fuseanl', name:'Fuse ANL', model:'DM-ANL', category:'Accessories', emoji:'🔌', hasVideo:false,
+          desc:'Custom Made Silver Composite Fuse Conductor dengan Blackbonite, Emboss Dios.',
+          specs:{'Conductor':'Silver Composite','Design':'Heat Resistant','Finish':'Premium Emboss Dios','Available':'200 A / 100 A / 10 A'} },
+        { id:'dm-fuseminianl', name:'Fuse Mini ANL', model:'DM-MINI', category:'Accessories', emoji:'🔌', hasVideo:false,
+          desc:'Custom Made Silver Composite Fuse Conductor dengan Blackbonite, Emboss Dios.',
+          specs:{'Conductor':'Silver Composite','Design':'Heat Resistant','Finish':'Premium Emboss Dios','Available':'100 A / 50 A / 10 A'} },
+      ]},
+      { name: 'Cable Series', products: [
+        { id:'dm-rca', name:'RCA Quadruple Series', model:'DM-RCA', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'High performance RCA cable, high purity copper, double shielding, 24K Gold plated RCA jack.',
+          specs:{'Conductor':'17 Ing Single Crystal Copper 99.99%','First Shield':'99.99% Copper Braided Mesh','Second Shield':'Aluminum Foil','Connector':'Pure Copper 24K Gold Plated','Unit':'1M / 2M / 3M / 5M Pair'} },
+        { id:'dm-cable', name:'Cable Quadruple', model:'DM-Cable Quadruple', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'Flexible 4-channel cable dengan durabilitas tinggi dan transmisi sinyal sangat baik.',
+          specs:{'Conductor':'Double 16 AWG Solid + Multi-Strand Copper','Tonal':'(-) Multi Strand, (+) Solid Copper','Unit':'Meter'} },
+        { id:'dm-16aw', name:'DM-16AW', model:'DM-16AW', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'Speaker cable — PVC, AL Foil, Braided Sleeving.',
+          specs:{'PVC (OD)':'2.5 ± 2.5','Shield':'AL Foil','Sleeving':'Braided','Unit':'Meter'} },
+        { id:'dm-septuple0g', name:'Septuple Cable 0G', model:'DM-0G', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'Power cable 0 Gauge — 7 group multistrand copper, triple twist.',
+          specs:{'Conductor':'7 group multistrand copper','Jacket':'Double PVC + Aluminium','Construction':'Triple twist','Unit':'Meter'} },
+        { id:'dm-septuple4g', name:'Septuple Cable 4G', model:'DM-4G', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'Power cable 4 Gauge — 7 group multistrand copper, triple twist.',
+          specs:{'Conductor':'7 group multistrand copper','Jacket':'Double PVC + Aluminium','Construction':'Triple twist','Unit':'Meter'} },
+        { id:'dm-septuple8g', name:'Septuple Cable 8G', model:'DM-8G', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'Power cable 8 Gauge — 7 group multistrand copper, triple twist.',
+          specs:{'Conductor':'7 group multistrand copper','Jacket':'Double PVC + Aluminium','Construction':'Triple twist','Unit':'Meter'} },
+      ]},
+      { name: 'Sound Deadening', products: [
+        { id:'dm-deadening', name:'Sound Deadening', model:'DM Sound Deadening', category:'Accessories', emoji:'🧱', hasVideo:false,
+          desc:'Peredam Diosdela Musica — Aluminum Foil + White Rubber Butyl.',
+          specs:{'Material':'Aluminum Foil + White Rubber Butyl','Weight':'2.0 mm','Dimension':'100 × 60 cm','Unit':'Lembar'} },
+      ]},
+    ]
+  },
+  {
+    id: 'og', name: 'OG One Sound', tagline: 'Premium Quality — Installed Cables & Combo',
+    color: '#3a86c8', bg: 'linear-gradient(135deg,#04101c 0%,#0c2f4e 100%)', text: '#fff', abbr: 'OG',
+    desc: 'Kabel RCA premium dengan tembaga anaerobic kemurnian tinggi dan multi-shield, tersedia dalam empat seri dari entry hingga flagship.',
+    lines: [
+      { name: 'RCA Cable', products: [
+        { id:'og-reddragon', name:'Red Dragon Series', model:'OG Red Dragon', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'RCA Cable flagship — Anaerobic Copper 4N, 6 shield, thick gold plating RCA plug.',
+          specs:{'Conductor':'Anaerobic Copper 4N','Pair':'Twisted Pair','Shield':'6 Shield (SR-PVC + Fiber + Al-Mylar + Tin-Plated Copper + PVC)','Plug':'Thick Gold Plating RCA','Unit':'1M / 2M / 3M / 5M Pair'} },
+        { id:'og-reference', name:'Reference Series', model:'OG Reference', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'RCA Cable — Anaerobic Copper 3N, 5 shield, twisted pair.',
+          specs:{'Conductor':'Anaerobic Copper 3N','Pair':'Twisted Pair','Shield':'5 Shield (SR-PVC + Al-Mylar + Tin-Plated Copper + PVC)','Unit':'1M / 2M / 3M / 5M Pair'} },
+        { id:'og-azure', name:'Azure Series', model:'OG Azure', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'RCA Cable — Anaerobic Copper 99.9% (7×2×0.10 TC), 4 shield.',
+          specs:{'Conductor':'Anaerobic Copper 99.9% (7×2×0.10 TC)','Shield':'4 Shield (SR-PVC + Al-Mylar + Tin-Plated Copper + PVC)','Unit':'1M / 2M / 3M / 5M Pair'} },
+        { id:'og-streamline', name:'Stream Line Series', model:'OG Stream Line', category:'Cable', emoji:'🔗', hasVideo:false,
+          desc:'RCA Cable entry — Anaerobic Copper 99.99%, 4 shield.',
+          specs:{'Conductor':'Anaerobic Copper 99.99%','Shield':'4 Shield (LD-PE + Polyvinyl + PVC)','Unit':'1M / 2M / 3M / 5M Pair'} },
+      ]},
+    ]
+  }
+];
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let currentBrandId = null;
+let currentProductId = null;
+let activeFilter = 'Semua';
+let catalogBrand = 'all';
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+/* ── Data helpers (brands have `lines`, each with `products`) ── */
+function brandProducts(b) {
+  return b.lines.flatMap(l => l.products.map(p => Object.assign({}, p, { line: l.name })));
+}
+function brandCategories(b) {
+  return [...new Set(brandProducts(b).map(p => p.category))];
+}
+function findProduct(brandId, productId) {
+  const brand = BRANDS.find(b => b.id === brandId);
+  if (!brand) return {};
+  for (const l of brand.lines) {
+    const product = l.products.find(p => p.id === productId);
+    if (product) return { brand, line: l.name, product };
+  }
+  return { brand };
+}
+
+function init() {
+  // Stats
+  const totalProducts = BRANDS.reduce((s,b) => s + brandProducts(b).length, 0);
+  document.getElementById('stat-brands').textContent = BRANDS.length;
+  document.getElementById('stat-products').textContent = totalProducts;
+  document.getElementById('stat-lines').textContent = BRANDS.reduce((s,b)=>s+b.lines.length,0);
+
+  // Brand nav in sidebar
+  const navList = document.getElementById('brand-nav-list');
+  navList.innerHTML = BRANDS.map(b => `
+    <button class="brand-nav-item" id="nav-brand-${b.id}" onclick="showBrand('${b.id}')">
+      <div class="brand-logo-mini" style="background:${b.color}20;color:${b.color}">${b.abbr}</div>
+      ${b.name}
+    </button>
+  `).join('');
+
+  // Brand logos
+  document.getElementById('logo-landing').src = LOGO_WHITE;
+  updateTopbarLogo();
+
+  // Landing marquee + visualizer
+  initMarquee();
+  initViz();
+
+  // Dashboard brand cards
+  const grid = document.getElementById('dashboard-brands');
+  grid.innerHTML = BRANDS.map(b => `
+    <div class="brand-card" onclick="showBrand('${b.id}')">
+      <div class="brand-card-header" style="background:${b.bg};color:${b.text}">
+        <span style="font-family:var(--f-display);font-size:30px;font-weight:800;letter-spacing:0.04em;text-shadow:0 2px 12px rgba(0,0,0,.4)">${b.name}</span>
+      </div>
+      <div class="brand-card-body">
+        <div class="brand-card-name">${b.name}</div>
+        <div class="brand-card-desc">${b.desc}</div>
+        <div class="brand-card-footer">
+          <div class="product-count"><strong>${brandProducts(b).length}</strong> produk</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+            ${brandCategories(b).slice(0,3).map(c => `<span class="tag" style="color:${b.color};border-color:${b.color}40">${c}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ══════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════ */
+function initMarquee() {
+  const names = BRANDS.map(b => b.name);
+  const base = [...names, ...names, ...names];
+  const full = [...base, ...base];
+  const el = document.getElementById('marquee');
+  if (el) el.innerHTML = full.map(n => `<span>${n}</span>`).join('');
+}
+
+function initViz() {
+  const canvas = document.getElementById('viz-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let w, h, dpr;
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = canvas.clientWidth; h = canvas.clientHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const barCount = 72;
+  const seeds = Array.from({length: barCount}, () => Math.random() * Math.PI * 2);
+
+  function accentColor() {
+    return '#d8b26a'; // landing is always dark — fixed champagne gold
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, w, h);
+    const bw = w / barCount;
+    const baseY = h;
+    const col = accentColor();
+    for (let i = 0; i < barCount; i++) {
+      const phase = seeds[i];
+      const n = (Math.sin(t * 0.002 + phase) * 0.5 + 0.5)
+              * (Math.sin(t * 0.0013 + phase * 1.7) * 0.5 + 0.5);
+      const amp = reduce ? (Math.sin(phase) * 0.5 + 0.5) : n;
+      const bh = 16 + amp * (h * 0.4);
+      const x = i * bw;
+      const grad = ctx.createLinearGradient(0, baseY - bh, 0, baseY);
+      grad.addColorStop(0, col);
+      grad.addColorStop(1, 'transparent');
+      ctx.globalAlpha = 0.14 + amp * 0.2;
+      ctx.fillStyle = grad;
+      ctx.fillRect(x + bw * 0.22, baseY - bh, bw * 0.56, bh);
+    }
+    ctx.globalAlpha = 1;
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  if (reduce) draw(0); else requestAnimationFrame(draw);
+}
+
+function enterPortal() {
+  const landing = document.getElementById('landing');
+  const app = document.querySelector('.app');
+  app.classList.remove('app-hidden');
+  landing.classList.add('hidden-landing');
+  setTimeout(() => { landing.hidden = true; }, 600);
+}
+
+function backToLanding() {
+  const landing = document.getElementById('landing');
+  const app = document.querySelector('.app');
+  landing.hidden = false;
+  // reflow so the fade-in transition runs
+  void landing.offsetWidth;
+  landing.classList.remove('hidden-landing');
+  app.classList.add('app-hidden');
+  // reset portal to dashboard for next entry
+  showView('dashboard');
+  window.scrollTo(0, 0);
+}
+
+/* ══════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════ */
+function showView(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + viewId)?.classList.add('active');
+
+  // Sidebar active
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.brand-nav-item').forEach(el => el.classList.remove('active'));
+  if (viewId === 'dashboard') document.getElementById('nav-dashboard')?.classList.add('active');
+  if (viewId === 'catalog') document.getElementById('nav-brands')?.classList.add('active');
+}
+
+function showBrand(brandId) {
+  currentBrandId = brandId;
+  activeFilter = 'Semua';
+  const brand = BRANDS.find(b => b.id === brandId);
+  if (!brand) return;
+
+  // Hero
+  document.getElementById('brand-hero').style.background = brand.bg;
+  document.getElementById('brand-hero-name').style.color = brand.text;
+  document.getElementById('brand-hero-tagline').style.color = brand.text;
+  document.getElementById('brand-hero-name').textContent = brand.name;
+  document.getElementById('brand-hero-tagline').textContent = brand.tagline;
+
+  // Sidebar active
+  document.querySelectorAll('.sidebar-item, .brand-nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-brand-' + brandId)?.classList.add('active');
+
+  // Filters (by category)
+  const cats = ['Semua', ...brandCategories(brand)];
+  document.getElementById('product-filters').innerHTML = cats.map(c =>
+    `<button class="filter-chip${c==='Semua'?' active':''}" onclick="filterProducts('${c}','${brandId}')">${c}</button>`
+  ).join('');
+
+  renderProducts(brand, 'Semua');
+
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-brand').classList.add('active');
+  document.querySelector('.main')?.scrollTo(0, 0);
+}
+
+function filterProducts(cat, brandId) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-chip').forEach(el => {
+    el.classList.toggle('active', el.textContent === cat);
+  });
+  const brand = BRANDS.find(b => b.id === brandId || b.id === currentBrandId);
+  if (brand) renderProducts(brand, cat);
+}
+
+function productCard(brand, p) {
+  const photo = p.photo
+    ? `<img class="product-photo" src="${p.photo}" alt="${p.name}" loading="lazy">`
+    : `<span class="product-thumb-icon">${p.emoji}</span>`;
+  return `
+    <div class="product-card" onclick="showProduct('${brand.id}','${p.id}')">
+      <div class="product-thumb" style="background:${brand.color}10">
+        ${photo}
+        <span class="product-thumb-label">${p.category}</span>
+        ${p.hasVideo ? `<span class="video-badge">▶ VIDEO</span>` : ''}
+      </div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-model">${p.model}</div>
+      </div>
+    </div>`;
+}
+
+function renderProducts(brand, filter) {
+  const grid = document.getElementById('products-grid');
+  // Render grouped by line; hide empty lines when filtered
+  let html = '';
+  brand.lines.forEach(line => {
+    const items = filter === 'Semua' ? line.products : line.products.filter(p => p.category === filter);
+    if (!items.length) return;
+    html += `<div class="line-group">
+      <div class="line-header"><span class="line-name">${line.name}</span><span class="line-count">${items.length}</span></div>
+      <div class="line-grid">${items.map(p => productCard(brand, p)).join('')}</div>
+    </div>`;
+  });
+  grid.innerHTML = html || `<div style="padding:20px;color:var(--fg-muted)">Tidak ada produk pada kategori ini.</div>`;
+}
+
+/* ══════════════════════════════════════════
+   SEMUA BRAND — Katalog lengkap + pencarian
+══════════════════════════════════════════ */
+function openCatalog() {
+  catalogBrand = 'all';
+  const chips = document.getElementById('catalog-brand-chips');
+  chips.innerHTML = [{id:'all',name:'Semua'}, ...BRANDS.map(b=>({id:b.id,name:b.name}))].map(b =>
+    `<button class="filter-chip${b.id==='all'?' active':''}" data-brand="${b.id}" onclick="setCatalogBrand('${b.id}')">${b.name}</button>`
+  ).join('');
+  const search = document.getElementById('catalog-search');
+  if (search) search.value = '';
+  renderCatalog();
+  showView('catalog');
+  document.querySelector('.main')?.scrollTo(0, 0);
+}
+
+function setCatalogBrand(id) {
+  catalogBrand = id;
+  document.querySelectorAll('#catalog-brand-chips .filter-chip').forEach(el =>
+    el.classList.toggle('active', el.dataset.brand === id));
+  renderCatalog();
+}
+
+function renderCatalog() {
+  const q = (document.getElementById('catalog-search')?.value || '').trim().toLowerCase();
+  const brands = catalogBrand === 'all' ? BRANDS : BRANDS.filter(b => b.id === catalogBrand);
+  let total = 0, html = '';
+  brands.forEach(brand => {
+    const matches = brandProducts(brand).filter(p => {
+      if (!q) return true;
+      return (p.name + ' ' + p.model + ' ' + p.category + ' ' + (p.line||'') + ' ' + (p.desc||'')).toLowerCase().includes(q);
+    });
+    if (!matches.length) return;
+    total += matches.length;
+    html += `<div class="catalog-brand-block">
+      <div class="catalog-brand-head">
+        <span class="catalog-brand-dot" style="background:${brand.color}"></span>
+        <span class="catalog-brand-name">${brand.name}</span>
+        <span class="line-count">${matches.length}</span>
+        <button class="catalog-open-brand" onclick="showBrand('${brand.id}')">Buka brand →</button>
+      </div>
+      <div class="line-grid">${matches.map(p => productCard(brand, p)).join('')}</div>
+    </div>`;
+  });
+  document.getElementById('catalog-results').innerHTML = html ||
+    `<div style="padding:30px;color:var(--fg-muted);text-align:center">Tidak ada produk yang cocok dengan pencarian.</div>`;
+  const cnt = document.getElementById('catalog-count');
+  if (cnt) cnt.textContent = `${total} produk${q ? ' ditemukan untuk "' + q + '"' : ''}`;
+}
+
+function showProduct(brandId, productId) {
+  currentProductId = productId;
+  currentBrandId = brandId;
+  const { brand, line, product } = findProduct(brandId, productId);
+  if (!brand || !product) return;
+
+  document.getElementById('product-back-label').textContent = brand.name;
+  document.getElementById('panel-brand').textContent = brand.name + (line ? ' · ' + line : '');
+  document.getElementById('panel-name').textContent = product.name;
+  document.getElementById('panel-model').textContent = product.model;
+
+  // Main media
+  const mediaMain = document.getElementById('media-main');
+  if (product.photo) {
+    mediaMain.innerHTML = `<img src="${product.photo}" alt="${product.name}" style="width:100%;height:100%;object-fit:contain">
+      <div class="media-main-label">📷 Foto Produk</div>`;
+    mediaMain.style.background = '#f4f4f5';
+  } else {
+    mediaMain.innerHTML = `<span>${product.emoji}</span><div class="media-main-label">📷 Foto Produk</div>`;
+    mediaMain.style.background = `${brand.color}10`;
+  }
+
+  // Thumbnails
+  const thumbData = [
+    {label:'Foto 1', type:'photo'},
+    ...(product.hasVideo ? [{label:'Video', type:'video'}] : []),
+    {label:'Spek', type:'doc'},
+  ];
+  const ph = product.photo || '';
+  document.getElementById('media-thumbs').innerHTML = thumbData.map((t,i) => `
+    <div class="media-thumb${i===0?' active':''}" onclick="selectMedia(this,'${t.type}','${product.emoji}','${brand.color}','${t.label}','${ph}')">
+      ${t.type==='photo' && ph ? `<img src="${ph}" alt="" style="width:100%;height:100%;object-fit:cover">` : `<span>${t.type==='video'?'🎬':t.type==='doc'?'📄':product.emoji}</span>`}
+      ${t.type==='video'?`<div class="play-icon"><svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg></div>`:''}
+    </div>
+  `).join('');
+
+  // Specs
+  document.getElementById('specs-list').innerHTML = Object.entries(product.specs).map(([k,v]) =>
+    `<div class="spec-row"><span class="spec-key">${k}</span><span class="spec-val">${v}</span></div>`
+  ).join('');
+
+  // Tags (category + line)
+  const tags = [product.category, line].filter(Boolean);
+  document.getElementById('panel-tags').innerHTML = tags.map(t =>
+    `<span class="tag" style="color:${brand.color};border-color:${brand.color}40">${t}</span>`
+  ).join('');
+
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-product').classList.add('active');
+  document.querySelector('.main')?.scrollTo(0, 0);
+}
+
+function selectMedia(el, type, emoji, color, label, photo) {
+  document.querySelectorAll('.media-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const main = document.getElementById('media-main');
+  const labelMap = {photo:'📷 Foto Produk', video:'▶ Video Demo', doc:'📄 Spec Sheet'};
+  if (type === 'photo' && photo) {
+    main.style.background = '#f4f4f5';
+    main.innerHTML = `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:contain">
+      <div class="media-main-label">${labelMap[type]}</div>`;
+    return;
+  }
+  const bgMap = {photo: `${color}10`, video:'#0a0a0a', doc:'var(--surface2)'};
+  main.style.background = bgMap[type];
+  main.innerHTML = `
+    <span>${type==='video'?'▶':type==='doc'?'📄':emoji}</span>
+    <div class="media-main-label">${labelMap[type]}</div>
+    ${type==='video'?`<div style="position:absolute;bottom:18px;left:0;right:0;text-align:center;color:rgba(255,255,255,.6);font-size:12px">Video demo produk</div>`:''}
+  `;
+}
+
+function backToBrand() {
+  if (currentBrandId) showBrand(currentBrandId);
+}
+
+/* ══════════════════════════════════════════
+   SPEC SHEET / PDF
+══════════════════════════════════════════ */
+function currentProduct() {
+  return findProduct(currentBrandId, currentProductId);
+}
+
+// Darken/lighten a hex color by amt (-255..255)
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+// Build a placeholder product photo as a JPEG data URL (real photos replace this)
+function makePhotoPlaceholder(brand, product, idx, wmm, hmm) {
+  const scale = 4;
+  const w = Math.round(wmm * scale), h = Math.round(hmm * scale);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, brand.color);
+  grad.addColorStop(1, shade(brand.color, -36));
+  g.fillStyle = grad; g.fillRect(0, 0, w, h);
+  g.textAlign = 'center';
+  g.fillStyle = 'rgba(255,255,255,.92)';
+  g.font = 'bold ' + Math.round(h * 0.13) + 'px Arial, sans-serif';
+  g.fillText(product.name, w / 2, h * 0.48);
+  g.fillStyle = 'rgba(255,255,255,.65)';
+  g.font = Math.round(h * 0.08) + 'px Arial, sans-serif';
+  g.fillText('FOTO ' + idx, w / 2, h * 0.72);
+  return c.toDataURL('image/jpeg', 0.9);
+}
+
+function openSpecSheet() {
+  const { brand, product } = currentProduct();
+  if (!brand || !product) return;
+  const today = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+  const { line } = currentProduct();
+  const specsHtml = Object.entries(product.specs).map(([k,v]) =>
+    `<div class="sheet-spec"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  const tags = [product.category, line].filter(Boolean);
+  const tagsHtml = tags.map(t => `<span class="sheet-tag">${t}</span>`).join('');
+  const photosHtml = product.photo
+    ? `<div class="sheet-photo-main"><img src="${product.photo}" alt="${product.name}"></div>`
+    : `<div class="sheet-photos">${[1,2,3].map(i => `<div class="sheet-photo" style="background:linear-gradient(135deg,${brand.color},${shade(brand.color,-32)})"><span>${product.emoji}</span><em>Foto ${i}</em></div>`).join('')}</div>`;
+
+  document.getElementById('sheet-content').innerHTML = `
+    <div class="sheet-accent"></div>
+    <div class="sheet-body">
+      <div class="sheet-top">
+        <img src="${LOGO_NAVY}" alt="Concerto Audio Indonesia" style="height:30px;width:auto">
+        <div class="sheet-doc-type">Spec Sheet</div>
+      </div>
+      <div class="sheet-brand">${brand.name}${line ? ' · ' + line : ''}</div>
+      <div class="sheet-name">${product.name}</div>
+      <div class="sheet-model">${product.model} &nbsp;·&nbsp; ${product.category}</div>
+      <div class="sheet-section-title">Foto Produk</div>
+      ${photosHtml}
+      ${product.desc ? `<div class="sheet-desc">${product.desc}</div>` : ''}
+      <div class="sheet-section-title">Spesifikasi Teknis</div>
+      ${specsHtml}
+      <div class="sheet-tags" style="margin-top:18px">${tagsHtml}</div>
+      <div class="sheet-footer">
+        <span>Distributor Resmi — Concerto Audio Indonesia</span>
+        <span>${today}</span>
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="sheet-btn ghost" onclick="closeSpecSheet()">Tutup</button>
+      <button class="sheet-btn primary" onclick="downloadPdf()">Unduh PDF</button>
+    </div>
+    <div class="sheet-note">Pratinjau di atas adalah isi file PDF, lengkap dengan foto. Slot foto terisi otomatis saat foto asli dimasukkan; unduhan berjalan penuh saat sistem di-deploy ke website.</div>
+  `;
+  document.getElementById('spec-modal').classList.add('open');
+}
+
+function closeSpecSheet() {
+  document.getElementById('spec-modal').classList.remove('open');
+}
+
+function downloadPdf() {
+  const { brand, product } = currentProduct();
+  if (!brand || !product) return;
+  if (!window.jspdf) return;
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+
+    // accent bar
+    doc.setFillColor(200,147,58); doc.rect(0, 0, 210, 5, 'F');
+
+    // header — brand logo + doc type
+    try { doc.addImage(LOGO_NAVY, 'PNG', 15, 11, 34, 34 * 59 / 174); } catch (err) {}
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(183,135,58);
+    doc.text('SPEC SHEET', 195, 20, { align:'right' });
+
+    // title block
+    doc.setFontSize(10); doc.setTextColor(183,135,58);
+    doc.text(brand.name.toUpperCase(), 15, 38);
+    doc.setFont('helvetica','bold'); doc.setFontSize(24); doc.setTextColor(20,20,20);
+    doc.text(product.name, 15, 48);
+    doc.setFont('courier','normal'); doc.setFontSize(11); doc.setTextColor(130,130,130);
+    doc.text(product.model + '   -   ' + product.category, 15, 55);
+
+    // product photos
+    let y = 66;
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(150,150,150);
+    doc.text('FOTO PRODUK', 15, y);
+    y += 5;
+    const imgW = 56, imgH = 42, gap = 6, startX = 15;
+    for (let i = 0; i < 3; i++) {
+      const data = makePhotoPlaceholder(brand, product, i + 1, imgW, imgH);
+      doc.addImage(data, 'JPEG', startX + i * (imgW + gap), y, imgW, imgH);
+    }
+    y += imgH + 14;
+
+    // description
+    if (product.desc) {
+      doc.setFont('helvetica','italic'); doc.setFontSize(9.5); doc.setTextColor(90,90,90);
+      const dl = doc.splitTextToSize(product.desc, 180);
+      doc.text(dl, 15, y); y += dl.length * 5 + 6;
+    }
+
+    // specs
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(150,150,150);
+    doc.text('SPESIFIKASI TEKNIS', 15, y);
+    y += 4; doc.setDrawColor(225,225,225); doc.line(15, y, 195, y); y += 8;
+    Object.entries(product.specs).forEach(([k,v]) => {
+      if (y > 275) { doc.addPage(); y = 25; }
+      doc.setFont('helvetica','normal'); doc.setFontSize(10.5); doc.setTextColor(110,110,110);
+      doc.text(String(k), 15, y);
+      doc.setFont('helvetica','bold'); doc.setTextColor(25,25,25);
+      doc.text(doc.splitTextToSize(String(v), 95), 195, y, { align:'right' });
+      doc.setDrawColor(240,240,240); doc.line(15, y + 3, 195, y + 3);
+      y += 8.5;
+    });
+
+    // tag line
+    y += 4;
+    const line = currentProduct().line;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(120,120,120);
+    doc.text([product.category, line].filter(Boolean).join('   •   '), 15, y);
+
+    // footer
+    doc.setDrawColor(225,225,225); doc.line(15, 282, 195, 282);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150,150,150);
+    doc.text('Distributor Resmi — Concerto Audio Indonesia', 15, 288);
+    const today = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    doc.text(today, 195, 288, { align:'right' });
+
+    doc.save(product.model.replace(/[^a-z0-9]/gi, '_') + '_Concerto.pdf');
+  } catch (e) {
+    /* download blocked in sandbox preview — modal already shows the content */
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeSpecSheet();
+});
+
+/* ══════════════════════════════════════════
+   THEME TOGGLE (dark ⇄ light), persisted
+══════════════════════════════════════════ */
+const SUN_ICON = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+const MOON_ICON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+function isLightTheme() {
+  const t = document.documentElement.getAttribute('data-theme');
+  if (t === 'light') return true;
+  if (t === 'dark') return false;
+  return window.matchMedia('(prefers-color-scheme: light)').matches;
+}
+function updateTopbarLogo() {
+  const el = document.getElementById('logo-top-dark');
+  if (el) el.src = isLightTheme() ? LOGO_NAVY : LOGO_WHITE;
+}
+function applyThemeIcon() {
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.innerHTML = isLightTheme() ? MOON_ICON : SUN_ICON;
+  updateTopbarLogo();
+}
+function toggleTheme() {
+  const next = isLightTheme() ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('cai-theme', next); } catch(e){}
+  applyThemeIcon();
+}
+try {
+  const saved = localStorage.getItem('cai-theme');
+  if (saved === 'light' || saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
+} catch(e){}
+applyThemeIcon();
+
+init();
+</script>
+</body>
+</html>
