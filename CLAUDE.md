@@ -80,6 +80,7 @@ BRANDS = [
 
 ## Catatan
 - Foto produk sebagian besar masih **placeholder** (ikon per kategori) — tinggal isi field `photo` saat foto asli siap. Sudah berfoto: **PRO-W6C NEO** (`ac-prow6c`). Sudah ber-video: PRO-W6C NEO, PRO-M3C, PRO-T28 — ketiganya memakai satu video bersama `assets/ac-proline.mp4`, masing-masing mulai di segmen produknya lewat suffix `#t=<detik>` pada field `video` (W6C `#t=14`, M3C `#t=26`, T28 `#t=36`).
+- Angka spesifikasi yang tampil di video Pro Line (mis. PRO-M3C freq. response, PRO-T28 SPL/power/Fs) berbeda dengan data portal. **Data di portal (`BRANDS`) yang benar** — sudah dikonfirmasi pemilik; jangan ubah data mengikuti video.
 - PDF memakai font bawaan jsPDF yang tidak punya karakter `Ω` → otomatis ditulis `Ohm` di PDF.
 - Foto hanya bisa di-embed ke PDF saat portal dibuka via server (http/https); jika dibuka langsung sebagai file (`file://`), PDF memakai placeholder.
 - Semua data berasal dari katalog resmi CAI 2026. Jaga agar tetap tanpa harga.
