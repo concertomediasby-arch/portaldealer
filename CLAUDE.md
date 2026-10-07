@@ -34,6 +34,8 @@ BRANDS = [
         { id, name, model, category, emoji, hasVideo, desc,
           specs: { "Key": "Value", ... },
           photo?            // opsional: URL/path foto asli; jika kosong → pakai placeholder emoji
+          video?            // opsional: path video MP4 (H.264); diputar di thumbnail "Video" (butuh hasVideo:true)
+          videoPoster?      // opsional: gambar sampul video untuk thumbnail & sebelum diputar
         },
         ...
       ]}
@@ -52,6 +54,9 @@ BRANDS = [
 - **Tambah line:** tambahkan objek `{ name, products: [...] }` ke `lines` sebuah brand.
 - **Tambah brand:** tambahkan objek brand baru ke `BRANDS` (wajib `id` unik, `lines`).
 - **Tambah foto asli:** isi field `photo` pada produk dengan URL/path gambar (mis. `"assets/og-pc65.jpg"`). Foto otomatis muncul di kartu, halaman detail, dan di-embed ke PDF. Jika `photo` kosong, dipakai ikon emoji placeholder.
+- **Tambah video:** simpan MP4 di `assets/`, isi `video` (dan `videoPoster`), set `hasVideo:true`. Kompres dulu agar ringan, mis.:
+  `ffmpeg -i input.mp4 -vf scale=-2:720 -c:v libx264 -crf 24 -c:a aac -b:a 128k -movflags +faststart assets/<id>.mp4`
+- **File media** disimpan di folder `assets/` dengan nama `<id-produk>.<ext>` (mis. `assets/ac-prow6c.jpg`).
 - **JANGAN masukkan harga** — portal ini sengaja hanya referensi produk.
 
 ## Struktur UI & fungsi kunci (dalam `index.html` `<script>`)
@@ -74,6 +79,8 @@ BRANDS = [
 - **Landing page selalu gelap** di kedua tema (token di-override di selector `#landing`).
 
 ## Catatan
-- Foto produk saat ini **placeholder** (ikon per kategori) atas permintaan pemilik — tinggal isi field `photo` saat foto asli siap.
+- Foto produk sebagian besar masih **placeholder** (ikon per kategori) — tinggal isi field `photo` saat foto asli siap. Sudah berfoto + video: **PRO-W6C NEO** (`ac-prow6c`).
+- PDF memakai font bawaan jsPDF yang tidak punya karakter `Ω` → otomatis ditulis `Ohm` di PDF.
+- Foto hanya bisa di-embed ke PDF saat portal dibuka via server (http/https); jika dibuka langsung sebagai file (`file://`), PDF memakai placeholder.
 - Semua data berasal dari katalog resmi CAI 2026. Jaga agar tetap tanpa harga.
 - Tidak ada rahasia/kredensial di repo ini — aman dipublikasikan.

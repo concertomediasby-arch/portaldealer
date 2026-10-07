@@ -22,10 +22,10 @@ python3 -m http.server 8000   # http://localhost:8000
 ## Publikasi ke GitHub Pages (gratis)
 
 1. Buat repository baru di GitHub (mis. `concerto-dealer-portal`).
-2. Unggah **`index.html`** (dan file ini) ke branch `main`:
+2. Unggah **`index.html`**, folder **`assets/`** (dan file ini) ke branch `main`:
    ```bash
    git init
-   git add index.html README.md CLAUDE.md
+   git add index.html assets README.md CLAUDE.md
    git commit -m "Concerto Dealer Portal"
    git branch -M main
    git remote add origin https://github.com/<username>/concerto-dealer-portal.git
@@ -43,6 +43,7 @@ python3 -m http.server 8000   # http://localhost:8000
 ```
 concerto-dealer-portal/
 ├── index.html     # seluruh portal (HTML + CSS + JS + data katalog)
+├── assets/        # foto & video produk (mis. ac-prow6c.jpg, ac-prow6c.mp4)
 ├── CLAUDE.md      # panduan proyek untuk Claude Code
 └── README.md      # dokumen ini
 ```

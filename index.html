@@ -818,7 +818,7 @@ body {
 }
 .sheet-photo-main {
   width: 100%; aspect-ratio: 16/10; border-radius: 8px; overflow: hidden;
-  background: #f4f4f5; margin-bottom: 20px;
+  background: #fff; margin-bottom: 20px;
   display: flex; align-items: center; justify-content: center;
 }
 .sheet-photo-main img { width: 100%; height: 100%; object-fit: contain; }
@@ -1226,6 +1226,7 @@ const BRANDS = [
     lines: [
       { name: 'Pro Line', products: [
         { id:'ac-prow6c', name:'PRO-W6C NEO', model:'PRO-W6C NEO', category:'Speaker', emoji:'🔊', hasVideo:true,
+          photo:'assets/ac-prow6c.jpg', video:'assets/ac-prow6c.mp4', videoPoster:'assets/ac-prow6c-poster.jpg',
           desc:'Neo Magnet Driver, Titan 37mm Voice Coil Former CCA wire, Crystal Aluminum–Paper Compound Cone dengan W-Surround.',
           specs:{'Impedansi':'4 Ω','Handling Power':'180 W','SPL':'87 dB','Fs':'46 Hz','Freq. Response':'33 Hz – 5 kHz','Xmax':'±7 mm','Outer Diameter':'166 mm','Mounting Diameter':'143 mm','Mounting Depth':'83 mm','Weight':'1192 g'} },
         { id:'ac-prom3c', name:'PRO-M3C', model:'PRO-M3C', category:'Midrange', emoji:'🔉', hasVideo:false,
@@ -1806,8 +1807,14 @@ function backToLanding() {
 /* ══════════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════════ */
-function showView(viewId) {
+// Hide all views; stop any playing product video so audio doesn't continue off-screen
+function hideViews() {
+  document.querySelectorAll('#media-main video').forEach(v => v.pause());
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+}
+
+function showView(viewId) {
+  hideViews();
   document.getElementById('view-' + viewId)?.classList.add('active');
 
   // Sidebar active
@@ -1842,7 +1849,7 @@ function showBrand(brandId) {
 
   renderProducts(brand, 'Semua');
 
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  hideViews();
   document.getElementById('view-brand').classList.add('active');
   document.querySelector('.main')?.scrollTo(0, 0);
 }
@@ -1862,7 +1869,7 @@ function productCard(brand, p) {
     : `<span class="product-thumb-icon">${p.emoji}</span>`;
   return `
     <div class="product-card" onclick="showProduct('${brand.id}','${p.id}')">
-      <div class="product-thumb" style="background:${brand.color}10">
+      <div class="product-thumb" style="background:${p.photo ? '#fff' : brand.color + '10'}">
         ${photo}
         <span class="product-thumb-label">${p.category}</span>
         ${p.hasVideo ? `<span class="video-badge">▶ VIDEO</span>` : ''}
@@ -1955,7 +1962,7 @@ function showProduct(brandId, productId) {
   if (product.photo) {
     mediaMain.innerHTML = `<img src="${product.photo}" alt="${product.name}" style="width:100%;height:100%;object-fit:contain">
       <div class="media-main-label">📷 Foto Produk</div>`;
-    mediaMain.style.background = '#f4f4f5';
+    mediaMain.style.background = '#fff';
   } else {
     mediaMain.innerHTML = `<span>${product.emoji}</span><div class="media-main-label">📷 Foto Produk</div>`;
     mediaMain.style.background = `${brand.color}10`;
@@ -1970,7 +1977,9 @@ function showProduct(brandId, productId) {
   const ph = product.photo || '';
   document.getElementById('media-thumbs').innerHTML = thumbData.map((t,i) => `
     <div class="media-thumb${i===0?' active':''}" onclick="selectMedia(this,'${t.type}','${product.emoji}','${brand.color}','${t.label}','${ph}')">
-      ${t.type==='photo' && ph ? `<img src="${ph}" alt="" style="width:100%;height:100%;object-fit:cover">` : `<span>${t.type==='video'?'🎬':t.type==='doc'?'📄':product.emoji}</span>`}
+      ${t.type==='photo' && ph ? `<img src="${ph}" alt="" style="width:100%;height:100%;object-fit:cover">`
+        : t.type==='video' && product.videoPoster ? `<img src="${product.videoPoster}" alt="" style="width:100%;height:100%;object-fit:cover">`
+        : `<span>${t.type==='video'?'🎬':t.type==='doc'?'📄':product.emoji}</span>`}
       ${t.type==='video'?`<div class="play-icon"><svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg></div>`:''}
     </div>
   `).join('');
@@ -1986,7 +1995,7 @@ function showProduct(brandId, productId) {
     `<span class="tag" style="color:${brand.color};border-color:${brand.color}40">${t}</span>`
   ).join('');
 
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  hideViews();
   document.getElementById('view-product').classList.add('active');
   document.querySelector('.main')?.scrollTo(0, 0);
 }
@@ -1997,9 +2006,17 @@ function selectMedia(el, type, emoji, color, label, photo) {
   const main = document.getElementById('media-main');
   const labelMap = {photo:'📷 Foto Produk', video:'▶ Video Demo', doc:'📄 Spec Sheet'};
   if (type === 'photo' && photo) {
-    main.style.background = '#f4f4f5';
+    main.style.background = '#fff';
     main.innerHTML = `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:contain">
       <div class="media-main-label">${labelMap[type]}</div>`;
+    return;
+  }
+  const video = type === 'video' && currentProduct().product?.video;
+  if (video) {
+    const poster = currentProduct().product.videoPoster;
+    main.style.background = '#000';
+    main.innerHTML = `<video src="${video}"${poster ? ` poster="${poster}"` : ''} controls playsinline preload="metadata" style="width:100%;height:100%;object-fit:contain"></video>`;
+    main.querySelector('video').play().catch(() => {});
     return;
   }
   const bgMap = {photo: `${color}10`, video:'#0a0a0a', doc:'var(--surface2)'};
@@ -2051,6 +2068,22 @@ function makePhotoPlaceholder(brand, product, idx, wmm, hmm) {
   g.font = Math.round(h * 0.08) + 'px Arial, sans-serif';
   g.fillText('FOTO ' + idx, w / 2, h * 0.72);
   return c.toDataURL('image/jpeg', 0.9);
+}
+
+// Real product photo as JPEG data URL, read from the already-loaded spec sheet preview.
+// Returns null when unavailable (no photo, not loaded yet, or canvas blocked under file://).
+function productPhotoData(product) {
+  if (!product.photo) return null;
+  const img = document.querySelector('.sheet-photo-main img');
+  if (!img || !img.complete || !img.naturalWidth) return null;
+  try {
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(img, 0, 0);
+    return { data: c.toDataURL('image/jpeg', 0.9), w: c.width, h: c.height };
+  } catch (e) { return null; }
 }
 
 function openSpecSheet() {
@@ -2130,11 +2163,20 @@ function downloadPdf() {
     doc.text('FOTO PRODUK', 15, y);
     y += 5;
     const imgW = 56, imgH = 42, gap = 6, startX = 15;
-    for (let i = 0; i < 3; i++) {
-      const data = makePhotoPlaceholder(brand, product, i + 1, imgW, imgH);
-      doc.addImage(data, 'JPEG', startX + i * (imgW + gap), y, imgW, imgH);
+    const real = productPhotoData(product);
+    if (real) {
+      // real photo: centered "contain" inside a 180×64mm area
+      const boxH = 64, s = Math.min(180 / real.w, boxH / real.h);
+      const w = real.w * s, h = real.h * s;
+      doc.addImage(real.data, 'JPEG', 15 + (180 - w) / 2, y + (boxH - h) / 2, w, h);
+      y += boxH + 14;
+    } else {
+      for (let i = 0; i < 3; i++) {
+        const data = makePhotoPlaceholder(brand, product, i + 1, imgW, imgH);
+        doc.addImage(data, 'JPEG', startX + i * (imgW + gap), y, imgW, imgH);
+      }
+      y += imgH + 14;
     }
-    y += imgH + 14;
 
     // description
     if (product.desc) {
@@ -2152,7 +2194,7 @@ function downloadPdf() {
       doc.setFont('helvetica','normal'); doc.setFontSize(10.5); doc.setTextColor(110,110,110);
       doc.text(String(k), 15, y);
       doc.setFont('helvetica','bold'); doc.setTextColor(25,25,25);
-      doc.text(doc.splitTextToSize(String(v), 95), 195, y, { align:'right' });
+      doc.text(doc.splitTextToSize(String(v).replace(/Ω/g, 'Ohm'), 95), 195, y, { align:'right' });
       doc.setDrawColor(240,240,240); doc.line(15, y + 3, 195, y + 3);
       y += 8.5;
     });
