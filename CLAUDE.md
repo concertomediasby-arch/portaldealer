@@ -29,6 +29,7 @@ Data katalog ada di array **`BRANDS`** di dalam `<script>` (cari `const BRANDS =
 BRANDS = [
   {
     id, name, tagline, color, bg, text, abbr, desc,
+    logo?,   // opsional: path logo brand (versi untuk latar gelap); jika kosong → nama brand sebagai teks
     lines: [
       { name: "<nama line/seri>", products: [
         { id, name, model, category, emoji, hasVideo, desc,
@@ -56,6 +57,7 @@ BRANDS = [
 - **Tambah foto asli:** isi field `photo` pada produk dengan URL/path gambar (mis. `"assets/og-pc65.jpg"`). Foto otomatis muncul di kartu, halaman detail, dan di-embed ke PDF. Jika `photo` kosong, dipakai ikon emoji placeholder.
 - **Tambah video:** simpan MP4 di `assets/`, isi `video` (dan `videoPoster`), set `hasVideo:true`. Kompres dulu agar ringan, mis.:
   `ffmpeg -i input.mp4 -vf scale=-2:720 -c:v libx264 -crf 24 -c:a aac -b:a 128k -movflags +faststart assets/<id>.mp4`
+- **Logo brand:** simpan di `assets/brands/<id-brand>.webp` (latar transparan, ruang kosong dipangkas, versi **terang untuk latar gelap** — kartu brand & landing selalu gelap), isi field `logo`. Logo dipakai di strip brand landing, kartu dashboard, dan header halaman brand; ukurannya diseimbangkan otomatis oleh `fitLogo()`.
 - **File media** disimpan di folder `assets/` dengan nama `<id-produk>.<ext>` (mis. `assets/ac-prow6c.jpg`).
 - **JANGAN masukkan harga** — portal ini sengaja hanya referensi produk.
 
@@ -81,6 +83,7 @@ BRANDS = [
 ## Catatan
 - Foto produk sebagian besar masih **placeholder** (ikon per kategori) — tinggal isi field `photo` saat foto asli siap. Sudah berfoto: **PRO-W6C NEO** (`ac-prow6c`). Sudah ber-video: PRO-W6C NEO, PRO-M3C, PRO-T28 — ketiganya memakai satu video bersama `assets/ac-proline.mp4`, masing-masing mulai di segmen produknya lewat suffix `#t=<detik>` pada field `video` (W6C `#t=14`, M3C `#t=26`, T28 `#t=36`).
 - Angka spesifikasi yang tampil di video Pro Line (mis. PRO-M3C freq. response, PRO-T28 SPL/power/Fs) berbeda dengan data portal. **Data di portal (`BRANDS`) yang benar** — sudah dikonfirmasi pemilik; jangan ubah data mengikuti video.
+- Logo brand: Audiocircle, Master Stroke, STEG, Zelos, Diosdela Musica sudah ada. Diosdela (aslinya hitam) dan huruf STEG (aslinya biru) dibuat **putih** agar terbaca di latar gelap. **OG One Sound belum punya logo** → masih teks.
 - PDF memakai font bawaan jsPDF yang tidak punya karakter `Ω` → otomatis ditulis `Ohm` di PDF.
 - Foto hanya bisa di-embed ke PDF saat portal dibuka via server (http/https); jika dibuka langsung sebagai file (`file://`), PDF memakai placeholder.
 - Semua data berasal dari katalog resmi CAI 2026. Jaga agar tetap tanpa harga.

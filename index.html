@@ -996,7 +996,12 @@ body {
   content: ''; width: 80px; height: 1px; background: rgba(216,178,106,0.55);
 }
 .marquee { gap: 104px; }
-.marquee span { font-family: var(--f-display); font-weight: 700; font-size: 30px; text-transform: uppercase; letter-spacing: .03em; color: #c9ccd2; opacity: .75; }
+.marquee span { font-family: var(--f-display); font-weight: 700; font-size: 26px; text-transform: uppercase; letter-spacing: .03em; color: #c9ccd2; opacity: .75; }
+.marquee { align-items: center; }
+.marquee .brand-logo { opacity: .85; }
+.brand-logo { display: block; width: auto; max-width: 80%; object-fit: contain; }
+.marquee .brand-logo { max-width: none; }
+.brand-hero-name .brand-logo { max-width: 70vw; margin-bottom: 8px; }
 
 @media (max-width: 900px) {
   .landing-links { display: none; }
@@ -1010,6 +1015,7 @@ body {
   .eyebrow { font-size: 12px; }
   .marquee { gap: 56px; }
   .marquee span { font-size: 22px; }
+  .marquee .brand-logo { transform: scale(.8); }
 }
 
 /* ── Semua Brand / Katalog ── */
@@ -1255,7 +1261,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 const BRANDS = [
   {
     id: 'audiocircle', name: 'Audiocircle', tagline: 'German Car Audio — Experience. Tradition. Innovation.',
-    color: '#c0392b', bg: 'linear-gradient(135deg,#140403 0%,#3a0d0a 100%)', text: '#fff', abbr: 'AC',
+    color: '#c0392b', bg: 'linear-gradient(135deg,#140403 0%,#3a0d0a 100%)', text: '#fff', abbr: 'AC', logo: 'assets/brands/audiocircle.webp',
     desc: 'Audio mobil asal Jerman dengan rentang lengkap dari Pro Line audiophile hingga seri plug & play untuk BMW dan Mercedes-Benz.',
     lines: [
       { name: 'Pro Line', products: [
@@ -1406,7 +1412,7 @@ const BRANDS = [
   },
   {
     id: 'masterstroke', name: 'Master Stroke', tagline: 'Powerful. Dynamic. Musical. — Hand Crafted in Italy',
-    color: '#6b5bd0', bg: 'linear-gradient(135deg,#0c0a1e 0%,#241d52 100%)', text: '#fff', abbr: 'MS',
+    color: '#6b5bd0', bg: 'linear-gradient(135deg,#0c0a1e 0%,#241d52 100%)', text: '#fff', abbr: 'MS', logo: 'assets/brands/masterstroke.webp',
     desc: 'Seri audiophile hand-crafted dari Italia (GT Trading) dengan membran carbon fiber dan magnet neodymium untuk Sound Quality kelas tinggi.',
     lines: [
       { name: 'SQ Series', products: [
@@ -1432,7 +1438,7 @@ const BRANDS = [
   },
   {
     id: 'steg', name: 'STEG', tagline: 'Made in Italy — High-End Car Audio Engineering',
-    color: '#178a4c', bg: 'linear-gradient(135deg,#02140a 0%,#063d1f 100%)', text: '#fff', abbr: 'ST',
+    color: '#178a4c', bg: 'linear-gradient(135deg,#02140a 0%,#063d1f 100%)', text: '#fff', abbr: 'ST', logo: 'assets/brands/steg.webp',
     desc: 'Brand Italia legendaris: speaker K-Series, tweeter AMT, DSP hi-res, amplifier DK Line, subwoofer, hingga peredam—engineering kelas referensi.',
     lines: [
       { name: 'K Series Speaker', products: [
@@ -1572,7 +1578,7 @@ const BRANDS = [
   },
   {
     id: 'zelos', name: 'Zelos', tagline: 'ABYSS Audiophile — Handmade Pure Sound',
-    color: '#b8860b', bg: 'linear-gradient(135deg,#17120a 0%,#3d2f12 100%)', text: '#fff', abbr: 'ZL',
+    color: '#b8860b', bg: 'linear-gradient(135deg,#17120a 0%,#3d2f12 100%)', text: '#fff', abbr: 'ZL', logo: 'assets/brands/zelos.webp',
     desc: 'Amplifier handmade audiophile (ABYSS) dengan komponen hi-end: Class A dan Class AB, dari modul Bluetooth hingga power amplifier prestise.',
     lines: [
       { name: 'Bluetooth Module', products: [
@@ -1627,7 +1633,7 @@ const BRANDS = [
   },
   {
     id: 'dios', name: 'Diosdela Musica', tagline: 'Art of Sound — Protect Your System. Enhance Your Sound.',
-    color: '#d4a017', bg: 'linear-gradient(135deg,#120f05 0%,#2e2408 100%)', text: '#fff', abbr: 'DM',
+    color: '#d4a017', bg: 'linear-gradient(135deg,#120f05 0%,#2e2408 100%)', text: '#fff', abbr: 'DM', logo: 'assets/brands/dios.webp',
     desc: 'Aksesoris dan kabel premium: fuse silver composite, kabel RCA quadruple, power cable septuple, dan peredam—perlindungan sekaligus peningkat kualitas suara.',
     lines: [
       { name: 'Fuse Series', products: [
@@ -1745,7 +1751,7 @@ function init() {
   grid.innerHTML = BRANDS.map(b => `
     <div class="brand-card" onclick="showBrand('${b.id}')">
       <div class="brand-card-header" style="background:${b.bg};color:${b.text}">
-        <span style="font-family:var(--f-display);font-size:30px;font-weight:800;letter-spacing:0.04em;text-shadow:0 2px 12px rgba(0,0,0,.4)">${b.name}</span>
+        ${b.logo ? brandMark(b, 36) : `<span style="font-family:var(--f-display);font-size:30px;font-weight:800;letter-spacing:0.04em;text-shadow:0 2px 12px rgba(0,0,0,.4)">${b.name}</span>`}
       </div>
       <div class="brand-card-body">
         <div class="brand-card-name">${b.name}</div>
@@ -1765,11 +1771,24 @@ function init() {
    LANDING PAGE
 ══════════════════════════════════════════ */
 function initMarquee() {
-  const names = BRANDS.map(b => b.name);
-  const base = [...names, ...names, ...names];
+  const items = BRANDS.map(b => brandMark(b, 46));
+  const base = [...items, ...items, ...items];
   const full = [...base, ...base];
   const el = document.getElementById('marquee');
-  if (el) el.innerHTML = full.map(n => `<span>${n}</span>`).join('');
+  if (el) el.innerHTML = full.join('');
+}
+
+// Brand logo image (falls back to the name as text when a brand has no logo).
+// `base` = height in px for a 4:1 logo; fitLogo() scales others so wide and
+// compact logos look equally heavy.
+function brandMark(b, base) {
+  return b.logo
+    ? `<img class="brand-logo" src="${b.logo}" alt="${b.name}" style="height:${base}px" onload="fitLogo(this, ${base})">`
+    : `<span>${b.name}</span>`;
+}
+function fitLogo(img, base) {
+  const aspect = img.naturalWidth / img.naturalHeight;
+  if (aspect) img.style.height = Math.round(base * Math.min(1.6, Math.sqrt(4 / aspect))) + 'px';
 }
 
 function initViz() {
@@ -1882,7 +1901,9 @@ function showBrand(brandId) {
   document.getElementById('brand-hero').style.background = brand.bg;
   document.getElementById('brand-hero-name').style.color = brand.text;
   document.getElementById('brand-hero-tagline').style.color = brand.text;
-  document.getElementById('brand-hero-name').textContent = brand.name;
+  const heroName = document.getElementById('brand-hero-name');
+  if (brand.logo) heroName.innerHTML = brandMark(brand, 46);
+  else heroName.textContent = brand.name;
   document.getElementById('brand-hero-tagline').textContent = brand.tagline;
 
   // Sidebar active

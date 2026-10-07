@@ -43,7 +43,8 @@ python3 -m http.server 8000   # http://localhost:8000
 ```
 concerto-dealer-portal/
 ├── index.html     # seluruh portal (HTML + CSS + JS + data katalog)
-├── assets/        # foto & video produk (mis. ac-prow6c.jpg, ac-prow6c.mp4)
+├── assets/        # foto & video produk (mis. ac-prow6c.jpg, ac-proline.mp4)
+│   └── brands/    # logo brand (mis. steg.webp)
 ├── CLAUDE.md      # panduan proyek untuk Claude Code
 └── README.md      # dokumen ini
 ```
