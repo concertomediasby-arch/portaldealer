@@ -620,29 +620,6 @@ body {
   text-align: center;
   padding: 20px;
 }
-.pulse-rings {
-  position: absolute;
-  top: 44%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 440px; height: 440px;
-  max-width: 90vw;
-  z-index: -1;
-  pointer-events: none;
-}
-.pulse-ring {
-  position: absolute;
-  inset: 0;
-  border: 1.5px solid var(--accent);
-  border-radius: 50%;
-  opacity: 0;
-  animation: pulse-out 4s ease-out infinite;
-}
-.pulse-ring:nth-child(2) { animation-delay: 1.3s; }
-.pulse-ring:nth-child(3) { animation-delay: 2.6s; }
-@keyframes pulse-out {
-  0%   { transform: scale(.35); opacity: .45; }
-  100% { transform: scale(1.4); opacity: 0; }
-}
 .eyebrow {
   font-size: 12px; font-weight: 600;
   letter-spacing: 0.3em; text-transform: uppercase;
@@ -739,14 +716,13 @@ body {
 @keyframes scroll-x { to { transform: translateX(-50%); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .pulse-ring, .marquee { animation: none; }
+  .marquee, .sparkle { animation: none; }
   .eyebrow, .landing-title .line > span, .landing-sub, .enter-btn, .landing-brands {
     animation: none; opacity: 1; transform: none;
   }
 }
 @media (max-width: 720px) {
   .landing-nav { padding: 16px; }
-  .pulse-rings { width: 300px; height: 300px; }
 }
 
 /* ── Download button in product panel ── */
@@ -960,28 +936,81 @@ body {
   mask-image: radial-gradient(circle at 50% 42%, #000 15%, transparent 72%);
 }
 .landing-nav { border-bottom: 1px solid var(--hairline); }
-.eyebrow { font-family: var(--f-mono); color: var(--accent); letter-spacing: .34em; font-weight: 500; }
+.eyebrow { font-family: var(--f-mono); color: var(--accent); letter-spacing: .34em; font-weight: 500; font-size: 14px; margin-bottom: 28px; }
 .landing-title {
-  font-family: var(--f-display); text-transform: none; font-weight: 600;
-  font-size: clamp(44px, 8.5vw, 96px); line-height: 1.02; letter-spacing: -0.02em;
-  max-width: 16ch;
+  position: relative;
+  font-family: var(--f-display); text-transform: none; font-weight: 700;
+  font-size: clamp(40px, 7.4vw, 112px); line-height: 1.04; letter-spacing: -0.035em;
+  max-width: none; color: #8a8b8f;
 }
-.landing-title .line { padding: 0.04em 0.02em; }
+.landing-title .line { padding: 0.04em 0.06em; white-space: nowrap; }
 .landing-title em {
-  font-style: normal; font-weight: 700;
-  background: linear-gradient(100deg, var(--accent-hi), var(--accent-deep));
+  font-style: italic; font-weight: 800; padding-right: .06em;
+  background: linear-gradient(100deg, #f3d899 0%, #d8b26a 45%, #9c7634 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
-.landing-sub { color: var(--fg-muted); max-width: 52ch; }
+.landing-sub { color: #a3a7b0; max-width: 54ch; font-size: clamp(14px, 1.7vw, 19px); line-height: 1.65; margin-bottom: 40px; }
+
+/* landing nav: logo · centered links · CTA */
+.landing-nav { justify-content: space-between; gap: 24px; padding: 18px 40px; }
+.landing-links { display: flex; gap: clamp(20px, 3.4vw, 56px); }
+.landing-links a {
+  color: #c4c7ce; text-decoration: none; font-family: var(--f-body);
+  font-size: 16px; font-weight: 500; transition: color .15s;
+}
+.landing-links a:hover { color: var(--accent-hi); }
+.nav-cta {
+  padding: 13px 30px; border: none; border-radius: 40px; cursor: pointer;
+  background: linear-gradient(135deg, var(--accent-hi), var(--accent-deep));
+  color: #0b0a06; font-family: var(--f-body); font-size: 16px; font-weight: 700;
+  box-shadow: 0 10px 30px rgba(216,178,106,0.25);
+  transition: transform .18s, box-shadow .3s;
+}
+.nav-cta:hover { transform: translateY(-1px); box-shadow: 0 14px 40px rgba(216,178,106,0.4); }
+
+/* faint concentric rings behind the headline */
+.hero-rings { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.hero-rings span {
+  position: absolute; top: 47%; left: 50%; transform: translate(-50%, -50%);
+  border-radius: 50%; border: 1px solid rgba(255,255,255,0.07);
+}
+.hero-rings span:nth-child(1) { width: min(860px, 120vw); aspect-ratio: 1; }
+.hero-rings span:nth-child(2) { width: min(510px, 76vw); aspect-ratio: 1; border-color: rgba(216,178,106,0.10); }
+
+/* gold four-point sparkles */
+.sparkle { position: absolute; fill: #b8955a; opacity: .85; pointer-events: none; animation: twinkle 3.6s ease-in-out infinite; }
+.sparkle-a { width: .72em; top: -.12em; right: 1.6em; }
+.sparkle-b { width: .4em; top: 2.02em; left: 1.05em; animation-delay: 1.8s; }
+@keyframes twinkle { 0%,100% { opacity: .85; transform: scale(1); } 50% { opacity: .45; transform: scale(.82); } }
 .enter-btn {
   background: linear-gradient(135deg, var(--accent-hi), var(--accent-deep));
   color: #0b0a06; font-family: var(--f-body); font-weight: 700;
   border-radius: 40px; box-shadow: 0 12px 34px rgba(216,178,106,0.28);
 }
 .enter-btn:hover { box-shadow: 0 16px 48px rgba(216,178,106,0.42); transform: translateY(-2px) scale(1.015); }
-.landing-brands-label { font-family: var(--f-mono); letter-spacing: .24em; color: var(--fg-dim); }
-.marquee span { font-family: var(--f-display); font-weight: 700; color: var(--fg-muted); opacity: .4; }
-.pulse-ring { border-color: rgba(216,178,106,0.5); }
+.landing-brands-label {
+  display: flex; align-items: center; justify-content: center; gap: 28px;
+  font-family: var(--f-mono); letter-spacing: .3em; color: #8b92a1; font-weight: 500; font-size: 13px;
+}
+.landing-brands-label::before, .landing-brands-label::after {
+  content: ''; width: 80px; height: 1px; background: rgba(216,178,106,0.55);
+}
+.marquee { gap: 104px; }
+.marquee span { font-family: var(--f-display); font-weight: 700; font-size: 30px; text-transform: uppercase; letter-spacing: .03em; color: #c9ccd2; opacity: .75; }
+
+@media (max-width: 900px) {
+  .landing-links { display: none; }
+  .landing-nav { padding: 14px 16px; }
+  .nav-cta { padding: 10px 20px; font-size: 14px; }
+  .landing-title .line { white-space: normal; }
+  .sparkle-a { right: .1em; top: -.3em; }
+  .sparkle-b { display: none; }
+  .landing-brands-label { letter-spacing: .2em; gap: 14px; }
+  .landing-brands-label::before, .landing-brands-label::after { width: 28px; }
+  .eyebrow { font-size: 12px; }
+  .marquee { gap: 56px; }
+  .marquee span { font-size: 22px; }
+}
 
 /* ── Semua Brand / Katalog ── */
 .catalog-controls { padding: 16px 28px 6px; display: flex; flex-direction: column; gap: 14px; }
@@ -1027,20 +1056,25 @@ body {
     <div class="topbar-logo">
       <img id="logo-landing" class="logo-img" alt="Concerto Audio Indonesia">
     </div>
+    <div class="landing-links">
+      <a href="#" onclick="landingGo('dashboard'); return false;">Dashboard</a>
+      <a href="#" onclick="landingGo('catalog'); return false;">Semua Brand</a>
+      <a href="#" onclick="landingGo('products'); return false;">Produk</a>
+      <a href="#" onclick="landingGo('brands'); return false;">Brand Resmi</a>
+    </div>
+    <button class="nav-cta" onclick="enterPortal()">Masuk Portal</button>
   </nav>
 
   <div class="landing-hero">
-    <div class="pulse-rings">
-      <div class="pulse-ring"></div>
-      <div class="pulse-ring"></div>
-      <div class="pulse-ring"></div>
-    </div>
-    <div class="eyebrow">Distributor Resmi · Car Audio Premium</div>
+    <div class="hero-rings" aria-hidden="true"><span></span><span></span></div>
+    <div class="eyebrow">Concerto Audio Indonesia · Dealer Portal</div>
     <h1 class="landing-title">
-      <span class="line"><span>Rasakan Suara</span></span>
-      <span class="line"><span>Tanpa <em>Kompromi</em></span></span>
+      <svg class="sparkle sparkle-a" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.6 7.2 16.8 11.4 24 12 16.8 12.6 12.6 16.8 12 24 11.4 16.8 7.2 12.6 0 12 7.2 11.4 11.4 7.2 12 0Z"/></svg>
+      <svg class="sparkle sparkle-b" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.6 7.2 16.8 11.4 24 12 16.8 12.6 12.6 16.8 12 24 11.4 16.8 7.2 12.6 0 12 7.2 11.4 11.4 7.2 12 0Z"/></svg>
+      <span class="line"><span>Know Your Products.</span></span>
+      <span class="line"><span>Build With <em>Confidence.</em></span></span>
     </h1>
-    <p class="landing-sub">Portal katalog produk untuk dealer &amp; mitra Concerto Audio Indonesia. Jelajahi brand pilihan dunia — spesifikasi, foto, dan video, dalam satu tempat.</p>
+    <p class="landing-sub">A centralized product database for Concerto Audio Indonesia dealers and partners — from specifications and technical data to visual assets and product resources.</p>
     <button class="enter-btn" onclick="enterPortal()">
       Masuk Portal
       <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg>
@@ -1048,7 +1082,7 @@ body {
   </div>
 
   <div class="landing-brands">
-    <div class="landing-brands-label">Our Official Support Brands</div>
+    <div class="landing-brands-label">Our Official Support Brand</div>
     <div class="marquee-wrap">
       <div class="marquee" id="marquee"></div>
     </div>
@@ -1791,6 +1825,18 @@ function enterPortal() {
   app.classList.remove('app-hidden');
   landing.classList.add('hidden-landing');
   setTimeout(() => { landing.hidden = true; }, 600);
+}
+
+// Landing nav links: enter the portal straight into a section
+function landingGo(target) {
+  enterPortal();
+  if (target === 'catalog' || target === 'products') {
+    openCatalog();
+    if (target === 'products') document.getElementById('catalog-search')?.focus();
+  } else {
+    showView('dashboard');
+    if (target === 'brands') document.getElementById('dashboard-brands')?.scrollIntoView({ block: 'start' });
+  }
 }
 
 function backToLanding() {

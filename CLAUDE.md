@@ -62,7 +62,7 @@ BRANDS = [
 ## Struktur UI & fungsi kunci (dalam `index.html` `<script>`)
 
 - `init()` — inisialisasi: stats dashboard, sidebar brand, kartu brand, logo, visualizer landing.
-- **Landing:** `initViz()` (canvas equalizer emas), `enterPortal()`, `backToLanding()`.
+- **Landing:** `initViz()` (canvas equalizer emas), `enterPortal()`, `backToLanding()`, `landingGo(target)` (link nav landing → `dashboard` / `catalog` / `products` / `brands`). Layout: nav (logo · link tengah · tombol Masuk Portal), headline "Know Your Products. Build With *Confidence.*", ring tipis + sparkle emas, strip brand berjalan.
 - **Navigasi:** `showView(id)` — view: `dashboard`, `catalog`, `brand`, `product`.
 - **Brand:** `showBrand(id)`, `renderProducts(brand, filter)` (dikelompokkan per line), `filterProducts()`.
 - **Semua Brand / katalog:** `openCatalog()`, `renderCatalog()`, `setCatalogBrand()` — pencarian + filter brand.
