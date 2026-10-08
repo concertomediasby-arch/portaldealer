@@ -230,25 +230,16 @@ body {
 
 .brand-nav-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 7px 10px;
+  padding: 9px 12px;
   border-radius: var(--r-sm);
   cursor: pointer;
-  font-size: 13px; font-weight: 500;
+  font-size: 14px; font-weight: 500;
   color: var(--fg-muted);
   transition: background .12s, color .12s;
   border: none; background: none; width: 100%; text-align: left;
 }
 .brand-nav-item:hover { background: var(--surface2); color: var(--fg); }
 .brand-nav-item.active { background: var(--accent-lo); color: var(--accent); }
-.brand-logo-mini {
-  width: 26px; height: 26px;
-  border-radius: 5px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--f-display);
-  font-size: 9px; font-weight: 800;
-  flex-shrink: 0;
-  overflow: hidden;
-}
 
 /* ── Main Content ── */
 .main {
@@ -859,7 +850,6 @@ body {
   content:''; position:absolute; left:0; top:22%; bottom:22%; width:2px; border-radius:2px;
   background: var(--accent); box-shadow: 0 0 10px var(--accent-glow);
 }
-.brand-logo-mini { border: 1px solid var(--border); font-family: var(--f-mono); }
 
 /* Headlines & data type */
 .page-title, .section-title, .brand-hero-name, .panel-name, .brand-card-name,
@@ -1735,7 +1725,6 @@ function init() {
   const navList = document.getElementById('brand-nav-list');
   navList.innerHTML = BRANDS.map(b => `
     <button class="brand-nav-item" id="nav-brand-${b.id}" onclick="showBrand('${b.id}')">
-      <div class="brand-logo-mini" style="background:${b.color}20;color:${b.color}">${b.abbr}</div>
       ${b.name}
     </button>
   `).join('');
