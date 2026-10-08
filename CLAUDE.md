@@ -35,6 +35,7 @@ BRANDS = [
         { id, name, model, category, emoji, hasVideo, desc,
           specs: { "Key": "Value", ... },
           photo?            // opsional: URL/path foto asli; jika kosong → pakai placeholder emoji
+          photos?           // opsional: beberapa foto [..]; foto pertama jadi foto utama, tiap foto dapat thumbnail sendiri
           video?            // opsional: path video MP4 (H.264); diputar di thumbnail "Video" (butuh hasVideo:true)
           videoPoster?      // opsional: gambar sampul video untuk thumbnail & sebelum diputar
         },
@@ -81,7 +82,7 @@ BRANDS = [
 - **Landing page selalu gelap** di kedua tema (token di-override di selector `#landing`).
 
 ## Catatan
-- Foto produk sebagian besar masih **placeholder** (ikon per kategori) — tinggal isi field `photo` saat foto asli siap. Sudah berfoto: seluruh **Audiocircle Pro Line** — PRO-W6C NEO, PRO-M3C, PRO-T28, PRO-M3P, PRO-M3P Nextel (`assets/ac-pro*.jpg`). Sudah ber-video: PRO-W6C NEO, PRO-M3C, PRO-T28 — ketiganya memakai satu video bersama `assets/ac-proline.mp4`, masing-masing mulai di segmen produknya lewat suffix `#t=<detik>` pada field `video` (W6C `#t=14`, M3C `#t=26`, T28 `#t=36`, setelah `?v=N`).
+- Foto produk sebagian besar masih **placeholder** (ikon per kategori) — tinggal isi field `photo` saat foto asli siap. Sudah berfoto: seluruh **Audiocircle Pro Line** — PRO-W6C NEO, PRO-M3C, PRO-T28, PRO-M3P, PRO-M3P Nextel (`assets/ac-pro*.jpg`); **Audiocircle Concerto Line** — CL-W6, CL-M3, CL-T27 (2 foto) (`assets/ac-cl*.jpg`). Foto sumber PNG transparan berukuran besar diratakan ke latar putih, dipangkas, dan diperkecil ke ≤1400 px JPG. Sudah ber-video: PRO-W6C NEO, PRO-M3C, PRO-T28 — ketiganya memakai satu video bersama `assets/ac-proline.mp4`, masing-masing mulai di segmen produknya lewat suffix `#t=<detik>` pada field `video` (W6C `#t=14`, M3C `#t=26`, T28 `#t=36`, setelah `?v=N`).
 - Video Pro Line saat ini = `Audiocircle_Professional_Line_60s_16x9` (60 dtk, dikompres ke 720p). Saat mengganti file video/poster dengan nama yang sama, naikkan suffix `?v=N` di field `video`/`videoPoster` agar cache browser/GitHub Pages ikut terbarui.
 - **Data spesifikasi di portal (`BRANDS`) adalah acuan** (dikonfirmasi pemilik). Video lama sempat menampilkan angka berbeda; video yang sekarang sudah sesuai dengan data portal. Jangan ubah data mengikuti materi video.
 - Logo brand: keenam brand sudah punya logo. Diosdela (aslinya hitam) dan huruf STEG (aslinya biru) dibuat **putih** agar terbaca di latar gelap.

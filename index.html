@@ -1278,12 +1278,15 @@ const BRANDS = [
       ]},
       { name: 'Concerto Line', products: [
         { id:'ac-clw6', name:'MIDBASS CL-W6', model:'CL-W6', category:'Speaker', emoji:'🔊', hasVideo:false,
+          photo:'assets/ac-clw6.jpg',
           desc:'Dibangun dengan magnet neodymium, basket aluminium, dan paper cone untuk suara hangat dan natural.',
           specs:{'Handling Power':'180 W','Power Rating':'80 W','Min. Amplifier Power':'35 W','Sensitivity':'86 dB','Resonance Frequency':'38 Hz','Freq. Response':'35 Hz – 6 kHz','Impedansi':'4 / 5.4 / 7.3 Ω','External':'166 mm','Installation':'142 mm','Mounting Depth':'74 mm','Weight':'1253 g'} },
         { id:'ac-clm3', name:'MIDRANGE CL-M3', model:'CL-M3', category:'Midrange', emoji:'🔉', hasVideo:false,
+          photo:'assets/ac-clm3.jpg',
           desc:'Magnet neodymium, basket aluminium, paper cone untuk suara hangat dan natural.',
           specs:{'Handling Power':'75 W','Power Rating':'35 W','Min. Amplifier Power':'15 W','Sensitivity':'86 dB','Resonance Frequency':'85 Hz','Freq. Response':'65 Hz – 15 kHz','Impedansi':'4 / 3.8 / 7.8 Ω','External':'90 mm','Installation':'72 mm','Mounting Depth':'39 mm','Weight':'87 g'} },
         { id:'ac-clt27', name:'TWEETER CL-T27', model:'CL-T27', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          photos:['assets/ac-clt27.jpg', 'assets/ac-clt27-2.jpg'],
           desc:'Magnet neodymium, basket stainless steel, silk cone untuk suara halus dan detail.',
           specs:{'Handling Power':'60 W','Power Rating':'5 W','Sensitivity':'88 dB','Resonance Frequency':'680 Hz','Freq. Response':'1800 Hz – 30 kHz','Impedansi':'3.8 / 4.2 / 5.1 Ω','External':'58 mm','Installation':'48 mm','Mounting Depth':'26 mm','Weight':'87 g'} },
       ]},
@@ -1715,6 +1718,9 @@ function findProduct(brandId, productId) {
 }
 
 function init() {
+  // Products with a `photos` list use the first one as their main `photo` (card, detail, PDF)
+  BRANDS.forEach(b => b.lines.forEach(l => l.products.forEach(p => { if (p.photos && !p.photo) p.photo = p.photos[0]; })));
+
   // Stats
   const totalProducts = BRANDS.reduce((s,b) => s + brandProducts(b).length, 0);
   document.getElementById('stat-brands').textContent = BRANDS.length;
@@ -2028,16 +2034,16 @@ function showProduct(brandId, productId) {
     mediaMain.style.background = `${brand.color}10`;
   }
 
-  // Thumbnails
+  // Thumbnails — one per photo, then video, then spec sheet
+  const photos = product.photos || (product.photo ? [product.photo] : ['']);
   const thumbData = [
-    {label:'Foto 1', type:'photo'},
+    ...photos.map((src, i) => ({label:'Foto ' + (i + 1), type:'photo', src})),
     ...(product.hasVideo ? [{label:'Video', type:'video'}] : []),
     {label:'Spek', type:'doc'},
   ];
-  const ph = product.photo || '';
   document.getElementById('media-thumbs').innerHTML = thumbData.map((t,i) => `
-    <div class="media-thumb${i===0?' active':''}" onclick="selectMedia(this,'${t.type}','${product.emoji}','${brand.color}','${t.label}','${ph}')">
-      ${t.type==='photo' && ph ? `<img src="${ph}" alt="" style="width:100%;height:100%;object-fit:cover">`
+    <div class="media-thumb${i===0?' active':''}" onclick="selectMedia(this,'${t.type}','${product.emoji}','${brand.color}','${t.label}','${t.src || ''}')">
+      ${t.type==='photo' && t.src ? `<img src="${t.src}" alt="" style="width:100%;height:100%;object-fit:cover">`
         : t.type==='video' && product.videoPoster ? `<img src="${product.videoPoster}" alt="" style="width:100%;height:100%;object-fit:cover">`
         : `<span>${t.type==='video'?'🎬':t.type==='doc'?'📄':product.emoji}</span>`}
       ${t.type==='video'?`<div class="play-icon"><svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg></div>`:''}
