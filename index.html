@@ -1725,9 +1725,16 @@ const BRANDS = [
           } },
       ]},
       { name: 'Speaker', products: [
-        { id:'as-ay65', name:'AY65', model:'AY65', category:'Speaker', emoji:'🔊', hasVideo:false,
-          desc:'Speaker coaxial Audio System.',
-          specs:{} },
+        { id:'as-ay65', name:'AY65', model:'AY65', category:'Speaker', emoji:'🔊', hasVideo:true,
+          photos:['assets/as-ay65-1.webp','assets/as-ay65-2.webp','assets/as-ay65-3.webp'],
+          video:'assets/as-ay65.mp4', videoPoster:'assets/as-ay65-poster.jpg',
+          desc:'Speaker coaxial 6.5" Audio System — 120W RMS, 240W MAX, impedansi 4 Ohm.',
+          specs:{
+            'Power RMS':'120 W',
+            'Power MAX':'240 W',
+            'Impedansi':'4 Ω',
+            'Tipe':'Coaxial 2-way'
+          } },
         { id:'as-ay65c', name:'AY65C', model:'AY65C', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'Speaker component Audio System.',
           specs:{} },
