@@ -81,8 +81,9 @@ BRANDS = [
 - **Landing page selalu gelap** di kedua tema (token di-override di selector `#landing`).
 
 ## Catatan
-- Foto produk sebagian besar masih **placeholder** (ikon per kategori) — tinggal isi field `photo` saat foto asli siap. Sudah berfoto: seluruh **Audiocircle Pro Line** — PRO-W6C NEO, PRO-M3C, PRO-T28, PRO-M3P, PRO-M3P Nextel (`assets/ac-pro*.jpg`). Sudah ber-video: PRO-W6C NEO, PRO-M3C, PRO-T28 — ketiganya memakai satu video bersama `assets/ac-proline.mp4`, masing-masing mulai di segmen produknya lewat suffix `#t=<detik>` pada field `video` (W6C `#t=14`, M3C `#t=26`, T28 `#t=36`).
-- Angka spesifikasi yang tampil di video Pro Line (mis. PRO-M3C freq. response, PRO-T28 SPL/power/Fs) berbeda dengan data portal. **Data di portal (`BRANDS`) yang benar** — sudah dikonfirmasi pemilik; jangan ubah data mengikuti video.
+- Foto produk sebagian besar masih **placeholder** (ikon per kategori) — tinggal isi field `photo` saat foto asli siap. Sudah berfoto: seluruh **Audiocircle Pro Line** — PRO-W6C NEO, PRO-M3C, PRO-T28, PRO-M3P, PRO-M3P Nextel (`assets/ac-pro*.jpg`). Sudah ber-video: PRO-W6C NEO, PRO-M3C, PRO-T28 — ketiganya memakai satu video bersama `assets/ac-proline.mp4`, masing-masing mulai di segmen produknya lewat suffix `#t=<detik>` pada field `video` (W6C `#t=14`, M3C `#t=26`, T28 `#t=36`, setelah `?v=N`).
+- Video Pro Line saat ini = `Audiocircle_Professional_Line_60s_16x9` (60 dtk, dikompres ke 720p). Saat mengganti file video/poster dengan nama yang sama, naikkan suffix `?v=N` di field `video`/`videoPoster` agar cache browser/GitHub Pages ikut terbarui.
+- **Data spesifikasi di portal (`BRANDS`) adalah acuan** (dikonfirmasi pemilik). Video lama sempat menampilkan angka berbeda; video yang sekarang sudah sesuai dengan data portal. Jangan ubah data mengikuti materi video.
 - Logo brand: keenam brand sudah punya logo. Diosdela (aslinya hitam) dan huruf STEG (aslinya biru) dibuat **putih** agar terbaca di latar gelap.
 - PDF memakai font bawaan jsPDF yang tidak punya karakter `Ω` → otomatis ditulis `Ohm` di PDF.
 - Foto hanya bisa di-embed ke PDF saat portal dibuka via server (http/https); jika dibuka langsung sebagai file (`file://`), PDF memakai placeholder.
