@@ -1721,6 +1721,7 @@ const BRANDS = [
       ]},
       { name: 'DSP', products: [
         { id:'as-dspas6', name:'DSP-AS6', model:'DSP-AS6', category:'DSP', emoji:'🎛️', hasVideo:false,
+          pdf:'assets/as-dspas6-guide.pdf',
           desc:'DSP Amplifier 6 Channel — prosesor digital dan ampli Class-D terintegrasi dalam satu unit. Chip AKM7735 hi-res, 8 output channel, kompatibel dengan hampir semua sumber audio.',
           specs:{
             'DSP Chip':'AKM7735 hi-res, distorsi ultra rendah',
@@ -2087,18 +2088,20 @@ function showProduct(brandId, productId) {
     mediaMain.style.background = `${brand.color}10`;
   }
 
-  // Thumbnails — one per photo, then video, then spec sheet
+  // Thumbnails — one per photo, then video, then pdf, then spec sheet
   const photos = product.photos || (product.photo ? [product.photo] : ['']);
   const thumbData = [
     ...photos.map((src, i) => ({label:'Foto ' + (i + 1), type:'photo', src})),
     ...(product.hasVideo ? [{label:'Video', type:'video'}] : []),
+    ...(product.pdf ? [{label:'Panduan', type:'pdf', src: product.pdf}] : []),
     {label:'Spek', type:'doc'},
   ];
   document.getElementById('media-thumbs').innerHTML = thumbData.map((t,i) => `
     <div class="media-thumb${i===0?' active':''}" onclick="selectMedia(this,'${t.type}','${product.emoji}','${brand.color}','${t.label}','${t.src || ''}')">
       ${t.type==='photo' && t.src ? `<img src="${t.src}" alt="" style="width:100%;height:100%;object-fit:cover">`
         : t.type==='video' && product.videoPoster ? `<img src="${product.videoPoster}" alt="" style="width:100%;height:100%;object-fit:cover">`
-        : `<span>${t.type==='video'?'🎬':t.type==='doc'?'📄':product.emoji}</span>`}
+        : t.type==='pdf' ? `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:3px"><span style="font-size:20px">📄</span><span style="font-size:8px;font-weight:700;letter-spacing:.05em;color:var(--fg-muted)">PDF</span></div>`
+        : `<span>${t.type==='video'?'🎬':t.type==='doc'?'📊':product.emoji}</span>`}
       ${t.type==='video'?`<div class="play-icon"><svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg></div>`:''}
     </div>
   `).join('');
@@ -2123,11 +2126,19 @@ function selectMedia(el, type, emoji, color, label, photo) {
   document.querySelectorAll('.media-thumb').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   const main = document.getElementById('media-main');
-  const labelMap = {photo:'📷 Foto Produk', video:'▶ Video Demo', doc:'📄 Spec Sheet'};
+  const labelMap = {photo:'📷 Foto Produk', video:'▶ Video Demo', pdf:'📄 Panduan PDF', doc:'📊 Spec Sheet'};
   if (type === 'photo' && photo) {
     main.style.background = '#fff';
     main.innerHTML = `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:contain">
       <div class="media-main-label">${labelMap[type]}</div>`;
+    return;
+  }
+  if (type === 'pdf' && photo) {
+    main.style.background = '#f5f5f5';
+    main.innerHTML = `
+      <iframe src="${photo}" style="width:100%;height:100%;border:none" title="Panduan PDF"></iframe>
+      <div class="media-main-label">${labelMap[type]}</div>
+      <a href="${photo}" download style="position:absolute;bottom:14px;right:14px;background:var(--accent);color:#111;padding:6px 16px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.05em;text-decoration:none;z-index:2">⬇ Download</a>`;
     return;
   }
   const video = type === 'video' && currentProduct().product?.video;
@@ -2138,11 +2149,11 @@ function selectMedia(el, type, emoji, color, label, photo) {
     main.querySelector('video').play().catch(() => {});
     return;
   }
-  const bgMap = {photo: `${color}10`, video:'#0a0a0a', doc:'var(--surface2)'};
-  main.style.background = bgMap[type];
+  const bgMap = {photo: `${color}10`, video:'#0a0a0a', pdf:'#f5f5f5', doc:'var(--surface2)'};
+  main.style.background = bgMap[type] || 'var(--surface2)';
   main.innerHTML = `
-    <span>${type==='video'?'▶':type==='doc'?'📄':emoji}</span>
-    <div class="media-main-label">${labelMap[type]}</div>
+    <span>${type==='video'?'▶':type==='doc'?'📊':emoji}</span>
+    <div class="media-main-label">${labelMap[type]||label}</div>
     ${type==='video'?`<div style="position:absolute;bottom:18px;left:0;right:0;text-align:center;color:rgba(255,255,255,.6);font-size:12px">Video demo produk</div>`:''}
   `;
 }
