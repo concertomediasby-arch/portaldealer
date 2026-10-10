@@ -1387,7 +1387,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T07:17:12Z';
+const LAST_UPDATE = '2026-10-10T07:30:33Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
@@ -1713,6 +1713,30 @@ const BRANDS = [
     desc: 'Brand Italia legendaris: speaker K-Series, tweeter AMT, DSP hi-res, amplifier DK Line, subwoofer, hingga peredam—engineering kelas referensi.',
     philosophy: 'Music is emotion in acoustic waves.\n\nIt touches people like no other medium.\n\nThe STEG brand was born with the idea to reproduce this audio experience as accurate and realistic as possible. Nothing shall stand in the way of pure musical enjoyment. Not even the automobile interior with its less than ideal acoustic conditions. Based on this vision, GTTRADING creates legendary high-end hi-fi components for automotive applications since 1983. There is only one goal: absolutely uncompromising sound.\n\nIf high-end audio reproduction in cars is the question, STEG will be the answer.',
     lines: [
+      { name: 'Master Stroke — SQ Series', products: [
+        { id:'ms-mss6', name:'MSS6', model:'MSS6', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'SQ Woofer — Hand Crafted Audiophile series, High End.',
+          photos:['assets/ms-mss6-1.webp','assets/ms-mss6-2.webp','assets/ms-mss6-3.webp','assets/ms-mss6-4.webp','assets/ms-mss6-5.webp'],
+          specs:{'Speaker Size':'6.6 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.25 mH','VC Former':'BASV, 1-EISVW','Membrane':'Carbon fiber + resin','Magnet':'Neodymium','Net Weight':'1.38 kg','Outer Diameter':'158 mm','Mounting Diameter':'141 mm','Overall Depth':'62.3 mm','Qms':'6.64','Qts':'0.81','BL':'4.9 T·m','Centering Device':'Konex','Suspension Cone':'55sh Rubber','Fs':'68 Hz','Freq. Response':'60 Hz – 4.5 kHz','SPL':'87 dB','Power RMS (Hi-pass 150 Hz)':'200 W','Mms':'14.6 g','Cms':'374 µm/N','Vas':'14.5 L','Sd':'138.9 cm²','Xmax':'6.2 mm'} },
+        { id:'ms-mss3', name:'MSS3', model:'MSS3', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'SQ Midrange — Hand Crafted Audiophile series, High End.',
+          photos:['assets/ms-mss3-1.webp','assets/ms-mss3-2.webp','assets/ms-mss3-3.webp','assets/ms-mss3-4.webp','assets/ms-mss3-5.webp'],
+          specs:{'Speaker Size':'4.3 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.09 mH','VC Former':'Kapton CCAW','Membrane':'Carbon fiber loaded with resin','Magnet':'Neodymium','Net Weight':'0.36 kg','Qms':'6.08','Qts':'0.65','BL':'3.76 T·m','Centering Device':'Konex','Suspension Cone':'50sh Rubber','Fs':'97 Hz','Freq. Response':'100 Hz – 12 kHz','SPL':'86 dB','Power RMS (Hi-pass 150 Hz)':'70 W','Mms':'4.74 g','Cms':'568 µm/N','Vas':'2.04 L','Sd':'50 cm²','Xmax':'3 mm','Outer Diameter':'105 mm','Mounting Depth':'41 mm'} },
+      ]},
+      { name: 'Master Stroke — MGL 3-Way Component', products: [
+        { id:'ms-mgl1', name:'MGL1', model:'MGL1', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Tweeter — concave metal diaphragm, CNC aluminium faceplate, 25mm copper voice coil, Neodymium magnet.',
+          photos:['assets/ms-mgl1-1.webp','assets/ms-mgl1-2.webp','assets/ms-mgl1-3.webp','assets/ms-mgl1-4.webp','assets/ms-mgl1-5.webp'],
+          specs:{'Rated Power':'20 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'1100 Hz – 40 kHz','Qms':'10.019','Qes':'1.412','Qts':'1.237','Magnet':'NdFeB','Mounting Depth':'26 mm','Mounting Diameter':'55 mm','Outer Diameter':'68.5 mm'} },
+        { id:'ms-mgl3', name:'MGL3', model:'MGL3', category:'Midrange', emoji:'🔉', hasVideo:false,
+          desc:'Midrange — vented die cast aluminium chassis, Neodymium magnet, special treatment metal cone.',
+          photos:['assets/ms-mgl3-1.webp','assets/ms-mgl3-2.webp','assets/ms-mgl3-3.webp','assets/ms-mgl3-4.webp','assets/ms-mgl3-5.webp'],
+          specs:{'Rated Power':'30 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'145 Hz – 15 kHz','Qms':'5.381','Qes':'0.668','Qts':'0.594','Mms':'3.346 g','Vas':'0.558 L','Magnet':'NdFeB','Mounting Depth':'40 mm','Mounting Diameter':'73 mm','Outer Diameter':'92.5 mm'} },
+        { id:'ms-mgl6', name:'MGL6', model:'MGL6', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'Woofer — special treatment metal cone, CNC motor metal parts, large Ferrite magnet, vented die cast chassis.',
+          photos:['assets/ms-mgl6-1.webp','assets/ms-mgl6-2.webp','assets/ms-mgl6-3.webp','assets/ms-mgl6-4.webp','assets/ms-mgl6-5.webp'],
+          specs:{'System':'3-way 6.5″ & 3.5″ & 1″ active component set','Power RMS':'60 W','Power Max':'120 W','Voice Coil':'35.6 mm','Freq. Response':'60 Hz – 40 kHz','SPL':'88 dB','DC Resistance (Re)':'3.9 Ω','Fs':'68 Hz','Xmax':'6.2 mm','Vas':'8.15 L','Qts':'0.397','Qms':'6.606','Qes':'0.423','Mounting Diameter':'144 mm','Mounting Depth':'71 mm','Net Weight':'4.2 kg'} },
+      ]},
       { name: 'K Series Speaker', products: [
         { id:'st-k1c', name:'K1C', model:'K1C', category:'Tweeter', emoji:'🎺', hasVideo:false,
           desc:'K Series Tweeter (per Pair) — Neodymium magnet, high sensitivity pod-style tweeter.',
@@ -1904,30 +1928,6 @@ const BRANDS = [
           desc:'Sound Deadening — 15mm Egg Foam.',
           specs:{'Material':'15 mm Egg Foam','Feature':'Decouple & isolate, compressible','Water Resistant':'Yes','Size':'90 × 50 cm per sheet'},
           photos:['assets/st-s15-1.webp','assets/st-s15-2.webp','assets/st-s15-3.webp'] },
-      ]},
-      { name: 'Master Stroke — SQ Series', products: [
-        { id:'ms-mss6', name:'MSS6', model:'MSS6', category:'Speaker', emoji:'🔊', hasVideo:false,
-          desc:'SQ Woofer — Hand Crafted Audiophile series, High End.',
-          photos:['assets/ms-mss6-1.webp','assets/ms-mss6-2.webp','assets/ms-mss6-3.webp','assets/ms-mss6-4.webp','assets/ms-mss6-5.webp'],
-          specs:{'Speaker Size':'6.6 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.25 mH','VC Former':'BASV, 1-EISVW','Membrane':'Carbon fiber + resin','Magnet':'Neodymium','Net Weight':'1.38 kg','Outer Diameter':'158 mm','Mounting Diameter':'141 mm','Overall Depth':'62.3 mm','Qms':'6.64','Qts':'0.81','BL':'4.9 T·m','Centering Device':'Konex','Suspension Cone':'55sh Rubber','Fs':'68 Hz','Freq. Response':'60 Hz – 4.5 kHz','SPL':'87 dB','Power RMS (Hi-pass 150 Hz)':'200 W','Mms':'14.6 g','Cms':'374 µm/N','Vas':'14.5 L','Sd':'138.9 cm²','Xmax':'6.2 mm'} },
-        { id:'ms-mss3', name:'MSS3', model:'MSS3', category:'Midrange', emoji:'🔉', hasVideo:false,
-          desc:'SQ Midrange — Hand Crafted Audiophile series, High End.',
-          photos:['assets/ms-mss3-1.webp','assets/ms-mss3-2.webp','assets/ms-mss3-3.webp','assets/ms-mss3-4.webp','assets/ms-mss3-5.webp'],
-          specs:{'Speaker Size':'4.3 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.09 mH','VC Former':'Kapton CCAW','Membrane':'Carbon fiber loaded with resin','Magnet':'Neodymium','Net Weight':'0.36 kg','Qms':'6.08','Qts':'0.65','BL':'3.76 T·m','Centering Device':'Konex','Suspension Cone':'50sh Rubber','Fs':'97 Hz','Freq. Response':'100 Hz – 12 kHz','SPL':'86 dB','Power RMS (Hi-pass 150 Hz)':'70 W','Mms':'4.74 g','Cms':'568 µm/N','Vas':'2.04 L','Sd':'50 cm²','Xmax':'3 mm','Outer Diameter':'105 mm','Mounting Depth':'41 mm'} },
-      ]},
-      { name: 'Master Stroke — MGL 3-Way Component', products: [
-        { id:'ms-mgl1', name:'MGL1', model:'MGL1', category:'Tweeter', emoji:'🎺', hasVideo:false,
-          desc:'Tweeter — concave metal diaphragm, CNC aluminium faceplate, 25mm copper voice coil, Neodymium magnet.',
-          photos:['assets/ms-mgl1-1.webp','assets/ms-mgl1-2.webp','assets/ms-mgl1-3.webp','assets/ms-mgl1-4.webp','assets/ms-mgl1-5.webp'],
-          specs:{'Rated Power':'20 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'1100 Hz – 40 kHz','Qms':'10.019','Qes':'1.412','Qts':'1.237','Magnet':'NdFeB','Mounting Depth':'26 mm','Mounting Diameter':'55 mm','Outer Diameter':'68.5 mm'} },
-        { id:'ms-mgl3', name:'MGL3', model:'MGL3', category:'Midrange', emoji:'🔉', hasVideo:false,
-          desc:'Midrange — vented die cast aluminium chassis, Neodymium magnet, special treatment metal cone.',
-          photos:['assets/ms-mgl3-1.webp','assets/ms-mgl3-2.webp','assets/ms-mgl3-3.webp','assets/ms-mgl3-4.webp','assets/ms-mgl3-5.webp'],
-          specs:{'Rated Power':'30 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'145 Hz – 15 kHz','Qms':'5.381','Qes':'0.668','Qts':'0.594','Mms':'3.346 g','Vas':'0.558 L','Magnet':'NdFeB','Mounting Depth':'40 mm','Mounting Diameter':'73 mm','Outer Diameter':'92.5 mm'} },
-        { id:'ms-mgl6', name:'MGL6', model:'MGL6', category:'Speaker', emoji:'🔊', hasVideo:false,
-          desc:'Woofer — special treatment metal cone, CNC motor metal parts, large Ferrite magnet, vented die cast chassis.',
-          photos:['assets/ms-mgl6-1.webp','assets/ms-mgl6-2.webp','assets/ms-mgl6-3.webp','assets/ms-mgl6-4.webp','assets/ms-mgl6-5.webp'],
-          specs:{'System':'3-way 6.5″ & 3.5″ & 1″ active component set','Power RMS':'60 W','Power Max':'120 W','Voice Coil':'35.6 mm','Freq. Response':'60 Hz – 40 kHz','SPL':'88 dB','DC Resistance (Re)':'3.9 Ω','Fs':'68 Hz','Xmax':'6.2 mm','Vas':'8.15 L','Qts':'0.397','Qms':'6.606','Qes':'0.423','Mounting Diameter':'144 mm','Mounting Depth':'71 mm','Net Weight':'4.2 kg'} },
       ]},
     ]
   },
