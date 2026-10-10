@@ -1230,6 +1230,123 @@ body {
   img { max-width: 100%; }
   [hidden] { display: none !important; }
   :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+  /* ── Stock Badge ── */
+  .stock-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 20px; font-family: var(--f-mono);
+    white-space: nowrap; line-height: 1.4;
+  }
+  .stock-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .stock-badge.ready  { background: rgba(82,195,138,.14); color: #52c38a; border: 1px solid rgba(82,195,138,.3); }
+  .stock-badge.ready::before  { background: #52c38a; box-shadow: 0 0 5px #52c38a; animation: stockpulse 2s infinite; }
+  .stock-badge.indent { background: rgba(216,178,106,.14); color: #d8b26a; border: 1px solid rgba(216,178,106,.3); }
+  .stock-badge.indent::before { background: #d8b26a; }
+  .stock-badge.habis  { background: rgba(224,103,95,.12); color: #e0675f; border: 1px solid rgba(224,103,95,.3); }
+  .stock-badge.habis::before  { background: #e0675f; }
+  @keyframes stockpulse { 0%,100%{ opacity:1 } 50%{ opacity:.4 } }
+
+  .stock-badge-wrap { padding: 10px 20px 0; }
+  .stock-badge-note { font-size: 11px; color: var(--fg-muted); margin-top: 4px; padding: 0 20px; }
+
+  /* badge kecil di product-card */
+  .product-stock-badge {
+    position: absolute; top: 7px; left: 7px; z-index: 2;
+    font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 20px; font-family: var(--f-mono);
+    display: inline-flex; align-items: center; gap: 4px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .product-stock-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+  .product-stock-badge.ready  { background: rgba(0,0,0,.55); color: #52c38a; border: 1px solid rgba(82,195,138,.4); }
+  .product-stock-badge.ready::before  { background: #52c38a; animation: stockpulse 2s infinite; }
+  .product-stock-badge.indent { background: rgba(0,0,0,.55); color: #d8b26a; border: 1px solid rgba(216,178,106,.4); }
+  .product-stock-badge.indent::before { background: #d8b26a; }
+  .product-stock-badge.habis  { background: rgba(0,0,0,.55); color: #e0675f; border: 1px solid rgba(224,103,95,.4); }
+  .product-stock-badge.habis::before  { background: #e0675f; }
+
+  /* ── Admin Panel Modal ── */
+  .admin-overlay {
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(0,0,0,.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .admin-overlay.open { opacity: 1; pointer-events: all; }
+  .admin-panel {
+    background: #0d0f13; border: 1px solid rgba(255,255,255,.1);
+    border-radius: 18px; width: min(92vw, 560px); max-height: 85vh;
+    display: flex; flex-direction: column; box-shadow: 0 32px 80px rgba(0,0,0,.7);
+  }
+  .admin-header {
+    padding: 18px 22px 14px; border-bottom: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .admin-header h2 { font-family: var(--f-display); font-size: 15px; font-weight: 700; color: var(--accent); margin: 0; }
+  .admin-header p { font-size: 11px; color: var(--fg-muted); margin: 3px 0 0; }
+  .admin-close { background: none; border: none; color: var(--fg-muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 8px; border-radius: 6px; }
+  .admin-close:hover { background: rgba(255,255,255,.06); color: var(--fg); }
+  .admin-body { flex: 1; overflow-y: auto; padding: 16px 22px; }
+  .admin-footer { padding: 14px 22px; border-top: 1px solid rgba(255,255,255,.08); flex-shrink: 0; }
+
+  /* Login form */
+  .admin-login { display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 24px auto; }
+  .admin-login label { font-size: 11px; font-weight: 600; color: var(--fg-muted); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 2px; display: block; }
+  .admin-input {
+    width: 100%; padding: 10px 14px; border-radius: 9px; font-size: 13px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: var(--fg);
+    font-family: var(--f-body); outline: none; box-sizing: border-box;
+    transition: border-color .2s;
+  }
+  .admin-input:focus { border-color: var(--accent); }
+  .admin-btn {
+    padding: 10px 22px; border-radius: 9px; border: none; cursor: pointer;
+    font-weight: 700; font-size: 13px; font-family: var(--f-body); transition: opacity .15s;
+  }
+  .admin-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .admin-btn.primary { background: var(--accent); color: #111; }
+  .admin-btn.primary:hover:not(:disabled) { opacity: .88; }
+  .admin-btn.ghost { background: rgba(255,255,255,.07); color: var(--fg); border: 1px solid rgba(255,255,255,.1); }
+  .admin-btn.ghost:hover { background: rgba(255,255,255,.11); }
+  .admin-error { color: #e0675f; font-size: 12px; text-align: center; min-height: 18px; }
+
+  /* Stock list */
+  .admin-brand-section { margin-bottom: 20px; }
+  .admin-brand-title {
+    font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); padding: 8px 0 6px; border-bottom: 1px solid rgba(255,255,255,.06); margin-bottom: 8px;
+  }
+  .admin-product-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .admin-product-row:last-child { border-bottom: none; }
+  .admin-prod-name { flex: 1; font-size: 12.5px; font-weight: 600; line-height: 1.3; }
+  .admin-prod-model { font-size: 10px; color: var(--fg-muted); font-family: var(--f-mono); }
+  .admin-stock-select {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: var(--fg);
+    border-radius: 7px; padding: 5px 8px; font-size: 11px; font-family: var(--f-mono);
+    cursor: pointer; outline: none; min-width: 82px;
+  }
+  .admin-stock-select:focus { border-color: var(--accent); }
+  .admin-note-input {
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); color: var(--fg-muted);
+    border-radius: 7px; padding: 5px 8px; font-size: 11px; font-family: var(--f-body);
+    outline: none; width: 120px; min-width: 0;
+  }
+  .admin-note-input:focus { border-color: rgba(255,255,255,.2); color: var(--fg); }
+  .admin-save-row { color: #52c38a; font-size: 10px; font-weight: 700; flex-shrink: 0; min-width: 18px; text-align: center; }
+  .admin-search {
+    width: 100%; padding: 9px 14px; border-radius: 9px; font-size: 13px; box-sizing: border-box;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: var(--fg);
+    font-family: var(--f-body); outline: none; margin-bottom: 14px;
+  }
+  .admin-search:focus { border-color: var(--accent); }
+  .admin-status-bar { font-size: 11px; color: var(--fg-muted); }
+  .admin-status-bar span { color: var(--accent); font-weight: 600; }
+  .admin-logout-btn { font-size: 11px; color: var(--fg-muted); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
+  .admin-logout-btn:hover { color: var(--fg); }
 </style>
 </head>
 <body>
@@ -1482,6 +1599,7 @@ body {
               Unduh Spec Sheet (PDF)
             </button>
           </div>
+          <div id="panel-stock-badge"></div>
           <div class="panel-tags" id="panel-tags"></div>
         </div>
       </div>
@@ -1546,7 +1664,49 @@ body {
   <div class="sheet" id="sheet-content" role="dialog" aria-modal="true" aria-label="Spec sheet produk"></div>
 </div>
 
+<!-- ADMIN STOCK PANEL -->
+<div class="admin-overlay" id="admin-overlay" onclick="if(event.target===this)closeAdmin()">
+  <div class="admin-panel" role="dialog" aria-modal="true" aria-label="Admin Panel Stok">
+    <div class="admin-header">
+      <div>
+        <h2>⚙ Admin — Update Stok</h2>
+        <p id="admin-subtitle">Login untuk mengelola ketersediaan produk</p>
+      </div>
+      <button class="admin-close" onclick="closeAdmin()" title="Tutup">✕</button>
+    </div>
+    <div class="admin-body" id="admin-body">
+      <!-- Login form (default) -->
+      <div id="admin-login-section">
+        <div class="admin-login">
+          <div>
+            <label>Email Admin</label>
+            <input class="admin-input" type="email" id="admin-email" placeholder="email@example.com" autocomplete="email">
+          </div>
+          <div>
+            <label>Password</label>
+            <input class="admin-input" type="password" id="admin-password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div class="admin-error" id="admin-error"></div>
+          <button class="admin-btn primary" id="admin-login-btn" onclick="adminLogin()">Masuk</button>
+        </div>
+      </div>
+      <!-- Stock list (after login) -->
+      <div id="admin-stock-section" style="display:none">
+        <input class="admin-search" type="search" id="admin-search" placeholder="Cari produk..." oninput="renderAdminList()">
+        <div id="admin-stock-list"></div>
+      </div>
+    </div>
+    <div class="admin-footer" id="admin-footer" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div class="admin-status-bar">Login sebagai: <span id="admin-user-email"></span></div>
+        <button class="admin-logout-btn" onclick="adminLogout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 /* ══════════════════════════════════════════
    BRAND ASSETS
@@ -1557,7 +1717,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T11:38:48Z';
+const LAST_UPDATE = '2026-10-10T16:24:14Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -2868,12 +3028,14 @@ function productCard(brand, p) {
   const photo = p.photo
     ? `<img class="product-photo" src="${p.photo}" alt="${p.name}" loading="lazy">`
     : `<span class="product-thumb-icon">${p.emoji}</span>`;
+  const sb = stockBadgeSmall(p.id);
   return `
     <div class="product-card" onclick="showProduct('${brand.id}','${p.id}')">
-      <div class="product-thumb" style="background:${p.photo ? '#fff' : brand.color + '10'}">
+      <div class="product-thumb" style="background:${p.photo ? '#fff' : brand.color + '10'};position:relative">
         ${photo}
         <span class="product-thumb-label">${p.category}</span>
         ${p.hasVideo ? `<span class="video-badge">▶ VIDEO</span>` : ''}
+        ${sb ? `<span class="product-stock-badge ${sb.cls}">${sb.label}</span>` : ''}
       </div>
       <div class="product-info">
         <div class="product-name">${p.name}</div>
@@ -3031,6 +3193,9 @@ function showProduct(brandId, productId) {
   document.getElementById('panel-tags').innerHTML = tags.map(t =>
     `<span class="tag" style="color:${brand.color};border-color:${brand.color}40">${t}</span>`
   ).join('');
+
+  // Stock badge in detail panel
+  renderProductStockBadge(product.id);
 
   hideViews();
   document.getElementById('view-product').classList.add('active');
@@ -3296,7 +3461,239 @@ try {
 } catch(e){}
 applyThemeIcon();
 
+/* ══════════════════════════════════════════
+   STOCK SYSTEM — Supabase Realtime
+══════════════════════════════════════════ */
+const SUPA_URL  = 'https://cvffltbxsaiugccexmtf.supabase.co';
+const SUPA_KEY  = 'sb_publishable_Y4AMvOdGfunEZhvvpsMzbg_NBbxNqGW';
+let   supabase  = null;
+let   stockMap  = {};   // { product_id: { status, note } }
+let   adminUser = null;
+let   adminLogoClicks = 0, adminLogoTimer = null;
+
+const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
+
+function initSupabase() {
+  try {
+    supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    loadStock();
+    subscribeStock();
+  } catch(e) { console.warn('Supabase init failed', e); }
+}
+
+async function loadStock() {
+  if (!supabase) return;
+  try {
+    const { data } = await supabase.from('stock').select('product_id,status,note');
+    if (data) {
+      stockMap = {};
+      data.forEach(r => { stockMap[r.product_id] = { status: r.status, note: r.note }; });
+      refreshStockUI();
+    }
+  } catch(e) {}
+}
+
+function subscribeStock() {
+  if (!supabase) return;
+  supabase.channel('stock-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'stock' }, payload => {
+      const r = payload.new || payload.old;
+      if (!r) return;
+      if (payload.eventType === 'DELETE') {
+        delete stockMap[r.product_id];
+      } else {
+        stockMap[r.product_id] = { status: r.status, note: r.note };
+      }
+      refreshStockUI();
+    })
+    .subscribe();
+}
+
+function refreshStockUI() {
+  // Re-render all visible product cards (katalog / brand view)
+  document.querySelectorAll('.product-card').forEach(card => {
+    const onclick = card.getAttribute('onclick') || '';
+    const m = onclick.match(/showProduct\('([^']+)','([^']+)'\)/);
+    if (!m) return;
+    const pid = m[2];
+    const existing = card.querySelector('.product-stock-badge');
+    const sb = stockBadgeSmall(pid);
+    if (existing) existing.remove();
+    if (sb) {
+      const span = document.createElement('span');
+      span.className = 'product-stock-badge ' + sb.cls;
+      span.textContent = sb.label;
+      const thumb = card.querySelector('.product-thumb');
+      if (thumb) thumb.appendChild(span);
+    }
+  });
+  // Update detail panel if open
+  const panelBadge = document.getElementById('panel-stock-badge');
+  if (panelBadge && currentProductId) renderProductStockBadge(currentProductId);
+  // Update admin list if open
+  if (document.getElementById('admin-stock-section')?.style.display !== 'none') renderAdminList();
+}
+
+function stockBadgeSmall(pid) {
+  const s = stockMap[pid];
+  if (!s) return null;
+  const cls = s.status;
+  const label = STOCK_LABEL[s.status] || s.status;
+  return { cls, label };
+}
+
+function renderProductStockBadge(pid) {
+  const el = document.getElementById('panel-stock-badge');
+  if (!el) return;
+  const s = stockMap[pid];
+  if (!s) { el.innerHTML = ''; return; }
+  const note = s.note ? `<div class="stock-badge-note">📝 ${s.note}</div>` : '';
+  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}</span></div>${note}`;
+}
+
+/* ── Admin Panel ── */
+function openAdmin() {
+  document.getElementById('admin-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (adminUser) showAdminStockSection();
+}
+function closeAdmin() {
+  document.getElementById('admin-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAdmin(); });
+
+/* Trigger: klik logo topbar 5× */
+function handleLogoAdminTrigger() {
+  adminLogoClicks++;
+  clearTimeout(adminLogoTimer);
+  if (adminLogoClicks >= 5) {
+    adminLogoClicks = 0;
+    openAdmin();
+    return;
+  }
+  adminLogoTimer = setTimeout(() => { adminLogoClicks = 0; }, 2000);
+}
+
+async function adminLogin() {
+  const email = document.getElementById('admin-email').value.trim();
+  const pass  = document.getElementById('admin-password').value;
+  const btn   = document.getElementById('admin-login-btn');
+  const err   = document.getElementById('admin-error');
+  if (!email || !pass) { err.textContent = 'Isi email dan password.'; return; }
+  btn.disabled = true; btn.textContent = 'Memverifikasi...'; err.textContent = '';
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    adminUser = data.user;
+    showAdminStockSection();
+  } catch(e) {
+    err.textContent = 'Login gagal: ' + (e.message || 'Periksa email/password.');
+    btn.disabled = false; btn.textContent = 'Masuk';
+  }
+}
+
+function showAdminStockSection() {
+  document.getElementById('admin-login-section').style.display = 'none';
+  document.getElementById('admin-stock-section').style.display = 'block';
+  document.getElementById('admin-footer').style.display = 'block';
+  document.getElementById('admin-user-email').textContent = adminUser?.email || '';
+  document.getElementById('admin-subtitle').textContent = 'Kelola ketersediaan produk';
+  renderAdminList();
+}
+
+async function adminLogout() {
+  await supabase.auth.signOut();
+  adminUser = null;
+  document.getElementById('admin-login-section').style.display = 'block';
+  document.getElementById('admin-stock-section').style.display = 'none';
+  document.getElementById('admin-footer').style.display = 'none';
+  document.getElementById('admin-subtitle').textContent = 'Login untuk mengelola ketersediaan produk';
+  document.getElementById('admin-email').value = '';
+  document.getElementById('admin-password').value = '';
+  document.getElementById('admin-error').textContent = '';
+  document.getElementById('admin-login-btn').disabled = false;
+  document.getElementById('admin-login-btn').textContent = 'Masuk';
+}
+
+function renderAdminList() {
+  const q = (document.getElementById('admin-search')?.value || '').toLowerCase();
+  const container = document.getElementById('admin-stock-list');
+  if (!container) return;
+
+  let html = '';
+  BRANDS.forEach(brand => {
+    const products = brand.lines.flatMap(l => l.products).filter(p =>
+      !q || p.name.toLowerCase().includes(q) || p.model.toLowerCase().includes(q) || brand.name.toLowerCase().includes(q)
+    );
+    if (!products.length) return;
+    html += `<div class="admin-brand-section">
+      <div class="admin-brand-title">${brand.name}</div>`;
+    products.forEach(p => {
+      const s = stockMap[p.id] || {};
+      const status = s.status || 'ready';
+      const note   = s.note   || '';
+      html += `<div class="admin-product-row">
+        <div style="flex:1;min-width:0">
+          <div class="admin-prod-name">${p.name}</div>
+          <div class="admin-prod-model">${p.model}</div>
+        </div>
+        <select class="admin-stock-select" data-pid="${p.id}" onchange="adminStockChange('${p.id}',this)">
+          <option value="ready"  ${status==='ready' ?'selected':''}>🟢 Ready</option>
+          <option value="indent" ${status==='indent'?'selected':''}>🟡 Indent</option>
+          <option value="habis"  ${status==='habis' ?'selected':''}>🔴 Habis</option>
+        </select>
+        <input class="admin-note-input" type="text" placeholder="Catatan..." maxlength="80"
+          value="${note.replace(/"/g,'&quot;')}" data-pid="${p.id}" oninput="adminNoteChange('${p.id}',this)">
+        <div class="admin-save-row" id="saved-${p.id}"></div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  container.innerHTML = html || `<div style="color:var(--fg-muted);padding:20px 0;text-align:center">Tidak ada produk ditemukan.</div>`;
+}
+
+let saveTimers = {};
+function adminStockChange(pid, sel) {
+  scheduleSave(pid);
+}
+function adminNoteChange(pid, inp) {
+  scheduleSave(pid);
+}
+function scheduleSave(pid) {
+  clearTimeout(saveTimers[pid]);
+  saveTimers[pid] = setTimeout(() => saveStock(pid), 700);
+}
+
+async function saveStock(pid) {
+  const sel  = document.querySelector(`.admin-stock-select[data-pid="${pid}"]`);
+  const inp  = document.querySelector(`.admin-note-input[data-pid="${pid}"]`);
+  const icon = document.getElementById('saved-' + pid);
+  if (!sel || !supabase) return;
+  const status = sel.value;
+  const note   = inp ? inp.value.trim() : '';
+  if (icon) { icon.textContent = '⏳'; icon.style.color = 'var(--fg-muted)'; }
+  try {
+    const { error } = await supabase.from('stock').upsert(
+      { product_id: pid, status, note },
+      { onConflict: 'product_id' }
+    );
+    if (error) throw error;
+    if (icon) { icon.textContent = '✓'; icon.style.color = '#52c38a'; setTimeout(() => { if(icon) icon.textContent=''; }, 2000); }
+  } catch(e) {
+    if (icon) { icon.textContent = '✗'; icon.style.color = '#e0675f'; }
+    console.warn('Save stock error', e);
+  }
+}
+
+/* Pasang trigger klik pada logo topbar */
+window.addEventListener('DOMContentLoaded', () => {
+  const logoEl = document.getElementById('logo-top-dark');
+  if (logoEl) logoEl.addEventListener('click', e => { e.preventDefault(); handleLogoAdminTrigger(); });
+});
+
 init();
+initSupabase();
 </script>
 </body>
 </html>
