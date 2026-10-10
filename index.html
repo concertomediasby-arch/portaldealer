@@ -1255,8 +1255,16 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T03:05:39Z';
+const LAST_UPDATE = '2026-10-10T03:08:00Z';
 const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series', brandId: 'og', productId: 'og-reference' };
+
+// Urutan update produk: terbaru → terlama (isi productId)
+const UPDATE_LOG = [
+  'og-reference','og-azure','og-streamline','og-reddragon',
+  'dm-deadening','dm-16aw','dm-rca','dm-fuseminianl','dm-fuseanl',
+  'zl-mfa1','zl-mfa32','zl-mfa34','zl-mfa52','zl-mfa54',
+  'zl-verdi2','zl-verdi4','zl-argentum','zl-tantalum',
+];
 
 const BRANDS = [
   {
@@ -2304,29 +2312,64 @@ function setCatalogBrand(id) {
 
 function renderCatalog() {
   const q = (document.getElementById('catalog-search')?.value || '').trim().toLowerCase();
-  const brands = catalogBrand === 'all' ? BRANDS : BRANDS.filter(b => b.id === catalogBrand);
-  let total = 0, html = '';
-  brands.forEach(brand => {
-    const matches = brandProducts(brand).filter(p => {
-      if (!q) return true;
-      return (p.name + ' ' + p.model + ' ' + p.category + ' ' + (p.line||'') + ' ' + (p.desc||'')).toLowerCase().includes(q);
-    });
-    if (!matches.length) return;
-    total += matches.length;
-    html += `<div class="catalog-brand-block">
-      <div class="catalog-brand-head">
-        <span class="catalog-brand-dot" style="background:${brand.color}"></span>
-        <span class="catalog-brand-name">${brand.name}</span>
-        <span class="line-count">${matches.length}</span>
-        <button class="catalog-open-brand" onclick="showBrand('${brand.id}')">Buka brand →</button>
-      </div>
-      <div class="line-grid">${matches.map(p => productCard(brand, p)).join('')}</div>
-    </div>`;
+  const filterBrand = catalogBrand !== 'all';
+  const brands = filterBrand ? BRANDS.filter(b => b.id === catalogBrand) : BRANDS;
+
+  // Flatten semua produk dengan info brand-nya
+  const allPairs = [];
+  brands.forEach(brand => brand.lines.forEach(l => l.products.forEach(p => allPairs.push({ brand, p }))));
+
+  // Filter pencarian
+  const filtered = allPairs.filter(({ brand, p }) => {
+    if (!q) return true;
+    return (p.name + ' ' + p.model + ' ' + p.category + ' ' + brand.name + ' ' + (p.desc||'')).toLowerCase().includes(q);
   });
+
+  // Urutkan: ikuti UPDATE_LOG (terbaru dulu), sisanya di belakang
+  if (!filterBrand && !q) {
+    filtered.sort((a, b) => {
+      const ia = UPDATE_LOG.indexOf(a.p.id);
+      const ib = UPDATE_LOG.indexOf(b.p.id);
+      const ra = ia === -1 ? 9999 : ia;
+      const rb = ib === -1 ? 9999 : ib;
+      return ra - rb;
+    });
+  }
+
+  let html = '';
+  if (!filterBrand && !q) {
+    // Tampilkan sebagai flat grid dengan badge "Terbaru" untuk N produk pertama
+    const recentCount = UPDATE_LOG.length;
+    html = `<div class="line-grid">` + filtered.map(({ brand, p }, i) => {
+      const badge = i < recentCount && UPDATE_LOG.includes(p.id)
+        ? `<span style="position:absolute;top:8px;right:8px;background:var(--accent);color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.05em;z-index:1">#${i+1}</span>`
+        : '';
+      return `<div style="position:relative">${badge}${productCard(brand, p)}</div>`;
+    }).join('') + `</div>`;
+  } else {
+    // Tampilkan per brand (mode lama) saat ada filter
+    const grouped = new Map();
+    filtered.forEach(({ brand, p }) => {
+      if (!grouped.has(brand.id)) grouped.set(brand.id, { brand, products: [] });
+      grouped.get(brand.id).products.push(p);
+    });
+    grouped.forEach(({ brand, products }) => {
+      html += `<div class="catalog-brand-block">
+        <div class="catalog-brand-head">
+          <span class="catalog-brand-dot" style="background:${brand.color}"></span>
+          <span class="catalog-brand-name">${brand.name}</span>
+          <span class="line-count">${products.length}</span>
+          <button class="catalog-open-brand" onclick="showBrand('${brand.id}')">Buka brand →</button>
+        </div>
+        <div class="line-grid">${products.map(p => productCard(brand, p)).join('')}</div>
+      </div>`;
+    });
+  }
+
   document.getElementById('catalog-results').innerHTML = html ||
     `<div style="padding:30px;color:var(--fg-muted);text-align:center">Tidak ada produk yang cocok dengan pencarian.</div>`;
   const cnt = document.getElementById('catalog-count');
-  if (cnt) cnt.textContent = `${total} produk${q ? ' ditemukan untuk "' + q + '"' : ''}`;
+  if (cnt) cnt.textContent = `${filtered.length} produk${q ? ' ditemukan untuk "' + q + '"' : (!filterBrand ? ' · diurutkan terbaru' : '')}`;
 }
 
 function showProduct(brandId, productId) {
