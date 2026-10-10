@@ -1473,7 +1473,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T08:29:50Z';
+const LAST_UPDATE = '2026-10-10T08:42:12Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -1491,21 +1491,14 @@ const DEALER_GUIDES = [
 ];
 
 // ── Paket Audio ───────────────────────────────────────────────
-// segment: 'Entry' | 'Mid' | 'High' | 'Reference'
-// available: false → badge "Segera Hadir"
+// segment: label segmen paket
+// available: false → badge "Segera Hadir"; true → tombol unduh PDF
 const PAKET_AUDIO = [
-  { id:'paket-entry', title:'Paket Entry — Upgrade Pertama', segment:'Entry', icon:'🔊',
-    desc:'Paket ideal untuk upgrade pertama dari speaker bawaan. Cocok untuk pengguna yang ingin suara lebih baik dengan budget terjangkau.',
-    brands:['Audiocircle'], products:['Speaker Coaxial + Head Unit'], available:false },
-  { id:'paket-mid', title:'Paket Mid — Sistem Komponen', segment:'Mid', icon:'🎵',
-    desc:'Sistem speaker komponen dengan tweeter terpisah, memberikan soundstage lebih lebar dan vokal lebih jelas.',
-    brands:['Audiocircle', 'STEG'], products:['Speaker Komponen + Amplifier'], available:false },
-  { id:'paket-high', title:'Paket High — Full System', segment:'High', icon:'🎶',
-    desc:'Sistem audio lengkap dengan DSP, amplifier dedicated, dan subwoofer. Untuk pengalaman mendengarkan musik yang sesungguhnya di dalam mobil.',
-    brands:['Audiocircle', 'STEG', 'Audio System'], products:['Speaker + Amplifier + DSP + Subwoofer'], available:false },
-  { id:'paket-ref', title:'Paket Reference — Top of The Line', segment:'Reference', icon:'🏆',
-    desc:'Konfigurasi terbaik menggunakan produk flagship dari seluruh brand CAI. Untuk audiofil yang tidak berkompromi dengan kualitas suara.',
-    brands:['Audiocircle', 'STEG', 'Audio System', 'Diosdela'], products:['Full Hi-End System'], available:false },
+  { id:'paket-3way-aktif', title:'Paket Sistem 3-Way Aktif', segment:'STEG × Audiocircle', icon:'🎶',
+    desc:'Sistem 3-way aktif dengan DSP-S6 (6-channel) + SA-8W (active subwoofer). Tiap speaker punya channel, EQ, dan delay sendiri — panggung suara presisi, vokal fokus. Tersedia dalam tiga pilihan karakter speaker: Kohln+Hamburg, Hamburg Line, dan Berlin Line.',
+    brands:['STEG', 'Audiocircle'],
+    products:['STEG DSP-S6', 'STEG SA-8W', 'Pilihan: Kohln KL-C6.2 / Hamburg Line / Berlin Line'],
+    file:'assets/paket/3way-aktif-steg-audiocircle.pdf', available:true },
 ];
 
 // ── DSP Software ──────────────────────────────────────────────
@@ -2557,11 +2550,10 @@ function openPaketAudio() {
   showView('paket');
   const el = document.getElementById('paket-list');
   if (el.children.length) return;
-  const segColor = { 'Entry':'#52c38a', 'Mid':'#6fd3e6', 'High':'#d8b26a', 'Reference':'#a78bfa' };
   el.innerHTML = PAKET_AUDIO.map(p => {
-    const color = segColor[p.segment] || 'var(--accent)';
     const btn = p.available
-      ? `<a class="res-btn res-btn-dl" href="${p.file}" target="_blank">Lihat Detail</a>`
+      ? `<a class="res-btn res-btn-dl" href="${p.file}" target="_blank" download>
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh PDF</a>`
       : `<span class="res-btn res-btn-soon">Segera Hadir</span>`;
     const brandTags = p.brands.map(b =>
       `<span class="res-cat" style="color:var(--accent);border-color:var(--accent)22;background:var(--accent)11">${b}</span>`
@@ -2570,7 +2562,7 @@ function openPaketAudio() {
       <div class="res-icon">${p.icon}</div>
       <div class="res-body">
         <div class="res-meta">
-          <span class="res-cat" style="color:${color};border-color:${color}22;background:${color}11">${p.segment}</span>
+          <span class="res-cat" style="color:var(--accent);border-color:var(--accent)22;background:var(--accent)11">${p.segment}</span>
           ${brandTags}
         </div>
         <div class="res-title">${p.title}</div>
