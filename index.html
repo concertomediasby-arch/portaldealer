@@ -1278,7 +1278,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T05:43:38Z';
+const LAST_UPDATE = '2026-10-10T05:55:49Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
@@ -2545,11 +2545,10 @@ function showProduct(brandId, productId) {
   // Main media
   const mediaMain = document.getElementById('media-main');
   if (product.photo) {
-    mediaMain.innerHTML = `<img src="${product.photo}" alt="${product.name}" style="width:100%;height:100%;object-fit:contain">
-      <div class="media-main-label">📷 Foto Produk</div>`;
+    mediaMain.innerHTML = `<img src="${product.photo}" alt="${product.name}" style="width:100%;height:100%;object-fit:contain">`;
     mediaMain.style.background = '#fff';
   } else {
-    mediaMain.innerHTML = `<span>${product.emoji}</span><div class="media-main-label">📷 Foto Produk</div>`;
+    mediaMain.innerHTML = `<span>${product.emoji}</span>`;
     mediaMain.style.background = `${brand.color}10`;
   }
 
@@ -2594,15 +2593,13 @@ function selectMedia(el, type, emoji, color, label, photo) {
   const labelMap = {photo:'📷 Foto Produk', video:'▶ Video Demo', pdf:'📄 Panduan PDF', doc:'📊 Spec Sheet'};
   if (type === 'photo' && photo) {
     main.style.background = '#fff';
-    main.innerHTML = `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:contain">
-      <div class="media-main-label">${labelMap[type]}</div>`;
+    main.innerHTML = `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:contain">`;
     return;
   }
   if (type === 'pdf' && photo) {
     main.style.background = '#f5f5f5';
     main.innerHTML = `
       <iframe src="${photo}" style="width:100%;height:100%;border:none" title="Panduan PDF"></iframe>
-      <div class="media-main-label">${labelMap[type]}</div>
       <a href="${photo}" download style="position:absolute;bottom:14px;right:14px;background:var(--accent);color:#111;padding:6px 16px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.05em;text-decoration:none;z-index:2">⬇ Download</a>`;
     return;
   }
@@ -2618,7 +2615,6 @@ function selectMedia(el, type, emoji, color, label, photo) {
   main.style.background = bgMap[type] || 'var(--surface2)';
   main.innerHTML = `
     <span>${type==='video'?'▶':type==='doc'?'📊':emoji}</span>
-    <div class="media-main-label">${labelMap[type]||label}</div>
     ${type==='video'?`<div style="position:absolute;bottom:18px;left:0;right:0;text-align:center;color:rgba(255,255,255,.6);font-size:12px">Video demo produk</div>`:''}
   `;
 }
