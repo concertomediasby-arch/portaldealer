@@ -1278,11 +1278,13 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T05:18:39Z';
+const LAST_UPDATE = '2026-10-10T05:20:08Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
-  { date:'2026-10-10', type:'data',  brandId:'steg',        productId:'st-sec650c',  note:'Produk baru SEC650C ditambahkan' },
+  { date:'2026-10-10', type:'data',  brandId:'steg',        productId:'st-sec650',   note:'Produk baru SEC650 (Coaxial) ditambahkan' },
+  { date:'2026-10-10', type:'video', brandId:'steg',        productId:'st-sec650',   note:'Video SEC650 ditambahkan' },
+  { date:'2026-10-10', type:'data',  brandId:'steg',        productId:'st-sec650c',  note:'Produk baru SEC650C (Component) ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'steg',        productId:'st-sec650c',  note:'Video SEC650C ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'steg',        productId:'st-dsps6',    note:'Video DSP-S6 ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'steg',        productId:'st-dsps12',   note:'Video DSP-S12 ditambahkan' },
@@ -1629,9 +1631,15 @@ const BRANDS = [
           photos:['assets/st-ms650-1.webp','assets/st-ms650-2.webp','assets/st-ms650-3.webp','assets/st-ms650-4.webp'],
           desc:'6.5" 2-Way Coaxial Speaker (per Pair) — special paper membrane, integrated tweeter.',
           specs:{'Impedansi':'2.8 Ω','Rated Power':'60 W','Sensitivity':'88 dB','Freq. Response':'60 Hz – 20 kHz','Mounting Depth':'64 mm','Mounting Diameter':'144 mm'} },
+      ]},
+      { name: 'SEC Series', products: [
         { id:'st-sec650c', name:'SEC650C', model:'SEC650C', category:'Speaker', emoji:'🔊', hasVideo:true,
           video:'assets/st-sec650c.mp4?v=1', videoPoster:'assets/st-sec650c-poster.jpg?v=1',
-          desc:'6.5" Component Speaker Set — STEG SEC Series.',
+          desc:'6.5" 2-Way Component Speaker Set — STEG SEC Series.',
+          specs:{} },
+        { id:'st-sec650', name:'SEC650', model:'SEC650', category:'Speaker', emoji:'🔊', hasVideo:true,
+          video:'assets/st-sec650.mp4?v=1', videoPoster:'assets/st-sec650-poster.jpg?v=1',
+          desc:'6.5" Coaxial Speaker — STEG SEC Series.',
           specs:{} },
       ]},
       { name: 'Tweeter', products: [
