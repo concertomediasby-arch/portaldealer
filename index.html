@@ -1867,7 +1867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T17:33:38Z';
+const LAST_UPDATE = '2026-10-10T17:39:43Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -3624,6 +3624,9 @@ let   adminUser = null;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
 const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Bagian catatan internal gudang yang tidak ditampilkan ke dealer (catatan lengkap tetap tersimpan untuk admin)
+const DEALER_HIDDEN_NOTE = /^(free|pinjam)\b/i;
+const dealerNote = n => String(n || '').split(/[|;]/).map(x => x.trim()).filter(x => x && !DEALER_HIDDEN_NOTE.test(x)).join(' | ');
 const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || '', updated_at: r.updated_at || null });
 let stockLoaded = false, stockBrand = 'all', stockStatus = 'all';
 // Produk di luar katalog BRANDS disimpan dengan product_id "x:<KODE GUDANG>"
@@ -3716,7 +3719,8 @@ function renderProductStockBadge(pid) {
   const base = STOCK_LABEL[s.status] || s.status;
   const label = s.status === 'ready' && s.qty != null ? `${base} — Sisa ${s.qty} unit` : base;
   const otw = s.incoming ? `<div class="stock-badge-note">🚚 Dalam perjalanan: ${escHtml(s.incoming)}</div>` : '';
-  const note = s.note ? `<div class="stock-badge-note">📝 ${escHtml(s.note)}</div>` : '';
+  const dn = dealerNote(s.note);
+  const note = dn ? `<div class="stock-badge-note">📝 ${escHtml(dn)}</div>` : '';
   el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${label}</span></div>${otw}${note}`;
 }
 
@@ -3789,7 +3793,7 @@ function renderStockView() {
         <div style="min-width:0"><div class="sr-name">${escHtml(p.name)}</div><div class="sr-model">${escHtml(p.model)}</div></div>
         <div><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}${mq}</span></div>
         <div class="sr-qty">${s.qty ?? ''}</div>
-        <div class="sr-note">${s.incoming ? `<div class="sr-otw">🚚 OTW ${escHtml(s.incoming)}</div>` : ''}${escHtml(s.note)}</div>
+        <div class="sr-note">${s.incoming ? `<div class="sr-otw">🚚 OTW ${escHtml(s.incoming)}</div>` : ''}${escHtml(dealerNote(s.note))}</div>
         <div class="sr-time">${fmtStockTime(s.updated_at)}</div>
       </div>`;
     }).join('')}</div>`;
