@@ -1278,11 +1278,12 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T05:21:58Z';
+const LAST_UPDATE = '2026-10-10T05:23:09Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
   { date:'2026-10-10', type:'video', brandId:'audiosystem',  productId:'as-as10',     note:'Video AS10 diperbarui' },
+  { date:'2026-10-10', type:'photo', brandId:'steg',        productId:'st-sec650',   note:'Foto produk SEC650 ditambahkan' },
   { date:'2026-10-10', type:'data',  brandId:'steg',        productId:'st-sec650',   note:'Produk baru SEC650 (Coaxial) ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'steg',        productId:'st-sec650',   note:'Video SEC650 ditambahkan' },
   { date:'2026-10-10', type:'data',  brandId:'steg',        productId:'st-sec650c',  note:'Produk baru SEC650C (Component) ditambahkan' },
@@ -1639,9 +1640,9 @@ const BRANDS = [
           desc:'6.5" 2-Way Component Speaker Set — STEG SEC Series.',
           specs:{} },
         { id:'st-sec650', name:'SEC650', model:'SEC650', category:'Speaker', emoji:'🔊', hasVideo:true,
-          video:'assets/st-sec650.mp4?v=1', videoPoster:'assets/st-sec650-poster.jpg?v=1',
-          desc:'6.5" Coaxial Speaker — STEG SEC Series.',
-          specs:{} },
+          photos:['assets/st-sec650-1.webp','assets/st-sec650-2.webp','assets/st-sec650-3.webp','assets/st-sec650-4.webp'], video:'assets/st-sec650.mp4?v=1', videoPoster:'assets/st-sec650-poster.jpg?v=1',
+          desc:'6.5" 2-Way Coaxial Speaker — STEG SEC Series, Made in Italy by GT Trading.',
+          specs:{'Impedansi':'4 Ω','Rated Power':'60 W'} },
       ]},
       { name: 'Tweeter', products: [
         { id:'st-sst90', name:'SST90', model:'SST90', category:'Tweeter', emoji:'🎺', hasVideo:false,
