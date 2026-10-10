@@ -1278,10 +1278,11 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T05:12:15Z';
+const LAST_UPDATE = '2026-10-10T05:14:25Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
+  { date:'2026-10-10', type:'video', brandId:'steg',        productId:'st-dsps12',   note:'Video DSP-S12 ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-klc62',    note:'Video Köln Line ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-iqles10a', note:'Video IQ-LES10A ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-clw6',     note:'Video Concerto Line ditambahkan' },
@@ -1667,8 +1668,8 @@ const BRANDS = [
           photos:['assets/st-dsps6-1.webp','assets/st-dsps6-2.webp','assets/st-dsps6-3.webp','assets/st-dsps6-4.webp','assets/st-dsps6-5.webp'],
           desc:'OTG DSP Power Amplifier — High Level 6 In 8 Out, AKM7735 High Performance DSP Chip, 31-Band EQ.',
           specs:{'DSP Chip':'AKM7735','Channel':'6CH + 8 RCA Out','Power Output':'6×35 W (4Ω)','Amplifier':'Class-D','EQ':'31-Band','Bluetooth':'5.1','Sampling Rate':'48 kHz','SNR':'≥100 dB','THD':'≤0.01%','Operating Voltage':'9 – 18 V'} },
-        { id:'st-dsps12', name:'DSP-S12', model:'DSP-S12', category:'DSP', emoji:'💻', hasVideo:false,
-          photos:['assets/st-dsps12-1.webp','assets/st-dsps12-2.webp','assets/st-dsps12-3.webp','assets/st-dsps12-4.webp','assets/st-dsps12-5.webp'],
+        { id:'st-dsps12', name:'DSP-S12', model:'DSP-S12', category:'DSP', emoji:'💻', hasVideo:true,
+          photos:['assets/st-dsps12-1.webp','assets/st-dsps12-2.webp','assets/st-dsps12-3.webp','assets/st-dsps12-4.webp','assets/st-dsps12-5.webp'], video:'assets/st-dsps12.mp4?v=1', videoPoster:'assets/st-dsps12-poster.jpg?v=1',
           desc:'Car DSP Amplifier — 12-Channel DSP Processing, Built-in Class-D Amplifier, 31-Band Independent EQ per channel.',
           specs:{'Channel':'12CH DSP + 12 RCA Out','Input':'12 High-Level + 2 AUX','Power Output':'10×35 W (4Ω) + 2×90 W (2Ω)','Amplifier':'Class-D','EQ':'31-Band Independent','Crossover':'20 Hz – 20 kHz','Bluetooth':'Wi-Fi / BT','Optical':'TOSLINK In','Connectivity':'USB-OTG, COAX In'} },
         { id:'st-ss16', name:'SS16', model:'SS16', category:'DSP', emoji:'💻', hasVideo:false,
