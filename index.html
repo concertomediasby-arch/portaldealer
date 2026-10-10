@@ -1361,6 +1361,10 @@ body {
   .imp-table th { text-align: left; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #6b7280; padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,.08); }
   .imp-table td { padding: 6px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: top; }
   .imp-table tr.bad td { color: #e0675f; }
+  .imp-table tr.new td:first-child, .imp-table tr.new td:nth-child(2) { color: #d8b26a; }
+  .imp-sum b.new { color: #d8b26a; }
+  .imp-warn { color: #e8b04a; background: rgba(232,176,74,.08); border: 1px solid rgba(232,176,74,.3); border-radius: 8px; padding: 8px 10px; }
+  .imp-warn b { color: #f3c96b; }
   .imp-table .muted { color: #6b7280; font-size: 10.5px; }
   .imp-scroll { max-height: 260px; overflow-y: auto; border: 1px solid rgba(255,255,255,.06); border-radius: 8px; }
   .imp-ctrl { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 6px; }
@@ -1863,7 +1867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T17:09:31Z';
+const LAST_UPDATE = '2026-10-10T17:33:38Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -3622,6 +3626,12 @@ const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
 const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || '', updated_at: r.updated_at || null });
 let stockLoaded = false, stockBrand = 'all', stockStatus = 'all';
+// Produk di luar katalog BRANDS disimpan dengan product_id "x:<KODE GUDANG>"
+const EXTRA_PREFIX = 'x:';
+const EXTRA_GROUP = { id: '_extra', name: 'Produk Lain (di luar katalog)' };
+const extraId = raw => EXTRA_PREFIX + String(raw).toUpperCase().replace(/[^A-Z0-9 .\-\/+]/g, '').replace(/\s+/g, ' ').trim();
+const extraProducts = () => Object.keys(stockMap).filter(k => k.startsWith(EXTRA_PREFIX)).sort()
+  .map(id => ({ id, name: id.slice(EXTRA_PREFIX.length), model: 'Belum ada di katalog' }));
 
 function initSupabase() {
   try {
@@ -3720,7 +3730,7 @@ function openStockView() {
   const search = document.getElementById('stock-search');
   if (search) search.value = '';
   document.getElementById('stock-brand-chips').innerHTML =
-    [{id:'all', name:'Semua'}, ...BRANDS.map(b => ({id:b.id, name:b.name}))].map(b =>
+    [{id:'all', name:'Semua'}, ...BRANDS.map(b => ({id:b.id, name:b.name})), {id: EXTRA_GROUP.id, name: 'Lainnya'}].map(b =>
       `<button class="filter-chip${b.id==='all'?' active':''}" data-brand="${b.id}" onclick="setStockBrand('${b.id}')">${b.name}</button>`
     ).join('');
   renderStockView();
@@ -3740,7 +3750,10 @@ function setStockStatus(s) {
 
 function renderStockView() {
   const q = (document.getElementById('stock-search')?.value || '').trim().toLowerCase();
-  const all = BRANDS.flatMap(b => brandProducts(b).filter(p => stockMap[p.id]).map(p => ({ b, p, s: stockMap[p.id] })));
+  const all = [
+    ...BRANDS.flatMap(b => brandProducts(b).filter(p => stockMap[p.id]).map(p => ({ b, p, s: stockMap[p.id] }))),
+    ...extraProducts().map(p => ({ b: EXTRA_GROUP, p, s: stockMap[p.id] })),
+  ];
 
   const counts = { ready: 0, indent: 0, habis: 0, otw: 0 };
   all.forEach(x => { if (counts[x.s.status] !== undefined) counts[x.s.status]++; if (x.s.incoming) counts.otw++; });
@@ -3766,13 +3779,14 @@ function renderStockView() {
     return;
   }
   const head = `<div class="stock-row head"><span>Produk</span><span>Status</span><span>Qty</span><span>Catatan</span><span style="text-align:right">Diperbarui</span></div>`;
-  el.innerHTML = BRANDS.map(b => {
+  el.innerHTML = [...BRANDS, EXTRA_GROUP].map(b => {
     const items = rows.filter(r => r.b === b);
     if (!items.length) return '';
     return `<div class="stock-group"><div class="stock-group-title">${b.name}</div>${head}${items.map(({ p, s }) => {
       const mq = s.status === 'ready' && s.qty != null ? `<span class="sr-mq"> · ${s.qty}</span>` : '';
-      return `<div class="stock-row" onclick="showProduct('${b.id}','${p.id}')">
-        <div style="min-width:0"><div class="sr-name">${p.name}</div><div class="sr-model">${p.model}</div></div>
+      const open = b === EXTRA_GROUP ? 'style="cursor:default"' : `onclick="showProduct('${b.id}','${p.id}')"`;
+      return `<div class="stock-row" ${open}>
+        <div style="min-width:0"><div class="sr-name">${escHtml(p.name)}</div><div class="sr-model">${escHtml(p.model)}</div></div>
         <div><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}${mq}</span></div>
         <div class="sr-qty">${s.qty ?? ''}</div>
         <div class="sr-note">${s.incoming ? `<div class="sr-otw">🚚 OTW ${escHtml(s.incoming)}</div>` : ''}${escHtml(s.note)}</div>
@@ -3841,8 +3855,8 @@ function renderAdminList() {
   if (!container) return;
 
   let html = '';
-  BRANDS.forEach(brand => {
-    const products = brand.lines.flatMap(l => l.products).filter(p =>
+  [...BRANDS.map(b => [b, brandProducts(b)]), [EXTRA_GROUP, extraProducts()]].forEach(([brand, list]) => {
+    const products = list.filter(p =>
       !q || p.name.toLowerCase().includes(q) || p.model.toLowerCase().includes(q) || brand.name.toLowerCase().includes(q)
     );
     if (!products.length) return;
@@ -3855,8 +3869,8 @@ function renderAdminList() {
       const qty    = s.qty ?? '';
       html += `<div class="admin-product-row">
         <div class="admin-prod-info">
-          <div class="admin-prod-name">${p.name}</div>
-          <div class="admin-prod-model">${p.model}${s.incoming ? ` · 🚚 OTW ${escHtml(s.incoming)}` : ''}</div>
+          <div class="admin-prod-name">${escHtml(p.name)}</div>
+          <div class="admin-prod-model">${escHtml(p.model)}${s.incoming ? ` · 🚚 OTW ${escHtml(s.incoming)}` : ''}</div>
         </div>
         <select class="admin-stock-select" data-pid="${p.id}" onchange="scheduleSave('${p.id}')">
           <option value=""       ${status===''      ?'selected':''}>— Belum diatur</option>
@@ -3961,6 +3975,10 @@ async function downloadStockTemplate() {
       const s = stockMap[p.id] || {};
       rows.push([b.name, p.model, p.name, s.qty ?? '', s.status ? STOCK_LABEL[s.status] : '', s.note || '']);
     }));
+    extraProducts().forEach(p => {
+      const s = stockMap[p.id];
+      rows.push(['Lainnya', p.name, p.name, s.qty ?? '', s.status ? STOCK_LABEL[s.status] : '', s.note || '']);
+    });
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws['!cols'] = [{wch:16}, {wch:22}, {wch:28}, {wch:7}, {wch:9}, {wch:32}];
     const wb = XLSX.utils.book_new();
@@ -4020,7 +4038,7 @@ let importSrc = null;   // { sheets:[{name, rows}], idx, source, mode, qtyCol }
 function detectLayout(rows) {
   const isHead = r => r.some(c => /kode|model|nama|produk|barang|no\s*inv|tipe/i.test(c)) && r.some(c => /qty|jumlah|stok|stock|baru|sisa/i.test(c));
   const h = rows.slice(0, 8).findIndex(isHead);
-  if (h < 0) return { head: null, body: rows, col: { model: 0, name: -1, qty: 1, note: 2, status: -1, brand: -1 } };
+  if (h < 0) return { h: 0, head: null, body: rows, col: { model: 0, name: -1, qty: 1, note: 2, status: -1, brand: -1 } };
   const head = rows[h].map(c => String(c).trim().toLowerCase());
   const find = re => head.findIndex(x => re.test(x));
   let model = find(/kode|model|tipe|type|no\s*inv/);
@@ -4028,9 +4046,11 @@ function detectLayout(rows) {
   if (model < 0) model = name;
   let qty = find(/^baru$/);
   if (qty < 0) qty = find(/qty|jumlah|stok|stock|sisa/);
-  return { head: rows[h], body: rows.slice(h + 1), col: { model, name, qty, status: find(/status/), note: find(/catatan|note/), brand: find(/brand|merek/) } };
+  return { h, head: rows[h], body: rows.slice(h + 1), col: { model, name, qty, status: find(/status/), note: find(/catatan|note/), brand: find(/brand|merek/) } };
 }
-const looksOtw = rows => /otw|blm\s*datang|belum\s*datang|perjalanan/i.test(rows.slice(0, 4).flat().join(' '));
+// OTW only when the sheet name or the title rows ABOVE the header say so — never from data cells
+const OTW_RE = /\botw\b|blm\s*datang|belum\s*datang|perjalanan/i;
+const looksOtw = sheet => OTW_RE.test(sheet.name) || OTW_RE.test(sheet.rows.slice(0, detectLayout(sheet.rows).h).flat().join(' '));
 
 function startImport(sheets, source) {
   sheets = sheets.map(s => ({ name: s.name, rows: s.rows.map(r => r.map(c => String(c ?? '').trim())).filter(r => r.some(Boolean)) }))
@@ -4041,8 +4061,7 @@ function startImport(sheets, source) {
 }
 function pickImportSheet(i) {
   importSrc.idx = +i;
-  const rows = importSrc.sheets[importSrc.idx].rows;
-  importSrc.mode = looksOtw(rows) ? 'otw' : 'gudang';
+  importSrc.mode = looksOtw(importSrc.sheets[importSrc.idx]) ? 'otw' : 'gudang';
   importSrc.qtyCol = null;
   renderImport();
 }
@@ -4062,7 +4081,7 @@ function renderImport() {
     keys: new Set([normKey(p.model), normKey(p.name), normKey(p.id), normKey(b.name + p.model)]) })));
   const byId = Object.fromEntries(index.map(x => [x.p.id, x]));
 
-  const matched = new Map(), unmatched = new Map();
+  const matched = new Map();
   let skipped = 0, ignored = 0;
   lay.body.forEach(r => {
     const cell = k => col[k] >= 0 ? String(r[col[k]] ?? '').trim() : '';
@@ -4086,13 +4105,15 @@ function renderImport() {
     const k = normKey(raw), bk = normKey(cell('brand'));
     if (aliases[k] === '-') { ignored++; return; }
     let hit = byId[aliases[k] || STOCK_ALIASES[k]];
-    if (!hit) {
+    if (!hit && aliases[k] !== '+') {
       const hits = [...new Map(index.filter(x => x.keys.has(k) && (!bk || normKey(x.b.name) === bk || normKey(x.b.id) === bk)).map(h => [h.p.id, h])).values()];
       if (hits.length === 1) hit = hits[0];
     }
-    if (!hit) { unmatched.set(k, { key: k, raw, qty, status, incoming }); return; }
+    // Not in the catalog → kept as an extra product under its warehouse code
+    const pid = hit ? hit.p.id : extraId(raw);
+    if (!hit && pid === EXTRA_PREFIX) return;
 
-    const prev = matched.get(hit.p.id);
+    const prev = matched.get(pid);
     // Different warehouse codes for one catalog product (e.g. cable lengths) are summed; a repeated identical code just overwrites
     if (prev && !prev.codes.has(k)) {
       prev.codes.add(k); prev.raw += ' + ' + raw;
@@ -4100,18 +4121,22 @@ function renderImport() {
       else if (qty !== null) { prev.qty = (prev.qty || 0) + qty; prev.status = prev.qty === 0 ? 'habis' : (prev.status === 'indent' ? 'indent' : 'ready'); }
       return;
     }
-    matched.set(hit.p.id, { hit, raw, codes: new Set([k]), qty, status, note, incoming });
+    matched.set(pid, { pid, hit, key: k, raw, codes: new Set([k]), qty, status, note, incoming });
   });
 
   importRows = [...matched.values()];
-  const bad = [...unmatched.values()];
+  const bad = importRows.filter(r => !r.hit), good = importRows.filter(r => r.hit);
   const cleared = otw ? Object.entries(stockMap).filter(([pid, s]) => s.incoming && !matched.has(pid)).length : 0;
 
-  const opts = `<option value="">— Pilih produk…</option><option value="-">Abaikan (tidak ada di katalog)</option>` +
-    BRANDS.map(b => `<optgroup label="${escHtml(b.name)}">${brandProducts(b).map(p => `<option value="${p.id}">${escHtml(p.model)}</option>`).join('')}</optgroup>`).join('');
+  const opts = sel => `<option value="+" ${sel === '+' ? 'selected' : ''}>＋ Produk lain (di luar katalog)</option>
+    <option value="-">Abaikan — jangan disimpan</option>` +
+    BRANDS.map(b => `<optgroup label="Sama dengan produk ${escHtml(b.name)}:">${brandProducts(b).map(p => `<option value="${p.id}">${escHtml(p.model)}</option>`).join('')}</optgroup>`).join('');
   const headOpts = lay.head ? lay.head.map((h, i) => h ? `<option value="${i}" ${i === col.qty ? 'selected' : ''}>${escHtml(h)}</option>` : '').join('') : '';
   const fmtIn = x => `${x.n} ${x.unit}`;
   const cur = pid => stockMap[pid] || {};
+  const stOf = r => { const c = cur(r.pid); return otw ? (c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent') : r.status; };
+  const amount = r => { const c = cur(r.pid);
+    return (otw ? fmtIn(r.incoming) : (r.qty ?? '—')) + (!otw && c.qty != null && c.qty !== r.qty ? `<div class="muted">sebelumnya ${c.qty}</div>` : ''); };
 
   document.getElementById('imp-preview').innerHTML = `
     <div class="imp-ctrl">
@@ -4121,27 +4146,23 @@ function renderImport() {
         <option value="otw" ${otw ? 'selected' : ''}>Barang OTW (belum datang)</option></select></label>
       ${headOpts ? `<label>Kolom jumlah <select class="admin-stock-select" onchange="setImportQtyCol(this.value)">${headOpts}</select></label>` : ''}
     </div>
-    <div class="imp-sum">${escHtml(importSrc.source)}: <b class="ok">${importRows.length} cocok</b>${bad.length ? ` · <b class="bad">${bad.length} perlu dipilih</b>` : ''}${ignored ? ` · ${ignored} diabaikan` : ''}${skipped ? ` · ${skipped} baris tanpa jumlah dilewati` : ''}</div>
-    ${otw ? `<div class="imp-sum">Mode OTW: jumlah dicatat sebagai <b>barang dalam perjalanan</b>; stok gudang tidak berubah. Produk yang stoknya kosong ditandai <b>Indent</b>.${cleared ? ` ${cleared} produk yang sebelumnya OTW tapi tidak ada di daftar ini akan dihapus tanda OTW-nya (dianggap sudah datang).` : ''}</div>` : ''}
-    ${bad.length ? `<div class="imp-sum">Kode di bawah tidak cocok dengan katalog. Pilih produknya sekali — pilihan diingat untuk import berikutnya.</div>` : ''}
+    <div class="imp-sum">${escHtml(importSrc.source)}: <b class="ok">${good.length} cocok katalog</b>${bad.length ? ` · <b class="new">${bad.length} produk lain</b> (di luar katalog, ikut disimpan)` : ''}${ignored ? ` · ${ignored} diabaikan` : ''}${skipped ? ` · ${skipped} baris tanpa jumlah dilewati` : ''}</div>
+    ${otw ? `<div class="imp-sum imp-warn">⚠ Mode <b>Barang OTW</b>: jumlah dicatat sebagai barang dalam perjalanan, <b>stok gudang tidak berubah</b>. Pastikan file ini memang daftar barang belum datang.${cleared ? ` ${cleared} produk yang sebelumnya OTW tapi tidak ada di daftar ini akan dihapus tanda OTW-nya (dianggap sudah datang).` : ''}</div>` : ''}
+    ${bad.length ? `<div class="imp-sum">Produk bertanda ＋ tidak ada di katalog dan akan tampil di grup <b>Produk Lain</b>. Jika ternyata produk katalog dengan kode berbeda, pilih produknya — pilihan diingat untuk import berikutnya.</div>` : ''}
     <div class="imp-scroll"><table class="imp-table">
-      <tr><th></th><th>Kode / Produk</th><th>${otw ? 'OTW' : 'Qty'}</th><th>${otw ? 'Status' : 'Status'}</th></tr>
-      ${bad.map(r => `<tr class="bad">
-        <td>⚠</td>
-        <td>${escHtml(r.raw)}<div><select class="admin-stock-select imp-map" onchange="setImportAlias('${r.key}', this.value)">${opts}</select></div></td>
-        <td>${otw ? fmtIn(r.incoming) : (r.qty ?? '—')}</td><td>${otw ? '' : (STOCK_LABEL[r.status] || '—')}</td>
+      <tr><th></th><th>Kode / Produk</th><th>${otw ? 'OTW' : 'Qty'}</th><th>Status</th></tr>
+      ${bad.map(r => `<tr class="new">
+        <td>＋</td>
+        <td>${escHtml(r.raw)}<div><select class="admin-stock-select imp-map" onchange="setImportAlias('${r.key}', this.value === '+' ? '' : this.value)">${opts('+')}</select></div></td>
+        <td>${amount(r)}</td><td>${STOCK_LABEL[stOf(r)] || '—'}</td>
       </tr>`).join('')}
-      ${importRows.map(r => {
-        const c = cur(r.hit.p.id);
-        const st = otw ? (c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent') : r.status;
-        return `<tr>
+      ${good.map(r => `<tr>
         <td>✓</td>
         <td>${escHtml(r.hit.p.name)}<div class="muted">${escHtml(r.hit.b.name)} · ${escHtml(r.hit.p.model)}${normKey(r.raw) !== normKey(r.hit.p.model) ? ` · dari "${escHtml(r.raw)}"` : ''}</div></td>
-        <td>${otw ? fmtIn(r.incoming) : (r.qty ?? '—')}${!otw && c.qty != null && c.qty !== r.qty ? `<div class="muted">sebelumnya ${c.qty}</div>` : ''}</td>
-        <td>${STOCK_LABEL[st] || '—'}</td>
-      </tr>`; }).join('')}
+        <td>${amount(r)}</td><td>${STOCK_LABEL[stOf(r)] || '—'}</td>
+      </tr>`).join('')}
     </table></div>
-    ${importRows.length || cleared ? `<button class="admin-btn primary" id="imp-save" style="margin-top:10px" onclick="saveImport()">Simpan ${importRows.length} produk</button>` : ''}`;
+    ${importRows.length || cleared ? `<button class="admin-btn primary" id="imp-save" style="margin-top:10px" onclick="saveImport()">Simpan ${importRows.length} produk${otw ? ' sebagai OTW' : ''}</button>` : ''}`;
   adminMsg('');
 }
 
@@ -4152,10 +4173,10 @@ async function saveImport() {
   btn.disabled = true; btn.textContent = 'Menyimpan…';
   let payload;
   if (otw) {
-    const listed = new Set(importRows.map(r => r.hit.p.id));
+    const listed = new Set(importRows.map(r => r.pid));
     payload = importRows.map(r => {
-      const c = stockMap[r.hit.p.id] || {};
-      return { product_id: r.hit.p.id, incoming: `${r.incoming.n} ${r.incoming.unit}`,
+      const c = stockMap[r.pid] || {};
+      return { product_id: r.pid, incoming: `${r.incoming.n} ${r.incoming.unit}`,
                status: c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent', qty: c.qty ?? null, note: c.note || '' };
     });
     Object.entries(stockMap).forEach(([pid, c]) => {
@@ -4163,8 +4184,8 @@ async function saveImport() {
     });
   } else {
     // Empty Catatan keeps the existing note instead of wiping it
-    payload = importRows.map(r => ({ product_id: r.hit.p.id, status: r.status, qty: r.qty,
-      note: r.note || stockMap[r.hit.p.id]?.note || '' }));
+    payload = importRows.map(r => ({ product_id: r.pid, status: r.status, qty: r.qty,
+      note: r.note || stockMap[r.pid]?.note || '' }));
   }
   try {
     const { error } = await supabase.from('stock').upsert(payload, { onConflict: 'product_id' });
