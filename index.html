@@ -1072,17 +1072,40 @@ body {
   .line-grid { grid-template-columns: repeat(2, 1fr); }
   .media-thumbnails { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
   .media-thumb { flex-shrink: 0; }
+
+  /* Landing: brands marquee absolute di bawah agar tidak terdorong keluar viewport */
+  .landing-brands {
+    position: absolute;
+    bottom: env(safe-area-inset-bottom, 0px);
+    left: 0; right: 0;
+    z-index: 3;
+    padding: 0 0 20px;
+    background: linear-gradient(to top, rgba(0,0,0,.85) 55%, transparent);
+    opacity: 1 !important;
+    animation: none !important;
+  }
+  .landing-brands-label { margin-bottom: 12px; padding-top: 18px; }
+  /* Hero: beri ruang bawah untuk strip brand */
+  .landing-hero { padding-bottom: 110px; }
+  /* Eyebrow: kurangi letter-spacing agar tidak wrap */
+  .eyebrow { letter-spacing: 0.18em; font-size: 11px; }
 }
 @media (max-width: 480px) {
   .line-grid { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat-card { padding: 14px 16px; }
   .topbar-badge { display: none; }
-  .landing-title { font-size: clamp(28px, 9vw, 54px); }
-  .landing-sub { font-size: 14px; }
-  .enter-btn { font-size: 15px; padding: 14px 28px; }
+  /* Landing title lebih compact */
+  .landing-title { font-size: clamp(30px, 8.5vw, 46px); line-height: 0.95; margin-bottom: 16px; }
+  .landing-sub { font-size: 13.5px; line-height: 1.55; margin-bottom: 22px; max-width: 34ch; }
+  .enter-btn { font-size: 14px; padding: 12px 26px; }
+  .eyebrow { margin-bottom: 14px; }
+  .landing-hero { padding-top: 10px; padding-bottom: 120px; }
   .sheet { padding: 20px 16px; }
   .sheet-photos { grid-template-columns: repeat(2, 1fr); }
+  /* Brand hero */
+  .brand-hero { padding-top: 20px; padding-bottom: 20px; }
+  .page-header { padding-top: 16px; padding-bottom: 16px; }
 }
 </style>
 <style>
@@ -1351,7 +1374,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T06:23:09Z';
+const LAST_UPDATE = '2026-10-10T06:29:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
