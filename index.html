@@ -1278,7 +1278,11 @@ body {
     background: #0d0f13; border: 1px solid rgba(255,255,255,.1);
     border-radius: 18px; width: min(92vw, 560px); max-height: 85vh;
     display: flex; flex-direction: column; box-shadow: 0 32px 80px rgba(0,0,0,.7);
+    --fg: #f0f1f4; --fg-muted: #a3aab8; --accent: #d8b26a;
+    color: var(--fg); color-scheme: dark;
   }
+  .admin-input::placeholder, .admin-search::placeholder, .admin-note-input::placeholder { color: #6b7280; }
+  .admin-stock-select option { background: #0d0f13; color: #f0f1f4; }
   .admin-header {
     padding: 18px 22px 14px; border-bottom: 1px solid rgba(255,255,255,.08);
     display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
@@ -1722,7 +1726,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T16:30:12Z';
+const LAST_UPDATE = '2026-10-10T16:32:31Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
