@@ -1036,6 +1036,54 @@ body {
 /* theme toggle button polish */
 .theme-btn { background: var(--surface); border: 1px solid var(--border); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-radius: 50%; width: 34px; height: 34px; justify-content: center; }
 .theme-btn:hover { color: var(--accent-hi); border-color: var(--accent); }
+
+/* ── Mobile Bottom Nav ── */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 150;
+  justify-content: space-around;
+  align-items: center;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.mobile-nav-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; flex: 1; height: 100%;
+  background: none; border: none; cursor: pointer;
+  color: var(--fg-muted); font-size: 10px; font-weight: 600; letter-spacing: .03em;
+  font-family: var(--f-body);
+  transition: color .15s;
+  padding: 0;
+}
+.mobile-nav-item svg { width: 20px; height: 20px; stroke: currentColor; }
+.mobile-nav-item.active { color: var(--accent); }
+
+/* ── Responsive: Mobile ── */
+@media (max-width: 720px) {
+  .mobile-nav { display: flex; }
+  .main { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  .topbar-text-info { display: none !important; }
+  .line-grid { grid-template-columns: repeat(2, 1fr); }
+  .media-thumbnails { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .media-thumb { flex-shrink: 0; }
+}
+@media (max-width: 480px) {
+  .line-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card { padding: 14px 16px; }
+  .topbar-badge { display: none; }
+  .landing-title { font-size: clamp(28px, 9vw, 54px); }
+  .landing-sub { font-size: 14px; }
+  .enter-btn { font-size: 15px; padding: 14px 28px; }
+  .sheet { padding: 20px 16px; }
+  .sheet-photos { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 <style>
   img { max-width: 100%; }
@@ -1091,7 +1139,7 @@ body {
   <header class="topbar">
     <a class="topbar-logo" href="#" onclick="backToLanding(); return false;" aria-label="Home — Concerto Audio Indonesia" style="display:flex;align-items:center;gap:12px;text-decoration:none">
       <img id="logo-top-dark" class="logo-img" alt="Concerto Audio Indonesia">
-      <div style="display:flex;flex-direction:column;gap:1px;line-height:1.2;border-left:1px solid var(--border);padding-left:12px">
+      <div class="topbar-text-info" style="display:flex;flex-direction:column;gap:1px;line-height:1.2;border-left:1px solid var(--border);padding-left:12px">
         <span style="font-size:9px;font-family:var(--f-mono);letter-spacing:.12em;color:var(--accent);font-weight:600;text-transform:uppercase">Dealer Portal</span>
         <span style="font-size:11px;font-family:var(--f-display);font-weight:600;color:var(--fg);letter-spacing:.01em">Concerto Audio Indonesia</span>
       </div>
@@ -1260,6 +1308,31 @@ body {
     </div>
 
   </main>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-nav">
+    <button class="mobile-nav-item" id="mnav-home" onclick="backToLanding()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5L12 3l9 6.5"/><path d="M5 10v10h14V10"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="mobile-nav-item active" id="mnav-dashboard" onclick="showView('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-brands" onclick="openCatalog()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
+      <span>Brand</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-brandresmi" onclick="openBrandsPhilosophy()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span>Resmi</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-updates" onclick="openUpdates()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      <span>Update</span>
+    </button>
+  </nav>
+
 </div>
 
 <!-- SPEC SHEET MODAL -->
@@ -1278,7 +1351,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T06:01:48Z';
+const LAST_UPDATE = '2026-10-10T06:23:09Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
@@ -2371,6 +2444,12 @@ function showView(viewId) {
   if (viewId === 'catalog') document.getElementById('nav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('nav-brandresmi')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('nav-updates')?.classList.add('active');
+  // Mobile nav active
+  document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+  if (viewId === 'dashboard') document.getElementById('mnav-dashboard')?.classList.add('active');
+  if (viewId === 'catalog') document.getElementById('mnav-brands')?.classList.add('active');
+  if (viewId === 'brands') document.getElementById('mnav-brandresmi')?.classList.add('active');
+  if (viewId === 'updates') document.getElementById('mnav-updates')?.classList.add('active');
 }
 
 function showBrand(brandId) {
@@ -2391,6 +2470,9 @@ function showBrand(brandId) {
   // Sidebar active
   document.querySelectorAll('.sidebar-item, .brand-nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('nav-brand-' + brandId)?.classList.add('active');
+  // Mobile nav active
+  document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('mnav-brands')?.classList.add('active');
 
   // Filters (by category)
   const cats = ['Semua', ...brandCategories(brand)];
