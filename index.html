@@ -1867,7 +1867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T17:39:43Z';
+const LAST_UPDATE = '2026-10-10T17:41:03Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -3625,7 +3625,7 @@ let   adminUser = null;
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
 const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Bagian catatan internal gudang yang tidak ditampilkan ke dealer (catatan lengkap tetap tersimpan untuk admin)
-const DEALER_HIDDEN_NOTE = /^(free|pinjam)\b/i;
+const DEALER_HIDDEN_NOTE = /^(free|pinjam|2nd|pasang)\b/i;
 const dealerNote = n => String(n || '').split(/[|;]/).map(x => x.trim()).filter(x => x && !DEALER_HIDDEN_NOTE.test(x)).join(' | ');
 const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || '', updated_at: r.updated_at || null });
 let stockLoaded = false, stockBrand = 'all', stockStatus = 'all';
