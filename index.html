@@ -1126,12 +1126,9 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Brand Resmi
       </button>
-      <button class="sidebar-item" id="nav-lastitem" onclick="showProduct(LAST_ITEM.brandId, LAST_ITEM.productId)" style="flex-direction:column;align-items:flex-start;padding:8px 14px;gap:1px">
-        <span style="display:flex;align-items:center;gap:6px;font-size:13px">
-          <svg style="flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Update Terbaru
-        </span>
-        <span id="sidebar-lastitem-label" style="font-size:11px;opacity:.6;padding-left:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">—</span>
+      <button class="sidebar-item" id="nav-updates" onclick="openUpdates()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Update Terbaru
       </button>
     </div>
 
@@ -1186,6 +1183,15 @@ body {
         <div class="page-subtitle">Filosofi dan identitas setiap brand yang dinaungi Concerto Audio Indonesia.</div>
       </div>
       <div id="brands-philosophy-grid" style="padding-bottom:40px;border-top:1px solid var(--border)"></div>
+    </div>
+
+    <!-- VIEW: Update Terbaru -->
+    <div class="view" id="view-updates">
+      <div class="page-header">
+        <div class="page-title">Update Terbaru</div>
+        <div class="page-subtitle">Riwayat penambahan data, foto, dan video pada katalog produk.</div>
+      </div>
+      <div id="updates-list" style="padding-bottom:48px;border-top:1px solid var(--border)"></div>
     </div>
 
     <!-- VIEW: Semua Brand (Katalog Lengkap) -->
@@ -1272,16 +1278,39 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T05:00:02Z';
-const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series', brandId: 'og', productId: 'og-reference' };
-
-// Urutan update produk: terbaru → terlama (isi productId)
-const UPDATE_LOG = [
-  'og-reference','og-azure','og-streamline','og-reddragon',
-  'dm-deadening','dm-16aw','dm-rca','dm-fuseminianl','dm-fuseanl',
-  'zl-mfa1','zl-mfa32','zl-mfa34','zl-mfa52','zl-mfa54',
-  'zl-verdi2','zl-verdi4','zl-argentum','zl-tantalum',
+const LAST_UPDATE = '2026-10-10T05:03:41Z';
+// Log semua perubahan konten: data, foto, video — terbaru di atas
+// type: 'video' | 'photo' | 'data'
+const RECENT_UPDATES = [
+  { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-clw6',     note:'Video Concerto Line ditambahkan' },
+  { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-clm3',     note:'Video Concerto Line ditambahkan' },
+  { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-clt27',    note:'Video Concerto Line ditambahkan' },
+  { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-blw6',     note:'Video Berlin Line ditambahkan' },
+  { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-blt26',    note:'Video Berlin Line ditambahkan' },
+  { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-blm3',     note:'Video Berlin Line ditambahkan' },
+  { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-blx3',     note:'Video Berlin Line ditambahkan' },
+  { date:'2026-10-09', type:'photo', brandId:'og',          productId:'og-reference', note:'Foto produk ditambahkan' },
+  { date:'2026-10-09', type:'photo', brandId:'og',          productId:'og-azure',     note:'Foto produk ditambahkan' },
+  { date:'2026-10-09', type:'photo', brandId:'og',          productId:'og-streamline',note:'Foto produk ditambahkan' },
+  { date:'2026-10-09', type:'photo', brandId:'og',          productId:'og-reddragon', note:'Foto produk ditambahkan' },
+  { date:'2026-10-08', type:'data',  brandId:'dios',        productId:'dm-deadening', note:'Data produk ditambahkan' },
+  { date:'2026-10-08', type:'data',  brandId:'dios',        productId:'dm-16aw',      note:'Data produk ditambahkan' },
+  { date:'2026-10-08', type:'data',  brandId:'dios',        productId:'dm-rca',       note:'Data produk ditambahkan' },
+  { date:'2026-10-08', type:'data',  brandId:'dios',        productId:'dm-fuseminianl',note:'Data produk ditambahkan' },
+  { date:'2026-10-08', type:'data',  brandId:'dios',        productId:'dm-fuseanl',   note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-mfa1',      note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-mfa32',     note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-mfa34',     note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-mfa52',     note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-mfa54',     note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-verdi2',    note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-verdi4',    note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-argentum',  note:'Data produk ditambahkan' },
+  { date:'2026-10-07', type:'data',  brandId:'zelos',       productId:'zl-tantalum',  note:'Data produk ditambahkan' },
 ];
+
+// Untuk UPDATE_LOG (kompatibilitas katalog — urut terbaru ke terlama)
+const UPDATE_LOG = RECENT_UPDATES.map(u => u.productId);
 
 const BRANDS = [
   {
@@ -2061,9 +2090,13 @@ function init() {
 
   // Stats
   const totalProducts = BRANDS.reduce((s,b) => s + brandProducts(b).length, 0);
-  document.getElementById('stat-lastitem').innerHTML =
-    '<span style="opacity:.6;font-size:11px;display:block;margin-bottom:2px">' + LAST_ITEM.brand + '</span>' + LAST_ITEM.name;
-  document.getElementById('sidebar-lastitem-label').textContent = LAST_ITEM.brand + ' · ' + LAST_ITEM.name;
+  const _latestUpdate = RECENT_UPDATES[0];
+  const _latestBrand = BRANDS.find(b => b.id === _latestUpdate.brandId);
+  const _latestProduct = _latestBrand ? brandProducts(_latestBrand).find(p => p.id === _latestUpdate.productId) : null;
+  if (_latestProduct && _latestBrand) {
+    document.getElementById('stat-lastitem').innerHTML =
+      '<span style="opacity:.6;font-size:11px;display:block;margin-bottom:2px">' + _latestBrand.name + '</span>' + _latestProduct.name;
+  }
   document.getElementById('stat-products').textContent = totalProducts;
   document.getElementById('stat-lines').textContent = BRANDS.reduce((s,b)=>s+b.lines.length,0);
   const _lu = new Date(LAST_UPDATE);
@@ -2201,6 +2234,50 @@ function landingGo(target) {
   }
 }
 
+function openUpdates() {
+  showView('updates');
+  const el = document.getElementById('updates-list');
+  if (el.children.length) return;
+
+  const typeIcon = { video:'🎬', photo:'🖼️', data:'📋' };
+  const typeLabel = { video:'Video', photo:'Foto', data:'Data' };
+  const typeColor = { video:'#e67e22', photo:'#27ae60', data:'#2980b9' };
+
+  // Kelompokkan per tanggal
+  const byDate = new Map();
+  RECENT_UPDATES.forEach(u => {
+    if (!byDate.has(u.date)) byDate.set(u.date, []);
+    byDate.get(u.date).push(u);
+  });
+
+  let html = '<div style="padding-top:28px;display:flex;flex-direction:column;gap:28px">';
+  byDate.forEach((updates, date) => {
+    const d = new Date(date + 'T00:00:00+07:00');
+    const label = d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    html += `<div>
+      <div style="font-size:11px;font-family:var(--f-mono);color:var(--accent);letter-spacing:.12em;font-weight:700;text-transform:uppercase;margin-bottom:12px">${label}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">`;
+    updates.forEach(u => {
+      const { brand, product } = findProduct(u.brandId, u.productId);
+      if (!brand || !product) return;
+      const col = typeColor[u.type] || 'var(--accent)';
+      const ic = typeIcon[u.type] || '•';
+      const lbl = typeLabel[u.type] || u.type;
+      html += `<div onclick="showProduct('${u.brandId}','${u.productId}')" style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--glass-bar)'" onmouseleave="this.style.background='var(--surface)'">
+        <span style="font-size:18px;flex-shrink:0">${ic}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${product.name}</div>
+          <div style="font-size:11px;color:var(--fg-muted);margin-top:2px">${brand.name} · ${u.note}</div>
+        </div>
+        <span style="font-size:9px;font-family:var(--f-mono);font-weight:700;letter-spacing:.08em;padding:3px 8px;border-radius:4px;background:${col}22;color:${col};border:1px solid ${col}44;flex-shrink:0">${lbl.toUpperCase()}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function openBrandsPhilosophy() {
   showView('brands');
   const grid = document.getElementById('brands-philosophy-grid');
@@ -2267,6 +2344,7 @@ function showView(viewId) {
   if (viewId === 'dashboard') document.getElementById('nav-dashboard')?.classList.add('active');
   if (viewId === 'catalog') document.getElementById('nav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('nav-brandresmi')?.classList.add('active');
+  if (viewId === 'updates') document.getElementById('nav-updates')?.classList.add('active');
 }
 
 function showBrand(brandId) {
