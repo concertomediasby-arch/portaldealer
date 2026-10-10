@@ -1268,7 +1268,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T04:00:37Z';
+const LAST_UPDATE = '2026-10-10T04:04:04Z';
 const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series', brandId: 'og', productId: 'og-reference' };
 
 // Urutan update produk: terbaru → terlama (isi productId)
@@ -2118,7 +2118,7 @@ function initMarquee() {
 // compact logos look equally heavy.
 function brandMark(b, base) {
   return b.logo
-    ? `<img class="brand-logo" src="${b.logo}" alt="${b.name}" style="height:${base}px;filter:drop-shadow(0 0 6px rgba(255,255,255,.55))" onload="fitLogo(this, ${base})">`
+    ? `<img class="brand-logo" src="${b.logo}" alt="${b.name}" style="height:${base}px" onload="fitLogo(this, ${base})">`
     : `<span>${b.name}</span>`;
 }
 function fitLogo(img, base) {
