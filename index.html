@@ -1257,6 +1257,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         DSP Software
       </button>
+      <button class="sidebar-item" id="nav-paket" onclick="openPaketAudio()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Paket Audio
+      </button>
     </div>
 
     <hr class="sidebar-divider">
@@ -1337,6 +1341,15 @@ body {
         <div class="page-subtitle">Perangkat lunak tuning &amp; konfigurasi untuk produk DSP Concerto Audio Indonesia.</div>
       </div>
       <div id="dsp-list" style="padding:0 0 48px"></div>
+    </div>
+
+    <!-- VIEW: Paket Audio -->
+    <div class="view" id="view-paket">
+      <div class="page-header">
+        <div class="page-title">Paket Audio</div>
+        <div class="page-subtitle">Rekomendasi paket sistem audio lengkap dari Concerto Audio Indonesia untuk berbagai kebutuhan dan segmen.</div>
+      </div>
+      <div id="paket-list" style="padding:0 0 48px"></div>
     </div>
 
     <!-- VIEW: Semua Brand (Katalog Lengkap) -->
@@ -1436,6 +1449,10 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
       <span>DSP</span>
     </button>
+    <button class="mobile-nav-item" id="mnav-paket" onclick="openPaketAudio()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span>Paket</span>
+    </button>
   </nav>
 
 </div>
@@ -1456,7 +1473,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T07:37:03Z';
+const LAST_UPDATE = '2026-10-10T08:20:35Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -1471,6 +1488,24 @@ const DEALER_GUIDES = [
   { id:'guide-install', title:'Panduan Instalasi & After Sales', category:'Instalasi', icon:'🔧',
     desc:'Prosedur instalasi standar, tips perawatan produk, dan penanganan klaim garansi untuk dealer & installer resmi.',
     file:'assets/guides/panduan-instalasi.pdf', updated:'2026', available:false },
+];
+
+// ── Paket Audio ───────────────────────────────────────────────
+// segment: 'Entry' | 'Mid' | 'High' | 'Reference'
+// available: false → badge "Segera Hadir"
+const PAKET_AUDIO = [
+  { id:'paket-entry', title:'Paket Entry — Upgrade Pertama', segment:'Entry', icon:'🔊',
+    desc:'Paket ideal untuk upgrade pertama dari speaker bawaan. Cocok untuk pengguna yang ingin suara lebih baik dengan budget terjangkau.',
+    brands:['Audiocircle'], products:['Speaker Coaxial + Head Unit'], available:false },
+  { id:'paket-mid', title:'Paket Mid — Sistem Komponen', segment:'Mid', icon:'🎵',
+    desc:'Sistem speaker komponen dengan tweeter terpisah, memberikan soundstage lebih lebar dan vokal lebih jelas.',
+    brands:['Audiocircle', 'STEG'], products:['Speaker Komponen + Amplifier'], available:false },
+  { id:'paket-high', title:'Paket High — Full System', segment:'High', icon:'🎶',
+    desc:'Sistem audio lengkap dengan DSP, amplifier dedicated, dan subwoofer. Untuk pengalaman mendengarkan musik yang sesungguhnya di dalam mobil.',
+    brands:['Audiocircle', 'STEG', 'Audio System'], products:['Speaker + Amplifier + DSP + Subwoofer'], available:false },
+  { id:'paket-ref', title:'Paket Reference — Top of The Line', segment:'Reference', icon:'🏆',
+    desc:'Konfigurasi terbaik menggunakan produk flagship dari seluruh brand CAI. Untuk audiofil yang tidak berkompromi dengan kualitas suara.',
+    brands:['Audiocircle', 'STEG', 'Audio System', 'Diosdela'], products:['Full Hi-End System'], available:false },
 ];
 
 // ── DSP Software ──────────────────────────────────────────────
@@ -2518,6 +2553,35 @@ function openDspSoftware() {
   }).join('');
 }
 
+function openPaketAudio() {
+  showView('paket');
+  const el = document.getElementById('paket-list');
+  if (el.children.length) return;
+  const segColor = { 'Entry':'#52c38a', 'Mid':'#6fd3e6', 'High':'#d8b26a', 'Reference':'#a78bfa' };
+  el.innerHTML = PAKET_AUDIO.map(p => {
+    const color = segColor[p.segment] || 'var(--accent)';
+    const btn = p.available
+      ? `<a class="res-btn res-btn-dl" href="${p.file}" target="_blank">Lihat Detail</a>`
+      : `<span class="res-btn res-btn-soon">Segera Hadir</span>`;
+    const brandTags = p.brands.map(b =>
+      `<span class="res-cat" style="color:var(--accent);border-color:var(--accent)22;background:var(--accent)11">${b}</span>`
+    ).join('');
+    return `<div class="res-card">
+      <div class="res-icon">${p.icon}</div>
+      <div class="res-body">
+        <div class="res-meta">
+          <span class="res-cat" style="color:${color};border-color:${color}22;background:${color}11">${p.segment}</span>
+          ${brandTags}
+        </div>
+        <div class="res-title">${p.title}</div>
+        <div class="res-desc">${p.desc}</div>
+        <div class="res-desc" style="opacity:.6;font-size:.8em;margin-top:4px">Komponen: ${p.products.join(', ')}</div>
+        <div class="res-actions">${btn}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function openUpdates() {
   showView('updates');
   const el = document.getElementById('updates-list');
@@ -2631,6 +2695,7 @@ function showView(viewId) {
   if (viewId === 'updates') document.getElementById('nav-updates')?.classList.add('active');
   if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
+  if (viewId === 'paket') document.getElementById('nav-paket')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
   if (viewId === 'dashboard') document.getElementById('mnav-dashboard')?.classList.add('active');
@@ -2639,6 +2704,7 @@ function showView(viewId) {
   if (viewId === 'updates') document.getElementById('mnav-updates')?.classList.add('active');
   if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
+  if (viewId === 'paket') document.getElementById('mnav-paket')?.classList.add('active');
 }
 
 function showBrand(brandId) {
