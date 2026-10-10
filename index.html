@@ -538,13 +538,21 @@ body {
 @media (max-width: 720px) {
   .app { grid-template-columns: 1fr; grid-template-rows: 56px auto 1fr; }
   .sidebar { display: none; }
-  .product-detail-layout { grid-template-columns: 1fr; }
+  .product-detail-layout { grid-template-columns: 1fr; padding: 16px; gap: 16px; }
   .product-panel { position: static; }
   .brands-grid { grid-template-columns: 1fr; }
   .page-header, .brands-grid, .section-header,
   .stats-row, .filter-bar, .products-grid,
   .back-btn, .product-detail-layout { padding-left: 16px; padding-right: 16px; }
   .brand-hero { padding: 0 16px; }
+  /* Filter chips: horizontal scroll agar tidak wrap ke baris baru */
+  .filter-bar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px; scrollbar-width: none; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip { flex-shrink: 0; }
+  /* Spec rows: nilai ke kiri agar tidak terpotong */
+  .spec-row { gap: 8px; }
+  .spec-val { text-align: left; word-break: break-word; }
 }
 
 /* ── Utility ── */
@@ -1116,9 +1124,21 @@ body {
   .landing-hero { padding-top: 10px; padding-bottom: 120px; }
   .sheet { padding: 20px 16px; }
   .sheet-photos { grid-template-columns: repeat(2, 1fr); }
-  /* Brand hero */
-  .brand-hero { padding-top: 20px; padding-bottom: 20px; }
+  /* Brand hero compact */
+  .brand-hero { height: auto; min-height: 90px; padding: 18px 16px; }
+  .brand-hero-name { font-size: 26px; }
+  .brand-hero-tagline { font-size: 12.5px; }
   .page-header { padding-top: 16px; padding-bottom: 16px; }
+  .page-title { font-size: 18px; }
+  /* Product detail lebih compact */
+  .product-detail-layout { padding: 12px 16px; gap: 12px; }
+  .back-btn { margin: 14px 16px 0; }
+  /* Spec rows: stack key-value di layar sempit */
+  .spec-row { flex-direction: column; gap: 1px; padding: 8px 0; }
+  .spec-val { font-weight: 600; }
+  /* Res cards lebih kecil */
+  .res-title { font-size: 14px; }
+  .res-desc { font-size: 12px; }
 }
 
 /* ── Kartu resource (Panduan Dealer & DSP Software) ── */
@@ -1188,6 +1208,22 @@ body {
 @media (max-width: 560px) {
   .res-card { flex-direction: column; gap: 10px; padding: 18px 16px; }
   .res-icon { font-size: 24px; }
+  /* Tombol aksi lebih besar & mudah ditap */
+  .res-btn { padding: 9px 16px; font-size: 13px; }
+  .res-actions { gap: 10px; }
+}
+
+/* PDF Modal — fullscreen di tablet/layar kecil */
+@media (max-width: 720px) {
+  .pdf-modal-overlay { align-items: flex-end; padding: 0; }
+  .pdf-modal {
+    width: 100vw; height: 92vh;
+    border-radius: 16px 16px 0 0;
+    max-width: none;
+  }
+  .pdf-modal-title { font-size: .82rem; }
+  .pdf-modal-header { padding: 12px 16px; }
+  .pdf-modal-close { padding: 6px 12px; }
 }
 </style>
 <style>
@@ -1521,7 +1557,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T09:45:40Z';
+const LAST_UPDATE = '2026-10-10T09:49:42Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -2634,6 +2670,13 @@ function openPaketAudio() {
 }
 
 function openPdfPreview(file, title) {
+  // iOS Safari & browser mobile tidak support PDF di iframe → buka tab baru
+  const isMobile = window.matchMedia('(max-width: 720px)').matches
+    || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    window.open(file, '_blank');
+    return;
+  }
   const overlay = document.getElementById('pdf-preview-modal');
   document.getElementById('pdf-preview-title').textContent = title;
   document.getElementById('pdf-preview-frame').src = file;
