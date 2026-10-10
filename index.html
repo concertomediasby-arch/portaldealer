@@ -1268,7 +1268,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T04:04:04Z';
+const LAST_UPDATE = '2026-10-10T04:19:41Z';
 const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series', brandId: 'og', productId: 'og-reference' };
 
 // Urutan update produk: terbaru → terlama (isi productId)
@@ -1284,6 +1284,7 @@ const BRANDS = [
     id: 'audiocircle', name: 'Audiocircle', tagline: 'German Car Audio — Experience. Tradition. Innovation.',
     color: '#c0392b', bg: 'linear-gradient(135deg,#140403 0%,#3a0d0a 100%)', text: '#fff', abbr: 'AC', logo: 'assets/brands/audiocircle.webp',
     desc: 'Audio mobil asal Jerman dengan rentang lengkap dari Pro Line audiophile hingga seri plug & play untuk BMW dan Mercedes-Benz.',
+    philosophy: 'Audiocircle represents a team of long-time high-end audio and car enthusiasts with the aim to give people the possibility to enjoy music in perfection and naturalness — in all its variety, in our time of mobility, also in your car.\n\nOur products combine the experience and tradition of our team with innovation, progress, materials and manufacturing in Germany to meet the wishes and requirements of people today and tomorrow.\n\nImmerse yourself with us in the fascination and energy of music in all its facets and close the circle of everlasting desire for the perfect sound experience as well as the emotion and love for music.',
     lines: [
       { name: 'Pro Line', products: [
         { id:'ac-prow6c', name:'PRO-W6C NEO', model:'PRO-W6C NEO', category:'Speaker', emoji:'🔊', hasVideo:true,
@@ -2212,7 +2213,7 @@ function openBrandsPhilosophy() {
       </div>
       <!-- Body: desc + CTA -->
       <div style="background:var(--surface);padding:20px 24px 22px;display:flex;flex-direction:column;gap:14px">
-        <p style="margin:0;font-size:13px;line-height:1.75;color:var(--fg-muted)">${b.desc}</p>
+        <div style="font-size:13px;line-height:1.75;color:var(--fg-muted);display:flex;flex-direction:column;gap:10px">${(b.philosophy||b.desc).split('\n\n').map(p=>`<p style="margin:0">${p}</p>`).join('')}</div>
         <div style="display:flex;align-items:center;gap:8px">
           <div style="width:20px;height:2px;background:${b.color};border-radius:2px;transition:width .25s" class="bp-line"></div>
           <span style="font-size:10px;font-family:var(--f-mono);color:${b.color};font-weight:700;letter-spacing:.1em">LIHAT PRODUK</span>
