@@ -1089,8 +1089,12 @@ body {
 
   <!-- TOPBAR -->
   <header class="topbar">
-    <a class="topbar-logo" href="#" onclick="backToLanding(); return false;" aria-label="Home — Concerto Audio Indonesia">
+    <a class="topbar-logo" href="#" onclick="backToLanding(); return false;" aria-label="Home — Concerto Audio Indonesia" style="display:flex;align-items:center;gap:12px;text-decoration:none">
       <img id="logo-top-dark" class="logo-img" alt="Concerto Audio Indonesia">
+      <div style="display:flex;flex-direction:column;gap:1px;line-height:1.2;border-left:1px solid var(--border);padding-left:12px">
+        <span style="font-size:9px;font-family:var(--f-mono);letter-spacing:.12em;color:var(--accent);font-weight:600;text-transform:uppercase">Dealer Portal</span>
+        <span style="font-size:11px;font-family:var(--f-display);font-weight:600;color:var(--fg);letter-spacing:.01em">Concerto Audio Indonesia</span>
+      </div>
     </a>
     <div class="topbar-spacer"></div>
     <span class="topbar-status"><i></i>System Online</span>
@@ -1268,7 +1272,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T04:29:47Z';
+const LAST_UPDATE = '2026-10-10T04:39:48Z';
 const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series', brandId: 'og', productId: 'og-reference' };
 
 // Urutan update produk: terbaru → terlama (isi productId)
