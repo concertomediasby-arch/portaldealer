@@ -1181,7 +1181,7 @@ body {
         <div class="page-title">Brand Resmi</div>
         <div class="page-subtitle">Filosofi dan identitas setiap brand yang dinaungi Concerto Audio Indonesia.</div>
       </div>
-      <div id="brands-philosophy-grid" style="display:flex;flex-direction:column;gap:2px;padding-bottom:32px"></div>
+      <div id="brands-philosophy-grid" style="display:flex;flex-direction:column;gap:14px;padding-bottom:40px"></div>
     </div>
 
     <!-- VIEW: Semua Brand (Katalog Lengkap) -->
@@ -1268,7 +1268,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T03:13:56Z';
+const LAST_UPDATE = '2026-10-10T03:16:30Z';
 const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series', brandId: 'og', productId: 'og-reference' };
 
 // Urutan update produk: terbaru → terlama (isi productId)
@@ -2199,20 +2199,47 @@ function openBrandsPhilosophy() {
   const grid = document.getElementById('brands-philosophy-grid');
   if (grid.children.length) return;
   grid.innerHTML = BRANDS.map((b, i) => {
-    const logoHtml = b.logo
-      ? `<img src="${b.logo}" alt="${b.name}" style="max-height:36px;max-width:120px;object-fit:contain;filter:brightness(0) invert(1);opacity:.95">`
-      : `<span style="font-size:17px;font-weight:800;color:#fff;letter-spacing:.01em">${b.name}</span>`;
     const num = String(i + 1).padStart(2, '0');
-    return `<div onclick="showBrand('${b.id}')" style="cursor:pointer;display:flex;align-items:stretch;border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--border);transition:border-color .18s,background .18s" onmouseenter="this.style.borderColor='${b.color}';this.style.background='${b.color}0d'" onmouseleave="this.style.borderColor='';this.style.background=''">
-      <div style="width:5px;flex-shrink:0;background:${b.color}"></div>
-      <div style="width:220px;flex-shrink:0;padding:22px 24px;display:flex;flex-direction:column;justify-content:center;gap:10px;border-right:1px solid var(--border)">
-        <div style="font-size:11px;font-family:var(--f-mono);color:${b.color};letter-spacing:.1em;opacity:.7">${num}</div>
-        ${logoHtml}
-        <div style="font-size:10.5px;color:var(--fg-muted);font-family:var(--f-mono);line-height:1.5;margin-top:2px">${b.tagline}</div>
+    const logoHtml = b.logo
+      ? `<img src="${b.logo}" alt="${b.name}" style="max-height:44px;max-width:160px;object-fit:contain;filter:brightness(0) invert(1)">`
+      : `<span style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-.01em;font-family:var(--f-display)">${b.name}</span>`;
+    return `<div onclick="showBrand('${b.id}')" style="
+        position:relative;overflow:hidden;cursor:pointer;
+        border-radius:16px;
+        background:linear-gradient(135deg,#0e0e10 0%,${b.color}18 100%);
+        border:1px solid ${b.color}28;
+        display:grid;grid-template-columns:1fr 1.4fr;min-height:180px;
+        transition:border-color .25s,box-shadow .25s;
+      "
+      onmouseenter="this.style.borderColor='${b.color}70';this.style.boxShadow='0 0 0 1px ${b.color}40,0 20px 60px ${b.color}18'"
+      onmouseleave="this.style.borderColor='${b.color}28';this.style.boxShadow=''">
+
+      <!-- Background number watermark -->
+      <div style="position:absolute;right:24px;bottom:-18px;font-size:120px;font-weight:900;font-family:var(--f-display);color:${b.color};opacity:.06;line-height:1;pointer-events:none;user-select:none">${num}</div>
+
+      <!-- Left: brand identity -->
+      <div style="
+        position:relative;padding:32px 32px;
+        display:flex;flex-direction:column;justify-content:space-between;gap:20px;
+        border-right:1px solid ${b.color}20;
+      ">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-size:10px;font-family:var(--f-mono);color:${b.color};letter-spacing:.18em;opacity:.8">— ${num} —</span>
+          ${logoHtml}
+        </div>
+        <div>
+          <div style="width:32px;height:1px;background:${b.color};opacity:.5;margin-bottom:10px"></div>
+          <div style="font-size:10.5px;font-family:var(--f-mono);color:#ffffff80;line-height:1.6;letter-spacing:.02em">${b.tagline}</div>
+        </div>
       </div>
-      <div style="flex:1;padding:22px 28px;display:flex;flex-direction:column;justify-content:center;gap:10px">
-        <p style="margin:0;font-size:13.5px;line-height:1.7;color:var(--fg-muted)">${b.desc}</p>
-        <span style="font-size:10.5px;color:${b.color};font-family:var(--f-mono);font-weight:700;letter-spacing:.08em">LIHAT PRODUK →</span>
+
+      <!-- Right: philosophy -->
+      <div style="padding:32px 36px 32px 32px;display:flex;flex-direction:column;justify-content:space-between;gap:20px">
+        <p style="margin:0;font-size:14px;line-height:1.8;color:#ffffffb0;font-family:var(--f-body)">${b.desc}</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:20px;height:1px;background:${b.color}"></div>
+          <span style="font-size:10px;font-family:var(--f-mono);color:${b.color};font-weight:700;letter-spacing:.14em">LIHAT PRODUK</span>
+        </div>
       </div>
     </div>`;
   }).join('');
