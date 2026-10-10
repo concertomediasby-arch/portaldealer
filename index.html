@@ -1118,6 +1118,13 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
         Semua Brand
       </button>
+      <button class="sidebar-item" id="nav-lastitem" onclick="showProduct(LAST_ITEM.brandId, LAST_ITEM.productId)" style="flex-direction:column;align-items:flex-start;padding:8px 14px;gap:1px">
+        <span style="display:flex;align-items:center;gap:6px;font-size:13px">
+          <svg style="flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Update Terbaru
+        </span>
+        <span id="sidebar-lastitem-label" style="font-size:11px;opacity:.6;padding-left:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">—</span>
+      </button>
     </div>
 
     <hr class="sidebar-divider">
@@ -1248,8 +1255,8 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T03:03:55Z';
-const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series' };
+const LAST_UPDATE = '2026-10-10T03:05:39Z';
+const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series', brandId: 'og', productId: 'og-reference' };
 
 const BRANDS = [
   {
@@ -2028,6 +2035,7 @@ function init() {
   const totalProducts = BRANDS.reduce((s,b) => s + brandProducts(b).length, 0);
   document.getElementById('stat-lastitem').innerHTML =
     '<span style="opacity:.6;font-size:11px;display:block;margin-bottom:2px">' + LAST_ITEM.brand + '</span>' + LAST_ITEM.name;
+  document.getElementById('sidebar-lastitem-label').textContent = LAST_ITEM.brand + ' · ' + LAST_ITEM.name;
   document.getElementById('stat-products').textContent = totalProducts;
   document.getElementById('stat-lines').textContent = BRANDS.reduce((s,b)=>s+b.lines.length,0);
   const _lu = new Date(LAST_UPDATE);
