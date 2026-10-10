@@ -1268,7 +1268,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T03:56:00Z';
+const LAST_UPDATE = '2026-10-10T03:58:52Z';
 const LAST_ITEM = { brand: 'OG One Sound', name: 'Reference Series', brandId: 'og', productId: 'og-reference' };
 
 // Urutan update produk: terbaru → terlama (isi productId)
@@ -2198,41 +2198,33 @@ function openBrandsPhilosophy() {
   showView('brands');
   const grid = document.getElementById('brands-philosophy-grid');
   if (grid.children.length) return;
-  grid.innerHTML = BRANDS.map((b, i) => {
-    const num = String(i + 1).padStart(2, '0');
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;padding:28px 0 48px';
+  grid.innerHTML = BRANDS.map((b) => {
     const logoHtml = b.logo
-      ? `<img src="${b.logo}" alt="${b.name}" style="max-height:32px;max-width:130px;width:auto;object-fit:contain;filter:brightness(0) invert(1);display:block">`
-      : `<span style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em;font-family:var(--f-display);line-height:1">${b.name}</span>`;
-    return `<div onclick="showBrand('${b.id}')" style="cursor:pointer;position:relative;overflow:hidden" class="bp-row">
-      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,${b.color},${b.color}00)"></div>
-      <div style="display:grid;grid-template-columns:48px 200px 1fr auto;align-items:center;gap:0;padding:28px 32px 28px 0;border-bottom:1px solid var(--border)">
-
-        <!-- Number -->
-        <div style="font-size:11px;font-family:var(--f-mono);color:${b.color};letter-spacing:.1em;opacity:.5;text-align:center">${num}</div>
-
-        <!-- Logo + tagline -->
-        <div style="padding:0 24px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:10px;height:64px;justify-content:center">
-          ${logoHtml}
-          <span style="font-size:9.5px;font-family:var(--f-mono);color:var(--fg-muted);letter-spacing:.04em;line-height:1.4;opacity:.7">${b.tagline}</span>
-        </div>
-
-        <!-- Description -->
-        <div style="padding:0 32px;font-size:13px;line-height:1.75;color:var(--fg-muted)">${b.desc}</div>
-
-        <!-- CTA -->
-        <div style="display:flex;align-items:center;gap:8px;white-space:nowrap;padding-left:16px">
-          <div style="width:16px;height:1px;background:${b.color};transition:width .25s" class="bp-line"></div>
-          <span style="font-size:9.5px;font-family:var(--f-mono);color:${b.color};font-weight:700;letter-spacing:.12em">LIHAT</span>
+      ? `<img src="${b.logo}" alt="${b.name}" style="max-height:48px;max-width:180px;width:auto;object-fit:contain;display:block" onload="fitLogo(this,48)">`
+      : `<span style="font-size:22px;font-weight:800;color:#fff;font-family:var(--f-display)">${b.name}</span>`;
+    return `<div class="bp-card" onclick="showBrand('${b.id}')" style="cursor:pointer;border-radius:14px;overflow:hidden;border:1px solid var(--border);transition:transform .2s,box-shadow .2s">
+      <!-- Header: brand gradient bg + logo -->
+      <div style="background:${b.bg};padding:32px 28px 28px;display:flex;flex-direction:column;gap:16px;min-height:140px;justify-content:flex-end;position:relative">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${b.color};border-radius:14px 14px 0 0"></div>
+        ${logoHtml}
+        <div style="font-size:9px;font-family:var(--f-mono);color:${b.color};letter-spacing:.12em;font-weight:600;opacity:.85;text-transform:uppercase">${b.tagline}</div>
+      </div>
+      <!-- Body: desc + CTA -->
+      <div style="background:var(--surface);padding:20px 24px 22px;display:flex;flex-direction:column;gap:14px">
+        <p style="margin:0;font-size:13px;line-height:1.75;color:var(--fg-muted)">${b.desc}</p>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:20px;height:2px;background:${b.color};border-radius:2px;transition:width .25s" class="bp-line"></div>
+          <span style="font-size:10px;font-family:var(--f-mono);color:${b.color};font-weight:700;letter-spacing:.1em">LIHAT PRODUK</span>
         </div>
       </div>
     </div>`;
   }).join('');
 
-  // Hover: expand accent line
-  document.querySelectorAll('.bp-row').forEach(row => {
-    const line = row.querySelector('.bp-line');
-    row.addEventListener('mouseenter', () => { row.style.background = 'var(--surface)'; if(line) line.style.width='32px'; });
-    row.addEventListener('mouseleave', () => { row.style.background = ''; if(line) line.style.width='16px'; });
+  document.querySelectorAll('.bp-card').forEach(card => {
+    const line = card.querySelector('.bp-line');
+    card.addEventListener('mouseenter', () => { card.style.transform='translateY(-3px)'; card.style.boxShadow='0 8px 32px rgba(0,0,0,.35)'; if(line) line.style.width='36px'; });
+    card.addEventListener('mouseleave', () => { card.style.transform=''; card.style.boxShadow=''; if(line) line.style.width='20px'; });
   });
 }
 
