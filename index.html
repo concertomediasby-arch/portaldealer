@@ -1282,10 +1282,21 @@ body {
     color: var(--fg); color-scheme: dark;
   }
   .admin-input::placeholder, .admin-search::placeholder, .admin-note-input::placeholder { color: #6b7280; -webkit-text-fill-color: #6b7280; }
-  .admin-panel .admin-prod-name { color: #f0f1f4; }
+  .admin-panel .admin-prod-name { color: #f0f1f4 !important; -webkit-text-fill-color: #f0f1f4; }
   .admin-panel .admin-prod-model { color: #a3aab8; }
   .admin-panel .admin-input, .admin-panel .admin-search, .admin-panel .admin-note-input,
-  .admin-panel .admin-stock-select { color: #f0f1f4; -webkit-text-fill-color: #f0f1f4; }
+  .admin-panel .admin-qty-input, .admin-panel .admin-stock-select { color: #f0f1f4 !important; -webkit-text-fill-color: #f0f1f4; }
+  .admin-product-row { flex-wrap: wrap; }
+  .admin-prod-info { flex: 1 1 150px; min-width: 0; }
+  .admin-panel .admin-stock-select { min-width: 128px; }
+  .admin-panel .admin-note-input { flex: 1 1 90px; width: auto; }
+  .admin-qty-input {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 7px; padding: 5px 8px; font-size: 11px; font-family: var(--f-mono);
+    outline: none; width: 64px;
+  }
+  .admin-qty-input:focus { border-color: var(--accent); }
+  .admin-qty-input::placeholder { color: #6b7280; -webkit-text-fill-color: #6b7280; }
   .admin-panel .admin-logout-btn { color: #a3aab8; }
   .admin-panel .admin-logout-btn:hover { color: #f0f1f4; }
   .admin-panel .admin-close { color: #a3aab8; }
@@ -1733,7 +1744,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T16:33:53Z';
+const LAST_UPDATE = '2026-10-10T16:37:49Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -3483,10 +3494,12 @@ applyThemeIcon();
 const SUPA_URL  = 'https://cvffltbxsaiugccexmtf.supabase.co';
 const SUPA_KEY  = 'sb_publishable_Y4AMvOdGfunEZhvvpsMzbg_NBbxNqGW';
 let   supabase  = null;
-let   stockMap  = {};   // { product_id: { status, note } }
+let   stockMap  = {};   // { product_id: { status, note, qty } }
 let   adminUser = null;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
+const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null });
 
 function initSupabase() {
   try {
@@ -3500,14 +3513,16 @@ function initSupabase() {
 async function loadStock() {
   if (!supabase) return;
   try {
-    const { data } = await supabase.from('stock').select('product_id,status,note');
+    const { data } = await supabase.from('stock').select('*');
     if (data) {
       stockMap = {};
-      data.forEach(r => { stockMap[r.product_id] = { status: r.status, note: r.note }; });
+      data.forEach(r => { stockMap[r.product_id] = stockRow(r); });
       refreshStockUI();
     }
   } catch(e) {}
 }
+// Re-sync when a dealer comes back to the tab, in case the realtime connection dropped
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') loadStock(); });
 
 function subscribeStock() {
   if (!supabase) return;
@@ -3518,7 +3533,7 @@ function subscribeStock() {
       if (payload.eventType === 'DELETE') {
         delete stockMap[r.product_id];
       } else {
-        stockMap[r.product_id] = { status: r.status, note: r.note };
+        stockMap[r.product_id] = stockRow(r);
       }
       refreshStockUI();
     })
@@ -3546,16 +3561,17 @@ function refreshStockUI() {
   // Update detail panel if open
   const panelBadge = document.getElementById('panel-stock-badge');
   if (panelBadge && currentProductId) renderProductStockBadge(currentProductId);
-  // Update admin list if open
-  if (document.getElementById('admin-stock-section')?.style.display !== 'none') renderAdminList();
+  // Update admin list if open — but never while the admin is typing in it
+  const list = document.getElementById('admin-stock-list');
+  if (document.getElementById('admin-stock-section')?.style.display !== 'none' && !list?.contains(document.activeElement)) renderAdminList();
 }
 
 function stockBadgeSmall(pid) {
   const s = stockMap[pid];
   if (!s) return null;
-  const cls = s.status;
-  const label = STOCK_LABEL[s.status] || s.status;
-  return { cls, label };
+  const base = STOCK_LABEL[s.status] || s.status;
+  const label = s.status === 'ready' && s.qty != null ? `${base} · ${s.qty}` : base;
+  return { cls: s.status, label };
 }
 
 function renderProductStockBadge(pid) {
@@ -3563,8 +3579,10 @@ function renderProductStockBadge(pid) {
   if (!el) return;
   const s = stockMap[pid];
   if (!s) { el.innerHTML = ''; return; }
-  const note = s.note ? `<div class="stock-badge-note">📝 ${s.note}</div>` : '';
-  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}</span></div>${note}`;
+  const base = STOCK_LABEL[s.status] || s.status;
+  const label = s.status === 'ready' && s.qty != null ? `${base} — Sisa ${s.qty} unit` : base;
+  const note = s.note ? `<div class="stock-badge-note">📝 ${escHtml(s.note)}</div>` : '';
+  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${label}</span></div>${note}`;
 }
 
 /* ── Admin Panel ── */
@@ -3635,20 +3653,24 @@ function renderAdminList() {
       <div class="admin-brand-title">${brand.name}</div>`;
     products.forEach(p => {
       const s = stockMap[p.id] || {};
-      const status = s.status || 'ready';
+      const status = s.status || '';
       const note   = s.note   || '';
+      const qty    = s.qty ?? '';
       html += `<div class="admin-product-row">
-        <div style="flex:1;min-width:0">
+        <div class="admin-prod-info">
           <div class="admin-prod-name">${p.name}</div>
           <div class="admin-prod-model">${p.model}</div>
         </div>
-        <select class="admin-stock-select" data-pid="${p.id}" onchange="adminStockChange('${p.id}',this)">
+        <select class="admin-stock-select" data-pid="${p.id}" onchange="scheduleSave('${p.id}')">
+          <option value=""       ${status===''      ?'selected':''}>— Belum diatur</option>
           <option value="ready"  ${status==='ready' ?'selected':''}>🟢 Ready</option>
           <option value="indent" ${status==='indent'?'selected':''}>🟡 Indent</option>
           <option value="habis"  ${status==='habis' ?'selected':''}>🔴 Habis</option>
         </select>
+        <input class="admin-qty-input" type="number" min="0" step="1" inputmode="numeric" placeholder="Qty"
+          value="${qty}" data-pid="${p.id}" oninput="adminQtyChange('${p.id}',this)" title="Jumlah stok tersisa">
         <input class="admin-note-input" type="text" placeholder="Catatan..." maxlength="80"
-          value="${note.replace(/"/g,'&quot;')}" data-pid="${p.id}" oninput="adminNoteChange('${p.id}',this)">
+          value="${escHtml(note)}" data-pid="${p.id}" oninput="scheduleSave('${p.id}')">
         <div class="admin-save-row" id="saved-${p.id}"></div>
       </div>`;
     });
@@ -3658,10 +3680,14 @@ function renderAdminList() {
 }
 
 let saveTimers = {};
-function adminStockChange(pid, sel) {
-  scheduleSave(pid);
-}
-function adminNoteChange(pid, inp) {
+// Qty drives the status automatically (0 → Habis, >0 → Ready); Indent is kept if chosen manually
+function adminQtyChange(pid, inp) {
+  const sel = document.querySelector(`.admin-stock-select[data-pid="${pid}"]`);
+  if (sel && inp.value !== '') {
+    const n = parseInt(inp.value, 10);
+    if (n === 0) sel.value = 'habis';
+    else if (n > 0 && sel.value !== 'indent') sel.value = 'ready';
+  }
   scheduleSave(pid);
 }
 function scheduleSave(pid) {
@@ -3671,21 +3697,30 @@ function scheduleSave(pid) {
 
 async function saveStock(pid) {
   const sel  = document.querySelector(`.admin-stock-select[data-pid="${pid}"]`);
+  const qin  = document.querySelector(`.admin-qty-input[data-pid="${pid}"]`);
   const inp  = document.querySelector(`.admin-note-input[data-pid="${pid}"]`);
   const icon = document.getElementById('saved-' + pid);
   if (!sel || !supabase) return;
-  const status = sel.value;
-  const note   = inp ? inp.value.trim() : '';
-  if (icon) { icon.textContent = '⏳'; icon.style.color = 'var(--fg-muted)'; }
+  const note = inp ? inp.value.trim() : '';
+  const n    = qin && qin.value !== '' ? parseInt(qin.value, 10) : null;
+  const qty  = Number.isInteger(n) && n >= 0 ? n : null;
+  let status = sel.value;
+  if (!status && (qty !== null || note)) { status = qty === 0 ? 'habis' : 'ready'; sel.value = status; }
+  if (icon) { icon.textContent = '⏳'; icon.style.color = '#a3aab8'; icon.title = ''; }
   try {
-    const { error } = await supabase.from('stock').upsert(
-      { product_id: pid, status, note },
-      { onConflict: 'product_id' }
-    );
-    if (error) throw error;
+    if (!status) {
+      const { error } = await supabase.from('stock').delete().eq('product_id', pid);
+      if (error) throw error;
+      delete stockMap[pid];
+    } else {
+      const { error } = await supabase.from('stock').upsert({ product_id: pid, status, note, qty }, { onConflict: 'product_id' });
+      if (error) throw error;
+      stockMap[pid] = { status, note, qty };
+    }
+    refreshStockUI();
     if (icon) { icon.textContent = '✓'; icon.style.color = '#52c38a'; setTimeout(() => { if(icon) icon.textContent=''; }, 2000); }
   } catch(e) {
-    if (icon) { icon.textContent = '✗'; icon.style.color = '#e0675f'; }
+    if (icon) { icon.textContent = '✗'; icon.style.color = '#e0675f'; icon.title = e.message || 'Gagal menyimpan'; }
     console.warn('Save stock error', e);
   }
 }
