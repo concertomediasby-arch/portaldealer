@@ -1071,6 +1071,9 @@ body {
 }
 .mobile-nav-item svg { width: 20px; height: 20px; stroke: currentColor; }
 .mobile-nav-item.active { color: var(--accent); }
+.mobile-nav { overflow-x: auto; scrollbar-width: none; }
+.mobile-nav::-webkit-scrollbar { display: none; }
+.mobile-nav-item { min-width: 52px; flex-shrink: 0; }
 
 /* ── Responsive: Mobile ── */
 @media (max-width: 720px) {
@@ -1266,6 +1269,48 @@ body {
   .product-stock-badge.habis  { background: rgba(0,0,0,.55); color: #e0675f; border: 1px solid rgba(224,103,95,.4); }
   .product-stock-badge.habis::before  { background: #e0675f; }
 
+  /* ── Stok Produk view ── */
+  .stock-live { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 11.5px; color: var(--fg-muted); font-family: var(--f-mono); }
+  .stock-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-dim); }
+  .stock-live.on i { background: #52c38a; box-shadow: 0 0 6px #52c38a; animation: stockpulse 2s infinite; }
+  .stock-summary { display: flex; gap: 10px; flex-wrap: wrap; padding: 0 28px 14px; }
+  .stock-sum {
+    flex: 1 1 120px; padding: 12px 14px; border-radius: var(--r); cursor: pointer; text-align: left;
+    background: var(--surface); border: 1px solid var(--border); color: var(--fg); font-family: var(--f-body);
+    transition: border-color .15s;
+  }
+  .stock-sum:hover { border-color: var(--accent); }
+  .stock-sum.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .stock-sum b { display: block; font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.1; }
+  .stock-sum span { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .stock-sum.ready b { color: #52c38a; } .stock-sum.indent b { color: #c9a052; } .stock-sum.habis b { color: #e0675f; }
+  .stock-group { margin: 0 28px 18px; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: var(--surface); }
+  .stock-group-title { padding: 10px 16px; font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); }
+  .stock-row {
+    display: grid; grid-template-columns: minmax(0,1.6fr) 110px 70px minmax(0,1.4fr) 110px; gap: 12px; align-items: center;
+    padding: 10px 16px; border-bottom: 1px solid var(--hairline); cursor: pointer; transition: background .12s;
+  }
+  .stock-row:last-child { border-bottom: none; }
+  .stock-row:hover { background: var(--surface2); }
+  .stock-row.head { cursor: default; background: none; font-size: 10px; color: var(--fg-dim); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; padding-top: 8px; padding-bottom: 8px; }
+  .stock-row .sr-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stock-row .sr-model { font-size: 10.5px; color: var(--fg-muted); font-family: var(--f-mono); }
+  .stock-row .sr-qty { font-family: var(--f-mono); font-size: 14px; font-weight: 700; }
+  .stock-row .sr-note { font-size: 12px; color: var(--fg-muted); }
+  .stock-row .sr-time { font-size: 11px; color: var(--fg-dim); font-family: var(--f-mono); text-align: right; }
+  .stock-empty { margin: 0 28px; padding: 28px; text-align: center; color: var(--fg-muted); border: 1px dashed var(--border); border-radius: var(--r); }
+  @media (max-width: 720px) {
+    .stock-summary, .stock-group, .stock-empty { margin-left: 16px; margin-right: 16px; }
+    .stock-summary { padding: 0 0 12px; margin: 0 16px; }
+    .stock-sum { flex: 1 1 calc(50% - 10px); }
+    .stock-row { grid-template-columns: minmax(0,1fr) auto; gap: 4px 10px; }
+    .stock-row.head, .stock-row .sr-qty { display: none; }
+    .stock-row .sr-mq { display: inline; }
+    .stock-row .sr-note:empty { display: none; }
+    .stock-row .sr-note, .stock-row .sr-time { grid-column: 1 / -1; text-align: left; }
+  }
+  .sr-mq { display: none; }
+
   /* ── Admin Panel Modal ── */
   .admin-overlay {
     position: fixed; inset: 0; z-index: 9000;
@@ -1455,6 +1500,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
         Semua Brand
       </button>
+      <button class="sidebar-item" id="nav-stock" onclick="openStockView()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><polyline points="9 14 11 16 15 12"/></svg>
+        Stok Produk
+      </button>
       <button class="sidebar-item" id="nav-brandresmi" onclick="openBrandsPhilosophy()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Brand Resmi
@@ -1566,6 +1615,24 @@ body {
       <div id="paket-list" style="padding:0 0 48px"></div>
     </div>
 
+    <!-- VIEW: Stok Produk -->
+    <div class="view" id="view-stock">
+      <div class="page-header">
+        <div class="page-title">Stok Produk</div>
+        <div class="page-subtitle">Ketersediaan produk terkini dari gudang Concerto Audio Indonesia. Diperbarui otomatis secara langsung.</div>
+        <div class="stock-live" id="stock-live"><i></i><span id="stock-updated">Memuat data stok…</span></div>
+      </div>
+      <div class="stock-summary" id="stock-summary"></div>
+      <div class="catalog-controls">
+        <div class="catalog-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="stock-search" class="catalog-search" placeholder="Cari produk atau model…" oninput="renderStockView()" autocomplete="off">
+        </div>
+        <div class="catalog-chips" id="stock-brand-chips"></div>
+      </div>
+      <div id="stock-results" style="padding:8px 0 48px"></div>
+    </div>
+
     <!-- VIEW: Semua Brand (Katalog Lengkap) -->
     <div class="view" id="view-catalog">
       <div class="page-header">
@@ -1647,6 +1714,10 @@ body {
     <button class="mobile-nav-item" id="mnav-brands" onclick="openCatalog()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
       <span>Produk</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-stock" onclick="openStockView()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><polyline points="9 14 11 16 15 12"/></svg>
+      <span>Stok</span>
     </button>
     <button class="mobile-nav-item" id="mnav-brandresmi" onclick="openBrandsPhilosophy()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -1744,7 +1815,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T16:46:26Z';
+const LAST_UPDATE = '2026-10-10T16:50:04Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -2996,6 +3067,7 @@ function showView(viewId) {
   if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('nav-paket')?.classList.add('active');
+  if (viewId === 'stock') document.getElementById('nav-stock')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
   if (viewId === 'dashboard') document.getElementById('mnav-dashboard')?.classList.add('active');
@@ -3005,6 +3077,7 @@ function showView(viewId) {
   if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('mnav-paket')?.classList.add('active');
+  if (viewId === 'stock') document.getElementById('mnav-stock')?.classList.add('active');
 }
 
 function showBrand(brandId) {
@@ -3499,7 +3572,8 @@ let   adminUser = null;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
 const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null });
+const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, updated_at: r.updated_at || null });
+let stockLoaded = false, stockBrand = 'all', stockStatus = 'all';
 
 function initSupabase() {
   try {
@@ -3517,6 +3591,7 @@ async function loadStock() {
     if (data) {
       stockMap = {};
       data.forEach(r => { stockMap[r.product_id] = stockRow(r); });
+      stockLoaded = true;
       refreshStockUI();
     }
   } catch(e) {}
@@ -3561,6 +3636,7 @@ function refreshStockUI() {
   // Update detail panel if open
   const panelBadge = document.getElementById('panel-stock-badge');
   if (panelBadge && currentProductId) renderProductStockBadge(currentProductId);
+  if (document.getElementById('view-stock')?.classList.contains('active')) renderStockView();
   // Update admin list if open — but never while the admin is typing in it
   const list = document.getElementById('admin-stock-list');
   if (document.getElementById('admin-stock-section')?.style.display !== 'none' && !list?.contains(document.activeElement)) renderAdminList();
@@ -3583,6 +3659,78 @@ function renderProductStockBadge(pid) {
   const label = s.status === 'ready' && s.qty != null ? `${base} — Sisa ${s.qty} unit` : base;
   const note = s.note ? `<div class="stock-badge-note">📝 ${escHtml(s.note)}</div>` : '';
   el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${label}</span></div>${note}`;
+}
+
+/* ── Stok Produk view (publik, tanpa login) ── */
+const fmtStockTime = iso => iso
+  ? new Date(iso).toLocaleString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' })
+  : '';
+
+function openStockView() {
+  stockBrand = 'all'; stockStatus = 'all';
+  const search = document.getElementById('stock-search');
+  if (search) search.value = '';
+  document.getElementById('stock-brand-chips').innerHTML =
+    [{id:'all', name:'Semua'}, ...BRANDS.map(b => ({id:b.id, name:b.name}))].map(b =>
+      `<button class="filter-chip${b.id==='all'?' active':''}" data-brand="${b.id}" onclick="setStockBrand('${b.id}')">${b.name}</button>`
+    ).join('');
+  renderStockView();
+  showView('stock');
+  document.querySelector('.main')?.scrollTo(0, 0);
+  loadStock();
+}
+function setStockBrand(id) {
+  stockBrand = id;
+  document.querySelectorAll('#stock-brand-chips .filter-chip').forEach(el => el.classList.toggle('active', el.dataset.brand === id));
+  renderStockView();
+}
+function setStockStatus(s) {
+  stockStatus = stockStatus === s ? 'all' : s;
+  renderStockView();
+}
+
+function renderStockView() {
+  const q = (document.getElementById('stock-search')?.value || '').trim().toLowerCase();
+  const all = BRANDS.flatMap(b => brandProducts(b).filter(p => stockMap[p.id]).map(p => ({ b, p, s: stockMap[p.id] })));
+
+  const counts = { ready: 0, indent: 0, habis: 0 };
+  all.forEach(x => { if (counts[x.s.status] !== undefined) counts[x.s.status]++; });
+  document.getElementById('stock-summary').innerHTML =
+    [['all','Total', all.length], ['ready','Ready', counts.ready], ['indent','Indent', counts.indent], ['habis','Habis', counts.habis]]
+      .map(([k, label, n]) => `<button class="stock-sum ${k}${stockStatus===k?' active':''}" onclick="setStockStatus('${k}')"><b>${n}</b><span>${label}</span></button>`).join('');
+
+  const latest = all.map(x => x.s.updated_at).filter(Boolean).sort().pop();
+  const live = document.getElementById('stock-live');
+  live.classList.toggle('on', stockLoaded);
+  document.getElementById('stock-updated').textContent = !stockLoaded
+    ? (supabase ? 'Memuat data stok…' : 'Data stok tidak dapat dimuat — periksa koneksi internet.')
+    : 'Live' + (latest ? ' · terakhir diperbarui ' + fmtStockTime(latest) + ' WIB' : '');
+
+  const rows = all.filter(({ b, p, s }) =>
+    (stockBrand === 'all' || b.id === stockBrand) &&
+    (stockStatus === 'all' || s.status === stockStatus) &&
+    (!q || p.name.toLowerCase().includes(q) || p.model.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)));
+
+  const el = document.getElementById('stock-results');
+  if (!rows.length) {
+    el.innerHTML = `<div class="stock-empty">${stockLoaded && !all.length ? 'Data stok belum tersedia.' : stockLoaded ? 'Tidak ada produk yang cocok dengan filter.' : 'Memuat…'}</div>`;
+    return;
+  }
+  const head = `<div class="stock-row head"><span>Produk</span><span>Status</span><span>Qty</span><span>Catatan</span><span style="text-align:right">Diperbarui</span></div>`;
+  el.innerHTML = BRANDS.map(b => {
+    const items = rows.filter(r => r.b === b);
+    if (!items.length) return '';
+    return `<div class="stock-group"><div class="stock-group-title">${b.name}</div>${head}${items.map(({ p, s }) => {
+      const mq = s.status === 'ready' && s.qty != null ? `<span class="sr-mq"> · ${s.qty}</span>` : '';
+      return `<div class="stock-row" onclick="showProduct('${b.id}','${p.id}')">
+        <div style="min-width:0"><div class="sr-name">${p.name}</div><div class="sr-model">${p.model}</div></div>
+        <div><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}${mq}</span></div>
+        <div class="sr-qty">${s.qty ?? ''}</div>
+        <div class="sr-note">${escHtml(s.note)}</div>
+        <div class="sr-time">${fmtStockTime(s.updated_at)}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }).join('');
 }
 
 /* ── Admin Panel ── */
@@ -3715,7 +3863,7 @@ async function saveStock(pid) {
     } else {
       const { error } = await supabase.from('stock').upsert({ product_id: pid, status, note, qty }, { onConflict: 'product_id' });
       if (error) throw error;
-      stockMap[pid] = { status, note, qty };
+      stockMap[pid] = { status, note, qty, updated_at: new Date().toISOString() };
     }
     refreshStockUI();
     if (icon) { icon.textContent = '✓'; icon.style.color = '#52c38a'; setTimeout(() => { if(icon) icon.textContent=''; }, 2000); }
