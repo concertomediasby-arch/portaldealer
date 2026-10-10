@@ -1283,7 +1283,8 @@ body {
   .stock-sum.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
   .stock-sum b { display: block; font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.1; }
   .stock-sum span { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
-  .stock-sum.ready b { color: #52c38a; } .stock-sum.indent b { color: #c9a052; } .stock-sum.habis b { color: #e0675f; }
+  .stock-sum.ready b { color: #52c38a; } .stock-sum.indent b { color: #c9a052; } .stock-sum.habis b { color: #e0675f; } .stock-sum.otw b { color: #5aa9e6; }
+  .sr-otw { color: #5aa9e6; font-weight: 600; font-size: 11.5px; }
   .stock-group { margin: 0 28px 18px; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: var(--surface); }
   .stock-group-title { padding: 10px 16px; font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); }
   .stock-row {
@@ -1362,6 +1363,9 @@ body {
   .imp-table tr.bad td { color: #e0675f; }
   .imp-table .muted { color: #6b7280; font-size: 10.5px; }
   .imp-scroll { max-height: 260px; overflow-y: auto; border: 1px solid rgba(255,255,255,.06); border-radius: 8px; }
+  .imp-ctrl { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 6px; }
+  .imp-ctrl label { display: flex; flex-direction: column; gap: 3px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; font-weight: 700; }
+  .imp-map { margin-top: 4px; max-width: 220px; }
   .admin-msg { font-size: 12px; min-height: 0; margin-bottom: 8px; }
   .admin-msg.ok { color: #52c38a; } .admin-msg.err { color: #e0675f; }
   .admin-qty-input::placeholder { color: #6b7280; -webkit-text-fill-color: #6b7280; }
@@ -1819,9 +1823,9 @@ body {
         </div>
         <div class="admin-import" id="admin-import" style="display:none">
           <div class="imp-help">
-            <b>Cara cepat:</b> unduh <b>Template Excel</b>, isi kolom <b>Qty</b> (dan Catatan bila perlu), lalu unggah kembali di sini.
-            Bisa juga copy-paste langsung dari Excel / Google Sheets dengan urutan kolom <b>Model · Qty · Catatan</b>.
-            Baris dengan Qty &amp; Status kosong dilewati.
+            Unggah file stok gudang CAI apa adanya (kolom <b>Kode Barang</b> + <b>Baru</b>), daftar <b>barang OTW</b>, atau <b>Template Excel</b>.
+            Bisa juga copy-paste dari Excel / Google Sheets (urutan <b>Model · Qty · Catatan</b>).
+            Kolom &amp; jenis data dikenali otomatis dan bisa diubah di pratinjau sebelum disimpan.
           </div>
           <label class="admin-btn ghost imp-file">📄 Pilih file (.xlsx / .csv)
             <input type="file" accept=".xlsx,.xls,.csv,.txt" onchange="importFile(this)" hidden>
@@ -1859,7 +1863,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T17:01:43Z';
+const LAST_UPDATE = '2026-10-10T17:09:31Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -3616,7 +3620,7 @@ let   adminUser = null;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
 const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, updated_at: r.updated_at || null });
+const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || '', updated_at: r.updated_at || null });
 let stockLoaded = false, stockBrand = 'all', stockStatus = 'all';
 
 function initSupabase() {
@@ -3701,8 +3705,9 @@ function renderProductStockBadge(pid) {
   if (!s) { el.innerHTML = ''; return; }
   const base = STOCK_LABEL[s.status] || s.status;
   const label = s.status === 'ready' && s.qty != null ? `${base} — Sisa ${s.qty} unit` : base;
+  const otw = s.incoming ? `<div class="stock-badge-note">🚚 Dalam perjalanan: ${escHtml(s.incoming)}</div>` : '';
   const note = s.note ? `<div class="stock-badge-note">📝 ${escHtml(s.note)}</div>` : '';
-  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${label}</span></div>${note}`;
+  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${label}</span></div>${otw}${note}`;
 }
 
 /* ── Stok Produk view (publik, tanpa login) ── */
@@ -3737,10 +3742,10 @@ function renderStockView() {
   const q = (document.getElementById('stock-search')?.value || '').trim().toLowerCase();
   const all = BRANDS.flatMap(b => brandProducts(b).filter(p => stockMap[p.id]).map(p => ({ b, p, s: stockMap[p.id] })));
 
-  const counts = { ready: 0, indent: 0, habis: 0 };
-  all.forEach(x => { if (counts[x.s.status] !== undefined) counts[x.s.status]++; });
+  const counts = { ready: 0, indent: 0, habis: 0, otw: 0 };
+  all.forEach(x => { if (counts[x.s.status] !== undefined) counts[x.s.status]++; if (x.s.incoming) counts.otw++; });
   document.getElementById('stock-summary').innerHTML =
-    [['all','Total', all.length], ['ready','Ready', counts.ready], ['indent','Indent', counts.indent], ['habis','Habis', counts.habis]]
+    [['all','Total', all.length], ['ready','Ready', counts.ready], ['indent','Indent', counts.indent], ['habis','Habis', counts.habis], ['otw','OTW', counts.otw]]
       .map(([k, label, n]) => `<button class="stock-sum ${k}${stockStatus===k?' active':''}" onclick="setStockStatus('${k}')"><b>${n}</b><span>${label}</span></button>`).join('');
 
   const latest = all.map(x => x.s.updated_at).filter(Boolean).sort().pop();
@@ -3752,7 +3757,7 @@ function renderStockView() {
 
   const rows = all.filter(({ b, p, s }) =>
     (stockBrand === 'all' || b.id === stockBrand) &&
-    (stockStatus === 'all' || s.status === stockStatus) &&
+    (stockStatus === 'all' || (stockStatus === 'otw' ? !!s.incoming : s.status === stockStatus)) &&
     (!q || p.name.toLowerCase().includes(q) || p.model.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)));
 
   const el = document.getElementById('stock-results');
@@ -3770,7 +3775,7 @@ function renderStockView() {
         <div style="min-width:0"><div class="sr-name">${p.name}</div><div class="sr-model">${p.model}</div></div>
         <div><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}${mq}</span></div>
         <div class="sr-qty">${s.qty ?? ''}</div>
-        <div class="sr-note">${escHtml(s.note)}</div>
+        <div class="sr-note">${s.incoming ? `<div class="sr-otw">🚚 OTW ${escHtml(s.incoming)}</div>` : ''}${escHtml(s.note)}</div>
         <div class="sr-time">${fmtStockTime(s.updated_at)}</div>
       </div>`;
     }).join('')}</div>`;
@@ -3851,7 +3856,7 @@ function renderAdminList() {
       html += `<div class="admin-product-row">
         <div class="admin-prod-info">
           <div class="admin-prod-name">${p.name}</div>
-          <div class="admin-prod-model">${p.model}</div>
+          <div class="admin-prod-model">${p.model}${s.incoming ? ` · 🚚 OTW ${escHtml(s.incoming)}` : ''}</div>
         </div>
         <select class="admin-stock-select" data-pid="${p.id}" onchange="scheduleSave('${p.id}')">
           <option value=""       ${status===''      ?'selected':''}>— Belum diatur</option>
@@ -3907,7 +3912,7 @@ async function saveStock(pid) {
     } else {
       const { error } = await supabase.from('stock').upsert({ product_id: pid, status, note, qty }, { onConflict: 'product_id' });
       if (error) throw error;
-      stockMap[pid] = { status, note, qty, updated_at: new Date().toISOString() };
+      stockMap[pid] = { ...stockMap[pid], status, note, qty, updated_at: new Date().toISOString() };
     }
     refreshStockUI();
     if (icon) { icon.textContent = '✓'; icon.style.color = '#52c38a'; setTimeout(() => { if(icon) icon.textContent=''; }, 2000); }
@@ -3930,7 +3935,7 @@ function toggleImport() {
   const box = document.getElementById('admin-import');
   const open = box.style.display === 'none';
   box.style.display = open ? 'flex' : 'none';
-  if (!open) { importRows = []; document.getElementById('imp-preview').innerHTML = ''; document.getElementById('imp-text').value = ''; }
+  if (!open) { importRows = []; importSrc = null; document.getElementById('imp-preview').innerHTML = ''; document.getElementById('imp-text').value = ''; }
   adminMsg('');
 }
 
@@ -3974,11 +3979,11 @@ async function importFile(input) {
     if (/\.(xlsx|xls)$/i.test(file.name)) {
       const XLSX = await loadXlsx();
       const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
-      rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
+      rows = wb.SheetNames.map(name => ({ name, rows: XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '', raw: false }) }));
     } else {
-      rows = splitDelimited(await file.text());
+      rows = [{ name: file.name, rows: splitDelimited(await file.text()) }];
     }
-    buildImportPreview(rows, file.name);
+    startImport(rows, file.name);
   } catch (e) { adminMsg('Gagal membaca file: ' + e.message, 'err'); }
 }
 
@@ -3991,91 +3996,190 @@ function splitDelimited(text) {
 function parseImportText() {
   const text = document.getElementById('imp-text').value;
   if (!text.trim()) { adminMsg('Paste data dari Excel dulu, atau pilih file.', 'err'); return; }
-  buildImportPreview(splitDelimited(text), 'data paste');
+  startImport([{ name: 'data paste', rows: splitDelimited(text) }], 'data paste');
 }
 
-function buildImportPreview(rows, source) {
-  rows = rows.filter(r => r.some(c => String(c).trim()));
-  if (!rows.length) { adminMsg('Tidak ada data yang terbaca.', 'err'); return; }
+// Kode gudang CAI yang berbeda dengan nama model di katalog (kunci = normKey kode gudang)
+const STOCK_ALIASES = {
+  plt28: 'ac-prot28', plw6cneo: 'ac-prow6c', plw6c: 'ac-prow6c', plm3c: 'ac-prom3c', plm3p: 'ac-prom3p', plm3pnextel: 'ac-prom3pnextel',
+  hlm2mkii: 'ac-hlm2', hlt20mkii: 'ac-hlt20', hlt25vmkiinp: 'ac-hlt25', hlt25mkiinp: 'ac-hlt25',
+  ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16',
+};
+// Pilihan manual admin di pratinjau ('-' = abaikan), disimpan di browser ini
+const ALIAS_KEY = 'cai-stock-alias';
+function localAliases() { try { return JSON.parse(localStorage.getItem(ALIAS_KEY) || '{}'); } catch (e) { return {}; } }
+function setImportAlias(key, pid) {
+  const a = localAliases();
+  if (pid) a[key] = pid; else delete a[key];
+  try { localStorage.setItem(ALIAS_KEY, JSON.stringify(a)); } catch (e) {}
+  renderImport();
+}
 
-  // Header row → map columns by name; otherwise positional Model · Qty · Catatan
-  const head = rows[0].map(c => String(c).toLowerCase());
-  let col = { model: 0, qty: 1, note: 2, status: -1, brand: -1, name: -1 };
-  if (head.some(h => /model|produk|nama/.test(h))) {
-    const find = re => head.findIndex(h => re.test(h));
-    col = { model: find(/model|tipe|type/), name: find(/nama|produk|product/), qty: find(/qty|jumlah|stok|stock|sisa/),
-            status: find(/status/), note: find(/catatan|note|ket/), brand: find(/brand|merek/) };
-    if (col.model < 0) col.model = col.name;
-    rows = rows.slice(1);
-  }
+let importSrc = null;   // { sheets:[{name, rows}], idx, source, mode, qtyCol }
+
+function detectLayout(rows) {
+  const isHead = r => r.some(c => /kode|model|nama|produk|barang|no\s*inv|tipe/i.test(c)) && r.some(c => /qty|jumlah|stok|stock|baru|sisa/i.test(c));
+  const h = rows.slice(0, 8).findIndex(isHead);
+  if (h < 0) return { head: null, body: rows, col: { model: 0, name: -1, qty: 1, note: 2, status: -1, brand: -1 } };
+  const head = rows[h].map(c => String(c).trim().toLowerCase());
+  const find = re => head.findIndex(x => re.test(x));
+  let model = find(/kode|model|tipe|type|no\s*inv/);
+  const name = find(/nama|produk|product/);
+  if (model < 0) model = name;
+  let qty = find(/^baru$/);
+  if (qty < 0) qty = find(/qty|jumlah|stok|stock|sisa/);
+  return { head: rows[h], body: rows.slice(h + 1), col: { model, name, qty, status: find(/status/), note: find(/catatan|note/), brand: find(/brand|merek/) } };
+}
+const looksOtw = rows => /otw|blm\s*datang|belum\s*datang|perjalanan/i.test(rows.slice(0, 4).flat().join(' '));
+
+function startImport(sheets, source) {
+  sheets = sheets.map(s => ({ name: s.name, rows: s.rows.map(r => r.map(c => String(c ?? '').trim())).filter(r => r.some(Boolean)) }))
+                 .filter(s => s.rows.length);
+  if (!sheets.length) { adminMsg('Tidak ada data yang terbaca.', 'err'); return; }
+  importSrc = { sheets, source };
+  pickImportSheet(0);
+}
+function pickImportSheet(i) {
+  importSrc.idx = +i;
+  const rows = importSrc.sheets[importSrc.idx].rows;
+  importSrc.mode = looksOtw(rows) ? 'otw' : 'gudang';
+  importSrc.qtyCol = null;
+  renderImport();
+}
+function setImportMode(m) { importSrc.mode = m; renderImport(); }
+function setImportQtyCol(c) { importSrc.qtyCol = +c; renderImport(); }
+
+function renderImport() {
+  if (!importSrc) return;
+  const sheet = importSrc.sheets[importSrc.idx];
+  const lay = detectLayout(sheet.rows);
+  const col = { ...lay.col };
+  if (importSrc.qtyCol !== null) col.qty = importSrc.qtyCol;
+  const otw = importSrc.mode === 'otw';
+  const aliases = localAliases();
 
   const index = BRANDS.flatMap(b => brandProducts(b).map(p => ({ b, p,
     keys: new Set([normKey(p.model), normKey(p.name), normKey(p.id), normKey(b.name + p.model)]) })));
+  const byId = Object.fromEntries(index.map(x => [x.p.id, x]));
 
-  const seen = new Map();
-  let skipped = 0;
-  rows.forEach((r, i) => {
+  const matched = new Map(), unmatched = new Map();
+  let skipped = 0, ignored = 0;
+  lay.body.forEach(r => {
     const cell = k => col[k] >= 0 ? String(r[col[k]] ?? '').trim() : '';
     const raw = cell('model') || cell('name');
+    if (!raw || /^total/i.test(raw)) return;
     const qtyRaw = cell('qty'), stRaw = cell('status'), note = cell('note');
-    if (!raw) return;
-
-    // Qty column may hold a number ("12", "12 pcs") or a status word ("indent")
-    let qty = null, status = '';
     const num = qtyRaw.match(/^\s*(\d+)/);
-    if (num) qty = parseInt(num[1], 10);
-    else if (STATUS_WORDS[normKey(qtyRaw)]) status = STATUS_WORDS[normKey(qtyRaw)];
-    if (STATUS_WORDS[normKey(stRaw)]) status = status || STATUS_WORDS[normKey(stRaw)];
-    if (qty === null && !status) { skipped++; return; }
-    if (qty !== null && status !== 'indent') status = qty === 0 ? 'habis' : 'ready';
+    let qty = num ? parseInt(num[1], 10) : null, status = '', incoming = '';
+
+    if (otw) {
+      if (qty === null) { skipped++; return; }
+      const unit = (qtyRaw.match(/^\s*\d+\s*(set|pcs|pc|unit|pair|psg)\b/i) || [])[1];
+      incoming = { n: qty, unit: unit ? unit.toLowerCase().replace(/^pc$/, 'pcs') : 'unit' };
+    } else {
+      if (qty === null && STATUS_WORDS[normKey(qtyRaw)]) status = STATUS_WORDS[normKey(qtyRaw)];
+      if (STATUS_WORDS[normKey(stRaw)]) status = status || STATUS_WORDS[normKey(stRaw)];
+      if (qty === null && !status) { skipped++; return; }
+      if (qty !== null && status !== 'indent') status = qty === 0 ? 'habis' : 'ready';
+    }
 
     const k = normKey(raw), bk = normKey(cell('brand'));
-    let hits = index.filter(x => x.keys.has(k) && (!bk || normKey(x.b.name) === bk || normKey(x.b.id) === bk));
-    hits = [...new Map(hits.map(h => [h.p.id, h])).values()];
-    const row = { line: i + 1, raw, qty, status, note, hit: hits.length === 1 ? hits[0] : null,
-                  err: hits.length === 0 ? 'Model tidak dikenali' : hits.length > 1 ? 'Ambigu — tambahkan kolom Brand' : '' };
-    seen.set(row.hit ? row.hit.p.id : 'x' + i, row);
+    if (aliases[k] === '-') { ignored++; return; }
+    let hit = byId[aliases[k] || STOCK_ALIASES[k]];
+    if (!hit) {
+      const hits = [...new Map(index.filter(x => x.keys.has(k) && (!bk || normKey(x.b.name) === bk || normKey(x.b.id) === bk)).map(h => [h.p.id, h])).values()];
+      if (hits.length === 1) hit = hits[0];
+    }
+    if (!hit) { unmatched.set(k, { key: k, raw, qty, status, incoming }); return; }
+
+    const prev = matched.get(hit.p.id);
+    // Different warehouse codes for one catalog product (e.g. cable lengths) are summed; a repeated identical code just overwrites
+    if (prev && !prev.codes.has(k)) {
+      prev.codes.add(k); prev.raw += ' + ' + raw;
+      if (otw) prev.incoming.n += incoming.n;
+      else if (qty !== null) { prev.qty = (prev.qty || 0) + qty; prev.status = prev.qty === 0 ? 'habis' : (prev.status === 'indent' ? 'indent' : 'ready'); }
+      return;
+    }
+    matched.set(hit.p.id, { hit, raw, codes: new Set([k]), qty, status, note, incoming });
   });
 
-  importRows = [...seen.values()];
-  const ok = importRows.filter(r => r.hit), bad = importRows.filter(r => !r.hit);
-  const prev = document.getElementById('imp-preview');
-  if (!importRows.length) { prev.innerHTML = ''; adminMsg(`Tidak ada baris berisi Qty/Status di ${source}.`, 'err'); return; }
-  adminMsg('');
-  prev.innerHTML = `
-    <div class="imp-sum">${escHtml(source)}: <b class="ok">${ok.length} cocok</b>${bad.length ? ` · <b class="bad">${bad.length} tidak dikenali</b> (tidak disimpan)` : ''}${skipped ? ` · ${skipped} baris kosong dilewati` : ''}</div>
+  importRows = [...matched.values()];
+  const bad = [...unmatched.values()];
+  const cleared = otw ? Object.entries(stockMap).filter(([pid, s]) => s.incoming && !matched.has(pid)).length : 0;
+
+  const opts = `<option value="">— Pilih produk…</option><option value="-">Abaikan (tidak ada di katalog)</option>` +
+    BRANDS.map(b => `<optgroup label="${escHtml(b.name)}">${brandProducts(b).map(p => `<option value="${p.id}">${escHtml(p.model)}</option>`).join('')}</optgroup>`).join('');
+  const headOpts = lay.head ? lay.head.map((h, i) => h ? `<option value="${i}" ${i === col.qty ? 'selected' : ''}>${escHtml(h)}</option>` : '').join('') : '';
+  const fmtIn = x => `${x.n} ${x.unit}`;
+  const cur = pid => stockMap[pid] || {};
+
+  document.getElementById('imp-preview').innerHTML = `
+    <div class="imp-ctrl">
+      ${importSrc.sheets.length > 1 ? `<label>Sheet <select class="admin-stock-select" onchange="pickImportSheet(this.value)">${importSrc.sheets.map((s, i) => `<option value="${i}" ${i === importSrc.idx ? 'selected' : ''}>${escHtml(s.name)}</option>`).join('')}</select></label>` : ''}
+      <label>Jenis data <select class="admin-stock-select" onchange="setImportMode(this.value)">
+        <option value="gudang" ${!otw ? 'selected' : ''}>Stok gudang</option>
+        <option value="otw" ${otw ? 'selected' : ''}>Barang OTW (belum datang)</option></select></label>
+      ${headOpts ? `<label>Kolom jumlah <select class="admin-stock-select" onchange="setImportQtyCol(this.value)">${headOpts}</select></label>` : ''}
+    </div>
+    <div class="imp-sum">${escHtml(importSrc.source)}: <b class="ok">${importRows.length} cocok</b>${bad.length ? ` · <b class="bad">${bad.length} perlu dipilih</b>` : ''}${ignored ? ` · ${ignored} diabaikan` : ''}${skipped ? ` · ${skipped} baris tanpa jumlah dilewati` : ''}</div>
+    ${otw ? `<div class="imp-sum">Mode OTW: jumlah dicatat sebagai <b>barang dalam perjalanan</b>; stok gudang tidak berubah. Produk yang stoknya kosong ditandai <b>Indent</b>.${cleared ? ` ${cleared} produk yang sebelumnya OTW tapi tidak ada di daftar ini akan dihapus tanda OTW-nya (dianggap sudah datang).` : ''}</div>` : ''}
+    ${bad.length ? `<div class="imp-sum">Kode di bawah tidak cocok dengan katalog. Pilih produknya sekali — pilihan diingat untuk import berikutnya.</div>` : ''}
     <div class="imp-scroll"><table class="imp-table">
-      <tr><th></th><th>Produk</th><th>Qty</th><th>Status</th><th>Catatan</th></tr>
-      ${[...bad, ...ok].map(r => `<tr class="${r.hit ? '' : 'bad'}">
-        <td>${r.hit ? '✓' : '⚠'}</td>
-        <td>${r.hit ? `${escHtml(r.hit.p.name)}<div class="muted">${escHtml(r.hit.b.name)} · ${escHtml(r.hit.p.model)}</div>` : `${escHtml(r.raw)}<div class="muted">${r.err}</div>`}</td>
-        <td>${r.qty ?? '—'}</td>
-        <td>${STOCK_LABEL[r.status] || '—'}</td>
-        <td>${escHtml(r.note || (r.hit && stockMap[r.hit.p.id]?.note) || '')}</td>
+      <tr><th></th><th>Kode / Produk</th><th>${otw ? 'OTW' : 'Qty'}</th><th>${otw ? 'Status' : 'Status'}</th></tr>
+      ${bad.map(r => `<tr class="bad">
+        <td>⚠</td>
+        <td>${escHtml(r.raw)}<div><select class="admin-stock-select imp-map" onchange="setImportAlias('${r.key}', this.value)">${opts}</select></div></td>
+        <td>${otw ? fmtIn(r.incoming) : (r.qty ?? '—')}</td><td>${otw ? '' : (STOCK_LABEL[r.status] || '—')}</td>
       </tr>`).join('')}
+      ${importRows.map(r => {
+        const c = cur(r.hit.p.id);
+        const st = otw ? (c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent') : r.status;
+        return `<tr>
+        <td>✓</td>
+        <td>${escHtml(r.hit.p.name)}<div class="muted">${escHtml(r.hit.b.name)} · ${escHtml(r.hit.p.model)}${normKey(r.raw) !== normKey(r.hit.p.model) ? ` · dari "${escHtml(r.raw)}"` : ''}</div></td>
+        <td>${otw ? fmtIn(r.incoming) : (r.qty ?? '—')}${!otw && c.qty != null && c.qty !== r.qty ? `<div class="muted">sebelumnya ${c.qty}</div>` : ''}</td>
+        <td>${STOCK_LABEL[st] || '—'}</td>
+      </tr>`; }).join('')}
     </table></div>
-    ${ok.length ? `<button class="admin-btn primary" id="imp-save" style="margin-top:10px" onclick="saveImport()">Simpan ${ok.length} produk</button>` : ''}`;
+    ${importRows.length || cleared ? `<button class="admin-btn primary" id="imp-save" style="margin-top:10px" onclick="saveImport()">Simpan ${importRows.length} produk</button>` : ''}`;
+  adminMsg('');
 }
 
 async function saveImport() {
-  const ok = importRows.filter(r => r.hit);
-  if (!ok.length || !supabase) return;
+  if (!importSrc || !supabase) return;
+  const otw = importSrc.mode === 'otw';
   const btn = document.getElementById('imp-save');
   btn.disabled = true; btn.textContent = 'Menyimpan…';
-  // Empty Catatan keeps the existing note instead of wiping it
-  const payload = ok.map(r => ({ product_id: r.hit.p.id, status: r.status, qty: r.qty,
-    note: r.note || stockMap[r.hit.p.id]?.note || '' }));
+  let payload;
+  if (otw) {
+    const listed = new Set(importRows.map(r => r.hit.p.id));
+    payload = importRows.map(r => {
+      const c = stockMap[r.hit.p.id] || {};
+      return { product_id: r.hit.p.id, incoming: `${r.incoming.n} ${r.incoming.unit}`,
+               status: c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent', qty: c.qty ?? null, note: c.note || '' };
+    });
+    Object.entries(stockMap).forEach(([pid, c]) => {
+      if (c.incoming && !listed.has(pid)) payload.push({ product_id: pid, incoming: null, status: c.status, qty: c.qty ?? null, note: c.note || '' });
+    });
+  } else {
+    // Empty Catatan keeps the existing note instead of wiping it
+    payload = importRows.map(r => ({ product_id: r.hit.p.id, status: r.status, qty: r.qty,
+      note: r.note || stockMap[r.hit.p.id]?.note || '' }));
+  }
   try {
     const { error } = await supabase.from('stock').upsert(payload, { onConflict: 'product_id' });
     if (error) throw error;
     const now = new Date().toISOString();
-    payload.forEach(r => { stockMap[r.product_id] = { status: r.status, qty: r.qty, note: r.note, updated_at: now }; });
+    payload.forEach(r => { stockMap[r.product_id] = { ...stockMap[r.product_id], ...r, updated_at: now }; });
     toggleImport();
     refreshStockUI();
-    adminMsg(`✓ ${payload.length} produk berhasil diperbarui.`, 'ok');
+    adminMsg(`✓ ${otw ? 'Data OTW' : 'Stok'} ${importRows.length} produk berhasil diperbarui.`, 'ok');
   } catch (e) {
-    btn.disabled = false; btn.textContent = `Simpan ${ok.length} produk`;
-    adminMsg('Gagal menyimpan: ' + (e.message || e), 'err');
+    btn.disabled = false; btn.textContent = `Simpan ${importRows.length} produk`;
+    const m = String(e.message || e);
+    adminMsg(/incoming/.test(m)
+      ? 'Kolom OTW belum ada di database. Jalankan di Supabase SQL Editor: alter table stock add column if not exists incoming text;'
+      : 'Gagal menyimpan: ' + m, 'err');
   }
 }
 
