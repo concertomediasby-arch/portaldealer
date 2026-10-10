@@ -1120,6 +1120,42 @@ body {
   .brand-hero { padding-top: 20px; padding-bottom: 20px; }
   .page-header { padding-top: 16px; padding-bottom: 16px; }
 }
+
+/* ── Panduan Dealer ── */
+.guide-card {
+  display: flex; gap: 20px; align-items: flex-start;
+  padding: 22px 24px; border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.guide-card:hover { background: var(--surface); }
+.guide-icon { font-size: 32px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.guide-body { flex: 1; min-width: 0; }
+.guide-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.guide-cat {
+  font-size: 10px; font-family: var(--f-mono); font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 20px;
+  border: 1px solid currentColor;
+}
+.guide-year { font-size: 11px; color: var(--fg-muted); font-family: var(--f-mono); }
+.guide-title { font-size: 15px; font-weight: 600; color: var(--fg); margin-bottom: 6px; line-height: 1.3; }
+.guide-desc { font-size: 13px; color: var(--fg-muted); line-height: 1.6; margin-bottom: 14px; }
+.guide-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.guide-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; font-family: var(--f-body);
+  padding: 7px 14px; border-radius: 8px; cursor: pointer;
+  text-decoration: none; transition: opacity .15s;
+}
+.guide-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.guide-btn:hover { opacity: .8; }
+.guide-btn-dl { background: var(--accent); color: #1a1200; }
+.guide-btn-view { background: var(--surface2); color: var(--fg); border: 1px solid var(--border); }
+.guide-btn-soon { background: var(--surface); color: var(--fg-dim); border: 1px solid var(--border); cursor: default; font-style: italic; }
+
+@media (max-width: 560px) {
+  .guide-card { flex-direction: column; gap: 12px; padding: 18px 16px; }
+  .guide-icon { font-size: 26px; }
+}
 </style>
 <style>
   img { max-width: 100%; }
@@ -1214,6 +1250,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         Update Terbaru
       </button>
+      <button class="sidebar-item" id="nav-guides" onclick="openGuides()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Panduan Dealer
+      </button>
     </div>
 
     <hr class="sidebar-divider">
@@ -1276,6 +1316,15 @@ body {
         <div class="page-subtitle">Riwayat penambahan data, foto, dan video pada katalog produk.</div>
       </div>
       <div id="updates-list" style="padding-bottom:48px;border-top:1px solid var(--border)"></div>
+    </div>
+
+    <!-- VIEW: Panduan Dealer -->
+    <div class="view" id="view-guides">
+      <div class="page-header">
+        <div class="page-title">Panduan Dealer</div>
+        <div class="page-subtitle">Dokumen panduan penjualan produk Concerto Audio Indonesia untuk dealer & distributor resmi.</div>
+      </div>
+      <div id="guides-list" style="padding:0 0 48px"></div>
     </div>
 
     <!-- VIEW: Semua Brand (Katalog Lengkap) -->
@@ -1367,6 +1416,10 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       <span>Update</span>
     </button>
+    <button class="mobile-nav-item" id="mnav-guides" onclick="openGuides()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Panduan</span>
+    </button>
   </nav>
 
 </div>
@@ -1387,7 +1440,42 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T07:17:12Z';
+const LAST_UPDATE = '2026-10-10T07:19:33Z';
+// Panduan Dealer — daftar dokumen PDF
+// Tambahkan objek baru untuk setiap dokumen panduan yang ingin ditampilkan
+const DEALER_GUIDES = [
+  {
+    id: 'guide-selling-tips',
+    title: 'Tips & Teknik Penjualan Produk',
+    desc: 'Panduan praktis cara mempresentasikan dan menjual produk CAI kepada pelanggan: argumen nilai, perbandingan kompetitor, dan closing technique.',
+    category: 'Penjualan',
+    icon: '💡',
+    file: 'assets/guides/tips-penjualan.pdf',
+    updated: '2026',
+    available: false,
+  },
+  {
+    id: 'guide-product-knowledge',
+    title: 'Product Knowledge — Semua Brand',
+    desc: 'Ringkasan spesifikasi, keunggulan, dan positioning setiap brand CAI (Audiocircle, STEG, Zelos, Diosdela, OG, Audio System) dalam satu dokumen.',
+    category: 'Produk',
+    icon: '📋',
+    file: 'assets/guides/product-knowledge.pdf',
+    updated: '2026',
+    available: false,
+  },
+  {
+    id: 'guide-installation',
+    title: 'Panduan Instalasi & After Sales',
+    desc: 'Prosedur instalasi standar, tips perawatan produk, dan penanganan klaim garansi untuk dealer & installer resmi CAI.',
+    category: 'Instalasi',
+    icon: '🔧',
+    file: 'assets/guides/panduan-instalasi.pdf',
+    updated: '2026',
+    available: false,
+  },
+];
+
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
@@ -2362,6 +2450,40 @@ function landingGo(target) {
   }
 }
 
+function openGuides() {
+  showView('guides');
+  const el = document.getElementById('guides-list');
+  if (el.children.length) return;
+
+  const catColor = { 'Penjualan':'#d8b26a', 'Produk':'#6fd3e6', 'Instalasi':'#52c38a' };
+
+  el.innerHTML = DEALER_GUIDES.map(g => {
+    const color = catColor[g.category] || 'var(--accent)';
+    const btnHtml = g.available
+      ? `<a class="guide-btn guide-btn-dl" href="${g.file}" target="_blank" download>
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+           Unduh PDF
+         </a>
+         <a class="guide-btn guide-btn-view" href="${g.file}" target="_blank">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+           Buka
+         </a>`
+      : `<span class="guide-btn guide-btn-soon">Segera Hadir</span>`;
+    return `<div class="guide-card">
+      <div class="guide-icon">${g.icon}</div>
+      <div class="guide-body">
+        <div class="guide-meta">
+          <span class="guide-cat" style="color:${color};border-color:${color}22;background:${color}11">${g.category}</span>
+          <span class="guide-year">${g.updated}</span>
+        </div>
+        <div class="guide-title">${g.title}</div>
+        <div class="guide-desc">${g.desc}</div>
+        <div class="guide-actions">${btnHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function openUpdates() {
   showView('updates');
   const el = document.getElementById('updates-list');
@@ -2473,12 +2595,14 @@ function showView(viewId) {
   if (viewId === 'catalog') document.getElementById('nav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('nav-brandresmi')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('nav-updates')?.classList.add('active');
+  if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
   if (viewId === 'dashboard') document.getElementById('mnav-dashboard')?.classList.add('active');
   if (viewId === 'catalog') document.getElementById('mnav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('mnav-brandresmi')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('mnav-updates')?.classList.add('active');
+  if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
 }
 
 function showBrand(brandId) {
