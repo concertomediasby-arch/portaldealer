@@ -1120,6 +1120,41 @@ body {
   .brand-hero { padding-top: 20px; padding-bottom: 20px; }
   .page-header { padding-top: 16px; padding-bottom: 16px; }
 }
+
+/* ── Kartu resource (Panduan Dealer & DSP Software) ── */
+.res-card {
+  display: flex; gap: 20px; align-items: flex-start;
+  padding: 22px 24px; border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.res-card:hover { background: var(--surface); }
+.res-icon { font-size: 30px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.res-body { flex: 1; min-width: 0; }
+.res-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+.res-cat {
+  font-size: 10px; font-family: var(--f-mono); font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 20px; border: 1px solid;
+}
+.res-year { font-size: 11px; color: var(--fg-muted); font-family: var(--f-mono); }
+.res-title { font-size: 15px; font-weight: 600; color: var(--fg); margin-bottom: 5px; line-height: 1.3; }
+.res-desc { font-size: 13px; color: var(--fg-muted); line-height: 1.6; margin-bottom: 14px; }
+.res-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.res-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; font-family: var(--f-body);
+  padding: 7px 14px; border-radius: 8px; cursor: pointer;
+  text-decoration: none; transition: opacity .15s; border: none;
+}
+.res-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.res-btn:hover { opacity: .8; }
+.res-btn-dl   { background: var(--accent); color: #1a1200; }
+.res-btn-view { background: var(--surface2); color: var(--fg); border: 1px solid var(--border); }
+.res-btn-soon { background: var(--surface); color: var(--fg-dim); border: 1px solid var(--border); cursor: default; font-style: italic; }
+
+@media (max-width: 560px) {
+  .res-card { flex-direction: column; gap: 10px; padding: 18px 16px; }
+  .res-icon { font-size: 24px; }
+}
 </style>
 <style>
   img { max-width: 100%; }
@@ -1214,6 +1249,14 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         Update Terbaru
       </button>
+      <button class="sidebar-item" id="nav-guides" onclick="openGuides()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Panduan Dealer
+      </button>
+      <button class="sidebar-item" id="nav-dsp" onclick="openDspSoftware()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        DSP Software
+      </button>
     </div>
 
     <hr class="sidebar-divider">
@@ -1276,6 +1319,24 @@ body {
         <div class="page-subtitle">Riwayat penambahan data, foto, dan video pada katalog produk.</div>
       </div>
       <div id="updates-list" style="padding-bottom:48px;border-top:1px solid var(--border)"></div>
+    </div>
+
+    <!-- VIEW: Panduan Dealer -->
+    <div class="view" id="view-guides">
+      <div class="page-header">
+        <div class="page-title">Panduan Dealer</div>
+        <div class="page-subtitle">Dokumen panduan penjualan produk Concerto Audio Indonesia untuk dealer &amp; distributor resmi.</div>
+      </div>
+      <div id="guides-list" style="padding:0 0 48px"></div>
+    </div>
+
+    <!-- VIEW: DSP Software -->
+    <div class="view" id="view-dsp">
+      <div class="page-header">
+        <div class="page-title">DSP Software</div>
+        <div class="page-subtitle">Perangkat lunak tuning &amp; konfigurasi untuk produk DSP Concerto Audio Indonesia.</div>
+      </div>
+      <div id="dsp-list" style="padding:0 0 48px"></div>
     </div>
 
     <!-- VIEW: Semua Brand (Katalog Lengkap) -->
@@ -1367,6 +1428,14 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       <span>Update</span>
     </button>
+    <button class="mobile-nav-item" id="mnav-guides" onclick="openGuides()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>Panduan</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-dsp" onclick="openDspSoftware()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
+      <span>DSP</span>
+    </button>
   </nav>
 
 </div>
@@ -1387,9 +1456,37 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T07:30:33Z';
+const LAST_UPDATE = '2026-10-10T07:37:03Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
+// ── Panduan Dealer ────────────────────────────────────────────
+// available: false → tampil badge "Segera Hadir"; true → tombol unduh/buka
+const DEALER_GUIDES = [
+  { id:'guide-selling', title:'Tips & Teknik Penjualan Produk', category:'Penjualan', icon:'💡',
+    desc:'Panduan praktis cara mempresentasikan dan menjual produk CAI: argumen nilai, perbandingan kompetitor, dan closing technique.',
+    file:'assets/guides/tips-penjualan.pdf', updated:'2026', available:false },
+  { id:'guide-pk', title:'Product Knowledge — Semua Brand', category:'Produk', icon:'📋',
+    desc:'Ringkasan spesifikasi, keunggulan, dan positioning setiap brand CAI dalam satu dokumen referensi cepat.',
+    file:'assets/guides/product-knowledge.pdf', updated:'2026', available:false },
+  { id:'guide-install', title:'Panduan Instalasi & After Sales', category:'Instalasi', icon:'🔧',
+    desc:'Prosedur instalasi standar, tips perawatan produk, dan penanganan klaim garansi untuk dealer & installer resmi.',
+    file:'assets/guides/panduan-instalasi.pdf', updated:'2026', available:false },
+];
+
+// ── DSP Software ──────────────────────────────────────────────
+// Tambah objek per software; platform: 'Windows' | 'Mac' | 'Android' | 'iOS'
+const DSP_SOFTWARE = [
+  { id:'dsp-steg-sdp', title:'STEG SDP — PC Software', brand:'STEG', platform:['Windows'],
+    icon:'💻', version:'', desc:'Software tuning untuk DSP STEG SDP series. Koneksi via USB atau Bluetooth. Mendukung EQ 31-band, crossover, time alignment, dan penyimpanan preset.',
+    file:'assets/software/steg-sdp-setup.exe', available:false },
+  { id:'dsp-steg-app', title:'STEG SDP — Mobile App', brand:'STEG', platform:['Android','iOS'],
+    icon:'📱', version:'', desc:'Aplikasi kontrol DSP STEG SDP via Bluetooth untuk Android & iOS. Adjust volume, balance, dan preset langsung dari smartphone.',
+    file:'', linkAndroid:'', linkIos:'', available:false },
+  { id:'dsp-audiosystem-app', title:'Audio System — AS App', brand:'Audio System', platform:['Android','iOS'],
+    icon:'📱', version:'', desc:'Aplikasi resmi Audio System untuk kontrol DSP & amplifier via Bluetooth.',
+    file:'', linkAndroid:'', linkIos:'', available:false },
+];
+
 const RECENT_UPDATES = [
   { date:'2026-10-10', type:'photo', brandId:'diosdela',     productId:'dm-septuple8g', note:'Foto Septuple Cable 8G ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiosystem',  productId:'as-as10',     note:'Video AS10 diperbarui' },
@@ -2362,6 +2459,65 @@ function landingGo(target) {
   }
 }
 
+function openGuides() {
+  showView('guides');
+  const el = document.getElementById('guides-list');
+  if (el.children.length) return;
+  const catColor = { 'Penjualan':'#d8b26a', 'Produk':'#6fd3e6', 'Instalasi':'#52c38a' };
+  el.innerHTML = DEALER_GUIDES.map(g => {
+    const color = catColor[g.category] || 'var(--accent)';
+    const btn = g.available
+      ? `<a class="res-btn res-btn-dl" href="${g.file}" target="_blank" download>
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh PDF</a>
+         <a class="res-btn res-btn-view" href="${g.file}" target="_blank">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Buka</a>`
+      : `<span class="res-btn res-btn-soon">Segera Hadir</span>`;
+    return `<div class="res-card">
+      <div class="res-icon">${g.icon}</div>
+      <div class="res-body">
+        <div class="res-meta">
+          <span class="res-cat" style="color:${color};border-color:${color}22;background:${color}11">${g.category}</span>
+          <span class="res-year">${g.updated}</span>
+        </div>
+        <div class="res-title">${g.title}</div>
+        <div class="res-desc">${g.desc}</div>
+        <div class="res-actions">${btn}</div>
+      </div></div>`;
+  }).join('');
+}
+
+function openDspSoftware() {
+  showView('dsp');
+  const el = document.getElementById('dsp-list');
+  if (el.children.length) return;
+  const platColor = { 'Windows':'#6fd3e6', 'Mac':'#d8b26a', 'Android':'#52c38a', 'iOS':'#a78bfa' };
+  el.innerHTML = DSP_SOFTWARE.map(s => {
+    const plats = s.platform.map(p =>
+      `<span class="res-cat" style="color:${platColor[p]||'var(--accent)'};border-color:${platColor[p]||'var(--accent)'}22;background:${platColor[p]||'var(--accent)'}11">${p}</span>`
+    ).join('');
+    let btn;
+    if (!s.available) {
+      btn = `<span class="res-btn res-btn-soon">Segera Hadir</span>`;
+    } else if (s.file) {
+      btn = `<a class="res-btn res-btn-dl" href="${s.file}" target="_blank" download>
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh</a>`;
+    } else {
+      btn = [
+        s.linkAndroid ? `<a class="res-btn res-btn-view" href="${s.linkAndroid}" target="_blank">Google Play</a>` : '',
+        s.linkIos     ? `<a class="res-btn res-btn-view" href="${s.linkIos}" target="_blank">App Store</a>` : '',
+      ].join('');
+    }
+    return `<div class="res-card">
+      <div class="res-icon">${s.icon}</div>
+      <div class="res-body">
+        <div class="res-meta">${plats}<span class="res-year">${s.brand}${s.version ? ' · v'+s.version : ''}</span></div>
+        <div class="res-title">${s.title}</div>
+        <div class="res-desc">${s.desc}</div>
+        <div class="res-actions">${btn}</div>
+      </div></div>`;
+  }).join('');
+}
+
 function openUpdates() {
   showView('updates');
   const el = document.getElementById('updates-list');
@@ -2473,12 +2629,16 @@ function showView(viewId) {
   if (viewId === 'catalog') document.getElementById('nav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('nav-brandresmi')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('nav-updates')?.classList.add('active');
+  if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
+  if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
   if (viewId === 'dashboard') document.getElementById('mnav-dashboard')?.classList.add('active');
   if (viewId === 'catalog') document.getElementById('mnav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('mnav-brandresmi')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('mnav-updates')?.classList.add('active');
+  if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
+  if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
 }
 
 function showBrand(brandId) {
