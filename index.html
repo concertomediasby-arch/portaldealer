@@ -1278,10 +1278,11 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T05:03:41Z';
+const LAST_UPDATE = '2026-10-10T05:09:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 const RECENT_UPDATES = [
+  { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-iqles10a', note:'Video IQ-LES10A ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-clw6',     note:'Video Concerto Line ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-clm3',     note:'Video Concerto Line ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiocircle', productId:'ac-clt27',    note:'Video Concerto Line ditambahkan' },
@@ -1535,8 +1536,8 @@ const BRANDS = [
           photos:['assets/ac-mls10-3.webp','assets/ac-mls10-4.webp','assets/ac-mls10-5.webp','assets/ac-mls10-2.webp'],
           desc:'10" Power Subwoofer — reinforced metal cone, Dual 2 Ohm Voice Coil, dirancang untuk ported box.',
           specs:{'Handling Power':'1200 W','Rated Power':'500 W','SPL':'86 dB','Freq. Response':'25 Hz – 250 Hz','Impedansi':'2×2 Ω','Fs':'28 Hz','Qts':'0.39','Vas':'26.7 L','Outer Diameter':'257 mm','Fastening Diameter':'245 mm','Mounting Depth':'145 mm'} },
-        { id:'ac-iqles10a', name:'IQ-LES10A', model:'IQ-LES10A', category:'Subwoofer', emoji:'📦', hasVideo:false,
-          photos:['assets/ac-iqles10a-1.webp','assets/ac-iqles10a-2.webp','assets/ac-iqles10a-3.webp'],
+        { id:'ac-iqles10a', name:'IQ-LES10A', model:'IQ-LES10A', category:'Subwoofer', emoji:'📦', hasVideo:true,
+          photos:['assets/ac-iqles10a-1.webp','assets/ac-iqles10a-2.webp','assets/ac-iqles10a-3.webp'], video:'assets/ac-iqles10a.mp4?v=1', videoPoster:'assets/ac-iqles10a-poster.jpg?v=1',
           desc:'10" Active Subwoofer Load Enclosure — built-in amplifier dengan kontrol gain, phase, dan low-pass.',
           specs:{'Freq. Response':'40 Hz – 200 Hz','Operating Voltage':'9.5 – 16 VDC','Input Sensitivity':'180 mV','Peak Power Output':'350 W','RMS Power Output':'150 W','Impedansi':'4 Ω','Dimensions':'270 × 310 × 380 mm','Volume':'20.4 L'} },
         { id:'ac-iquss8a', name:'IQ-USS8A', model:'IQ-USS8A', category:'Subwoofer', emoji:'📦', hasVideo:false,
