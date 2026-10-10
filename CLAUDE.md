@@ -5,10 +5,11 @@ Menampilkan brand yang dinaungi beserta produk, spesifikasi, media, dan spec she
 
 ## Arsitektur
 
-- **Satu file statis: `index.html`** — berisi seluruh HTML, CSS, JavaScript, dan data katalog dalam satu dokumen. Tidak ada build step, tidak ada backend, tidak ada dependency npm.
+- **Satu file statis: `index.html`** — berisi seluruh HTML, CSS, JavaScript, dan data katalog dalam satu dokumen. Tidak ada build step, tidak ada server sendiri, tidak ada dependency npm. Satu-satunya data dinamis adalah **stok produk** di Supabase (lihat bagian *Sistem stok*).
 - Dependency eksternal via CDN (dimuat saat runtime di browser):
   - Google Fonts: **Sora**, **Inter**, **JetBrains Mono**
   - **jsPDF** (cdnjs) — untuk generate spec sheet PDF per produk.
+  - **supabase-js v2** (jsdelivr) — baca/tulis stok + realtime.
 - Logo CAI di-embed sebagai **data URI base64** di dua konstanta JS: `LOGO_WHITE` (untuk latar gelap) dan `LOGO_NAVY` (untuk latar terang). Cari `const LOGO_WHITE` / `const LOGO_NAVY` di dalam `<script>`.
 
 ## Menjalankan
@@ -71,7 +72,23 @@ BRANDS = [
 - **Semua Brand / katalog:** `openCatalog()`, `renderCatalog()`, `setCatalogBrand()` — pencarian + filter brand.
 - **Detail produk:** `showProduct(brandId, productId)`, `selectMedia()`.
 - **Spec sheet PDF:** `openSpecSheet()` (modal pratinjau), `downloadPdf()` (jsPDF), `makePhotoPlaceholder()`.
+- **Paket Audio:** array `PAKET_AUDIO` (PDF di `assets/paket/`), pratinjau via `openPdfPreview()` (di mobile dibuka di tab baru). PDF sumber boleh memuat harga, tapi teks kartu di portal tidak boleh.
 - **Tema:** `toggleTheme()` (dark ⇄ light), `applyThemeIcon()`, `updateTopbarLogo()`. Preferensi disimpan di `localStorage` key `cai-theme`.
+
+## Sistem stok (Supabase)
+
+Katalog tetap di `BRANDS` (GitHub); Supabase **hanya** menyimpan status stok per produk. Kode di blok `STOCK SYSTEM` di akhir `<script>`.
+
+- **Project:** `portaldealer-stock` — URL & publishable key ada di konstanta `SUPA_URL` / `SUPA_KEY`. Key ini memang publik (aman di repo); akses tulis dibatasi RLS.
+- **Tabel `stock`:** `product_id` (text PK, = `id` produk di `BRANDS`), `status` (`ready` | `indent` | `habis`), `note` (text), `qty` (integer ≥ 0, nullable), `updated_at` (auto via trigger).
+- **RLS:** publik hanya `SELECT`; tulis (`FOR ALL`) hanya user ter-autentikasi. Tabel sudah masuk publication `supabase_realtime`.
+- **Admin:** tombol gembok 🔒 di topbar → `openAdmin()` → login email/password (Supabase Auth; akun dibuat manual di dashboard Authentication). Sesi dipulihkan saat refresh.
+- **Aturan qty:** isi Qty → status otomatis (0 → `habis`, >0 → `ready`; `indent` dipertahankan jika dipilih manual). Status "— Belum diatur" = baris dihapus dari tabel → dealer tidak melihat badge.
+- **Tampilan dealer:** badge di kartu (`Ready · 12`) dan detail (`Ready — Sisa 12 unit`). Fungsi: `loadStock()`, `subscribeStock()` (realtime), `refreshStockUI()`, `stockBadgeSmall()`, `renderProductStockBadge()`; stok dimuat ulang saat tab kembali aktif.
+- **Admin panel:** `renderAdminList()`, `adminQtyChange()`, `scheduleSave()` (debounce 700 ms) → `saveStock()` (upsert/delete).
+- **Ubah skema:** jalankan SQL di Supabase → SQL Editor, **hanya statement baru** (editor menjalankan semua baris dalam satu transaksi; satu error membatalkan semuanya).
+- Panel admin selalu gelap; warna teksnya dikunci eksplisit agar tetap terbaca di mode terang.
+- Jangan tambahkan harga ke tabel stok.
 
 ## Design system (CSS)
 
@@ -89,4 +106,4 @@ BRANDS = [
 - PDF memakai font bawaan jsPDF yang tidak punya karakter `Ω` → otomatis ditulis `Ohm` di PDF.
 - Foto hanya bisa di-embed ke PDF saat portal dibuka via server (http/https); jika dibuka langsung sebagai file (`file://`), PDF memakai placeholder.
 - Semua data berasal dari katalog resmi CAI 2026. Jaga agar tetap tanpa harga.
-- Tidak ada rahasia/kredensial di repo ini — aman dipublikasikan.
+- Tidak ada rahasia/kredensial di repo ini — aman dipublikasikan. (Supabase publishable key bersifat publik; jangan pernah commit `service_role` key atau password admin.)
