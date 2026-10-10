@@ -1405,6 +1405,11 @@ body {
     <div class="topbar-spacer"></div>
     <span class="topbar-status"><i></i>System Online</span>
     <span class="topbar-badge">Dealer Portal</span>
+    <button class="theme-btn" onclick="openAdmin()" title="Admin — Update Stok" aria-label="Admin stok">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+    </button>
     <button class="theme-btn" onclick="toggleTheme()" title="Ganti mode terang/gelap" aria-label="Ganti tema">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="theme-icon">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -1717,7 +1722,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T16:24:14Z';
+const LAST_UPDATE = '2026-10-10T16:30:12Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -3469,7 +3474,6 @@ const SUPA_KEY  = 'sb_publishable_Y4AMvOdGfunEZhvvpsMzbg_NBbxNqGW';
 let   supabase  = null;
 let   stockMap  = {};   // { product_id: { status, note } }
 let   adminUser = null;
-let   adminLogoClicks = 0, adminLogoTimer = null;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
 
@@ -3478,6 +3482,7 @@ function initSupabase() {
     supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
     loadStock();
     subscribeStock();
+    supabase.auth.getSession().then(({ data }) => { adminUser = data?.session?.user || null; });
   } catch(e) { console.warn('Supabase init failed', e); }
 }
 
@@ -3562,18 +3567,6 @@ function closeAdmin() {
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAdmin(); });
-
-/* Trigger: klik logo topbar 5× */
-function handleLogoAdminTrigger() {
-  adminLogoClicks++;
-  clearTimeout(adminLogoTimer);
-  if (adminLogoClicks >= 5) {
-    adminLogoClicks = 0;
-    openAdmin();
-    return;
-  }
-  adminLogoTimer = setTimeout(() => { adminLogoClicks = 0; }, 2000);
-}
 
 async function adminLogin() {
   const email = document.getElementById('admin-email').value.trim();
@@ -3685,12 +3678,6 @@ async function saveStock(pid) {
     console.warn('Save stock error', e);
   }
 }
-
-/* Pasang trigger klik pada logo topbar */
-window.addEventListener('DOMContentLoaded', () => {
-  const logoEl = document.getElementById('logo-top-dark');
-  if (logoEl) logoEl.addEventListener('click', e => { e.preventDefault(); handleLogoAdminTrigger(); });
-});
 
 init();
 initSupabase();
