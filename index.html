@@ -1153,7 +1153,7 @@ body {
         </div>
         <div class="stat-card">
           <div class="stat-label">Terakhir Update</div>
-          <div class="stat-value" style="font-size:18px">Okt <span>2026</span></div>
+          <div class="stat-value" id="stat-lastupdate" style="font-size:18px">—</div>
         </div>
       </div>
 
@@ -1248,6 +1248,8 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
+const LAST_UPDATE = '2026-10-10T03:02:37Z';
+
 const BRANDS = [
   {
     id: 'audiocircle', name: 'Audiocircle', tagline: 'German Car Audio — Experience. Tradition. Innovation.',
@@ -2026,6 +2028,11 @@ function init() {
   document.getElementById('stat-brands').textContent = BRANDS.length;
   document.getElementById('stat-products').textContent = totalProducts;
   document.getElementById('stat-lines').textContent = BRANDS.reduce((s,b)=>s+b.lines.length,0);
+  const _lu = new Date(LAST_UPDATE);
+  document.getElementById('stat-lastupdate').innerHTML =
+    _lu.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Jakarta'}) +
+    '<br><span style="font-size:13px;opacity:.7">' +
+    _lu.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}) + ' WIB</span>';
 
   // Brand nav in sidebar
   const navList = document.getElementById('brand-nav-list');
