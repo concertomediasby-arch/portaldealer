@@ -1521,7 +1521,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T08:48:01Z';
+const LAST_UPDATE = '2026-10-10T09:11:29Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -1542,11 +1542,21 @@ const DEALER_GUIDES = [
 // segment: label segmen paket
 // available: false → badge "Segera Hadir"; true → tombol unduh PDF
 const PAKET_AUDIO = [
+  { id:'paket-entry', title:'Paket Entry — Semua Sudah Termasuk', segment:'STEG', icon:'🔊',
+    desc:'Upgrade pertama yang tuntas: speaker komponen, DSP amplifier, active subwoofer tersembunyi di bawah jok, peredam pintu, kabel, ring, pasang, dan tuning gratis — semua dalam satu harga. Bagasi tetap kosong.',
+    brands:['STEG'],
+    products:['STEG SEC-650C', 'STEG DSP-S6', 'STEG SA-8W', 'Termasuk peredam & pasang'],
+    file:'assets/paket/entry-steg.pdf', available:true },
   { id:'paket-3way-aktif', title:'Paket Sistem 3-Way Aktif', segment:'STEG × Audiocircle', icon:'🎶',
     desc:'Sistem 3-way aktif dengan DSP-S6 (6-channel) + SA-8W (active subwoofer). Tiap speaker punya channel, EQ, dan delay sendiri — panggung suara presisi, vokal fokus. Tersedia dalam tiga pilihan karakter speaker: Kohln+Hamburg, Hamburg Line, dan Berlin Line.',
     brands:['STEG', 'Audiocircle'],
     products:['STEG DSP-S6', 'STEG SA-8W', 'Pilihan: Kohln KL-C6.2 / Hamburg Line / Berlin Line'],
     file:'assets/paket/3way-aktif-steg-audiocircle.pdf', available:true },
+  { id:'paket-kompetisi', title:'Paket Kompetisi — K Series 3-Way Aktif', segment:'STEG K Series', icon:'🏆',
+    desc:'Dibangun untuk panggung suara terbaik dan arena kompetisi SQ. Sistem 3-way aktif K Series dengan DSP 12-channel, amplifier monoblock, dan Bluetooth controller. Setiap detail dibuat untuk didengar dan dinilai.',
+    brands:['STEG'],
+    products:['STEG K1C Tweeter', 'STEG K3C Midrange', 'STEG K6C Woofer', 'STEG DSP-S12', 'STEG DK500.1', 'STEG BT1'],
+    file:'assets/paket/kompetisi-steg-kseries.pdf', available:true },
 ];
 
 // ── DSP Software ──────────────────────────────────────────────
