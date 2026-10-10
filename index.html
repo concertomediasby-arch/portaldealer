@@ -1341,6 +1341,29 @@ body {
     outline: none; width: 64px;
   }
   .admin-qty-input:focus { border-color: var(--accent); }
+  .admin-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .admin-tools .admin-btn { padding: 8px 14px; font-size: 12px; }
+  .admin-import { border: 1px solid rgba(216,178,106,.35); background: rgba(216,178,106,.05); border-radius: 12px; padding: 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .imp-help { font-size: 12px; line-height: 1.55; color: #a3aab8; }
+  .imp-help b { color: #f0f1f4; }
+  .imp-file { display: inline-block; align-self: flex-start; padding: 8px 14px; font-size: 12px; }
+  .admin-textarea {
+    width: 100%; box-sizing: border-box; resize: vertical; padding: 10px 12px; border-radius: 9px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); outline: none;
+    color: #f0f1f4; -webkit-text-fill-color: #f0f1f4; font-family: var(--f-mono); font-size: 12px; line-height: 1.5;
+  }
+  .admin-textarea:focus { border-color: var(--accent); }
+  .admin-textarea::placeholder { color: #6b7280; -webkit-text-fill-color: #6b7280; }
+  .imp-sum { font-size: 12px; color: #a3aab8; margin: 4px 0 8px; }
+  .imp-sum b.ok { color: #52c38a; } .imp-sum b.bad { color: #e0675f; }
+  .imp-table { width: 100%; border-collapse: collapse; font-size: 11.5px; color: #f0f1f4; }
+  .imp-table th { text-align: left; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: #6b7280; padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .imp-table td { padding: 6px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: top; }
+  .imp-table tr.bad td { color: #e0675f; }
+  .imp-table .muted { color: #6b7280; font-size: 10.5px; }
+  .imp-scroll { max-height: 260px; overflow-y: auto; border: 1px solid rgba(255,255,255,.06); border-radius: 8px; }
+  .admin-msg { font-size: 12px; min-height: 0; margin-bottom: 8px; }
+  .admin-msg.ok { color: #52c38a; } .admin-msg.err { color: #e0675f; }
   .admin-qty-input::placeholder { color: #6b7280; -webkit-text-fill-color: #6b7280; }
   .admin-panel .admin-logout-btn { color: #a3aab8; }
   .admin-panel .admin-logout-btn:hover { color: #f0f1f4; }
@@ -1790,6 +1813,27 @@ body {
       </div>
       <!-- Stock list (after login) -->
       <div id="admin-stock-section" style="display:none">
+        <div class="admin-tools">
+          <button class="admin-btn ghost" onclick="downloadStockTemplate()">⬇ Template Excel</button>
+          <button class="admin-btn ghost" onclick="toggleImport()">⬆ Import dari Excel</button>
+        </div>
+        <div class="admin-import" id="admin-import" style="display:none">
+          <div class="imp-help">
+            <b>Cara cepat:</b> unduh <b>Template Excel</b>, isi kolom <b>Qty</b> (dan Catatan bila perlu), lalu unggah kembali di sini.
+            Bisa juga copy-paste langsung dari Excel / Google Sheets dengan urutan kolom <b>Model · Qty · Catatan</b>.
+            Baris dengan Qty &amp; Status kosong dilewati.
+          </div>
+          <label class="admin-btn ghost imp-file">📄 Pilih file (.xlsx / .csv)
+            <input type="file" accept=".xlsx,.xls,.csv,.txt" onchange="importFile(this)" hidden>
+          </label>
+          <textarea class="admin-textarea" id="imp-text" rows="5" placeholder="…atau paste di sini, contoh:&#10;PRO-W6C NEO	12&#10;DSP-S6	0	Restock akhir bulan&#10;BL-T26 MKII	indent	Estimasi 2 minggu"></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="admin-btn primary" onclick="parseImportText()">Proses</button>
+            <button class="admin-btn ghost" onclick="toggleImport()">Batal</button>
+          </div>
+          <div id="imp-preview"></div>
+        </div>
+        <div class="admin-msg" id="admin-msg"></div>
         <input class="admin-search" type="search" id="admin-search" placeholder="Cari produk..." oninput="renderAdminList()">
         <div id="admin-stock-list"></div>
       </div>
@@ -1815,7 +1859,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T16:50:04Z';
+const LAST_UPDATE = '2026-10-10T17:01:43Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -3870,6 +3914,168 @@ async function saveStock(pid) {
   } catch(e) {
     if (icon) { icon.textContent = '✗'; icon.style.color = '#e0675f'; icon.title = e.message || 'Gagal menyimpan'; }
     console.warn('Save stock error', e);
+  }
+}
+
+/* ── Import stok dari Excel / CSV / paste ── */
+let importRows = [];
+const normKey = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const STATUS_WORDS = { ready:'ready', ada:'ready', tersedia:'ready', indent:'indent', inden:'indent', po:'indent', habis:'habis', kosong:'habis', soldout:'habis' };
+
+function adminMsg(text, kind) {
+  const el = document.getElementById('admin-msg');
+  el.textContent = text || ''; el.className = 'admin-msg' + (kind ? ' ' + kind : '');
+}
+function toggleImport() {
+  const box = document.getElementById('admin-import');
+  const open = box.style.display === 'none';
+  box.style.display = open ? 'flex' : 'none';
+  if (!open) { importRows = []; document.getElementById('imp-preview').innerHTML = ''; document.getElementById('imp-text').value = ''; }
+  adminMsg('');
+}
+
+let xlsxLib = null;
+function loadXlsx() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (xlsxLib) return xlsxLib;
+  xlsxLib = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = () => res(window.XLSX);
+    s.onerror = () => { xlsxLib = null; rej(new Error('Gagal memuat pembaca Excel. Periksa koneksi internet.')); };
+    document.head.appendChild(s);
+  });
+  return xlsxLib;
+}
+
+async function downloadStockTemplate() {
+  try {
+    const XLSX = await loadXlsx();
+    const rows = [['Brand', 'Model', 'Nama Produk', 'Qty', 'Status', 'Catatan']];
+    BRANDS.forEach(b => brandProducts(b).forEach(p => {
+      const s = stockMap[p.id] || {};
+      rows.push([b.name, p.model, p.name, s.qty ?? '', s.status ? STOCK_LABEL[s.status] : '', s.note || '']);
+    }));
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:16}, {wch:22}, {wch:28}, {wch:7}, {wch:9}, {wch:32}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Stok');
+    const d = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `stok-concerto-${d}.xlsx`);
+  } catch (e) { adminMsg(e.message, 'err'); }
+}
+
+async function importFile(input) {
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file) return;
+  try {
+    let rows;
+    if (/\.(xlsx|xls)$/i.test(file.name)) {
+      const XLSX = await loadXlsx();
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
+    } else {
+      rows = splitDelimited(await file.text());
+    }
+    buildImportPreview(rows, file.name);
+  } catch (e) { adminMsg('Gagal membaca file: ' + e.message, 'err'); }
+}
+
+function splitDelimited(text) {
+  const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+  const first = lines[0] || '';
+  const delim = first.includes('\t') ? '\t' : first.includes(';') ? ';' : first.includes(',') ? ',' : '\t';
+  return lines.map(l => l.split(delim).map(c => c.trim().replace(/^"(.*)"$/, '$1')));
+}
+function parseImportText() {
+  const text = document.getElementById('imp-text').value;
+  if (!text.trim()) { adminMsg('Paste data dari Excel dulu, atau pilih file.', 'err'); return; }
+  buildImportPreview(splitDelimited(text), 'data paste');
+}
+
+function buildImportPreview(rows, source) {
+  rows = rows.filter(r => r.some(c => String(c).trim()));
+  if (!rows.length) { adminMsg('Tidak ada data yang terbaca.', 'err'); return; }
+
+  // Header row → map columns by name; otherwise positional Model · Qty · Catatan
+  const head = rows[0].map(c => String(c).toLowerCase());
+  let col = { model: 0, qty: 1, note: 2, status: -1, brand: -1, name: -1 };
+  if (head.some(h => /model|produk|nama/.test(h))) {
+    const find = re => head.findIndex(h => re.test(h));
+    col = { model: find(/model|tipe|type/), name: find(/nama|produk|product/), qty: find(/qty|jumlah|stok|stock|sisa/),
+            status: find(/status/), note: find(/catatan|note|ket/), brand: find(/brand|merek/) };
+    if (col.model < 0) col.model = col.name;
+    rows = rows.slice(1);
+  }
+
+  const index = BRANDS.flatMap(b => brandProducts(b).map(p => ({ b, p,
+    keys: new Set([normKey(p.model), normKey(p.name), normKey(p.id), normKey(b.name + p.model)]) })));
+
+  const seen = new Map();
+  let skipped = 0;
+  rows.forEach((r, i) => {
+    const cell = k => col[k] >= 0 ? String(r[col[k]] ?? '').trim() : '';
+    const raw = cell('model') || cell('name');
+    const qtyRaw = cell('qty'), stRaw = cell('status'), note = cell('note');
+    if (!raw) return;
+
+    // Qty column may hold a number ("12", "12 pcs") or a status word ("indent")
+    let qty = null, status = '';
+    const num = qtyRaw.match(/^\s*(\d+)/);
+    if (num) qty = parseInt(num[1], 10);
+    else if (STATUS_WORDS[normKey(qtyRaw)]) status = STATUS_WORDS[normKey(qtyRaw)];
+    if (STATUS_WORDS[normKey(stRaw)]) status = status || STATUS_WORDS[normKey(stRaw)];
+    if (qty === null && !status) { skipped++; return; }
+    if (qty !== null && status !== 'indent') status = qty === 0 ? 'habis' : 'ready';
+
+    const k = normKey(raw), bk = normKey(cell('brand'));
+    let hits = index.filter(x => x.keys.has(k) && (!bk || normKey(x.b.name) === bk || normKey(x.b.id) === bk));
+    hits = [...new Map(hits.map(h => [h.p.id, h])).values()];
+    const row = { line: i + 1, raw, qty, status, note, hit: hits.length === 1 ? hits[0] : null,
+                  err: hits.length === 0 ? 'Model tidak dikenali' : hits.length > 1 ? 'Ambigu — tambahkan kolom Brand' : '' };
+    seen.set(row.hit ? row.hit.p.id : 'x' + i, row);
+  });
+
+  importRows = [...seen.values()];
+  const ok = importRows.filter(r => r.hit), bad = importRows.filter(r => !r.hit);
+  const prev = document.getElementById('imp-preview');
+  if (!importRows.length) { prev.innerHTML = ''; adminMsg(`Tidak ada baris berisi Qty/Status di ${source}.`, 'err'); return; }
+  adminMsg('');
+  prev.innerHTML = `
+    <div class="imp-sum">${escHtml(source)}: <b class="ok">${ok.length} cocok</b>${bad.length ? ` · <b class="bad">${bad.length} tidak dikenali</b> (tidak disimpan)` : ''}${skipped ? ` · ${skipped} baris kosong dilewati` : ''}</div>
+    <div class="imp-scroll"><table class="imp-table">
+      <tr><th></th><th>Produk</th><th>Qty</th><th>Status</th><th>Catatan</th></tr>
+      ${[...bad, ...ok].map(r => `<tr class="${r.hit ? '' : 'bad'}">
+        <td>${r.hit ? '✓' : '⚠'}</td>
+        <td>${r.hit ? `${escHtml(r.hit.p.name)}<div class="muted">${escHtml(r.hit.b.name)} · ${escHtml(r.hit.p.model)}</div>` : `${escHtml(r.raw)}<div class="muted">${r.err}</div>`}</td>
+        <td>${r.qty ?? '—'}</td>
+        <td>${STOCK_LABEL[r.status] || '—'}</td>
+        <td>${escHtml(r.note || (r.hit && stockMap[r.hit.p.id]?.note) || '')}</td>
+      </tr>`).join('')}
+    </table></div>
+    ${ok.length ? `<button class="admin-btn primary" id="imp-save" style="margin-top:10px" onclick="saveImport()">Simpan ${ok.length} produk</button>` : ''}`;
+}
+
+async function saveImport() {
+  const ok = importRows.filter(r => r.hit);
+  if (!ok.length || !supabase) return;
+  const btn = document.getElementById('imp-save');
+  btn.disabled = true; btn.textContent = 'Menyimpan…';
+  // Empty Catatan keeps the existing note instead of wiping it
+  const payload = ok.map(r => ({ product_id: r.hit.p.id, status: r.status, qty: r.qty,
+    note: r.note || stockMap[r.hit.p.id]?.note || '' }));
+  try {
+    const { error } = await supabase.from('stock').upsert(payload, { onConflict: 'product_id' });
+    if (error) throw error;
+    const now = new Date().toISOString();
+    payload.forEach(r => { stockMap[r.product_id] = { status: r.status, qty: r.qty, note: r.note, updated_at: now }; });
+    toggleImport();
+    refreshStockUI();
+    adminMsg(`✓ ${payload.length} produk berhasil diperbarui.`, 'ok');
+  } catch (e) {
+    btn.disabled = false; btn.textContent = `Simpan ${ok.length} produk`;
+    adminMsg('Gagal menyimpan: ' + (e.message || e), 'err');
   }
 }
 

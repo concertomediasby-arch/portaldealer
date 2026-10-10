@@ -86,6 +86,8 @@ Katalog tetap di `BRANDS` (GitHub); Supabase **hanya** menyimpan status stok per
 - **Aturan qty:** isi Qty → status otomatis (0 → `habis`, >0 → `ready`; `indent` dipertahankan jika dipilih manual). Status "— Belum diatur" = baris dihapus dari tabel → dealer tidak melihat badge.
 - **Tampilan dealer:** badge di kartu (`Ready · 12`) dan detail (`Ready — Sisa 12 unit`). Fungsi: `loadStock()`, `subscribeStock()` (realtime), `refreshStockUI()`, `stockBadgeSmall()`, `renderProductStockBadge()`; stok dimuat ulang saat tab kembali aktif.
 - **Admin panel:** `renderAdminList()`, `adminQtyChange()`, `scheduleSave()` (debounce 700 ms) → `saveStock()` (upsert/delete).
+- **Import massal:** tombol *Template Excel* (`downloadStockTemplate()`, .xlsx berisi semua produk + stok saat ini) dan *Import dari Excel* (`importFile()` untuk .xlsx/.csv, `parseImportText()` untuk paste) → `buildImportPreview()` mencocokkan model (abaikan huruf besar/spasi/tanda baca; kolom Brand opsional untuk model kembar) → `saveImport()` satu kali upsert. Kolom dikenali dari header (Model/Qty/Status/Catatan/Brand) atau urutan Model · Qty · Catatan; baris tanpa Qty & Status dilewati; Catatan kosong tidak menghapus catatan lama. SheetJS (`xlsx` 0.18.5, cdnjs) dimuat hanya saat fitur ini dipakai.
+- **Menu dealer:** view `stock` (`openStockView()`, `renderStockView()`) — publik, tanpa login.
 - **Ubah skema:** jalankan SQL di Supabase → SQL Editor, **hanya statement baru** (editor menjalankan semua baris dalam satu transaksi; satu error membatalkan semuanya).
 - Panel admin selalu gelap; warna teksnya dikunci eksplisit agar tetap terbaca di mode terang.
 - Jangan tambahkan harga ke tabel stok.
