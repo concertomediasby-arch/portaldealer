@@ -1281,7 +1281,14 @@ body {
     --fg: #f0f1f4; --fg-muted: #a3aab8; --accent: #d8b26a;
     color: var(--fg); color-scheme: dark;
   }
-  .admin-input::placeholder, .admin-search::placeholder, .admin-note-input::placeholder { color: #6b7280; }
+  .admin-input::placeholder, .admin-search::placeholder, .admin-note-input::placeholder { color: #6b7280; -webkit-text-fill-color: #6b7280; }
+  .admin-panel .admin-prod-name { color: #f0f1f4; }
+  .admin-panel .admin-prod-model { color: #a3aab8; }
+  .admin-panel .admin-input, .admin-panel .admin-search, .admin-panel .admin-note-input,
+  .admin-panel .admin-stock-select { color: #f0f1f4; -webkit-text-fill-color: #f0f1f4; }
+  .admin-panel .admin-logout-btn { color: #a3aab8; }
+  .admin-panel .admin-logout-btn:hover { color: #f0f1f4; }
+  .admin-panel .admin-close { color: #a3aab8; }
   .admin-stock-select option { background: #0d0f13; color: #f0f1f4; }
   .admin-header {
     padding: 18px 22px 14px; border-bottom: 1px solid rgba(255,255,255,.08);
@@ -1726,7 +1733,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T16:32:31Z';
+const LAST_UPDATE = '2026-10-10T16:33:53Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
