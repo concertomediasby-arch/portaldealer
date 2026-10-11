@@ -951,12 +951,19 @@ body {
 
 /* landing nav: logo · centered links · CTA */
 .landing-nav { justify-content: space-between; gap: 24px; padding: 18px 40px; }
-.landing-links { display: flex; gap: clamp(20px, 3.4vw, 56px); }
+.landing-links { display: flex; gap: clamp(16px, 2.6vw, 44px); }
 .landing-links a {
+  position: relative; padding: 6px 0; white-space: nowrap;
   color: #c4c7ce; text-decoration: none; font-family: var(--f-body);
-  font-size: 16px; font-weight: 500; transition: color .15s;
+  font-size: 15px; font-weight: 500; letter-spacing: .01em; transition: color .15s;
 }
-.landing-links a:hover { color: var(--accent-hi); }
+.landing-links a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent-hi), var(--accent-deep));
+  transform: scaleX(0); transform-origin: center; transition: transform .22s ease;
+}
+.landing-links a:hover, .landing-links a:focus-visible { color: var(--accent-hi); outline: none; }
+.landing-links a:hover::after, .landing-links a:focus-visible::after { transform: scaleX(1); }
 .nav-cta {
   padding: 13px 30px; border: none; border-radius: 40px; cursor: pointer;
   background: linear-gradient(135deg, var(--accent-hi), var(--accent-deep));
@@ -1002,8 +1009,17 @@ body {
 .brand-hero-name .brand-logo { max-width: 70vw; margin-bottom: 8px; }
 
 @media (max-width: 900px) {
-  .landing-links { display: none; }
-  .landing-nav { padding: 14px 16px; }
+  .landing-nav { padding: 14px 16px 0; flex-wrap: wrap; row-gap: 10px; }
+  .landing-links {
+    order: 3; flex: 1 0 100%; gap: 8px; overflow-x: auto; scrollbar-width: none;
+    margin: 0 -16px; padding: 2px 16px 10px; -webkit-overflow-scrolling: touch;
+  }
+  .landing-links::-webkit-scrollbar { display: none; }
+  .landing-links a {
+    flex-shrink: 0; font-size: 13px; padding: 7px 14px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+  }
+  .landing-links a::after { display: none; }
   .nav-cta { padding: 10px 20px; font-size: 14px; }
   .landing-title .line { white-space: normal; }
   .sparkle-a { right: .1em; top: -.3em; }
@@ -1458,8 +1474,9 @@ body {
     </div>
     <div class="landing-links">
       <a href="#" onclick="landingGo('dashboard'); return false;">Dashboard</a>
-      <a href="#" onclick="landingGo('catalog'); return false;">Semua Brand</a>
-      <a href="#" onclick="landingGo('products'); return false;">Produk</a>
+      <a href="#" onclick="landingGo('catalog'); return false;">Katalog</a>
+      <a href="#" onclick="landingGo('stock'); return false;">Stok Produk</a>
+      <a href="#" onclick="landingGo('paket'); return false;">Paket Audio</a>
       <a href="#" onclick="landingGo('brands'); return false;" id="nav-landing-brands">Brand Resmi</a>
     </div>
     <button class="nav-cta" onclick="enterPortal()">Masuk Portal</button>
@@ -1867,7 +1884,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-10T17:46:49Z';
+const LAST_UPDATE = '2026-10-11T03:23:08Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -2890,6 +2907,10 @@ function landingGo(target) {
     if (target === 'products') document.getElementById('catalog-search')?.focus();
   } else if (target === 'brands') {
     openBrandsPhilosophy();
+  } else if (target === 'stock') {
+    openStockView();
+  } else if (target === 'paket') {
+    openPaketAudio();
   } else {
     showView('dashboard');
   }
