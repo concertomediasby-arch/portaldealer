@@ -14,6 +14,10 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 
 const STAFF_ROLES = ['editor', 'admin'];
+// Akun dealer berbasis Kode Dealer memakai email internal <kode>@dealer.concerto.id (tidak pernah dikirimi email)
+const CODE_DOMAIN = 'dealer.concerto.id';
+const codeFromEmail = (e = '') => (e.toLowerCase().match(/^([a-z0-9-]+)@dealer\.concerto\.id$/)?.[1] || '').toUpperCase();
+const MIN_PIN = 6;
 const BAN_FOREVER = '876000h'; // ±100 tahun = nonaktif
 
 Deno.serve(async (req) => {
@@ -57,6 +61,7 @@ Deno.serve(async (req) => {
           users: users.map((u) => ({
             id: u.id,
             email: u.email,
+            code: codeFromEmail(u.email),
             role: u.app_metadata?.role || 'dealer',
             store: u.user_metadata?.store || '',
             city: u.user_metadata?.city || '',
@@ -69,15 +74,18 @@ Deno.serve(async (req) => {
       }
 
       case 'create': {
-        const email = str('email').toLowerCase(), password = str('password');
+        const code = str('code').toUpperCase().replace(/\s+/g, '-'), password = str('password');
+        if (code && !/^[A-Z0-9][A-Z0-9-]{1,28}[A-Z0-9]$/.test(code))
+          return json({ error: 'Kode Dealer 3–30 karakter: huruf, angka, dan tanda -.' }, 400);
+        const email = code ? `${code.toLowerCase()}@${CODE_DOMAIN}` : str('email').toLowerCase();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'Format email tidak valid.' }, 400);
-        if (password.length < 8) return json({ error: 'Password minimal 8 karakter.' }, 400);
+        if (password.length < MIN_PIN) return json({ error: `PIN minimal ${MIN_PIN} karakter.` }, 400);
         const { data, error } = await admin.auth.admin.createUser({
           email, password, email_confirm: true,
-          user_metadata: { store: str('store'), city: str('city'), phone: str('phone') },
+          user_metadata: { store: str('store'), city: str('city'), phone: str('phone'), ...(code ? { code } : {}) },
         });
         if (error) throw error;
-        return json({ ok: true, id: data.user?.id });
+        return json({ ok: true, id: data.user?.id, email });
       }
 
       case 'update': {
@@ -92,7 +100,7 @@ Deno.serve(async (req) => {
       case 'reset_password': {
         const u = await loadDealer(str('id'));
         const password = str('password');
-        if (password.length < 8) return json({ error: 'Password minimal 8 karakter.' }, 400);
+        if (password.length < MIN_PIN) return json({ error: `PIN minimal ${MIN_PIN} karakter.` }, 400);
         const { error } = await admin.auth.admin.updateUserById(u.id, { password });
         if (error) throw error;
         return json({ ok: true });
@@ -117,7 +125,7 @@ Deno.serve(async (req) => {
     }
   } catch (e) {
     const msg = (e as Error)?.message || String(e);
-    const friendly = /already.*registered|already exists/i.test(msg) ? 'Email ini sudah terdaftar.' : msg;
+    const friendly = /already.*registered|already exists/i.test(msg) ? 'Kode Dealer / email ini sudah terdaftar.' : msg;
     return json({ error: friendly }, 400);
   }
 });

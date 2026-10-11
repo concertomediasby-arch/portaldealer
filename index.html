@@ -1905,11 +1905,11 @@ body {
         <form class="dl-card dl-form" id="dl-form" onsubmit="submitDealerForm(); return false;">
           <div class="dl-card-title" id="dl-form-title">Tambah dealer baru</div>
           <div class="dl-grid">
-            <label>Nama toko / dealer<input class="dl-input" id="dl-store" required maxlength="80" placeholder="mis. Sinar Audio Surabaya"></label>
-            <label>Kota<input class="dl-input" id="dl-city" maxlength="60" placeholder="mis. Surabaya"></label>
+            <label>Nama toko / dealer<input class="dl-input" id="dl-store" required maxlength="80" placeholder="mis. Sinar Audio Surabaya" oninput="suggestDealerCode()"></label>
+            <label>Kota<input class="dl-input" id="dl-city" maxlength="60" placeholder="mis. Surabaya" oninput="suggestDealerCode()"></label>
             <label><span>No. WhatsApp <span class="dl-opt">(opsional)</span></span><input class="dl-input" id="dl-phone" maxlength="20" inputmode="tel" placeholder="08xxxxxxxxxx"></label>
-            <label class="dl-new">Email login<input class="dl-input" id="dl-email" type="email" maxlength="120" placeholder="email@dealer.com"></label>
-            <label class="dl-new">Password<span class="dl-pass"><input class="dl-input" id="dl-password" maxlength="60" autocomplete="new-password"><button type="button" class="dlr-btn ghost" onclick="document.getElementById('dl-password').value = randomPassword()">Acak</button></span></label>
+            <label class="dl-new"><span>Kode Dealer <span class="dl-opt">(huruf, angka, tanda -)</span></span><input class="dl-input" id="dl-code" maxlength="30" placeholder="mis. SBY-SINARAUDIO" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="dealerCodeTouched = true"></label>
+            <label class="dl-new">PIN<span class="dl-pass"><input class="dl-input" id="dl-password" maxlength="30" autocomplete="new-password"><button type="button" class="dlr-btn ghost" onclick="document.getElementById('dl-password').value = randomPin()">Acak</button></span></label>
           </div>
           <div class="dl-actions">
             <button class="dlr-btn primary" id="dl-submit" type="submit">Buat akun dealer</button>
@@ -1921,7 +1921,7 @@ body {
         <div class="dl-card">
           <div class="dl-list-head">
             <div class="dl-card-title" id="dl-count">Daftar dealer</div>
-            <input class="dl-input dl-search" id="dl-search" type="search" placeholder="Cari toko, kota, atau email…" oninput="renderDealers()">
+            <input class="dl-input dl-search" id="dl-search" type="search" placeholder="Cari toko, kota, atau kode…" oninput="renderDealers()">
           </div>
           <div id="dl-list"><div class="dl-empty">Memuat…</div></div>
         </div>
@@ -2139,16 +2139,16 @@ body {
     <div class="admin-body">
       <form class="admin-login" onsubmit="dealerLogin(); return false;">
         <div>
-          <label>Email</label>
-          <input class="admin-input" type="email" id="login-email" placeholder="email@dealer.com" autocomplete="username">
+          <label>Kode Dealer</label>
+          <input class="admin-input" type="text" id="login-email" placeholder="mis. SBY-SINARAUDIO" autocomplete="username" autocapitalize="characters" autocorrect="off" spellcheck="false">
         </div>
         <div>
-          <label>Password</label>
+          <label>PIN</label>
           <input class="admin-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
         </div>
         <div class="admin-error" id="login-error"></div>
         <button class="admin-btn primary" id="login-btn" type="submit">Masuk</button>
-        <div style="font-size:11.5px;color:#6b7280;text-align:center;line-height:1.5">Belum punya akun? Hubungi tim Concerto Audio Indonesia.</div>
+        <div style="font-size:11.5px;color:#6b7280;text-align:center;line-height:1.5">Belum punya kode? Hubungi tim Concerto Audio Indonesia.<br>Staff CAI: isi kolom Kode Dealer dengan email.</div>
       </form>
     </div>
   </div>
@@ -2236,7 +2236,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T10:20:03Z';
+const LAST_UPDATE = '2026-10-11T10:28:34Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4259,12 +4259,27 @@ function closeLogin() {
   document.body.style.overflow = '';
   afterLogin = null;
 }
+/* Kode Dealer: akun dealer memakai email internal <kode>@dealer.concerto.id (tidak pernah dikirimi email).
+   Dealer cukup mengetik kode + PIN; staff (dan akun dealer lama) tetap bisa login dengan email. */
+const DEALER_CODE_DOMAIN = 'dealer.concerto.id';
+const normDealerCode = c => String(c || '').trim().toUpperCase().replace(/\s+/g, '-');
+const validDealerCode = c => /^[A-Z0-9](?:[A-Z0-9-]{1,28})[A-Z0-9]$/.test(c);
+const loginEmailFor = id => id.includes('@') ? id.toLowerCase() : `${normDealerCode(id).toLowerCase()}@${DEALER_CODE_DOMAIN}`;
+const codeFromEmail = e => { const m = String(e || '').toLowerCase().match(new RegExp(`^([a-z0-9-]+)@${DEALER_CODE_DOMAIN.replace(/\./g, '\\.')}$`)); return m ? m[1].toUpperCase() : ''; };
+// Nama yang ditampilkan untuk akun: kode dealer jika akun berbasis kode, selain itu email
+const accountLabel = u => u ? (codeFromEmail(u.email) ? 'Kode ' + codeFromEmail(u.email) : u.email) : '';
+function randomPin(len = 6) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from(crypto.getRandomValues(new Uint32Array(len)), n => chars[n % chars.length]).join('');
+}
+
 async function dealerLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-password').value;
+  const ident = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value.trim();
   const btn   = document.getElementById('login-btn');
   const err   = document.getElementById('login-error');
-  if (!email || !pass) { err.textContent = 'Isi email dan password.'; return; }
+  if (!ident || !pass) { err.textContent = 'Isi Kode Dealer dan PIN.'; return; }
+  const email = loginEmailFor(ident);
   if (!supabase) { err.textContent = 'Tidak dapat terhubung ke server. Periksa koneksi internet.'; return; }
   btn.disabled = true; btn.textContent = 'Memverifikasi…'; err.textContent = '';
   try {
@@ -4274,17 +4289,17 @@ async function dealerLogin() {
     const next = afterLogin;
     document.getElementById('login-password').value = '';
     closeLogin();
-    showToast(`Masuk sebagai ${authUser.email} · ${ROLE_LABEL[userRole()] || 'Dealer'}`);
+    showToast(`Masuk sebagai ${authUser.user_metadata?.store || accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Dealer'}`);
     if (next) next();
   } catch (e) {
-    err.textContent = /invalid login/i.test(e.message || '') ? 'Email atau password salah.' : 'Login gagal: ' + (e.message || e);
+    err.textContent = /invalid login/i.test(e.message || '') ? 'Kode Dealer atau PIN salah.' : 'Login gagal: ' + (e.message || e);
   } finally {
     btn.disabled = false; btn.textContent = 'Masuk';
   }
 }
 async function authButton() {
   if (!authUser) { afterLogin = null; openLogin(); return; }
-  if (confirm(`Keluar dari akun ${authUser.email}?`)) await doLogout();
+  if (confirm(`Keluar dari akun ${authUser.user_metadata?.store || accountLabel(authUser)}?`)) await doLogout();
 }
 // Local sign-out always clears this browser's session, even if the server call fails (offline / expired session)
 async function doLogout() {
@@ -4307,7 +4322,7 @@ function updateAuthUI() {
   document.body.classList.toggle('is-editor', isEditor());
   if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
   const btn = document.getElementById('auth-btn');
-  if (btn) btn.title = authUser ? `Login sebagai ${authUser.email} (${ROLE_LABEL[userRole()] || 'Dealer'}) — klik untuk keluar` : 'Login dealer';
+  if (btn) btn.title = authUser ? `Login sebagai ${accountLabel(authUser)} (${ROLE_LABEL[userRole()] || 'Dealer'}) — klik untuk keluar` : 'Login dealer';
 }
 
 async function loadStock() {
@@ -4503,7 +4518,7 @@ function showAdminStockSection() {
   document.getElementById('admin-noaccess').style.display = admin ? 'none' : 'block';
   document.getElementById('admin-stock-section').style.display = admin ? 'block' : 'none';
   document.getElementById('admin-footer').style.display = 'block';
-  document.getElementById('admin-user-email').textContent = authUser ? `${authUser.email} · ${ROLE_LABEL[userRole()] || 'Dealer'}` : '';
+  document.getElementById('admin-user-email').textContent = authUser ? `${accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Dealer'}` : '';
   document.getElementById('admin-subtitle').textContent = admin ? 'Kelola ketersediaan produk' : 'Akun ini tidak punya akses admin';
   if (admin) renderAdminList();
 }
@@ -4895,7 +4910,7 @@ async function saveImport() {
    KELOLA DEALER — khusus Editor, lewat Edge Function "manage-dealers"
    (kunci service role hanya ada di server Supabase, tidak pernah di situs)
 ══════════════════════════════════════════ */
-let dealerUsers = null, dealerEditId = null;
+let dealerUsers = null, dealerEditId = null, dealerCodeTouched = false;
 const PORTAL_URL = 'https://dealer.concerto.id';
 
 function randomPassword(len = 10) {
@@ -4945,7 +4960,7 @@ function renderDealers() {
   if (!dealerUsers) return;
   const q = (document.getElementById('dl-search')?.value || '').trim().toLowerCase();
   const dealers = dealerUsers.filter(u => u.role === 'dealer')
-    .filter(u => !q || [u.store, u.city, u.email, u.phone].some(v => (v || '').toLowerCase().includes(q)))
+    .filter(u => !q || [u.store, u.city, u.email, codeFromEmail(u.email), u.phone].some(v => (v || '').toLowerCase().includes(q)))
     .sort((a, b) => (a.store || a.email).localeCompare(b.store || b.email));
   const staff = dealerUsers.filter(u => u.role !== 'dealer');
   const total = dealerUsers.filter(u => u.role === 'dealer').length;
@@ -4953,12 +4968,12 @@ function renderDealers() {
   const row = u => `<div class="dl-row${u.active ? '' : ' off'}">
       <div class="dl-main">
         <div class="dl-store">${escHtml(u.store || '(tanpa nama toko)')}${u.active ? '' : ' <span class="dl-tag off">Nonaktif</span>'}</div>
-        <div class="dl-sub">${escHtml([u.city, u.email, u.phone].filter(Boolean).join(' · '))}</div>
+        <div class="dl-sub">${escHtml([u.city, accountLabel(u), u.phone].filter(Boolean).join(' · '))}</div>
         <div class="dl-sub">Terakhir login: ${fmtDlDate(u.last_sign_in_at)} · Dibuat: ${fmtDlDate(u.created_at)}</div>
       </div>
       <div class="dl-row-actions">
         <button class="dlr-btn ghost" onclick="editDealer('${u.id}')">Edit</button>
-        <button class="dlr-btn ghost" onclick="resetDealerPassword('${u.id}')">Reset password</button>
+        <button class="dlr-btn ghost" onclick="resetDealerPassword('${u.id}')">Reset PIN</button>
         <button class="dlr-btn ghost" onclick="toggleDealer('${u.id}')">${u.active ? 'Nonaktifkan' : 'Aktifkan'}</button>
         <button class="dlr-btn danger" onclick="deleteDealer('${u.id}')">Hapus</button>
       </div>
@@ -4975,8 +4990,9 @@ function dealerMsg(text, err) {
 
 function resetDealerForm() {
   dealerEditId = null;
-  ['dl-store', 'dl-city', 'dl-phone', 'dl-email'].forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('dl-password').value = randomPassword();
+  ['dl-store', 'dl-city', 'dl-phone', 'dl-code'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('dl-password').value = randomPin();
+  dealerCodeTouched = false;
   document.getElementById('dl-form-title').textContent = 'Tambah dealer baru';
   document.getElementById('dl-submit').textContent = 'Buat akun dealer';
   document.getElementById('dl-cancel').hidden = true;
@@ -4991,13 +5007,24 @@ function editDealer(id) {
   document.getElementById('dl-store').value = u.store;
   document.getElementById('dl-city').value = u.city;
   document.getElementById('dl-phone').value = u.phone;
-  document.getElementById('dl-form-title').textContent = `Edit dealer — ${u.email}`;
+  document.getElementById('dl-form-title').textContent = `Edit dealer — ${accountLabel(u)}`;
   document.getElementById('dl-submit').textContent = 'Simpan perubahan';
   document.getElementById('dl-cancel').hidden = false;
   document.querySelectorAll('#dl-form .dl-new').forEach(el => el.hidden = true);
   dealerMsg('');
   document.getElementById('dl-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
   document.getElementById('dl-store').focus();
+}
+
+// Usulan kode dari kota + nama toko (mis. Sinar Audio, Surabaya → SUR-SINARAUDIO), selama belum diketik manual
+function suggestDealerCode() {
+  if (dealerEditId || dealerCodeTouched) return;
+  const clean = t => (t || '').toUpperCase().normalize('NFD').replace(/[^A-Z0-9 ]/g, '').trim();
+  const city = clean(document.getElementById('dl-city').value).split(/\s+/)[0] || '';
+  let store = clean(document.getElementById('dl-store').value).replace(/\s+/g, '');
+  if (city) store = store.replace(city, '') || store;
+  const code = [city.slice(0, 3), store.slice(0, 14)].filter(Boolean).join('-');
+  document.getElementById('dl-code').value = code;
 }
 
 async function submitDealerForm() {
@@ -5011,16 +5038,17 @@ async function submitDealerForm() {
       await callDealers('update', { id: dealerEditId, store, city, phone });
       showToast(`✓ Data ${store} diperbarui.`);
     } else {
-      const email = v('dl-email').toLowerCase(), password = v('dl-password');
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Format email tidak valid.');
-      if (password.length < 8) throw new Error('Password minimal 8 karakter.');
-      await callDealers('create', { email, password, store, city, phone });
-      showCredentials({ store, email, password, phone }, 'Akun dealer berhasil dibuat');
+      const code = normDealerCode(v('dl-code')), password = v('dl-password');
+      if (!validDealerCode(code)) throw new Error('Kode Dealer 3–30 karakter: huruf, angka, dan tanda - (tidak di awal/akhir).');
+      if (password.length < 6) throw new Error('PIN minimal 6 karakter.');
+      if (dealerUsers?.some(u => codeFromEmail(u.email) === code)) throw new Error(`Kode ${code} sudah dipakai dealer lain.`);
+      await callDealers('create', { code, email: loginEmailFor(code), password, store, city, phone });
+      showCredentials({ store, email: loginEmailFor(code), password, phone }, 'Akun dealer berhasil dibuat');
     }
     resetDealerForm();
     loadDealers();
   } catch (e) {
-    dealerMsg(e.message, true);
+    dealerMsg(/minimal 8/i.test(e.message) ? 'Fungsi server "manage-dealers" masih versi lama — deploy ulang dari repo agar PIN 6 karakter diterima.' : e.message, true);
   } finally {
     btn.disabled = false;
   }
@@ -5028,7 +5056,8 @@ async function submitDealerForm() {
 
 function credentialMessage(c) {
   return `Halo ${c.store}, berikut akun Concerto Dealer Portal Anda:\n\n` +
-    `🔗 ${PORTAL_URL}\n📧 Email: ${c.email}\n🔑 Password: ${c.password}\n\n` +
+    `🔗 ${PORTAL_URL}\n` +
+    (codeFromEmail(c.email) ? `🏷️ Kode Dealer: ${codeFromEmail(c.email)}\n🔑 PIN: ${c.password}\n\n` : `📧 Email: ${c.email}\n🔑 Password: ${c.password}\n\n`) +
     `Login lewat ikon akun di kanan atas portal untuk membuka Stok Produk & Panduan Dealer. Mohon jaga kerahasiaan akun ini. Terima kasih — Concerto Audio Indonesia`;
 }
 
@@ -5039,7 +5068,7 @@ function showCredentials(c, title) {
   box.hidden = false;
   box.innerHTML = `
     <div class="dl-card-title">✓ ${escHtml(title)}</div>
-    <div class="dl-sub">Kirim data login ini ke dealer. Password tidak bisa dilihat lagi setelah kotak ini ditutup.</div>
+    <div class="dl-sub">Kirim data login ini ke dealer. PIN tidak bisa dilihat lagi setelah kotak ini ditutup.</div>
     <pre class="dl-pre">${escHtml(msg)}</pre>
     <div class="dl-actions">
       <button class="dlr-btn primary" onclick="copyCredentials()">Salin pesan</button>
@@ -5058,12 +5087,13 @@ async function copyCredentials() {
 
 async function resetDealerPassword(id) {
   const u = dealerUsers?.find(x => x.id === id);
-  if (!u || !confirm(`Buat password baru untuk ${u.store || u.email}? Password lama tidak berlaku lagi.`)) return;
-  const password = randomPassword();
+  const isCode = !!codeFromEmail(u?.email);
+  if (!u || !confirm(`Buat ${isCode ? 'PIN' : 'password'} baru untuk ${u.store || accountLabel(u)}? ${isCode ? 'PIN' : 'Password'} lama tidak berlaku lagi.`)) return;
+  const password = isCode ? randomPin() : randomPassword();
   try {
     await callDealers('reset_password', { id, password });
-    showCredentials({ store: u.store || u.email, email: u.email, password, phone: u.phone }, 'Password baru dibuat');
-  } catch (e) { showToast('Gagal reset password: ' + e.message, 8000); }
+    showCredentials({ store: u.store || u.email, email: u.email, password, phone: u.phone }, isCode ? 'PIN baru dibuat' : 'Password baru dibuat');
+  } catch (e) { showToast('Gagal reset: ' + e.message, 8000); }
 }
 
 async function toggleDealer(id) {
@@ -5079,7 +5109,7 @@ async function toggleDealer(id) {
 
 async function deleteDealer(id) {
   const u = dealerUsers?.find(x => x.id === id);
-  if (!u || !confirm(`Hapus akun ${u.store || u.email} (${u.email}) secara permanen?\n\nSaran: pilih "Nonaktifkan" jika mungkin akan dipakai lagi.`)) return;
+  if (!u || !confirm(`Hapus akun ${u.store || accountLabel(u)} (${accountLabel(u)}) secara permanen?\n\nSaran: pilih "Nonaktifkan" jika mungkin akan dipakai lagi.`)) return;
   try {
     await callDealers('delete', { id });
     showToast(`Akun ${u.store || u.email} dihapus.`);
