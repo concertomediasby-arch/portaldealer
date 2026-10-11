@@ -2236,34 +2236,35 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T10:16:03Z';
+const LAST_UPDATE = '2026-10-11T10:20:03Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
 // Satu materi = satu halaman infografis di assets/academy/fundamental-NN.webp (+ -thumb.webp).
-// `date` = tanggal rilis (WIB): materi baru tampil mulai tanggal itu, dan bertanda ★ emas selama 14 hari.
+// `date` = tanggal upload (WIB): semua materi langsung tampil; bertanda ★ emas selama 14 hari sejak tanggal itu.
+// (Tanggal di masa depan tetap menyembunyikan materi sampai hari itu — opsional, tidak dipakai saat ini.)
 // Tambah materi: simpan gambar baru, lalu tambah baris di bawah dengan no & date berikutnya.
 const ACADEMY = [
   { no: 1, date:'2026-10-11', title:'Kenapa mobil adalah ruang dengar paling sulit?' },
-  { no: 2, date:'2026-10-18', title:'Kenapa tweeter soft dome terasa nyaman?' },
-  { no: 3, date:'2026-10-25', title:'Kenapa kunci audio ada di midbass?' },
-  { no: 4, date:'2026-11-01', title:'Kenapa getaran body merusak suara?' },
-  { no: 5, date:'2026-11-08', title:'Kenapa harus peredam butyl yang benar?' },
-  { no: 6, date:'2026-11-15', title:'Isolator dan absorber, apa tugasnya?' },
-  { no: 7, date:'2026-11-22', title:'Kenapa box subwoofer tidak boleh bocor?' },
-  { no: 8, date:'2026-11-29', title:'Apakah suara bagus harus keras?' },
-  { no: 9, date:'2026-12-06', title:'Box midrange sebaiknya diisi apa?' },
-  { no:10, date:'2026-12-13', title:'Kenapa speaker bawaan terdengar biasa?' },
-  { no:11, date:'2026-12-20', title:'Kenapa sih orang pakai super tweeter?' },
-  { no:12, date:'2026-12-27', title:'Subwoofer tipis vs subwoofer biasa, apa bedanya?' },
-  { no:13, date:'2027-01-03', title:'Car audio lebih baik dari home audio?' },
-  { no:14, date:'2027-01-10', title:'Speaker 2", 3", 4", apa bedanya?' },
-  { no:15, date:'2027-01-17', title:'Apa guna DSP, dan kenapa wajib?' },
-  { no:16, date:'2027-01-24', title:'Apa yang menentukan kabel speaker bagus?' },
-  { no:17, date:'2027-01-31', title:'Kabel solid core vs serabut, apa bedanya?' },
-  { no:18, date:'2027-02-07', title:'Bahan kabel: mana yang terbaik?' },
-  { no:19, date:'2027-02-14', title:'Apa itu kapasitor, dan kenapa mobil butuh?' },
-  { no:20, date:'2027-02-21', title:'Awas, kapasitor abal-abal!' },
+  { no: 2, date:'2026-10-11', title:'Kenapa tweeter soft dome terasa nyaman?' },
+  { no: 3, date:'2026-10-11', title:'Kenapa kunci audio ada di midbass?' },
+  { no: 4, date:'2026-10-11', title:'Kenapa getaran body merusak suara?' },
+  { no: 5, date:'2026-10-11', title:'Kenapa harus peredam butyl yang benar?' },
+  { no: 6, date:'2026-10-11', title:'Isolator dan absorber, apa tugasnya?' },
+  { no: 7, date:'2026-10-11', title:'Kenapa box subwoofer tidak boleh bocor?' },
+  { no: 8, date:'2026-10-11', title:'Apakah suara bagus harus keras?' },
+  { no: 9, date:'2026-10-11', title:'Box midrange sebaiknya diisi apa?' },
+  { no:10, date:'2026-10-11', title:'Kenapa speaker bawaan terdengar biasa?' },
+  { no:11, date:'2026-10-11', title:'Kenapa sih orang pakai super tweeter?' },
+  { no:12, date:'2026-10-11', title:'Subwoofer tipis vs subwoofer biasa, apa bedanya?' },
+  { no:13, date:'2026-10-11', title:'Car audio lebih baik dari home audio?' },
+  { no:14, date:'2026-10-11', title:'Speaker 2", 3", 4", apa bedanya?' },
+  { no:15, date:'2026-10-11', title:'Apa guna DSP, dan kenapa wajib?' },
+  { no:16, date:'2026-10-11', title:'Apa yang menentukan kabel speaker bagus?' },
+  { no:17, date:'2026-10-11', title:'Kabel solid core vs serabut, apa bedanya?' },
+  { no:18, date:'2026-10-11', title:'Bahan kabel: mana yang terbaik?' },
+  { no:19, date:'2026-10-11', title:'Apa itu kapasitor, dan kenapa mobil butuh?' },
+  { no:20, date:'2026-10-11', title:'Awas, kapasitor abal-abal!' },
 ];
 // ── Panduan Dealer ────────────────────────────────────────────
 // PDF disimpan di Supabase Storage bucket privat "guides" dengan nama file = `path` (bukan di repo/GitHub).
