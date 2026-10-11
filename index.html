@@ -1285,6 +1285,11 @@ body {
   .product-stock-badge.habis  { background: rgba(0,0,0,.55); color: #e0675f; border: 1px solid rgba(224,103,95,.4); }
   .product-stock-badge.habis::before  { background: #e0675f; }
 
+  /* ── Login dealer ── */
+  .nav-lock { margin-left: auto; font-size: 11px; opacity: .55; }
+  body.logged-in .nav-lock { display: none; }
+  body.logged-in .auth-btn { color: var(--accent); border-color: var(--accent); }
+
   /* ── Stok Produk view ── */
   .stock-live { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 11.5px; color: var(--fg-muted); font-family: var(--f-mono); }
   .stock-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-dim); }
@@ -1520,6 +1525,11 @@ body {
     <div class="topbar-spacer"></div>
     <span class="topbar-status"><i></i>System Online</span>
     <span class="topbar-badge">Dealer Portal</span>
+    <button class="theme-btn auth-btn" id="auth-btn" onclick="authButton()" title="Login dealer" aria-label="Akun dealer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    </button>
     <button class="theme-btn" onclick="openAdmin()" title="Admin — Update Stok" aria-label="Admin stok">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
@@ -1550,7 +1560,7 @@ body {
       </button>
       <button class="sidebar-item" id="nav-stock" onclick="openStockView()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><polyline points="9 14 11 16 15 12"/></svg>
-        Stok Produk
+        Stok Produk<span class="nav-lock" title="Perlu login">🔒</span>
       </button>
       <button class="sidebar-item" id="nav-brandresmi" onclick="openBrandsPhilosophy()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -1562,7 +1572,7 @@ body {
       </button>
       <button class="sidebar-item" id="nav-guides" onclick="openGuides()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Panduan Dealer
+        Panduan Dealer<span class="nav-lock" title="Perlu login">🔒</span>
       </button>
       <button class="sidebar-item" id="nav-dsp" onclick="openDspSoftware()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -1810,6 +1820,34 @@ body {
   <div class="sheet" id="sheet-content" role="dialog" aria-modal="true" aria-label="Spec sheet produk"></div>
 </div>
 
+<!-- DEALER LOGIN -->
+<div class="admin-overlay" id="login-overlay" onclick="if(event.target===this)closeLogin()">
+  <div class="admin-panel" role="dialog" aria-modal="true" aria-label="Login dealer" style="width:min(92vw,420px)">
+    <div class="admin-header">
+      <div>
+        <h2>🔒 Login Dealer</h2>
+        <p>Stok Produk &amp; Panduan Dealer khusus dealer resmi CAI.</p>
+      </div>
+      <button class="admin-close" onclick="closeLogin()" title="Tutup">✕</button>
+    </div>
+    <div class="admin-body">
+      <form class="admin-login" onsubmit="dealerLogin(); return false;">
+        <div>
+          <label>Email</label>
+          <input class="admin-input" type="email" id="login-email" placeholder="email@dealer.com" autocomplete="username">
+        </div>
+        <div>
+          <label>Password</label>
+          <input class="admin-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="admin-error" id="login-error"></div>
+        <button class="admin-btn primary" id="login-btn" type="submit">Masuk</button>
+        <div style="font-size:11.5px;color:#6b7280;text-align:center;line-height:1.5">Belum punya akun? Hubungi tim Concerto Audio Indonesia.</div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- ADMIN STOCK PANEL -->
 <div class="admin-overlay" id="admin-overlay" onclick="if(event.target===this)closeAdmin()">
   <div class="admin-panel" role="dialog" aria-modal="true" aria-label="Admin Panel Stok">
@@ -1834,6 +1872,13 @@ body {
           </div>
           <div class="admin-error" id="admin-error"></div>
           <button class="admin-btn primary" id="admin-login-btn" onclick="adminLogin()">Masuk</button>
+        </div>
+      </div>
+      <div id="admin-noaccess" style="display:none">
+        <div class="admin-login" style="text-align:center;color:#a3aab8;font-size:13px;line-height:1.6">
+          Akun ini adalah akun <b style="color:#f0f1f4">dealer</b> — bisa melihat stok, tetapi tidak dapat mengubahnya.<br>
+          Untuk mengubah stok, keluar lalu masuk dengan akun admin.
+          <button class="admin-btn ghost" onclick="adminLogout()">Keluar</button>
         </div>
       </div>
       <!-- Stock list (after login) -->
@@ -1884,7 +1929,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T03:23:08Z';
+const LAST_UPDATE = '2026-10-11T03:27:14Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -2917,6 +2962,7 @@ function landingGo(target) {
 }
 
 function openGuides() {
+  if (!requireLogin(openGuides)) return;
   showView('guides');
   const el = document.getElementById('guides-list');
   if (el.children.length) return;
@@ -3641,7 +3687,10 @@ const SUPA_URL  = 'https://cvffltbxsaiugccexmtf.supabase.co';
 const SUPA_KEY  = 'sb_publishable_Y4AMvOdGfunEZhvvpsMzbg_NBbxNqGW';
 let   supabase  = null;
 let   stockMap  = {};   // { product_id: { status, note, qty } }
-let   adminUser = null;
+let   authUser = null;   // akun yang sedang login (dealer atau admin)
+// Peran admin di-set lewat SQL di app_metadata (lihat CLAUDE.md); RLS Supabase menegakkan hal yang sama di server
+const isAdmin = () => authUser?.app_metadata?.role === 'admin';
+let   stockChannel = null, afterLogin = null, lastAuthId;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
 const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -3661,14 +3710,82 @@ const extraProducts = () => Object.keys(stockMap).filter(k => k.startsWith(EXTRA
 function initSupabase() {
   try {
     supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    // Fires once on load (INITIAL_SESSION) and on every login/logout; defer so no Supabase call runs inside the callback
+    supabase.auth.onAuthStateChange((_e, session) => {
+      authUser = session?.user || null;
+      if (authUser?.id === lastAuthId) return;
+      lastAuthId = authUser?.id;
+      setTimeout(onAuthChanged, 0);
+    });
+  } catch(e) { console.warn('Supabase init failed', e); }
+  updateAuthUI();
+}
+
+function onAuthChanged() {
+  updateAuthUI();
+  if (authUser) {
     loadStock();
     subscribeStock();
-    supabase.auth.getSession().then(({ data }) => { adminUser = data?.session?.user || null; });
-  } catch(e) { console.warn('Supabase init failed', e); }
+  } else {
+    if (stockChannel) { supabase.removeChannel(stockChannel); stockChannel = null; }
+    stockMap = {}; stockLoaded = false;
+    refreshStockUI();
+    if (['view-stock', 'view-guides'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
+  }
+}
+
+/* ── Login dealer (Stok Produk & Panduan Dealer hanya untuk akun terdaftar) ── */
+function requireLogin(fn) {
+  if (authUser) return true;
+  afterLogin = fn;
+  openLogin();
+  return false;
+}
+function openLogin() {
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('login-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('login-email')?.focus(), 50);
+}
+function closeLogin() {
+  document.getElementById('login-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  afterLogin = null;
+}
+async function dealerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const btn   = document.getElementById('login-btn');
+  const err   = document.getElementById('login-error');
+  if (!email || !pass) { err.textContent = 'Isi email dan password.'; return; }
+  if (!supabase) { err.textContent = 'Tidak dapat terhubung ke server. Periksa koneksi internet.'; return; }
+  btn.disabled = true; btn.textContent = 'Memverifikasi…'; err.textContent = '';
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    authUser = data.user;
+    const next = afterLogin;
+    document.getElementById('login-password').value = '';
+    closeLogin();
+    if (next) next();
+  } catch (e) {
+    err.textContent = /invalid login/i.test(e.message || '') ? 'Email atau password salah.' : 'Login gagal: ' + (e.message || e);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Masuk';
+  }
+}
+async function authButton() {
+  if (!authUser) { afterLogin = null; openLogin(); return; }
+  if (confirm(`Keluar dari akun ${authUser.email}?`)) await supabase.auth.signOut();
+}
+function updateAuthUI() {
+  document.body.classList.toggle('logged-in', !!authUser);
+  const btn = document.getElementById('auth-btn');
+  if (btn) btn.title = authUser ? `Login sebagai ${authUser.email} — klik untuk keluar` : 'Login dealer';
 }
 
 async function loadStock() {
-  if (!supabase) return;
+  if (!supabase || !authUser) return;
   try {
     const { data } = await supabase.from('stock').select('*');
     if (data) {
@@ -3684,7 +3801,8 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 function subscribeStock() {
   if (!supabase) return;
-  supabase.channel('stock-changes')
+  if (stockChannel) supabase.removeChannel(stockChannel);
+  stockChannel = supabase.channel('stock-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'stock' }, payload => {
       const r = payload.new || payload.old;
       if (!r) return;
@@ -3752,6 +3870,7 @@ const fmtStockTime = iso => iso
   : '';
 
 function openStockView() {
+  if (!requireLogin(openStockView)) return;
   stockBrand = 'all'; stockStatus = 'all';
   const search = document.getElementById('stock-search');
   if (search) search.value = '';
@@ -3826,13 +3945,13 @@ function renderStockView() {
 function openAdmin() {
   document.getElementById('admin-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  if (adminUser) showAdminStockSection();
+  if (authUser) showAdminStockSection(); else resetAdminLoginUI();
 }
 function closeAdmin() {
   document.getElementById('admin-overlay').classList.remove('open');
   document.body.style.overflow = '';
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAdmin(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAdmin(); closeLogin(); } });
 
 async function adminLogin() {
   const email = document.getElementById('admin-email').value.trim();
@@ -3844,7 +3963,7 @@ async function adminLogin() {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
     if (error) throw error;
-    adminUser = data.user;
+    authUser = data.user;
     showAdminStockSection();
   } catch(e) {
     err.textContent = 'Login gagal: ' + (e.message || 'Periksa email/password.');
@@ -3853,26 +3972,32 @@ async function adminLogin() {
 }
 
 function showAdminStockSection() {
+  const admin = isAdmin();
   document.getElementById('admin-login-section').style.display = 'none';
-  document.getElementById('admin-stock-section').style.display = 'block';
+  document.getElementById('admin-noaccess').style.display = admin ? 'none' : 'block';
+  document.getElementById('admin-stock-section').style.display = admin ? 'block' : 'none';
   document.getElementById('admin-footer').style.display = 'block';
-  document.getElementById('admin-user-email').textContent = adminUser?.email || '';
-  document.getElementById('admin-subtitle').textContent = 'Kelola ketersediaan produk';
-  renderAdminList();
+  document.getElementById('admin-user-email').textContent = authUser?.email || '';
+  document.getElementById('admin-subtitle').textContent = admin ? 'Kelola ketersediaan produk' : 'Akun ini tidak punya akses admin';
+  if (admin) renderAdminList();
 }
 
-async function adminLogout() {
-  await supabase.auth.signOut();
-  adminUser = null;
+function resetAdminLoginUI() {
   document.getElementById('admin-login-section').style.display = 'block';
+  document.getElementById('admin-noaccess').style.display = 'none';
   document.getElementById('admin-stock-section').style.display = 'none';
   document.getElementById('admin-footer').style.display = 'none';
   document.getElementById('admin-subtitle').textContent = 'Login untuk mengelola ketersediaan produk';
-  document.getElementById('admin-email').value = '';
   document.getElementById('admin-password').value = '';
   document.getElementById('admin-error').textContent = '';
   document.getElementById('admin-login-btn').disabled = false;
   document.getElementById('admin-login-btn').textContent = 'Masuk';
+}
+
+async function adminLogout() {
+  await supabase.auth.signOut();
+  authUser = null;
+  resetAdminLoginUI();
 }
 
 function renderAdminList() {
