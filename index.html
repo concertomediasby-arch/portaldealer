@@ -2103,7 +2103,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T06:03:50Z';
+const LAST_UPDATE = '2026-10-11T06:06:41Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3188,6 +3188,7 @@ async function loadGuideFiles() {
   } catch (e) {
     console.warn('guides list', e);
     guideFiles = new Map();
+    if (isAdmin()) showToast('Daftar panduan tidak bisa dibaca: ' + (e.message || e) + ' — pastikan SQL bucket "guides" sudah dijalankan.', 10000);
   }
   renderGuides();
 }
@@ -3251,15 +3252,23 @@ async function uploadGuideFile(id, input) {
   const g = DEALER_GUIDES.find(x => x.id === id);
   if (!file || !g || !supabase) return;
   if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { showToast('File harus berformat PDF.'); return; }
-  showToast(`Mengunggah ${file.name}…`);
+  const mb = (file.size / 1048576).toFixed(1);
+  showToast(`Mengunggah ${file.name} (${mb} MB)… jangan tutup halaman ini.`, 600000);
   try {
     const { error } = await supabase.storage.from(GUIDES_BUCKET)
       .upload(g.path, file, { upsert: true, contentType: 'application/pdf', cacheControl: '60' });
     if (error) throw error;
-    showToast(`✓ "${g.title}" berhasil diunggah.`);
-    loadGuideFiles();
+    await loadGuideFiles();
+    showToast(guideFiles?.has(g.path)
+      ? `✓ "${g.title}" berhasil diunggah.`
+      : 'Upload selesai, tapi file belum terbaca. Muat ulang halaman; jika tetap "Segera Hadir", cek policy baca bucket "guides".', 10000);
   } catch (e) {
-    showToast('Gagal mengunggah: ' + (e.message || e));
+    const m = String(e.message || e);
+    const hint = /bucket not found/i.test(m) ? ' — bucket "guides" belum dibuat (jalankan SQL-nya).'
+      : /row-level security|unauthorized|403/i.test(m) ? ' — akun ini belum diizinkan upload (pastikan role admin, lalu logout & login ulang).'
+      : /exceeded|too large|413|payload/i.test(m) ? ' — ukuran file melebihi batas Supabase (maks. 50 MB di paket gratis).'
+      : '';
+    showToast('Gagal mengunggah: ' + m + hint, 12000);
     console.warn('guide upload', e);
   }
 }
@@ -4134,13 +4143,13 @@ async function doLogout() {
   showToast('Anda telah keluar. Portal kini tampil sebagai pengunjung umum.');
 }
 let toastTimer = null;
-function showToast(text) {
+function showToast(text, ms = 3500) {
   let el = document.getElementById('toast');
   if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
   el.textContent = text;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
 function updateAuthUI() {
   document.body.classList.toggle('logged-in', !!authUser);
