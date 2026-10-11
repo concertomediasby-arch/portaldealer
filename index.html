@@ -1287,6 +1287,9 @@ body {
 
   /* ── Concerto Academy ── */
   .nav-star { margin-left: auto; color: #e9c46a; font-size: 13px; text-shadow: 0 0 8px rgba(233,196,106,.7); }
+  .acad-tagline { font-family: var(--f-display); font-size: clamp(17px, 2.2vw, 21px); font-weight: 700; color: var(--accent); margin: 4px 0 8px; letter-spacing: -.01em; }
+  .acad-intro { max-width: 70ch; line-height: 1.65; }
+  .acad-intro em { color: var(--accent); font-style: italic; font-weight: 600; }
   .acad-next { margin-top: 10px; font-size: 12px; color: var(--fg-muted); font-family: var(--f-mono); }
   .acad-next b { color: var(--accent); font-weight: 700; }
   .acad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; padding: 4px 28px 48px; }
@@ -1299,9 +1302,9 @@ body {
   .acad-thumb { aspect-ratio: 3 / 2; background: #0d1b33; overflow: hidden; }
   .acad-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .acad-body { padding: 12px 14px 14px; }
-  .acad-kicker { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-family: var(--f-mono); }
+  .acad-kicker { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-family: var(--f-mono); }
   .acad-star {
-    display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 20px; white-space: nowrap;
     font-size: 10px; letter-spacing: .04em; color: #1a1305; font-weight: 800;
     background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); box-shadow: 0 0 12px rgba(233,196,106,.45);
   }
@@ -1724,7 +1727,8 @@ body {
     <div class="view" id="view-academy">
       <div class="page-header">
         <div class="page-title">Concerto Academy</div>
-        <div class="page-subtitle">Materi edukasi car audio dari Concerto Audio Indonesia — singkat, mudah dipahami, dan siap dibagikan ke pelanggan. Materi baru rilis setiap minggu.</div>
+        <div class="acad-tagline">Ilmu dari lapangan, bukan dari brosur.</div>
+        <div class="page-subtitle acad-intro">Audio yang bagus tidak harus rumit dipahami. Di sini kami bagikan apa yang kami pelajari selama lebih dari 20 tahun di dunia car audio, dirangkum jadi satu halaman yang sederhana. Selamat membaca, dan semoga Anda ikut berkata: <em>“Ooo… iya ya.”</em></div>
         <div class="acad-next" id="acad-next"></div>
       </div>
       <div class="acad-grid" id="acad-grid"></div>
@@ -2018,7 +2022,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T04:33:11Z';
+const LAST_UPDATE = '2026-10-11T04:35:41Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
