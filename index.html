@@ -1286,6 +1286,7 @@ body {
   .product-stock-badge.habis::before  { background: #e0675f; }
 
   /* ── Concerto Academy ── */
+  .landing-star { margin-left: 4px; color: #e9c46a; font-size: .85em; text-shadow: 0 0 8px rgba(233,196,106,.7); }
   .nav-star { margin-left: auto; color: #e9c46a; font-size: 13px; text-shadow: 0 0 8px rgba(233,196,106,.7); }
   .acad-tagline { font-family: var(--f-display); font-size: clamp(17px, 2.2vw, 21px); font-weight: 700; color: var(--accent); margin: 4px 0 8px; letter-spacing: -.01em; }
   .acad-intro { max-width: 70ch; line-height: 1.65; }
@@ -1537,6 +1538,7 @@ body {
       <a href="#" onclick="landingGo('catalog'); return false;">Katalog</a>
       <a href="#" onclick="landingGo('stock'); return false;">Stok Produk</a>
       <a href="#" onclick="landingGo('paket'); return false;">Paket Audio</a>
+      <a href="#" onclick="landingGo('academy'); return false;">Academy<span class="landing-star" id="landing-academy-star" title="Ada materi baru" hidden>★</span></a>
       <a href="#" onclick="landingGo('brands'); return false;" id="nav-landing-brands">Brand Resmi</a>
     </div>
     <button class="nav-cta" onclick="enterPortal()">Masuk Portal</button>
@@ -2022,7 +2024,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T04:35:41Z';
+const LAST_UPDATE = '2026-10-11T04:41:29Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3079,6 +3081,8 @@ function landingGo(target) {
     openStockView();
   } else if (target === 'paket') {
     openPaketAudio();
+  } else if (target === 'academy') {
+    openAcademy();
   } else {
     showView('dashboard');
   }
@@ -3188,8 +3192,8 @@ const fmtAcadDate = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', {
 let acadCurrent = null;
 
 function updateAcademyStar() {
-  const star = document.getElementById('nav-academy-star');
-  if (star) star.hidden = !acadReleased().some(acadIsNew);
+  const hasNew = acadReleased().some(acadIsNew);
+  ['nav-academy-star', 'landing-academy-star'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !hasNew; });
 }
 
 function openAcademy() {
