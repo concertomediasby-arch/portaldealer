@@ -1929,7 +1929,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T03:27:14Z';
+const LAST_UPDATE = '2026-10-11T03:47:09Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -1986,6 +1986,7 @@ const DSP_SOFTWARE = [
 ];
 
 const RECENT_UPDATES = [
+  { date:'2026-10-11', type:'data',  brandId:'steg',        productId:'st-ssdsp16v1', note:'Produk baru SS-DSP16 (DSP) ditambahkan' },
   { date:'2026-10-10', type:'photo', brandId:'diosdela',     productId:'dm-septuple8g', note:'Foto Septuple Cable 8G ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiosystem',  productId:'as-as10',     note:'Video AS10 diperbarui' },
   { date:'2026-10-10', type:'photo', brandId:'steg',        productId:'st-sec650',   note:'Foto produk SEC650 ditambahkan' },
@@ -2428,6 +2429,9 @@ const BRANDS = [
           photos:['assets/st-ssdsp16-1.webp','assets/st-ssdsp16-2.webp','assets/st-ssdsp16-3.webp','assets/st-ssdsp16-4.webp','assets/st-ssdsp16-5.webp'],
           desc:'OTG DSP Class D Amplifier — High Level 16 In 16 Out, 192kHz/32-bit, ADAU1452.',
           specs:{'DSP Chip':'ADAU1452','Channel':'16 In 16 Out','Power Output':'16×80 W (4Ω)','Resolution':'192 kHz / 32-bit','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 16 V'} },
+        { id:'st-ssdsp16v1', name:'SS-DSP16', model:'SS-DSP16', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'STEG SS-DSP16. Spesifikasi lengkap menyusul.',
+          specs:{} },
         { id:'st-ssdsp12', name:'SS-DSP12', model:'SS-DSP12', category:'DSP', emoji:'💻', hasVideo:false,
           photos:['assets/st-ssdsp12-1.webp','assets/st-ssdsp12-2.webp','assets/st-ssdsp12-3.webp','assets/st-ssdsp12-4.webp','assets/st-ssdsp12-5.webp'],
           desc:'OTG DSP Power Amplifier — High Level 12 In 12 Out, 192kHz/32-bit ADC, ADAU1452 Chip.',
@@ -3405,7 +3409,7 @@ function showProduct(brandId, productId) {
   // Specs
   document.getElementById('specs-list').innerHTML = Object.entries(product.specs).map(([k,v]) =>
     `<div class="spec-row"><span class="spec-key">${k}</span><span class="spec-val">${v}</span></div>`
-  ).join('');
+  ).join('') || `<div class="spec-row"><span class="spec-key">Spesifikasi lengkap menyusul</span></div>`;
 
   // Tags (category + line)
   const tags = [product.category, line].filter(Boolean);
