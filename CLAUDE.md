@@ -104,8 +104,8 @@ Katalog tetap di `BRANDS` (GitHub); Supabase **hanya** menyimpan status stok per
 ## Share & SEO
 
 - `<head>` berisi judul/deskripsi berkata kunci, `canonical`, **Open Graph + Twitter card** (pratinjau WA/Telegram/FB: `assets/og-image.jpg`, 1200×630), favicon & ikon (`assets/icons/`: `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`, `icon-192/512.png`, dibuat dari tanda heksagon di `LOGO_WHITE`), `manifest.webmanifest` (Add to Home Screen, nama "CAI Dealer"), dan JSON-LD `Organization` + `WebSite`. Ada `<noscript>` ringkas untuk mesin pencari tanpa JS.
-- `sitemap.xml` (daftarkan manual di Google Search Console) dan `robots.txt` — catatan: di `github.io/portaldealer` Google hanya membaca robots.txt di akar domain, jadi file ini baru efektif setelah pakai domain sendiri.
-- Semua URL absolut memakai `https://concertomediasby-arch.github.io/portaldealer/`. **Jika pindah ke domain sendiri**, ganti URL itu di `<head>` (canonical, og:url, og:image, twitter:image, JSON-LD), `robots.txt`, dan `sitemap.xml`, lalu tambah file `CNAME`.
+- `sitemap.xml` (daftarkan manual di Google Search Console) dan `robots.txt` (efektif karena situs ada di akar domain sendiri).
+- **Domain:** `https://dealer.concerto.id/` — subdomain dari concerto.id (DNS di Hostinger: record **CNAME `dealer` → `concertomediasby-arch.github.io`**; record lain concerto.id jangan diubah). File `CNAME` di root repo berisi `dealer.concerto.id` (jangan dihapus — itu yang mengaktifkan custom domain GitHub Pages). URL lama `concertomediasby-arch.github.io/portaldealer` otomatis dialihkan GitHub. Semua URL absolut (canonical, og:url, og:image, twitter:image, JSON-LD, `robots.txt`, `sitemap.xml`) memakai domain ini. Sesi login tersimpan per domain, jadi pengguna login ulang sekali setelah pindah.
 - WhatsApp menyimpan cache pratinjau; setelah mengganti `og-image.jpg`, ubah nama file / tambah `?v=N` agar pratinjau baru muncul.
 
 ## Design system (CSS)
