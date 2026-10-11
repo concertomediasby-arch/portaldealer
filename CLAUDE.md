@@ -1,7 +1,7 @@
 # Concerto Dealer Portal — Panduan Proyek (untuk Claude Code)
 
 Portal informasi produk (katalog digital) untuk dealer & distributor **Concerto Audio Indonesia (CAI)**.
-Menampilkan brand yang dinaungi beserta produk, spesifikasi, media, dan spec sheet PDF. **Tanpa harga.**
+Menampilkan brand yang dinaungi beserta produk, spesifikasi, media, dan spec sheet PDF. **Harga yang boleh tampil hanya harga jual umum (SRP)** — sejak 2026-10 atas keputusan pemilik; harga dealer/modal/diskon tetap tidak boleh masuk portal.
 
 ## Arsitektur
 
@@ -39,6 +39,8 @@ BRANDS = [
           photos?           // opsional: beberapa foto [..]; foto pertama jadi foto utama, tiap foto dapat thumbnail sendiri
           video?            // opsional: path video MP4 (H.264); diputar di thumbnail "Video" (butuh hasVideo:true)
           videoPoster?      // opsional: gambar sampul video untuk thumbnail & sebelum diputar
+          price?            // opsional: harga jual umum (SRP) dalam rupiah, angka saja (mis. 4250000)
+          priceUnit?        // opsional: satuan harga, mis. 'set', 'pcs', 'pasang'
         },
         ...
       ]}
@@ -61,7 +63,7 @@ BRANDS = [
   `ffmpeg -i input.mp4 -vf scale=-2:720 -c:v libx264 -crf 24 -c:a aac -b:a 128k -movflags +faststart assets/<id>.mp4`
 - **Logo brand:** simpan di `assets/brands/<id-brand>.webp` (latar transparan, ruang kosong dipangkas, versi **terang untuk latar gelap** — kartu brand & landing selalu gelap), isi field `logo`. Logo dipakai di strip brand landing, kartu dashboard, dan header halaman brand; ukurannya diseimbangkan otomatis oleh `fitLogo()`.
 - **File media** disimpan di folder `assets/` dengan nama `<id-produk>.<ext>` (mis. `assets/ac-prow6c.jpg`).
-- **JANGAN masukkan harga** — portal ini sengaja hanya referensi produk.
+- **Harga:** hanya **SRP** (harga jual umum, publik) lewat field `price` (+ `priceUnit`). Tampil di kartu produk (kanan nama), detail produk (`#panel-price`), dan menu Stok; **tidak** dicetak di spec sheet PDF. Produk tanpa `price` tidak menampilkan harga. Helper: `fmtRp()`, `srpText()`. **Jangan** pernah memasukkan harga dealer/modal/diskon ke katalog — isi `index.html` bisa dibaca siapa saja.
 
 ## Struktur UI & fungsi kunci (dalam `index.html` `<script>`)
 
@@ -127,5 +129,5 @@ Katalog tetap di `BRANDS` (GitHub); Supabase **hanya** menyimpan status stok per
 - Logo brand: keenam brand sudah punya logo. Diosdela (aslinya hitam) dan huruf STEG (aslinya biru) dibuat **putih** agar terbaca di latar gelap.
 - PDF memakai font bawaan jsPDF yang tidak punya karakter `Ω` → otomatis ditulis `Ohm` di PDF.
 - Foto hanya bisa di-embed ke PDF saat portal dibuka via server (http/https); jika dibuka langsung sebagai file (`file://`), PDF memakai placeholder.
-- Semua data berasal dari katalog resmi CAI 2026. Jaga agar tetap tanpa harga.
+- Semua data berasal dari katalog resmi CAI 2026. Harga hanya SRP (lihat *Harga* di atas).
 - Tidak ada rahasia/kredensial di repo ini — aman dipublikasikan. (Supabase publishable key bersifat publik; jangan pernah commit `service_role` key atau password admin.)
