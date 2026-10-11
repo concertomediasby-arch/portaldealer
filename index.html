@@ -2103,7 +2103,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T05:54:03Z';
+const LAST_UPDATE = '2026-10-11T06:03:50Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -2133,17 +2133,18 @@ const ACADEMY = [
   { no:20, date:'2027-02-21', title:'Awas, kapasitor abal-abal!' },
 ];
 // ── Panduan Dealer ────────────────────────────────────────────
-// available: false → tampil badge "Segera Hadir"; true → tombol unduh/buka
+// PDF disimpan di Supabase Storage bucket privat "guides" dengan nama file = `path` (bukan di repo/GitHub).
+// Tersedia otomatis begitu file di-upload (admin: tombol Upload di kartu panduan); dibuka lewat signed URL 10 menit.
 const DEALER_GUIDES = [
   { id:'guide-selling', title:'Tips & Teknik Penjualan Produk', category:'Penjualan', icon:'💡',
     desc:'Panduan praktis cara mempresentasikan dan menjual produk CAI: argumen nilai, perbandingan kompetitor, dan closing technique.',
-    file:'assets/guides/tips-penjualan.pdf', updated:'2026', available:false },
+    path:'tips-penjualan.pdf' },
   { id:'guide-pk', title:'Product Knowledge — Semua Brand', category:'Produk', icon:'📋',
     desc:'Ringkasan spesifikasi, keunggulan, dan positioning setiap brand CAI dalam satu dokumen referensi cepat.',
-    file:'assets/guides/product-knowledge.pdf', updated:'2026', available:false },
+    path:'product-knowledge.pdf' },
   { id:'guide-install', title:'Panduan Instalasi & After Sales', category:'Instalasi', icon:'🔧',
     desc:'Prosedur instalasi standar, tips perawatan produk, dan penanganan klaim garansi untuk dealer & installer resmi.',
-    file:'assets/guides/panduan-instalasi.pdf', updated:'2026', available:false },
+    path:'panduan-instalasi.pdf' },
 ];
 
 // ── Paket Audio ───────────────────────────────────────────────
@@ -3167,32 +3168,100 @@ function landingGo(target) {
   }
 }
 
+const GUIDES_BUCKET = 'guides';
+const GUIDE_URL_TTL = 600;   // detik — link PDF kedaluwarsa setelah 10 menit
+let guideFiles = null;       // Map nama file → metadata dari Storage
+
 function openGuides() {
   if (!requireLogin(openGuides)) return;
   showView('guides');
+  renderGuides();
+  loadGuideFiles();
+}
+
+async function loadGuideFiles() {
+  if (!supabase || !authUser) return;
+  try {
+    const { data, error } = await supabase.storage.from(GUIDES_BUCKET).list('', { limit: 100 });
+    if (error) throw error;
+    guideFiles = new Map((data || []).filter(f => f.id).map(f => [f.name, f]));
+  } catch (e) {
+    console.warn('guides list', e);
+    guideFiles = new Map();
+  }
+  renderGuides();
+}
+
+function renderGuides() {
   const el = document.getElementById('guides-list');
-  if (el.children.length) return;
+  if (!el) return;
   const catColor = { 'Penjualan':'#d8b26a', 'Produk':'#6fd3e6', 'Instalasi':'#52c38a' };
+  const admin = isAdmin();
   el.innerHTML = DEALER_GUIDES.map(g => {
     const color = catColor[g.category] || 'var(--accent)';
-    const btn = g.available
-      ? `<a class="res-btn res-btn-dl" href="${g.file}" target="_blank" download>
-           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh PDF</a>
-         <a class="res-btn res-btn-view" href="${g.file}" target="_blank">
-           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Buka</a>`
-      : `<span class="res-btn res-btn-soon">Segera Hadir</span>`;
+    const f = guideFiles?.get(g.path);
+    const when = f ? new Date(f.updated_at || f.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) : '';
+    const btn = guideFiles === null
+      ? `<span class="res-btn res-btn-soon">Memuat…</span>`
+      : f
+        ? `<button class="res-btn res-btn-dl" onclick="openGuideFile('${g.id}', true)">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh PDF</button>
+           <button class="res-btn res-btn-view" onclick="openGuideFile('${g.id}', false)">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Buka</button>`
+        : `<span class="res-btn res-btn-soon">Segera Hadir</span>`;
+    const up = admin
+      ? `<label class="res-btn res-btn-view guide-upload" title="Admin: upload / ganti PDF">⬆ ${f ? 'Ganti PDF' : 'Upload PDF'}
+           <input type="file" accept="application/pdf,.pdf" hidden onchange="uploadGuideFile('${g.id}', this)"></label>`
+      : '';
     return `<div class="res-card">
       <div class="res-icon">${g.icon}</div>
       <div class="res-body">
         <div class="res-meta">
           <span class="res-cat" style="color:${color};border-color:${color}22;background:${color}11">${g.category}</span>
-          <span class="res-year">${g.updated}</span>
+          ${when ? `<span class="res-year">Diperbarui ${when}</span>` : ''}
         </div>
         <div class="res-title">${g.title}</div>
         <div class="res-desc">${g.desc}</div>
-        <div class="res-actions">${btn}</div>
+        <div class="res-actions">${btn}${up}</div>
       </div></div>`;
   }).join('');
+}
+
+async function openGuideFile(id, download) {
+  const g = DEALER_GUIDES.find(x => x.id === id);
+  if (!g || !supabase) return;
+  // Open the tab synchronously (inside the click) so mobile browsers don't block it as a popup
+  const win = download ? null : window.open('', '_blank');
+  try {
+    const { data, error } = await supabase.storage.from(GUIDES_BUCKET)
+      .createSignedUrl(g.path, GUIDE_URL_TTL, download ? { download: g.path } : undefined);
+    if (error) throw error;
+    if (win) win.location.href = data.signedUrl;
+    else window.location.href = data.signedUrl;
+  } catch (e) {
+    if (win) win.close();
+    showToast('Panduan tidak dapat dibuka. Coba login ulang atau hubungi CAI.');
+    console.warn('guide url', e);
+  }
+}
+
+async function uploadGuideFile(id, input) {
+  const file = input.files?.[0];
+  input.value = '';
+  const g = DEALER_GUIDES.find(x => x.id === id);
+  if (!file || !g || !supabase) return;
+  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { showToast('File harus berformat PDF.'); return; }
+  showToast(`Mengunggah ${file.name}…`);
+  try {
+    const { error } = await supabase.storage.from(GUIDES_BUCKET)
+      .upload(g.path, file, { upsert: true, contentType: 'application/pdf', cacheControl: '60' });
+    if (error) throw error;
+    showToast(`✓ "${g.title}" berhasil diunggah.`);
+    loadGuideFiles();
+  } catch (e) {
+    showToast('Gagal mengunggah: ' + (e.message || e));
+    console.warn('guide upload', e);
+  }
 }
 
 function openDspSoftware() {
@@ -4006,7 +4075,7 @@ function onAuthChanged() {
     subscribeStock();
   } else {
     if (stockChannel) { supabase.removeChannel(stockChannel); stockChannel = null; }
-    stockMap = {}; stockLoaded = false;
+    stockMap = {}; stockLoaded = false; guideFiles = null;
     refreshStockUI();
     if (['view-stock', 'view-guides'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
   }
