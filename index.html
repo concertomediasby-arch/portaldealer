@@ -1929,7 +1929,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T03:47:09Z';
+const LAST_UPDATE = '2026-10-11T03:59:32Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Panduan Dealer ────────────────────────────────────────────
@@ -3699,10 +3699,13 @@ let   stockChannel = null, afterLogin = null, lastAuthId;
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
 const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Bagian catatan internal gudang yang tidak ditampilkan ke dealer (catatan lengkap tetap tersimpan untuk admin)
-const DEALER_HIDDEN_NOTE = [/\b(free|pinjam|2nd|pasang)\s*:?\s*\d+(\s*(pcs|set|unit))?/gi, /tidak ada di template\.?/gi];
+// "OTW CAI: 30 SET" di catatan gudang = barang dalam perjalanan → ditampilkan sebagai 🚚 OTW, bukan sebagai catatan
+const OTW_NOTE_RE = /\botw(?:\s*cai)?\s*:?\s*(\d+)\s*(set|pcs|pc|unit|pair|psg)?\b/i;
+const otwFromNote = note => { const m = String(note || '').match(OTW_NOTE_RE); return m ? `${m[1]} ${(m[2] || 'unit').toLowerCase().replace(/^pc$/, 'pcs')}` : ''; };
+const DEALER_HIDDEN_NOTE = [/\b(free|pinjam|2nd|pasang)\s*:?\s*\d+(\s*(pcs|set|unit))?/gi, /tidak ada di template\.?/gi, new RegExp(OTW_NOTE_RE.source, 'gi')];
 const dealerNote = n => DEALER_HIDDEN_NOTE.reduce((s, re) => s.replace(re, ''), String(n || ''))
   .split(/[|;]/).map(x => x.replace(/^[\s.,]+|[\s,]+$/g, '').replace(/\s{2,}/g, ' ')).filter(Boolean).join(' | ');
-const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || '', updated_at: r.updated_at || null });
+const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || otwFromNote(r.note), updated_at: r.updated_at || null });
 let stockLoaded = false, stockBrand = 'all', stockStatus = 'all';
 // Produk di luar katalog BRANDS disimpan dengan product_id "x:<KODE GUDANG>"
 const EXTRA_PREFIX = 'x:';
@@ -4255,6 +4258,8 @@ function renderImport() {
       if (STATUS_WORDS[normKey(stRaw)]) status = status || STATUS_WORDS[normKey(stRaw)];
       if (qty === null && !status) { skipped++; return; }
       if (qty !== null && status !== 'indent') status = qty === 0 ? 'habis' : 'ready';
+      // Stok kosong tapi ada barang OTW di catatan → Indent, bukan Habis
+      if (status === 'habis' && otwFromNote(note)) status = 'indent';
     }
 
     const k = normKey(raw), bk = normKey(cell('brand'));
@@ -4276,10 +4281,11 @@ function renderImport() {
       else if (qty !== null) { prev.qty = (prev.qty || 0) + qty; prev.status = prev.qty === 0 ? 'habis' : (prev.status === 'indent' ? 'indent' : 'ready'); }
       return;
     }
-    matched.set(pid, { pid, hit, key: k, raw, codes: new Set([k]), qty, status, note, incoming });
+    matched.set(pid, { pid, hit, key: k, raw, codes: new Set([k]), qty, status, note, incoming, otwNote: otw ? '' : otwFromNote(note) });
   });
 
   importRows = [...matched.values()];
+  importSrc.hasNoteCol = !!lay.head && col.note >= 0;
   const bad = importRows.filter(r => !r.hit), good = importRows.filter(r => r.hit);
   const cleared = otw ? Object.entries(stockMap).filter(([pid, s]) => s.incoming && !matched.has(pid)).length : 0;
 
@@ -4291,7 +4297,8 @@ function renderImport() {
   const cur = pid => stockMap[pid] || {};
   const stOf = r => { const c = cur(r.pid); return otw ? (c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent') : r.status; };
   const amount = r => { const c = cur(r.pid);
-    return (otw ? fmtIn(r.incoming) : (r.qty ?? '—')) + (!otw && c.qty != null && c.qty !== r.qty ? `<div class="muted">sebelumnya ${c.qty}</div>` : ''); };
+    return (otw ? fmtIn(r.incoming) : (r.qty ?? '—')) + (!otw && c.qty != null && c.qty !== r.qty ? `<div class="muted">sebelumnya ${c.qty}</div>` : '')
+      + (r.otwNote ? `<div class="muted" style="color:#5aa9e6">🚚 OTW ${escHtml(r.otwNote)}</div>` : ''); };
 
   document.getElementById('imp-preview').innerHTML = `
     <div class="imp-ctrl">
@@ -4339,14 +4346,21 @@ async function saveImport() {
     });
   } else {
     // Empty Catatan keeps the existing note instead of wiping it
-    payload = importRows.map(r => ({ product_id: r.pid, status: r.status, qty: r.qty,
-      note: r.note || stockMap[r.pid]?.note || '' }));
+    // File with a Catatan column is the source of truth for notes (empty cell clears it);
+    // without that column the existing notes are kept
+    const fileHasOtw = importRows.some(r => r.otwNote);
+    payload = importRows.map(r => {
+      const row = { product_id: r.pid, status: r.status, qty: r.qty,
+        note: importSrc.hasNoteCol ? r.note : (r.note || stockMap[r.pid]?.note || '') };
+      if (fileHasOtw) row.incoming = r.otwNote || null;
+      return row;
+    });
   }
   try {
     const { error } = await supabase.from('stock').upsert(payload, { onConflict: 'product_id' });
     if (error) throw error;
     const now = new Date().toISOString();
-    payload.forEach(r => { stockMap[r.product_id] = { ...stockMap[r.product_id], ...r, updated_at: now }; });
+    payload.forEach(r => { const m = { ...stockMap[r.product_id], ...r, updated_at: now }; stockMap[r.product_id] = { ...m, incoming: r.incoming !== undefined ? (r.incoming || otwFromNote(m.note)) : (m.incoming || otwFromNote(m.note)) }; });
     toggleImport();
     refreshStockUI();
     adminMsg(`✓ ${otw ? 'Data OTW' : 'Stok'} ${importRows.length} produk berhasil diperbarui.`, 'ok');
