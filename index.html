@@ -1403,6 +1403,8 @@ body {
 
   /* ── Kelola Dealer ── */
   body:not(.is-editor) .editor-only { display: none !important; }
+  .sidebar-editor { margin-top: auto; padding-bottom: 12px; }
+  .sidebar-editor .sidebar-divider { margin-left: 0; margin-right: 0; }
   .dl-wrap { padding: 0 28px 48px; display: flex; flex-direction: column; gap: 16px; max-width: 980px; }
   .dl-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; }
   .dl-card-title { font-family: var(--f-display); font-weight: 700; font-size: 15px; margin-bottom: 12px; }
@@ -1793,10 +1795,6 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         Update Terbaru
       </button>
-      <button class="sidebar-item editor-only" id="nav-dealers" onclick="openDealers()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
-        Kelola Dealer
-      </button>
     </div>
 
     <hr class="sidebar-divider">
@@ -1804,6 +1802,15 @@ body {
     <div class="sidebar-section">
       <div class="sidebar-label">Brand</div>
       <div id="brand-nav-list"></div>
+    </div>
+
+    <div class="sidebar-section sidebar-editor editor-only">
+      <hr class="sidebar-divider">
+      <div class="sidebar-label">Editor</div>
+      <button class="sidebar-item editor-only" id="nav-dealers" onclick="openDealers()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
+        Kelola Dealer
+      </button>
     </div>
   </aside>
 
@@ -2219,7 +2226,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T09:50:00Z';
+const LAST_UPDATE = '2026-10-11T09:52:22Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
