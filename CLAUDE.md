@@ -73,6 +73,7 @@ BRANDS = [
 - **Detail produk:** `showProduct(brandId, productId)`, `selectMedia()`.
 - **Spec sheet PDF:** `openSpecSheet()` (modal pratinjau), `downloadPdf()` (jsPDF), `makePhotoPlaceholder()`.
 - **Paket Audio:** array `PAKET_AUDIO` (PDF di `assets/paket/`), pratinjau via `openPdfPreview()` (di mobile dibuka di tab baru). PDF sumber boleh memuat harga, tapi teks kartu di portal tidak boleh.
+- **Concerto Academy:** array `ACADEMY` (`{ no, date, title }`) + gambar `assets/academy/fundamental-NN.webp` (1080×1920, dari PDF 1 halaman = 1 materi) dan `-thumb.webp` (potongan atas 540×360). Menu publik (tanpa login): `openAcademy()` (grid terbaru di atas), viewer `openAcademyItem()` / `stepAcademy()`. **Rilis terjadwal:** materi hanya tampil jika `date` ≤ hari ini (WIB, `todayWIB()`); tanda **★ Baru** emas selama 14 hari sejak `date` (`ACADEMY_NEW_DAYS`), juga ★ di sidebar jika ada materi baru. Batch pertama: 20 materi Fundamental, rilis tiap 7 hari mulai 2026-10-11. Tambah materi: ekstrak gambar (`pdfimages -j`), simpan sebagai webp + thumb, tambah baris di `ACADEMY`.
 - **Tema:** `toggleTheme()` (dark ⇄ light), `applyThemeIcon()`, `updateTopbarLogo()`. Preferensi disimpan di `localStorage` key `cai-theme`.
 
 ## Sistem stok (Supabase)
