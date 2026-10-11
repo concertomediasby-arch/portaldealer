@@ -101,6 +101,13 @@ Katalog tetap di `BRANDS` (GitHub); Supabase **hanya** menyimpan status stok per
 - Panel admin selalu gelap; warna teksnya dikunci eksplisit agar tetap terbaca di mode terang.
 - Jangan tambahkan harga ke tabel stok.
 
+## Share & SEO
+
+- `<head>` berisi judul/deskripsi berkata kunci, `canonical`, **Open Graph + Twitter card** (pratinjau WA/Telegram/FB: `assets/og-image.jpg`, 1200×630), favicon & ikon (`assets/icons/`: `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`, `icon-192/512.png`, dibuat dari tanda heksagon di `LOGO_WHITE`), `manifest.webmanifest` (Add to Home Screen, nama "CAI Dealer"), dan JSON-LD `Organization` + `WebSite`. Ada `<noscript>` ringkas untuk mesin pencari tanpa JS.
+- `sitemap.xml` (daftarkan manual di Google Search Console) dan `robots.txt` — catatan: di `github.io/portaldealer` Google hanya membaca robots.txt di akar domain, jadi file ini baru efektif setelah pakai domain sendiri.
+- Semua URL absolut memakai `https://concertomediasby-arch.github.io/portaldealer/`. **Jika pindah ke domain sendiri**, ganti URL itu di `<head>` (canonical, og:url, og:image, twitter:image, JSON-LD), `robots.txt`, dan `sitemap.xml`, lalu tambah file `CNAME`.
+- WhatsApp menyimpan cache pratinjau; setelah mengganti `og-image.jpg`, ubah nama file / tambah `?v=N` agar pratinjau baru muncul.
+
 ## Design system (CSS)
 
 - Token di `:root` dalam `<style>`. Tema default **gelap** (hitam pekat + aksen **emas sampanye** `--accent`), dengan panel kaca (glassmorphism).
