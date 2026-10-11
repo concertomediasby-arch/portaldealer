@@ -1341,6 +1341,17 @@ body {
     .acad-viewer-box { width: 100vw; height: 100dvh; border-radius: 0; border: 0; }
   }
 
+  /* ── Toast ── */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 9500;
+    transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s;
+    max-width: min(92vw, 460px); padding: 11px 18px; border-radius: 12px; text-align: center;
+    background: #14161b; color: #f0f1f4; border: 1px solid rgba(216,178,106,.45);
+    font: 500 13px var(--f-body); box-shadow: 0 16px 40px rgba(0,0,0,.45);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  @media (max-width: 720px) { .toast { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); } }
+
   /* ── Login dealer ── */
   .nav-lock { margin-left: auto; font-size: 11px; opacity: .55; }
   body.logged-in .nav-lock { display: none; }
@@ -2024,7 +2035,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T04:41:29Z';
+const LAST_UPDATE = '2026-10-11T04:44:04Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3966,6 +3977,7 @@ async function dealerLogin() {
     const next = afterLogin;
     document.getElementById('login-password').value = '';
     closeLogin();
+    showToast(`Masuk sebagai ${authUser.email}`);
     if (next) next();
   } catch (e) {
     err.textContent = /invalid login/i.test(e.message || '') ? 'Email atau password salah.' : 'Login gagal: ' + (e.message || e);
@@ -3975,7 +3987,23 @@ async function dealerLogin() {
 }
 async function authButton() {
   if (!authUser) { afterLogin = null; openLogin(); return; }
-  if (confirm(`Keluar dari akun ${authUser.email}?`)) await supabase.auth.signOut();
+  if (confirm(`Keluar dari akun ${authUser.email}?`)) await doLogout();
+}
+// Local sign-out always clears this browser's session, even if the server call fails (offline / expired session)
+async function doLogout() {
+  try { await supabase?.auth.signOut({ scope: 'local' }); } catch (e) { console.warn('signOut', e); }
+  authUser = null; lastAuthId = undefined;
+  onAuthChanged();
+  showToast('Anda telah keluar. Portal kini tampil sebagai pengunjung umum.');
+}
+let toastTimer = null;
+function showToast(text) {
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
 }
 function updateAuthUI() {
   document.body.classList.toggle('logged-in', !!authUser);
@@ -4194,8 +4222,7 @@ function resetAdminLoginUI() {
 }
 
 async function adminLogout() {
-  await supabase.auth.signOut();
-  authUser = null;
+  await doLogout();
   resetAdminLoginUI();
 }
 
