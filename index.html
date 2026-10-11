@@ -2103,7 +2103,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T06:06:41Z';
+const LAST_UPDATE = '2026-10-11T06:10:43Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4042,7 +4042,12 @@ let   supabase  = null;
 let   stockMap  = {};   // { product_id: { status, note, qty } }
 let   authUser = null;   // akun yang sedang login (dealer atau admin)
 // Peran admin di-set lewat SQL di app_metadata (lihat CLAUDE.md); RLS Supabase menegakkan hal yang sama di server
-const isAdmin = () => authUser?.app_metadata?.role === 'admin';
+// Peran (app_metadata.role, di-set lewat SQL): 'editor' = pemilik/editor situs, 'admin' = admin staff, kosong = dealer.
+// Editor & admin sama-sama boleh mengubah stok dan Panduan Dealer; RLS Supabase menegakkan hal yang sama.
+const userRole = () => authUser?.app_metadata?.role || 'dealer';
+const isEditor = () => userRole() === 'editor';
+const isAdmin = () => ['admin', 'editor'].includes(userRole());
+const ROLE_LABEL = { editor: 'Editor', admin: 'Admin Staff', dealer: 'Dealer' };
 let   stockChannel = null, afterLogin = null, lastAuthId;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
@@ -4123,7 +4128,7 @@ async function dealerLogin() {
     const next = afterLogin;
     document.getElementById('login-password').value = '';
     closeLogin();
-    showToast(`Masuk sebagai ${authUser.email}`);
+    showToast(`Masuk sebagai ${authUser.email} · ${ROLE_LABEL[userRole()] || 'Dealer'}`);
     if (next) next();
   } catch (e) {
     err.textContent = /invalid login/i.test(e.message || '') ? 'Email atau password salah.' : 'Login gagal: ' + (e.message || e);
@@ -4154,7 +4159,7 @@ function showToast(text, ms = 3500) {
 function updateAuthUI() {
   document.body.classList.toggle('logged-in', !!authUser);
   const btn = document.getElementById('auth-btn');
-  if (btn) btn.title = authUser ? `Login sebagai ${authUser.email} — klik untuk keluar` : 'Login dealer';
+  if (btn) btn.title = authUser ? `Login sebagai ${authUser.email} (${ROLE_LABEL[userRole()] || 'Dealer'}) — klik untuk keluar` : 'Login dealer';
 }
 
 async function loadStock() {
@@ -4350,7 +4355,7 @@ function showAdminStockSection() {
   document.getElementById('admin-noaccess').style.display = admin ? 'none' : 'block';
   document.getElementById('admin-stock-section').style.display = admin ? 'block' : 'none';
   document.getElementById('admin-footer').style.display = 'block';
-  document.getElementById('admin-user-email').textContent = authUser?.email || '';
+  document.getElementById('admin-user-email').textContent = authUser ? `${authUser.email} · ${ROLE_LABEL[userRole()] || 'Dealer'}` : '';
   document.getElementById('admin-subtitle').textContent = admin ? 'Kelola ketersediaan produk' : 'Akun ini tidak punya akses admin';
   if (admin) renderAdminList();
 }
