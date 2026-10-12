@@ -1601,6 +1601,14 @@ body {
   .scr-btn small { font: 500 10.5px var(--f-mono); color: #9aa5bd; }
   .scr-btn.sel { border-color: #e9c46a; background: rgba(233,196,106,.12); box-shadow: 0 0 0 1px rgba(233,196,106,.45); }
   .scr-live { position: absolute; right: 6px; top: 5px; font: 700 9px var(--f-mono); font-style: normal; color: #22c55e; }
+  .scr-btn.grp { grid-column: span 2; }
+  .scr-btn.grp small { color: #e9c46a; }
+  .scr-lup-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .scr-lup-k { width: 100%; font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #e9c46a; margin-bottom: 2px; }
+  .scr-lup-tabs .filter-chip { color: #dfe5f2; border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.05); }
+  .scr-lup-tabs .filter-chip.active { color: #1a1305; background: #e9c46a; border-color: #e9c46a; }
+  .scr-lup-tabs small { opacity: .7; font-size: 10px; }
+  .scr-live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-right: 4px; vertical-align: 1px; box-shadow: 0 0 6px #22c55e; }
   .scr-pane { margin-top: 12px; padding: 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.25); }
   .scr-pane-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
   .scr-pane-head b { font: 700 16px var(--f-display); color: #fff; } .scr-pane-head p { margin: 3px 0 0; font-size: 12.5px; color: #9aa5bd; line-height: 1.45; }
@@ -2728,7 +2736,7 @@ body {
 <!-- DEALER LOGIN -->
 <!-- Layar videotron Tanya Jawab (dibuka lewat ?layar=qa, khusus Admin/Editor yang login) -->
 <div class="qa-screen" id="qa-screen" hidden>
-  <header class="qs-top"><img class="qs-logo" id="qs-logo" alt="CAI"><div class="qs-event"><b>GATHERING CAI 2026</b><span>Listening and Understanding Partner</span></div><span class="qs-status" id="qs-status" title="Status koneksi"></span></header>
+  <header class="qs-top"><img class="qs-logo" id="qs-logo" alt="CAI"><div class="qs-event"><b>GATHERING CAI 2026</b><span id="qs-event-sub">Listening and Understanding Partner</span></div><span class="qs-status" id="qs-status" title="Status koneksi"></span></header>
   <main class="qs-stage" id="qs-stage"></main>
   <footer class="qs-foot">Concerto Audio Indonesia</footer>
   <button class="qs-fs" id="qs-fs" onclick="qsFullscreen()">⛶ Layar penuh</button>
@@ -2848,7 +2856,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T10:00:34Z';
+const LAST_UPDATE = '2026-10-12T10:03:20Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6737,7 +6745,7 @@ async function addRdTemplate() {
   const have = new Set((rdItems || []).filter(r => r.day === day).map(r => r.title.toLowerCase()));
   const now = new Date().toISOString();
   const rows = RD_TEMPLATE_LUP.filter(t => !have.has(t.title.toLowerCase()))
-    .map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, segment: QA_SESSION, updated_at: now }));
+    .map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, segment: LUP_SCENES.includes(sceneForTitle(t.title) || 'qa') ? QA_SESSION : null, updated_at: now }));
   if (!rows.length) { showToast('Semua sesi template sudah ada di tanggal itu.'); return; }
   const { error } = await supabase.from(RUNDOWN_TABLE).insert(rows);
   if (error) { showToast('Gagal menambah template: ' + rdColHint(error), 9000); return; }
@@ -7121,6 +7129,10 @@ async function loadScreenRow() {
 
 // Panel layar per sesi: kartu sesi (urutan acara) → pane berisi kontrol khusus sesi terpilih.
 const SCR_SESSIONS = ['opening', 'qa', 'coffee', 'refresh', 'launch', 'lunch', 'funmkt', 'kickoff'];
+// Sesi yang masuk kelompok "Listening and Understanding Partner" (satu kartu di panel, tab di dalamnya)
+const LUP_SCENES = ['qa', 'refresh', 'launch', 'funmkt', 'kickoff'];
+const SCR_CARDS = ['opening', 'lup', 'coffee', 'lunch'];
+let scrLupSel = 'qa';
 const SCR_DESC = {
   qa: 'Pertanyaan dealer tampil di videotron. Ketik & atur antrian pertanyaan di tab Tanya Jawab Partner.',
   opening: 'Tampilkan susunan pembicara, lalu kartu tiap pembicara secara bergantian. Clicker / panah di komputer videotron juga bisa menggeser.',
@@ -7133,7 +7145,11 @@ const SCR_DESC = {
 };
 let scrSel = null;
 const scrOnAir = () => sceneBase(scrRow?.scene) || 'qa';
-function scrSelect(k) { scrSel = k; renderScreenPanel(); }
+function scrSelect(k) {
+  if (k === 'lup') k = LUP_SCENES.includes(scrOnAir()) ? scrOnAir() : scrLupSel;
+  if (LUP_SCENES.includes(k)) scrLupSel = k;
+  scrSel = k; renderScreenPanel();
+}
 function scrSessionTime(k) {
   const x = (rdItems || []).find(r => k === 'qa' ? QA_SESSION_RE.test(r.title) && !sceneForTitle(r.title) : sceneForTitle(r.title) === k);
   return x ? `${x.flexible ? '± ' : ''}${rdT(x.start_time)}` : '';
@@ -7176,9 +7192,14 @@ function renderScreenPanel(err) {
   el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Tanya Jawab'}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
     ${sceneCols() ? '' : '<div class="scr-warn">Jalankan SQL kolom <b>scene</b> di Supabase agar tampilan per sesi bisa dipakai.</div>'}
-    <div class="scr-sessions">${SCR_SESSIONS.map((k, i) => { const v = k === 'qa' ? { icon: '🎤', label: 'Tanya Jawab' } : QS_SCENES[k]; const t = scrSessionTime(k);
-      return `<button class="scr-btn${k === sel ? ' sel' : ''}${k === air ? ' on' : ''}" onclick="scrSelect('${k}')">${k === air ? '<i class="scr-live">● LIVE</i>' : ''}<em>${i + 1}</em><span>${v.icon}</span>${v.label}${t ? `<small>${t}</small>` : ''}</button>`; }).join('')}</div>
+    <div class="scr-sessions">${SCR_CARDS.map((k, i) => {
+      const grp = k === 'lup', v = grp ? { icon: '🤝', label: 'Listening and Understanding Partner' } : QS_SCENES[k];
+      const isSel = grp ? LUP_SCENES.includes(sel) : k === sel, isAir = grp ? LUP_SCENES.includes(air) : k === air;
+      const t = grp ? LUP_SCENES.map(scrSessionTime).filter(Boolean).sort((a, b) => a.replace('± ', '').localeCompare(b.replace('± ', '')))[0] : scrSessionTime(k);
+      return `<button class="scr-btn${grp ? ' grp' : ''}${isSel ? ' sel' : ''}${isAir ? ' on' : ''}" onclick="scrSelect('${k}')">${isAir ? '<i class="scr-live">● LIVE</i>' : ''}<em>${i + 1}</em><span>${v.icon}</span>${v.label}${grp ? `<small>${LUP_SCENES.length} sesi${isAir ? ' · ' + (air === 'qa' ? 'Tanya Jawab' : QS_SCENES[air].label) : ''}</small>` : ''}${t && !grp ? `<small>${t}</small>` : ''}</button>`; }).join('')}</div>
     <div class="scr-pane">
+      ${LUP_SCENES.includes(sel) ? `<div class="scr-lup-tabs"><span class="scr-lup-k">🤝 Listening and Understanding Partner</span>${LUP_SCENES.map(k => { const v = k === 'qa' ? { icon: '🎤', label: 'Tanya Jawab' } : QS_SCENES[k], tm = scrSessionTime(k);
+        return `<button class="filter-chip${k === sel ? ' active' : ''}" onclick="scrSelect('${k}')">${k === air ? '<i class="scr-live-dot"></i>' : ''}${v.icon} ${v.label}${tm ? ` <small>${tm}</small>` : ''}</button>`; }).join('')}</div>` : ''}
       <div class="scr-pane-head"><span class="scr-pane-ic">${info.icon}</span><div><b>${info.label}</b><p>${SCR_DESC[sel]}</p></div>${live ? '<span class="qa-badge onair">● Sedang tampil</span>' : ''}</div>
       ${body}
     </div>`;
@@ -7211,6 +7232,7 @@ const SC_MEGA = '<svg class="sc-svg sc-mega" viewBox="0 0 140 120" aria-hidden="
 const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><circle cx="70" cy="62" r="36" fill="rgba(233,196,106,.10)" stroke="#fff" stroke-width="5"/><circle cx="70" cy="62" r="22" fill="none" stroke="#e9c46a" stroke-width="3"/><path d="M16 28v22a7 7 0 0 0 14 0V28M23 28v74" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M122 28c-9 6-9 28 0 34v40" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function renderScene(s) {
+  qsSetEventSub(sceneBase(s.scene));
   if (String(s.scene).startsWith('launch:')) return renderLaunchVideo(s);
   if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene));
@@ -7445,7 +7467,12 @@ function qsSetStage(key, html) {
   return true;
 }
 
+function qsSetEventSub(base) {
+  const el = document.getElementById('qs-event-sub'); if (!el) return;
+  el.textContent = !base || LUP_SCENES.includes(base) ? 'Listening and Understanding Partner' : (QS_SCENES[base]?.label || '');
+}
 function renderQaScreen(q) {
+  qsSetEventSub(null);
   if (!q) {
     qsSetStage('idle', `<div class="qs-idle"><div class="qs-kicker">Sesi Tanya Jawab</div><h1>Listening and Understanding <em>Partner</em></h1>
       <p>Sampaikan pertanyaan &amp; masukan Anda kepada tim Concerto Audio Indonesia</p></div>`);
