@@ -1783,17 +1783,17 @@ body {
   .lh-br.bl { left: 4vw; bottom: 4vh; border-right: 0; border-top: 0; } .lh-br.brr { right: 4vw; bottom: 4vh; border-left: 0; border-top: 0; }
   .lh-kicker { display: flex; align-items: center; gap: 2vw; font: 700 max(13px, 2.3vh) var(--f-mono); letter-spacing: .6em; text-transform: uppercase; color: #e9c46a; animation: qsIn .9s ease both; }
   .lh-kicker i { display: block; width: min(10vw, 16vh); height: 1px; background: linear-gradient(90deg, transparent, #e9c46a); } .lh-kicker i:last-child { transform: scaleX(-1); }
-  .lh-title { font: 800 min(7.2vw, 12.5vh)/1.05 var(--f-display); margin: 2vh 0 1vh; text-transform: uppercase; letter-spacing: .06em; color: #fff; position: relative; overflow: hidden; padding: 0 1vw; }
+  .lh-title { font: 700 min(4vw, 7vh)/1.1 var(--f-display); margin: 2.4vh 0 0; text-transform: uppercase; letter-spacing: .26em; padding-left: .26em; color: #fff; position: relative; overflow: hidden; }
   .lh-w { display: inline-block; animation: lhRise 1s cubic-bezier(.2,.8,.2,1) both; } .lh-w.g { animation-delay: .25s; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .lh-title::after { content: ""; position: absolute; top: 0; bottom: 0; width: 16%; left: -30%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-18deg); animation: lhShine 5s ease-in-out 1.4s infinite; }
   @keyframes lhShine { 0% { left: -30%; } 35%, 100% { left: 130%; } }
   @keyframes lhRise { from { opacity: 0; transform: translateY(5vh) scale(.94); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
-  .lh-name { margin: 1.5vh 0 0; max-width: 88vw; text-align: center; animation: lhRise 1.2s cubic-bezier(.2,.8,.2,1) .55s both; }
-  .lh-name span { display: inline-block; font: 900 min(10.5vw, 19vh)/1.02 var(--f-display); text-wrap: balance; letter-spacing: -.01em;
+  .lh-name { margin: 6vh 0 0; max-width: 90vw; text-align: center; animation: lhRise 1.2s cubic-bezier(.2,.8,.2,1) .55s both; }
+  .lh-name span { display: inline-block; font: 900 min(8vw, 15vh)/1.05 var(--f-display); text-wrap: balance; letter-spacing: -.015em;
     background: linear-gradient(100deg, #b98a3c 0%, #f6dfa0 25%, #fff6dc 40%, #e9c46a 55%, #b98a3c 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
     animation: lhShimmer 5s linear infinite; filter: drop-shadow(0 0 3.5vh rgba(233,196,106,.45)); }
   @keyframes lhShimmer { to { background-position: -220% 0; } }
-  .lh-div { display: flex; align-items: center; gap: 1.4vw; margin: 3.5vh 0 2.2vh; animation: qsIn 1s ease 1s both; }
+  .lh-div { display: flex; align-items: center; gap: 1.4vw; margin: 6vh 0 2.4vh; animation: qsIn 1s ease 1s both; }
   .lh-div i { display: block; width: min(14vw, 24vh); height: 1px; background: linear-gradient(90deg, transparent, #e9c46a); } .lh-div i:last-child { transform: scaleX(-1); }
   .lh-div b { width: 1.3vh; height: 1.3vh; background: #e9c46a; transform: rotate(45deg); box-shadow: 0 0 2vh #e9c46a; }
   .lh-sub { margin: 0; font: 500 max(14px, 2.6vh) var(--f-body); letter-spacing: .5em; text-transform: uppercase; color: #cfd6e6; animation: qsIn 1s ease 1.2s both; }
@@ -2948,7 +2948,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T14:04:50Z';
+const LAST_UPDATE = '2026-10-12T14:06:20Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
