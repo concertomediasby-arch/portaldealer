@@ -1250,6 +1250,18 @@ body {
 .res-btn-view { background: var(--surface2); color: var(--fg); border: 1px solid var(--border); }
 .res-btn-soon { background: var(--surface); color: var(--fg-dim); border: 1px solid var(--border); cursor: default; font-style: italic; }
 .res-btn-prev { background: var(--surface2); color: var(--fg); border: 1px solid var(--border); }
+.gf-list { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.gf-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; }
+.gf-row + .gf-row { border-top: 1px solid var(--border); }
+.gf-info { min-width: 0; }
+.gf-title { font-size: 13px; font-weight: 600; color: var(--fg); overflow-wrap: anywhere; }
+.gf-sub { font: 11px var(--f-mono); color: var(--fg-muted); margin-top: 2px; }
+.gf-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.gf-del { background: transparent; border: 1px solid var(--border); color: var(--fg-muted); padding: 7px 10px; }
+.gf-del:hover { border-color: #e5484d; color: #e5484d; opacity: 1; }
+.gf-admin { margin-top: 10px; align-items: center; }
+.gf-hint { font-size: 11px; color: var(--fg-muted); }
+@media (max-width: 560px) { .gf-row { flex-direction: column; align-items: stretch; } .gf-actions { justify-content: flex-start; } }
 
 /* PDF Preview Modal */
 .pdf-modal-overlay {
@@ -2254,7 +2266,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T03:27:50Z';
+const LAST_UPDATE = '2026-10-12T03:33:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -2286,19 +2298,20 @@ const ACADEMY = [
 ];
 // ── Panduan Dealer ────────────────────────────────────────────
 // PDF disimpan di Supabase Storage bucket privat "guides" dengan nama file = `path` (bukan di repo/GitHub).
+// Tiap kartu bisa berisi BANYAK PDF: semua file di folder `folder/` bucket "guides" (admin: tombol "+ Tambah PDF").
+// `path` (opsional) = file lama di akar bucket yang ikut tampil di kartu itu, berjudul `pathTitle`.
 // `hidden:true` = kartu dinonaktifkan sementara (tidak tampil).
 // Tersedia otomatis begitu file di-upload (admin: tombol Upload di kartu panduan); dibuka lewat signed URL 10 menit.
 const DEALER_GUIDES = [
   { id:'guide-selling', title:'Tips & Teknik Penjualan Produk', category:'Penjualan', icon:'💡',
     desc:'Panduan praktis cara mempresentasikan dan menjual produk CAI: argumen nilai, perbandingan kompetitor, dan closing technique.',
-    // Memakai file yang sudah ter-upload (Munich ML-S10 — Panduan Dealer); "Ganti PDF" untuk memperbarui
-    path:'product-knowledge.pdf' },
+    folder:'tips-penjualan', path:'product-knowledge.pdf', pathTitle:'Munich ML-S10 — Panduan Dealer' },
   { id:'guide-pk', title:'Product Knowledge — Semua Brand', category:'Produk', icon:'📋',
     desc:'Ringkasan spesifikasi, keunggulan, dan positioning setiap brand CAI dalam satu dokumen referensi cepat.',
-    path:'product-knowledge-semua-brand.pdf', hidden:true },
+    folder:'product-knowledge', hidden:true },
   { id:'guide-install', title:'Panduan Instalasi & After Sales', category:'Instalasi', icon:'🔧',
     desc:'Prosedur instalasi standar, tips perawatan produk, dan penanganan klaim garansi untuk dealer & installer resmi.',
-    path:'panduan-instalasi.pdf', hidden:true },
+    folder:'panduan-instalasi', path:'panduan-instalasi.pdf', hidden:true },
 ];
 
 // ── Paket Audio ───────────────────────────────────────────────
@@ -3324,7 +3337,7 @@ function landingGo(target) {
 
 const GUIDES_BUCKET = 'guides';
 const GUIDE_URL_TTL = 600;   // detik — link PDF kedaluwarsa setelah 10 menit
-let guideFiles = null;       // Map nama file → metadata dari Storage
+let guideFiles = null;       // Map id panduan → [{ key, title, date, size }] (terbaru di atas)
 
 function openGuides() {
   if (!requireLogin(openGuides)) return;
@@ -3333,12 +3346,35 @@ function openGuides() {
   loadGuideFiles();
 }
 
+// Judul tampilan dari nama file: "Munich_ML-S10__Panduan_Dealer.pdf" → "Munich ML-S10 Panduan Dealer"
+const guideTitleFromName = n => n.replace(/\.pdf$/i, '').replace(/_+/g, ' ').replace(/\s+/g, ' ').trim() || n;
+// Nama file aman untuk Storage (huruf, angka, . _ -), selalu berakhiran .pdf
+function guideSafeName(n) {
+  const base = String(n).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\.pdf$/i, '')
+    .replace(/[^\w.\- ]+/g, ' ').trim().replace(/\s+/g, '_').slice(0, 120);
+  return (base || 'panduan-' + Date.now()) + '.pdf';
+}
+
 async function loadGuideFiles() {
   if (!supabase || !authUser) return;
-  try {
-    const { data, error } = await supabase.storage.from(GUIDES_BUCKET).list('', { limit: 100 });
+  const store = supabase.storage.from(GUIDES_BUCKET);
+  const list = async folder => {
+    const { data, error } = await store.list(folder, { limit: 1000, sortBy: { column: 'created_at', order: 'desc' } });
     if (error) throw error;
-    guideFiles = new Map((data || []).filter(f => f.id).map(f => [f.name, f]));
+    return (data || []).filter(f => f.id && /\.pdf$/i.test(f.name));   // id null = sub-folder
+  };
+  try {
+    const visible = DEALER_GUIDES.filter(g => !g.hidden);
+    const [root, ...folders] = await Promise.all([list(''), ...visible.map(g => g.folder ? list(g.folder) : [])]);
+    const rootMap = new Map(root.map(f => [f.name, f]));
+    const row = (key, title, f) => ({ key, title, date: f.updated_at || f.created_at, size: f.metadata?.size || 0 });
+    guideFiles = new Map(visible.map((g, i) => {
+      const files = folders[i].map(f => row(`${g.folder}/${f.name}`, guideTitleFromName(f.name), f));
+      const legacy = g.path && rootMap.get(g.path);
+      if (legacy) files.push(row(g.path, g.pathTitle || guideTitleFromName(g.path), legacy));
+      files.sort((a, b) => new Date(b.date) - new Date(a.date));
+      return [g.id, files];
+    }));
   } catch (e) {
     console.warn('guides list', e);
     guideFiles = new Map();
@@ -3347,49 +3383,60 @@ async function loadGuideFiles() {
   renderGuides();
 }
 
+const fmtGuideDate = d => d ? new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Jakarta' }) : '';
+const fmtGuideSize = b => b ? (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB') : '';
+
 function renderGuides() {
   const el = document.getElementById('guides-list');
   if (!el) return;
   const catColor = { 'Penjualan':'#d8b26a', 'Produk':'#6fd3e6', 'Instalasi':'#52c38a' };
   const admin = isAdmin();
+  const ICON_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  const ICON_VIEW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
   el.innerHTML = DEALER_GUIDES.filter(g => !g.hidden).map(g => {
     const color = catColor[g.category] || 'var(--accent)';
-    const f = guideFiles?.get(g.path);
-    const when = f ? new Date(f.updated_at || f.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) : '';
-    const btn = guideFiles === null
-      ? `<span class="res-btn res-btn-soon">Memuat…</span>`
-      : f
-        ? `<button class="res-btn res-btn-dl" onclick="openGuideFile('${g.id}', true)">
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh PDF</button>
-           <button class="res-btn res-btn-view" onclick="openGuideFile('${g.id}', false)">
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Buka</button>`
-        : `<span class="res-btn res-btn-soon">Segera Hadir</span>`;
-    const up = admin
-      ? `<label class="res-btn res-btn-view guide-upload" title="Admin: upload / ganti PDF">⬆ ${f ? 'Ganti PDF' : 'Upload PDF'}
-           <input type="file" accept="application/pdf,.pdf" hidden onchange="uploadGuideFile('${g.id}', this)"></label>`
+    const files = guideFiles?.get(g.id) || [];
+    const list = guideFiles === null
+      ? `<div class="res-actions"><span class="res-btn res-btn-soon">Memuat…</span></div>`
+      : files.length
+        ? `<div class="gf-list">${files.map(f => `
+            <div class="gf-row">
+              <div class="gf-info"><div class="gf-title">📄 ${escHtml(f.title)}</div>
+                <div class="gf-sub">${[fmtGuideDate(f.date), fmtGuideSize(f.size)].filter(Boolean).join(' · ')}</div></div>
+              <div class="gf-actions">
+                <button class="res-btn res-btn-view" onclick="openGuideFile('${f.key}', false)">${ICON_VIEW}Buka</button>
+                <button class="res-btn res-btn-dl" onclick="openGuideFile('${f.key}', true)">${ICON_DL}Unduh</button>
+                ${admin ? `<button class="res-btn gf-del" title="Hapus file ini" onclick="deleteGuideFile('${g.id}', '${f.key}')">🗑</button>` : ''}
+              </div>
+            </div>`).join('')}</div>`
+        : `<div class="res-actions"><span class="res-btn res-btn-soon">Segera Hadir</span></div>`;
+    const up = admin && g.folder
+      ? `<div class="res-actions gf-admin"><label class="res-btn res-btn-view guide-upload" title="Admin: tambah satu atau beberapa PDF">＋ Tambah PDF
+           <input type="file" accept="application/pdf,.pdf" multiple hidden onchange="uploadGuideFiles('${g.id}', this)"></label>
+           <span class="gf-hint">Bisa pilih beberapa file sekaligus · nama file sama = menggantikan file lama</span></div>`
       : '';
+    const latest = files[0] ? fmtGuideDate(files[0].date) : '';
     return `<div class="res-card">
       <div class="res-icon">${g.icon}</div>
       <div class="res-body">
         <div class="res-meta">
           <span class="res-cat" style="color:${color};border-color:${color}22;background:${color}11">${g.category}</span>
-          ${when ? `<span class="res-year">Diperbarui ${when}</span>` : ''}
+          ${files.length ? `<span class="res-year">${files.length} file · terbaru ${latest}</span>` : ''}
         </div>
         <div class="res-title">${g.title}</div>
         <div class="res-desc">${g.desc}</div>
-        <div class="res-actions">${btn}${up}</div>
+        ${list}${up}
       </div></div>`;
   }).join('');
 }
 
-async function openGuideFile(id, download) {
-  const g = DEALER_GUIDES.find(x => x.id === id);
-  if (!g || !supabase) return;
+async function openGuideFile(key, download) {
+  if (!key || !supabase) return;
   // Open the tab synchronously (inside the click) so mobile browsers don't block it as a popup
   const win = download ? null : window.open('', '_blank');
   try {
     const { data, error } = await supabase.storage.from(GUIDES_BUCKET)
-      .createSignedUrl(g.path, GUIDE_URL_TTL, download ? { download: g.path } : undefined);
+      .createSignedUrl(key, GUIDE_URL_TTL, download ? { download: key.split('/').pop() } : undefined);
     if (error) throw error;
     if (win) win.location.href = data.signedUrl;
     else window.location.href = data.signedUrl;
@@ -3400,30 +3447,53 @@ async function openGuideFile(id, download) {
   }
 }
 
-async function uploadGuideFile(id, input) {
-  const file = input.files?.[0];
+function guideErrorHint(m) {
+  return /bucket not found/i.test(m) ? ' — bucket "guides" belum dibuat (jalankan SQL-nya).'
+    : /row-level security|unauthorized|403/i.test(m) ? ' — akun ini belum diizinkan (pastikan role admin, lalu logout & login ulang).'
+    : /exceeded|too large|413|payload/i.test(m) ? ' — ukuran file melebihi batas Supabase (maks. 50 MB di paket gratis).'
+    : '';
+}
+
+async function uploadGuideFiles(id, input) {
+  const files = [...(input.files || [])];
   input.value = '';
   const g = DEALER_GUIDES.find(x => x.id === id);
-  if (!file || !g || !supabase) return;
-  if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { showToast('File harus berformat PDF.'); return; }
-  const mb = (file.size / 1048576).toFixed(1);
-  showToast(`Mengunggah ${file.name} (${mb} MB)… jangan tutup halaman ini.`, 600000);
+  if (!files.length || !g?.folder || !supabase) return;
+  const bad = files.filter(f => !/\.pdf$/i.test(f.name) && f.type !== 'application/pdf');
+  if (bad.length) { showToast('Hanya file PDF yang bisa diunggah: ' + bad.map(f => f.name).join(', '), 8000); return; }
+  let ok = 0;
+  const failed = [];
+  for (const [i, file] of files.entries()) {
+    const mb = (file.size / 1048576).toFixed(1);
+    showToast(`Mengunggah ${files.length > 1 ? `(${i + 1}/${files.length}) ` : ''}${file.name} (${mb} MB)… jangan tutup halaman ini.`, 600000);
+    try {
+      const { error } = await supabase.storage.from(GUIDES_BUCKET)
+        .upload(`${g.folder}/${guideSafeName(file.name)}`, file, { upsert: true, contentType: 'application/pdf', cacheControl: '60' });
+      if (error) throw error;
+      ok++;
+    } catch (e) {
+      const m = String(e.message || e);
+      failed.push(file.name + ': ' + m + guideErrorHint(m));
+      console.warn('guide upload', e);
+    }
+  }
+  await loadGuideFiles();
+  if (failed.length) showToast(`${ok ? `✓ ${ok} file terunggah. ` : ''}Gagal: ${failed.join(' | ')}`, 12000);
+  else showToast(`✓ ${ok} file berhasil ditambahkan ke "${g.title}".`);
+}
+
+async function deleteGuideFile(id, key) {
+  const f = (guideFiles?.get(id) || []).find(x => x.key === key);
+  if (!f || !supabase || !confirm(`Hapus "${f.title}" dari Panduan Dealer?\n\nFile akan hilang untuk semua dealer.`)) return;
   try {
-    const { error } = await supabase.storage.from(GUIDES_BUCKET)
-      .upload(g.path, file, { upsert: true, contentType: 'application/pdf', cacheControl: '60' });
+    const { data, error } = await supabase.storage.from(GUIDES_BUCKET).remove([key]);
     if (error) throw error;
+    if (!data?.length) throw new Error('file tidak terhapus — policy hapus (DELETE) bucket "guides" belum mengizinkan akun ini');
     await loadGuideFiles();
-    showToast(guideFiles?.has(g.path)
-      ? `✓ "${g.title}" berhasil diunggah.`
-      : 'Upload selesai, tapi file belum terbaca. Muat ulang halaman; jika tetap "Segera Hadir", cek policy baca bucket "guides".', 10000);
+    showToast(`"${f.title}" dihapus.`);
   } catch (e) {
     const m = String(e.message || e);
-    const hint = /bucket not found/i.test(m) ? ' — bucket "guides" belum dibuat (jalankan SQL-nya).'
-      : /row-level security|unauthorized|403/i.test(m) ? ' — akun ini belum diizinkan upload (pastikan role admin, lalu logout & login ulang).'
-      : /exceeded|too large|413|payload/i.test(m) ? ' — ukuran file melebihi batas Supabase (maks. 50 MB di paket gratis).'
-      : '';
-    showToast('Gagal mengunggah: ' + m + hint, 12000);
-    console.warn('guide upload', e);
+    showToast('Gagal menghapus: ' + m + guideErrorHint(m), 12000);
   }
 }
 
