@@ -1481,16 +1481,20 @@ body {
   @media (max-width: 720px) { .wa-float { right: 14px; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); width: 48px; height: 48px; } }
 
   /* ── Harga SRP ── */
-  .product-name-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-  .product-name-row .product-name { min-width: 0; }
-  .product-price { flex-shrink: 0; font: 700 12.5px var(--f-mono); color: var(--accent); white-space: nowrap; }
+  .product-card { display: flex; flex-direction: column; }
+  .product-card .product-info { flex: 1; display: flex; flex-direction: column; }
+  .product-price-row { margin-top: auto; padding-top: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .product-price-row::before { content: ''; flex-basis: 100%; height: 1px; background: var(--border); margin-bottom: 8px; order: -1; }
+  .pp-tag { font: 600 9.5px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); }
+  .product-price { font: 700 13px var(--f-mono); color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .product-price small { font-size: 10.5px; font-weight: 500; color: var(--fg-muted); }
   .panel-price { margin-top: 10px; font: 700 20px var(--f-display); color: var(--accent); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   .panel-price span { font: 600 10.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-muted); }
   .sr-price { color: var(--accent); font-weight: 700; }
   .panel-price .pp-label { flex-basis: 100%; }
   .pp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; width: 100%; font-size: 15px; }
   .pp-list b { display: inline-block; min-width: 34px; margin-right: 6px; font: 600 11px var(--f-mono); color: var(--fg-muted); }
-  @media (max-width: 480px) { .product-name-row { flex-direction: column; gap: 2px; } }
+
 
   /* ── Toast ── */
   .toast {
@@ -2250,7 +2254,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T03:12:02Z';
+const LAST_UPDATE = '2026-10-12T03:14:02Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -2386,51 +2390,51 @@ const BRANDS = [
     philosophy: 'Audiocircle represents a team of long-time high-end audio and car enthusiasts with the aim to give people the possibility to enjoy music in perfection and naturalness — in all its variety, in our time of mobility, also in your car.\n\nOur products combine the experience and tradition of our team with innovation, progress, materials and manufacturing in Germany to meet the wishes and requirements of people today and tomorrow.\n\nImmerse yourself with us in the fascination and energy of music in all its facets and close the circle of everlasting desire for the perfect sound experience as well as the emotion and love for music.',
     lines: [
       { name: 'Pro Line', products: [
-        { id:'ac-prow6c', price:42000000, name:'PRO-W6C NEO', model:'PRO-W6C NEO', category:'Speaker', emoji:'🔊', hasVideo:true,
+        { id:'ac-prow6c', price:42000000, priceUnit:'set', name:'PRO-W6C NEO', model:'PRO-W6C NEO', category:'Speaker', emoji:'🔊', hasVideo:true,
           photo:'assets/ac-prow6c.jpg', video:'assets/ac-proline.mp4?v=2#t=14', videoPoster:'assets/ac-prow6c-poster.jpg?v=2',
           desc:'Neo Magnet Driver, Titan 37mm Voice Coil Former CCA wire, Crystal Aluminum–Paper Compound Cone dengan W-Surround.',
           specs:{'Impedansi':'4 Ω','Handling Power':'180 W','SPL':'87 dB','Fs':'46 Hz','Freq. Response':'33 Hz – 5 kHz','Xmax':'±7 mm','Outer Diameter':'166 mm','Mounting Diameter':'143 mm','Mounting Depth':'83 mm','Weight':'1192 g'} },
-        { id:'ac-prom3c', price:25000000, name:'PRO-M3C', model:'PRO-M3C', category:'Midrange', emoji:'🔉', hasVideo:true,
+        { id:'ac-prom3c', price:25000000, priceUnit:'set', name:'PRO-M3C', model:'PRO-M3C', category:'Midrange', emoji:'🔉', hasVideo:true,
           photo:'assets/ac-prom3c.jpg', video:'assets/ac-proline.mp4?v=2#t=26', videoPoster:'assets/ac-prom3c-poster.jpg?v=2',
           desc:'Multi-vented U-Yoke Neo Magnet Driver, Titan 25mm Voice Coil Former CCA wire, Crystal Aluminum–Paper Compound Cone.',
           specs:{'Impedansi':'4 Ω','Handling Power':'80 W','SPL':'86 dB','Fs':'87 Hz','Freq. Response':'80 Hz – 18 kHz','Xmax':'±2.5 mm','Outer Diameter':'91 mm','Mounting Diameter':'78 mm','Mounting Depth':'36 mm','Weight':'268 g'} },
-        { id:'ac-prot28', price:39000000, name:'PRO-T28', model:'PRO-T28', category:'Tweeter', emoji:'🎺', hasVideo:true,
+        { id:'ac-prot28', price:39000000, priceUnit:'set', name:'PRO-T28', model:'PRO-T28', category:'Tweeter', emoji:'🎺', hasVideo:true,
           photo:'assets/ac-prot28.jpg', video:'assets/ac-proline.mp4?v=2#t=36', videoPoster:'assets/ac-prot28-poster.jpg?v=2',
           desc:'Industry-leading design, hand-coated silk dome, stainless steel chamber dengan multipart housing.',
           specs:{'Impedansi':'4 Ω','Handling Power':'40 W','SPL':'92 dB','Fs':'650 Hz','Freq. Response':'1200 Hz – 35 kHz','Outer Diameter':'57 mm','Mounting Diameter':'52 mm','Mounting Depth':'37 mm','Weight':'392 g'} },
-        { id:'ac-prom3p', price:14000000, name:'PRO-M3P', model:'PRO-M3P', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'ac-prom3p', price:14000000, priceUnit:'set', name:'PRO-M3P', model:'PRO-M3P', category:'Midrange', emoji:'🔉', hasVideo:false,
           photo:'assets/ac-prom3p.jpg',
           desc:'Multi-vented U-Yoke Neo Magnet Driver, Full Aluminum Phase Plug, hand-coated multilayer paper cone W-Surround.',
           specs:{'Impedansi':'4 Ω','Handling Power':'80 W','SPL':'88 dB','Fs':'113 Hz','Freq. Response':'180 Hz – 18 kHz','Xmax':'±2.5 mm','Outer Diameter':'91 mm','Mounting Diameter':'78 mm','Mounting Depth':'36 mm','Weight':'230 g'} },
-        { id:'ac-prom3pnextel', price:20500000, name:'PRO-M3P Nextel', model:'PRO-M3P Nextel', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'ac-prom3pnextel', price:20500000, priceUnit:'set', name:'PRO-M3P Nextel', model:'PRO-M3P Nextel', category:'Midrange', emoji:'🔉', hasVideo:false,
           photo:'assets/ac-prom3pnextel.jpg',
           desc:'Versi Nextel dari PRO-M3P dengan crossover.',
           specs:{'Impedansi':'4 Ω','Handling Power':'80 W (with crossover)','Resonance Frequency':'97 Hz','Freq. Response':'85 Hz – 18 kHz','SPL':'88 dB','Qts':'0.4','Outer Diameter':'91 mm','Mounting Diameter':'78 mm','Mounting Depth':'35 mm','Weight':'227 g'} },
       ]},
       { name: 'Concerto Line', products: [
-        { id:'ac-clw6', price:25000000, name:'MIDBASS CL-W6', model:'CL-W6', category:'Speaker', emoji:'🔊', hasVideo:true,
+        { id:'ac-clw6', price:25000000, priceUnit:'set', name:'MIDBASS CL-W6', model:'CL-W6', category:'Speaker', emoji:'🔊', hasVideo:true,
           photo:'assets/ac-clw6.jpg', video:'assets/ac-concertoline.mp4?v=1', videoPoster:'assets/ac-concertoline-poster.jpg?v=1',
           desc:'Dibangun dengan magnet neodymium, basket aluminium, dan paper cone untuk suara hangat dan natural.',
           specs:{'Handling Power':'180 W','Power Rating':'80 W','Min. Amplifier Power':'35 W','Sensitivity':'86 dB','Resonance Frequency':'38 Hz','Freq. Response':'35 Hz – 6 kHz','Impedansi':'4 / 5.4 / 7.3 Ω','External':'166 mm','Installation':'142 mm','Mounting Depth':'74 mm','Weight':'1253 g'} },
-        { id:'ac-clm3', price:20000000, name:'MIDRANGE CL-M3', model:'CL-M3', category:'Midrange', emoji:'🔉', hasVideo:true,
+        { id:'ac-clm3', price:20000000, priceUnit:'set', name:'MIDRANGE CL-M3', model:'CL-M3', category:'Midrange', emoji:'🔉', hasVideo:true,
           photo:'assets/ac-clm3.jpg', video:'assets/ac-concertoline.mp4?v=1', videoPoster:'assets/ac-concertoline-poster.jpg?v=1',
           desc:'Magnet neodymium, basket aluminium, paper cone untuk suara hangat dan natural.',
           specs:{'Handling Power':'75 W','Power Rating':'35 W','Min. Amplifier Power':'15 W','Sensitivity':'86 dB','Resonance Frequency':'85 Hz','Freq. Response':'65 Hz – 15 kHz','Impedansi':'4 / 3.8 / 7.8 Ω','External':'90 mm','Installation':'72 mm','Mounting Depth':'39 mm','Weight':'87 g'} },
-        { id:'ac-clt27', price:19000000, name:'TWEETER CL-T27', model:'CL-T27', category:'Tweeter', emoji:'🎺', hasVideo:true,
+        { id:'ac-clt27', price:19000000, priceUnit:'set', name:'TWEETER CL-T27', model:'CL-T27', category:'Tweeter', emoji:'🎺', hasVideo:true,
           photos:['assets/ac-clt27.jpg', 'assets/ac-clt27-2.jpg'], video:'assets/ac-concertoline.mp4?v=1', videoPoster:'assets/ac-concertoline-poster.jpg?v=1',
           desc:'Magnet neodymium, basket stainless steel, silk cone untuk suara halus dan detail.',
           specs:{'Handling Power':'60 W','Power Rating':'5 W','Sensitivity':'88 dB','Resonance Frequency':'680 Hz','Freq. Response':'1800 Hz – 30 kHz','Impedansi':'3.8 / 4.2 / 5.1 Ω','External':'58 mm','Installation':'48 mm','Mounting Depth':'26 mm','Weight':'87 g'} },
       ]},
       { name: 'Berlin Line', products: [
-        { id:'ac-blw6', price:9000000, name:'BL-W6 MKIII', model:'BL-W6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:true,
+        { id:'ac-blw6', price:9000000, priceUnit:'set', name:'BL-W6 MKIII', model:'BL-W6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:true,
           photo:'assets/ac-blw6.jpg', video:'assets/ac-berlinline.mp4?v=1', videoPoster:'assets/ac-berlinline-poster.jpg?v=1',
           desc:'6.5" Mid woofer — seri kompetisi Berlin Line.',
           specs:{'Peak Power Handling':'60 W','Power Rating':'30 W','Min. Amplifier Power':'15 W','Sensitivity':'89 dB','Freq. Response':'52 Hz – 6 kHz','Impedansi':'4 Ω','External Diameter':'166 mm','Fastening Diameter':'155 mm','Mounting Depth':'67 mm'} },
-        { id:'ac-blt26', price:5500000, name:'BL-T26 MKII', model:'BL-T26 MKII', category:'Tweeter', emoji:'🎺', hasVideo:true,
+        { id:'ac-blt26', price:5500000, priceUnit:'set', name:'BL-T26 MKII', model:'BL-T26 MKII', category:'Tweeter', emoji:'🎺', hasVideo:true,
           photo:'assets/ac-blt26.jpg', video:'assets/ac-berlinline.mp4?v=1', videoPoster:'assets/ac-berlinline-poster.jpg?v=1',
           desc:'26mm Silk Dome Tweeter.',
           specs:{'Peak Power Handling':'30 W','Power Rating':'15 W','Min. Amplifier Power':'10 W','Sensitivity':'87 dB','Freq. Response':'850 Hz – 22 kHz','Impedansi':'4 Ω','External Diameter':'58 mm','Fastening Diameter':'49 mm','Mounting Depth':'22 mm'} },
-        { id:'ac-blm3', price:6200000, name:'BL-M3 MKII', model:'BL-M3 MKII', category:'Midrange', emoji:'🔉', hasVideo:true,
+        { id:'ac-blm3', price:6200000, priceUnit:'set', name:'BL-M3 MKII', model:'BL-M3 MKII', category:'Midrange', emoji:'🔉', hasVideo:true,
           photo:'assets/ac-blm3.jpg', video:'assets/ac-berlinline.mp4?v=1', videoPoster:'assets/ac-berlinline-poster.jpg?v=1',
           desc:'3.5" Midrange Speaker.',
           specs:{'Handling Power':'75 W','SPL':'88 dB','Fs':'85 Hz','Freq. Response':'65 Hz – 15 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'82 mm','Mounting Depth':'42 mm'} },
@@ -2440,33 +2444,33 @@ const BRANDS = [
           specs:{'Handling Power':'100 W','SPL':'90 dB','Freq. Response':'80 Hz – 20 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'83 mm','Mounting Depth':'38 / 40 mm'} },
       ]},
       { name: 'Hamburg Line', products: [
-        { id:'ac-hlw6', price:6100000, name:'HL-W6 MKIII', model:'HL-W6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-hlw6', price:6100000, priceUnit:'set', name:'HL-W6 MKIII', model:'HL-W6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-hlw6-2.webp', 'assets/ac-hlw6.webp', 'assets/ac-hlw6-3.webp', 'assets/ac-hlw6-4.webp', 'assets/ac-hlw6-5.webp'],
           desc:'6.5" Mid woofer Speaker.',
           specs:{'Handling Power':'60 W','SPL':'89 dB','Freq. Response':'52 Hz – 6 kHz','Impedansi':'4 Ω','Outer Diameter':'166 mm','Fastening Diameter':'156 mm','Mounting Depth':'73.5 mm'} },
-        { id:'ac-hlw8', price:17500000, name:'HL-W8', model:'HL-W8', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-hlw8', price:17500000, priceUnit:'set', name:'HL-W8', model:'HL-W8', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-hlw8-1.webp', 'assets/ac-hlw8-2.webp', 'assets/ac-hlw8-3.webp', 'assets/ac-hlw8-4.webp'],
           desc:'8" Slim Mid Woofer Speaker.',
           specs:{'Handling Power':'100 W','SPL':'87 dB','Freq. Response':'42 Hz – 8 kHz','Impedansi':'4 Ω','Outer Diameter':'205 mm','Mounting Diameter':'194 mm','Mounting Depth':'57.5 mm'} },
-        { id:'ac-hlm3', price:5100000, name:'HL-M3 MKIII', model:'HL-M3 MKIII', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'ac-hlm3', price:5100000, priceUnit:'set', name:'HL-M3 MKIII', model:'HL-M3 MKIII', category:'Midrange', emoji:'🔉', hasVideo:false,
           photos:['assets/ac-hlm3-1.webp', 'assets/ac-hlm3-2.webp', 'assets/ac-hlm3-3.webp', 'assets/ac-hlm3-4.webp'],
           desc:'3.5" Midrange Speaker.',
           specs:{'Handling Power':'60 W','SPL':'84 dB','Freq. Response':'110 Hz – 20 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'82.7 mm','Mounting Depth':'34 mm'} },
-        { id:'ac-hlm2', price:4850000, name:'HL-M2', model:'HL-M2', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'ac-hlm2', price:4850000, priceUnit:'set', name:'HL-M2', model:'HL-M2', category:'Midrange', emoji:'🔉', hasVideo:false,
           photos:['assets/ac-hlm2-1.webp', 'assets/ac-hlm2-2.webp', 'assets/ac-hlm2-3.webp', 'assets/ac-hlm2-4.webp'],
           desc:'2" Wide Midrange Speaker.',
           specs:{'Handling Power':'40 W','SPL':'84 dB','Freq. Response':'132 Hz – 30 kHz','Impedansi':'4 Ω','Outer Diameter':'72 mm','Fastening Diameter':'64 mm','Mounting Depth':'29 mm'} },
-        { id:'ac-hlt25', price:5300000, name:'HL-T25 NP', model:'HL-T25 NP', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'ac-hlt25', price:5300000, priceUnit:'set', name:'HL-T25 NP', model:'HL-T25 NP', category:'Tweeter', emoji:'🎺', hasVideo:false,
           photos:['assets/ac-hlt25-4.webp', 'assets/ac-hlt25-5.webp', 'assets/ac-hlt25-6.webp'],
           desc:'Tweeter Hamburg Line.',
           specs:{'Peak Power Handling':'30 W','Power Rating':'15 W','Min. Amplifier Power':'10 W','Sensitivity':'87 dB','Freq. Response':'850 Hz – 22 kHz','Impedansi':'4 Ω','External Diameter':'45 mm','Fastening Diameter':'39 mm','Mounting Depth':'25.5 mm'} },
-        { id:'ac-hlt20', price:3650000, name:'HL-T20', model:'HL-T20', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'ac-hlt20', price:3650000, priceUnit:'set', name:'HL-T20', model:'HL-T20', category:'Tweeter', emoji:'🎺', hasVideo:false,
           photos:['assets/ac-hlt20-3.webp','assets/ac-hlt20-1.webp','assets/ac-hlt20-2.webp'],
           desc:'20mm Silk Dome Chamber Tweeter.',
           specs:{'Handling Power':'20 W','SPL':'84 dB','Freq. Response':'1500 Hz – 22 kHz','Impedansi':'4 Ω','Outer Diameter':'42 mm','Inner Diameter':'35 mm','Mounting Depth':'17 mm'} },
       ]},
       { name: 'Munich Line', products: [
-        { id:'ac-mlc62', price:10000000, name:'ML-C6.2 MKIII', model:'ML-C6.2 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-mlc62', price:10000000, priceUnit:'set', name:'ML-C6.2 MKIII', model:'ML-C6.2 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-mlc62-2.webp', 'assets/ac-mlc62-1.webp','assets/ac-mlc62-3.webp','assets/ac-mlc62-4.webp'],
           desc:'6.5" Two Way Component — Black Aluminum Former, Nomex Spider, Carbon Fibre Cone, Custom Steel Basket, 25mm Silk Dome Tweeter, 3×12dB inline crossover.',
           specs:{
@@ -2481,7 +2485,7 @@ const BRANDS = [
             'Tweeter':'Silk dome 25 mm',
             'Crossover':'3× inline, 12 dB/oct',
           } },
-        { id:'ac-mlc63', price:15000000, name:'ML-C6.3 MKIII', model:'ML-C6.3 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-mlc63', price:15000000, priceUnit:'set', name:'ML-C6.3 MKIII', model:'ML-C6.3 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-mlc63-4.webp','assets/ac-mlc63-1.webp','assets/ac-mlc63-2.webp','assets/ac-mlc63-5.webp'],
           desc:'6.5" Three Way Component — Black Aluminum Former, Nomax Spider, Carbon Fibre Cone, Custom Steel Basket, 25mm Silk Dome Tweeter, 2×12dB inline crossover.',
           specs:{
@@ -2506,7 +2510,7 @@ const BRANDS = [
           specs:{'Tipe':'Passive Crossover','Konfigurasi':'2 Way','Line':'Munich Line'} },
       ]},
       { name: 'Köln Line', products: [
-        { id:'ac-klc62', price:6000000, name:'KL-C6.2', model:'KL-C6.2', category:'Speaker', emoji:'🔊', hasVideo:true,
+        { id:'ac-klc62', price:6000000, priceUnit:'set', name:'KL-C6.2', model:'KL-C6.2', category:'Speaker', emoji:'🔊', hasVideo:true,
           photos:['assets/ac-klc62-4.webp', 'assets/ac-klc62-1.webp','assets/ac-klc62-2.webp','assets/ac-klc62-3.webp'], video:'assets/ac-klc62.mp4?v=1', videoPoster:'assets/ac-klc62-poster.jpg?v=1',
           desc:'6.5" 2-Way Component Set premium dengan fokus kejernihan vokal dan soundstage luas.',
           specs:{
@@ -2535,7 +2539,7 @@ const BRANDS = [
           } },
       ]},
       { name: 'Frankfurt Line', products: [
-        { id:'ac-flc62', price:3900000, name:'FL-C6.2 MKII', model:'FL-C6.2 MKII', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-flc62', price:3900000, priceUnit:'set', name:'FL-C6.2 MKII', model:'FL-C6.2 MKII', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-flc62-4.webp','assets/ac-flc62-2.webp', 'assets/ac-flc62-1.webp','assets/ac-flc62-3.webp','assets/ac-flc62-5.webp'],
           desc:'6.5" 2-Way Component Set — special paper cone, steel basket, tweeter silk dome 20mm, HP crossover terpisah.',
           specs:{
@@ -2549,7 +2553,7 @@ const BRANDS = [
             'Mounting Diameter':'165 mm (DIN)',
             'Mounting Depth':'62 mm',
           } },
-        { id:'ac-flx6', price:3300000, name:'FL-X6 MKII', model:'FL-X6 MKII', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-flx6', price:3300000, priceUnit:'set', name:'FL-X6 MKII', model:'FL-X6 MKII', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-flx6-3.webp','assets/ac-flx6-1.webp','assets/ac-flx6-2.webp',],
           desc:'6.5" Coaxial Speaker — special paper cone, steel basket, 20mm Silk Dome Tweeter built-in.',
           specs:{
@@ -2564,7 +2568,7 @@ const BRANDS = [
           } },
       ]},
       { name: 'Stuttgart Line', products: [
-        { id:'ac-slc62', price:2500000, name:'SL-C6.2 MKIV S', model:'SL-C6.2 MKIV S', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-slc62', price:2500000, priceUnit:'set', name:'SL-C6.2 MKIV S', model:'SL-C6.2 MKIV S', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-slc62-2.webp', 'assets/ac-slc62-1.webp','assets/ac-slc62-3.webp'],
           desc:'6.5" 2-Way Component Set — PP cone, steel basket, 16mm Silk Dome Tweeter, line crossover terpisah.',
           specs:{
@@ -2578,7 +2582,7 @@ const BRANDS = [
             'Mounting Diameter':'165 mm (DIN)',
             'Mounting Depth':'62 mm',
           } },
-        { id:'ac-slx6', price:2100000, name:'SL-X6 MKIII', model:'SL-X6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-slx6', price:2100000, priceUnit:'set', name:'SL-X6 MKIII', model:'SL-X6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-slx6-2.webp','assets/ac-slx6-1.webp','assets/ac-slx6-3.webp'],
           desc:'6.5" Coaxial Speaker — PP cone, steel basket, 16mm Silk Dome Tweeter built-in.',
           specs:{
@@ -2610,29 +2614,29 @@ const BRANDS = [
           specs:{'Freq. Response':'40 Hz – 200 Hz','Operating Voltage':'9.5 – 16 VDC','Input Sensitivity':'180 mV','Peak Power Output':'350 W','RMS Power Output':'150 W','Impedansi':'4 Ω'} },
       ]},
       { name: 'IQ Line — BMW', products: [
-        { id:'ac-iqc42bmwa', price:12000000, name:'IQ-C4.2 BMW Ver.A', model:'IQ-C4.2 BMW Ver.A', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-iqc42bmwa', price:12000000, priceUnit:'set', name:'IQ-C4.2 BMW Ver.A', model:'IQ-C4.2 BMW Ver.A', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'4" Two Way Component — BMW Plug & Play, Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
           photos:['assets/ac-iqc42bmwa-8.webp','assets/ac-iqc42bmwa-7.webp',,'assets/ac-iqc42bmwa-9.webp','assets/ac-iqc42bmwa-10.webp','assets/ac-iqc42bmwa-11.webp'],
           specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'BMW Plug & Play'} },
-        { id:'ac-iqc42bmwb', price:12000000, name:'IQ-C4.2 BMW Ver.B', model:'IQ-C4.2 BMW Ver.B', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-iqc42bmwb', price:12000000, priceUnit:'set', name:'IQ-C4.2 BMW Ver.B', model:'IQ-C4.2 BMW Ver.B', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'4" Two Way Component — BMW Plug & Play (Ver.B), Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
           photos:['assets/ac-iqc42bmwb-1.png'],
           specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'BMW Plug & Play'} },
-        { id:'ac-iqx4bmw', price:10000000, name:'IQ-X4 BMW', model:'IQ-X4 BMW', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-iqx4bmw', price:10000000, priceUnit:'set', name:'IQ-X4 BMW', model:'IQ-X4 BMW', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'4" Coaxial Speaker untuk rear door — BMW Plug & Play, Carbon Fibre Cone Die Cast Basket.',
           photos:['assets/ac-iqx4bmw-2.webp','assets/ac-iqx4bmw-3.webp','assets/ac-iqx4bmw-4.webp'],
           specs:{'Impedansi':'4 Ω','Rated Power':'40 – 60 W','SPL':'87 dB','Freq. Response':'100 Hz – 20 kHz','Fitment':'BMW Plug & Play'} },
-        { id:'ac-iqs824bmw', price:18500000, name:'IQ-S8-2/4 BMW', model:'IQ-S8-2/4 BMW', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-iqs824bmw', price:18500000, priceUnit:'set', name:'IQ-S8-2/4 BMW', model:'IQ-S8-2/4 BMW', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'8" Mid woofer — BMW Plug & Play, High Power Paper Cone Mid Woofer.',
           photos:['assets/ac-iqs82bmw-1.webp','assets/ac-iqs82bmw-2.webp'],
           specs:{'Impedansi':'2 / 4 Ω','Rated Power':'70 – 80 W','Handling Power':'200 W','SPL':'88 dB','Freq. Response':'33 Hz – 2000 Hz','Fitment':'BMW Plug & Play'} },
       ]},
       { name: 'IQ Line — Benz', products: [
-        { id:'ac-iqc42mb', price:12000000, name:'IQ-C4.2 MB', model:'IQ-C4.2 MB', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-iqc42mb', price:12000000, priceUnit:'set', name:'IQ-C4.2 MB', model:'IQ-C4.2 MB', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'4" Two Way Component — Mercedes Plug & Play, Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
           photos:['assets/ac-iqc42mb-1.png'],
           specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'Mercedes-Benz Plug & Play'} },
-        { id:'ac-iqc52mb', price:12000000, name:'IQ-C5.2 MB', model:'IQ-C5.2 MB', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-iqc52mb', price:12000000, priceUnit:'set', name:'IQ-C5.2 MB', model:'IQ-C5.2 MB', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'5" Two Way Component — Mercedes Plug & Play, Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
           photos:['assets/ac-iqc52mb-1.png'],
           specs:{'Impedansi':'4 Ω','Rated Power':'50 – 100 W','SPL':'90 dB','Freq. Response':'115 Hz – 30 kHz','Fitment':'Mercedes-Benz Plug & Play'} },
@@ -2659,53 +2663,53 @@ const BRANDS = [
     philosophy: 'Music is emotion in acoustic waves.\n\nIt touches people like no other medium.\n\nThe STEG brand was born with the idea to reproduce this audio experience as accurate and realistic as possible. Nothing shall stand in the way of pure musical enjoyment. Not even the automobile interior with its less than ideal acoustic conditions. Based on this vision, GTTRADING creates legendary high-end hi-fi components for automotive applications since 1983. There is only one goal: absolutely uncompromising sound.\n\nIf high-end audio reproduction in cars is the question, STEG will be the answer.',
     lines: [
       { name: 'Master Stroke — SQ Series', products: [
-        { id:'ms-mss6', price:26500000, name:'MSS6', model:'MSS6', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ms-mss6', price:26500000, priceUnit:'set', name:'MSS6', model:'MSS6', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'SQ Woofer — Hand Crafted Audiophile series, High End.',
           photos:['assets/ms-mss6-1.webp','assets/ms-mss6-2.webp','assets/ms-mss6-3.webp','assets/ms-mss6-4.webp','assets/ms-mss6-5.webp'],
           specs:{'Speaker Size':'6.6 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.25 mH','VC Former':'BASV, 1-EISVW','Membrane':'Carbon fiber + resin','Magnet':'Neodymium','Net Weight':'1.38 kg','Outer Diameter':'158 mm','Mounting Diameter':'141 mm','Overall Depth':'62.3 mm','Qms':'6.64','Qts':'0.81','BL':'4.9 T·m','Centering Device':'Konex','Suspension Cone':'55sh Rubber','Fs':'68 Hz','Freq. Response':'60 Hz – 4.5 kHz','SPL':'87 dB','Power RMS (Hi-pass 150 Hz)':'200 W','Mms':'14.6 g','Cms':'374 µm/N','Vas':'14.5 L','Sd':'138.9 cm²','Xmax':'6.2 mm'} },
-        { id:'ms-mss3', price:18000000, name:'MSS3', model:'MSS3', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'ms-mss3', price:18000000, priceUnit:'set', name:'MSS3', model:'MSS3', category:'Midrange', emoji:'🔉', hasVideo:false,
           desc:'SQ Midrange — Hand Crafted Audiophile series, High End.',
           photos:['assets/ms-mss3-1.webp','assets/ms-mss3-2.webp','assets/ms-mss3-3.webp','assets/ms-mss3-4.webp','assets/ms-mss3-5.webp'],
           specs:{'Speaker Size':'4.3 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.09 mH','VC Former':'Kapton CCAW','Membrane':'Carbon fiber loaded with resin','Magnet':'Neodymium','Net Weight':'0.36 kg','Qms':'6.08','Qts':'0.65','BL':'3.76 T·m','Centering Device':'Konex','Suspension Cone':'50sh Rubber','Fs':'97 Hz','Freq. Response':'100 Hz – 12 kHz','SPL':'86 dB','Power RMS (Hi-pass 150 Hz)':'70 W','Mms':'4.74 g','Cms':'568 µm/N','Vas':'2.04 L','Sd':'50 cm²','Xmax':'3 mm','Outer Diameter':'105 mm','Mounting Depth':'41 mm'} },
       ]},
       { name: 'Master Stroke — MGL 3-Way Component', products: [
-        { id:'ms-mgl1', price:9150000, name:'MGL1', model:'MGL1', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'ms-mgl1', price:9150000, priceUnit:'set', name:'MGL1', model:'MGL1', category:'Tweeter', emoji:'🎺', hasVideo:false,
           desc:'Tweeter — concave metal diaphragm, CNC aluminium faceplate, 25mm copper voice coil, Neodymium magnet.',
           photos:['assets/ms-mgl1-1.webp','assets/ms-mgl1-2.webp','assets/ms-mgl1-3.webp','assets/ms-mgl1-4.webp','assets/ms-mgl1-5.webp'],
           specs:{'Rated Power':'20 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'1100 Hz – 40 kHz','Qms':'10.019','Qes':'1.412','Qts':'1.237','Magnet':'NdFeB','Mounting Depth':'26 mm','Mounting Diameter':'55 mm','Outer Diameter':'68.5 mm'} },
-        { id:'ms-mgl3', price:11000000, name:'MGL3', model:'MGL3', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'ms-mgl3', price:11000000, priceUnit:'set', name:'MGL3', model:'MGL3', category:'Midrange', emoji:'🔉', hasVideo:false,
           desc:'Midrange — vented die cast aluminium chassis, Neodymium magnet, special treatment metal cone.',
           photos:['assets/ms-mgl3-1.webp','assets/ms-mgl3-2.webp','assets/ms-mgl3-3.webp','assets/ms-mgl3-4.webp','assets/ms-mgl3-5.webp'],
           specs:{'Rated Power':'30 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'145 Hz – 15 kHz','Qms':'5.381','Qes':'0.668','Qts':'0.594','Mms':'3.346 g','Vas':'0.558 L','Magnet':'NdFeB','Mounting Depth':'40 mm','Mounting Diameter':'73 mm','Outer Diameter':'92.5 mm'} },
-        { id:'ms-mgl6', price:15000000, name:'MGL6', model:'MGL6', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ms-mgl6', price:15000000, priceUnit:'set', name:'MGL6', model:'MGL6', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'Woofer — special treatment metal cone, CNC motor metal parts, large Ferrite magnet, vented die cast chassis.',
           photos:['assets/ms-mgl6-1.webp','assets/ms-mgl6-2.webp','assets/ms-mgl6-3.webp','assets/ms-mgl6-4.webp','assets/ms-mgl6-5.webp'],
           specs:{'System':'3-way 6.5″ & 3.5″ & 1″ active component set','Power RMS':'60 W','Power Max':'120 W','Voice Coil':'35.6 mm','Freq. Response':'60 Hz – 40 kHz','SPL':'88 dB','DC Resistance (Re)':'3.9 Ω','Fs':'68 Hz','Xmax':'6.2 mm','Vas':'8.15 L','Qts':'0.397','Qms':'6.606','Qes':'0.423','Mounting Diameter':'144 mm','Mounting Depth':'71 mm','Net Weight':'4.2 kg'} },
       ]},
       { name: 'K Series Speaker', products: [
-        { id:'st-k1c', price:7800000, priceUnit:'pasang', name:'K1C', model:'K1C', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'st-k1c', price:7800000, priceUnit:'pair', name:'K1C', model:'K1C', category:'Tweeter', emoji:'🎺', hasVideo:false,
           desc:'K Series Tweeter (per Pair) — Neodymium magnet, high sensitivity pod-style tweeter.',
           photos:['assets/st-k1c-1.webp','assets/st-k1c-2.webp'],
           specs:{'Impedansi':'6 Ω','Freq. Response':'700 Hz – 20 kHz','Rated Power':'20 W','Sensitivity':'90 dB','Qms':'1.464','Qes':'1.619','Qts':'0.769','Magnet':'NdFeB','Mounting Diameter':'56 mm','Mounting Depth':'23.5 mm','Outer Diameter':'62.4 mm'} },
-        { id:'st-k3c', price:9500000, priceUnit:'pasang', name:'K3C', model:'K3C', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'st-k3c', price:9500000, priceUnit:'pair', name:'K3C', model:'K3C', category:'Midrange', emoji:'🔉', hasVideo:false,
           desc:'K Series 3" Midrange (per Pair) — Neodymium magnet, Made in Italy by GT Trading.',
           photos:['assets/st-k3c-1.webp','assets/st-k3c-2.webp','assets/st-k3c-3.webp','assets/st-k3c-4.webp'],
           specs:{'Impedansi':'4 Ω','Freq. Response':'125 Hz – 15 kHz','Rated Power':'30 W','Sensitivity':'88 dB','Qms':'4.43','Qes':'0.46','Qts':'0.42','Mms':'3.93 g','Vas':'1.42 L','Magnet':'Neodymium','Mounting Diameter':'80 mm','Mounting Depth':'43 mm','Outer Diameter':'93 mm'} },
-        { id:'st-k4c', price:11000000, priceUnit:'pasang', name:'K4C', model:'K4C', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'st-k4c', price:11000000, priceUnit:'pair', name:'K4C', model:'K4C', category:'Midrange', emoji:'🔉', hasVideo:false,
           desc:'K Series 4" Midrange (per Pair) — Neodymium magnet, Made in Italy by GT Trading.',
           photos:['assets/st-k4c-1.webp','assets/st-k4c-2.webp','assets/st-k4c-3.webp','assets/st-k4c-4.webp'],
           specs:{'Impedansi':'4 Ω','Freq. Response':'130 Hz – 10 kHz','Rated Power':'30 W','Sensitivity':'87 dB','Qms':'2.809','Qes':'0.628','Qts':'0.513','Mms':'3.515 g','Vas':'1.775 L','Magnet':'NdFeB','Mounting Diameter':'96 mm','Mounting Depth':'43 mm','Outer Diameter':'110.5 mm'} },
-        { id:'st-k6c', price:11000000, priceUnit:'pasang', name:'K6C', model:'K6C', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'st-k6c', price:11000000, priceUnit:'pair', name:'K6C', model:'K6C', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'K Series 6" Woofer (per Pair) — Ferrite magnet, Developed in Italy by GT Trading.',
           photos:['assets/st-k6c-1.webp','assets/st-k6c-2.webp','assets/st-k6c-3.webp','assets/st-k6c-4.webp'],
           specs:{'Impedansi':'4 Ω','Freq. Response':'50 Hz – 8 kHz','Rated Power':'60 W','Sensitivity':'88 dB','Qms':'4.424','Qes':'0.599','Qts':'0.525','Mms':'14.662 g','Vas':'15.92 L','Magnet':'Ferrite','Mounting Diameter':'148 mm','Mounting Depth':'77 mm','Outer Diameter':'168 mm'} },
-        { id:'st-k8c', price:18750000, priceUnit:'pasang', name:'K8C', model:'K8C', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'st-k8c', price:18750000, priceUnit:'pair', name:'K8C', model:'K8C', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/st-k8c-1.webp','assets/st-k8c-2.webp','assets/st-k8c-3.webp','assets/st-k8c-4.webp'],
           desc:'K Series 8" Woofer (per Pair).',
           specs:{'Impedansi':'4 Ω','Freq. Response':'47 Hz – 3 kHz','Rated Power':'60 W','Sensitivity':'88 dB','Qms':'3.531','Qes':'0.719','Qts':'0.597','Mms':'29.556 g','Vas':'26.76 L','Magnet':'Ferrite','Mounting Diameter':'188 mm','Mounting Depth':'82 mm','Outer Diameter':'211 mm'} },
       ]},
       { name: 'Coaxial', products: [
-        { id:'st-q4c', price:11000000, name:'Q4C', model:'Q4C', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'st-q4c', price:11000000, priceUnit:'set', name:'Q4C', model:'Q4C', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/st-q4c-1.webp','assets/st-q4c-2.webp','assets/st-q4c-3.webp','assets/st-q4c-4.webp'],
           desc:'Same Point Coaxial Speaker — vented die cast chassis, Neodymium magnet, 1.4" voice coil, 1.2" titanium dome tweeter.',
           specs:{'Impedansi':'4 Ω','Freq. Response':'127 Hz – 20 kHz','Rated Power':'30 W','Sensitivity':'95 dB','Qms':'4.576','Qes':'0.304','Qts':'0.285','Mms':'2.246 g','Vas':'1.646 L','Magnet':'NdFeB','Mounting Diameter':'81 mm','Mounting Depth':'34 mm'} },
@@ -2715,7 +2719,7 @@ const BRANDS = [
           specs:{'Impedansi':'2.8 Ω','Rated Power':'60 W','Sensitivity':'88 dB','Freq. Response':'60 Hz – 20 kHz','Mounting Depth':'64 mm','Mounting Diameter':'144 mm'} },
       ]},
       { name: 'SEC Series', products: [
-        { id:'st-sec650c', price:1950000, name:'SEC650C', model:'SEC650C', category:'Speaker', emoji:'🔊', hasVideo:true,
+        { id:'st-sec650c', price:1950000, priceUnit:'set', name:'SEC650C', model:'SEC650C', category:'Speaker', emoji:'🔊', hasVideo:true,
           photos:['assets/st-sec650c-1.webp','assets/st-sec650c-2.webp','assets/st-sec650c-3.webp','assets/st-sec650c-4.webp','assets/st-sec650c-5.webp'],
           video:'assets/st-sec650c.mp4?v=1', videoPoster:'assets/st-sec650c-poster.jpg?v=1',
           desc:'6.5" 2-Way Component Speaker Set — STEG SEC Series, Made in Italy by GT Trading.',
@@ -2730,11 +2734,11 @@ const BRANDS = [
           photos:['assets/st-sst90-3.webp','assets/st-sst90-4.webp','assets/st-sst90-1.webp','assets/st-sst90-2.webp','assets/st-sst90-5.webp'],
           desc:'3.5" AMT Ultra Air Motion Tweeter — Advanced Air Motion Transformer, CNC aluminium panel, Neo magnet.',
           specs:{'DCR Impedance':'3.2 Ω','Nominal Impedance':'4 Ω','Sensitivity':'92 dB','Fs':'2.5 kHz','Freq. Up To':'35 kHz','Freq. Cut':'≥ 2.7 kHz','External Diameter':'90 mm','Installation Diameter':'68 mm','Installation Depth':'29.5 mm','Diaphragm':'Aluminum Foil','Panel':'CNC Aluminum'} },
-        { id:'st-sst50', price:4200000, name:'SST50', model:'SST50', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'st-sst50', price:4200000, priceUnit:'set', name:'SST50', model:'SST50', category:'Tweeter', emoji:'🎺', hasVideo:false,
           photos:['assets/st-sst50-4.webp','assets/st-sst50-1.webp','assets/st-sst50-2.webp','assets/st-sst50-3.webp'],
           desc:'2.2" AMT Ultra Air Motion Tweeter — Advanced Air Motion Transformer, CNC aluminium panel, Neo magnet.',
           specs:{'DCR Impedance':'3.2 Ω','Nominal Impedance':'4 Ω','Sensitivity':'89 dB','Fs':'3.3 kHz','Freq. Up To':'50 kHz','Freq. Cut':'≥ 4.5 kHz','External Diameter':'55 mm','Installation Diameter':'42 mm','Installation Depth':'21.5 mm','Diaphragm':'Aluminum Foil','Panel':'CNC Aluminum'} },
-        { id:'st-sff1', price:5200000, name:'SFF1', model:'SFF1', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'st-sff1', price:5200000, priceUnit:'set', name:'SFF1', model:'SFF1', category:'Tweeter', emoji:'🎺', hasVideo:false,
           photos:['assets/st-sff1-1.webp','assets/st-sff1-2.webp'],
           desc:'Ultra Atmos Sound Speaker — aluminum foil diaphragm, CNC aluminium panel, with pod mounting bracket.',
           specs:{'DCR Impedance':'3.4 Ω','Nominal Impedance':'4 Ω','Sensitivity':'83 dB','Fs':'165 Hz','Freq. Up To':'15 kHz','External Diameter':'70 mm','Installation Diameter':'61.5 mm','Installation Depth':'21 mm','Diaphragm':'Aluminum Foil','Panel':'CNC Aluminum'} },
@@ -2742,7 +2746,7 @@ const BRANDS = [
           photos:['assets/st-mz650ctw-1.webp','assets/st-mz650ctw-2.webp','assets/st-mz650ctw-3.webp','assets/st-mz650ctw-4.webp'],
           desc:'Tweeter Speaker — Transparent Silk diaphragm.',
           specs:{'Diaphragm':'Transparent Silk','Voice Coil':'28 mm','DC Impedance':'4 Ω','Continuous Power':'30 W','Freq. Response':'1300 Hz – 22 kHz','Sensitivity':'90 dB','Weight':'0.11 kg','Mounting Depth':'21 mm','Mounting Diameter':'49.5 mm'} },
-        { id:'st-mlg1tw', price:1950000, name:'MLG1TW', model:'MLG1TW', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'st-mlg1tw', price:1950000, priceUnit:'set', name:'MLG1TW', model:'MLG1TW', category:'Tweeter', emoji:'🎺', hasVideo:false,
           photos:['assets/st-mlg1tw-1.webp','assets/st-mlg1tw-2.webp','assets/st-mlg1tw-3.webp','assets/st-mlg1tw-4.webp','assets/st-mlg1tw-5.webp'],
           desc:'High-Frequency Tweeter Speaker — copper voice coil, Neodymium magnet.',
           specs:{'Impedance':'4 Ω','Rated Power':'20 W','Sensitivity':'90 dB','Freq. Response':'1500 Hz – 22 kHz','Voice Coil Diameter':'25 mm','Voice Coil Wire':'Copper','Magnet System':'Neodymium','Mounting Depth':'15 mm','Mounting Diameter':'44.5 mm'} },
@@ -2756,7 +2760,7 @@ const BRANDS = [
           desc:'Midrange Speaker — Special Composite Material cone.',
           specs:{'Voice Coil':'25 mm','Continuous Power':'30 W','DCR Impedance':'3.6 Ω','Sensitivity':'88 dB','Freq. Response':'100 Hz – 20 kHz','Qms':'3.9','Qts':'0.46','Weight':'0.245 kg','Mounting Depth':'64 mm','Mounting Diameter':'144 mm'},
           photos:['assets/st-ms30-1.webp','assets/st-ms30-2.webp','assets/st-ms30-3.webp','assets/st-ms30-4.webp'] },
-        { id:'st-sff3', price:9500000, name:'SFF3', model:'SFF3', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'st-sff3', price:9500000, priceUnit:'set', name:'SFF3', model:'SFF3', category:'Midrange', emoji:'🔉', hasVideo:false,
           photos:['assets/st-sff3-1.webp','assets/st-sff3-2.webp','assets/st-sff3-3.webp','assets/st-sff3-4.webp','assets/st-sff3-5.webp'],
           desc:'Midrange Speaker — vented die cast chassis, Neo magnet, customized rubber surround paper cone.',
           specs:{'Impedansi':'4 Ω','Freq. Response':'125 Hz – 15 kHz','Rated Power':'30 W','Sensitivity':'87 dB','Qms':'1.584','Qts':'0.397','Magnet':'NdFeB','Mounting Diameter':'75 mm','Mounting Depth':'49 mm'} },
@@ -2965,7 +2969,7 @@ const BRANDS = [
           photos:['assets/dm-fuseminianl-1.webp','assets/dm-fuseminianl-2.webp'] },
       ]},
       { name: 'Cable Series', products: [
-        { id:'dm-rca', priceList:{ '1M':2450000, '2M':3250000, '3M':4000000, '5M':5600000 }, priceUnit:'pasang', name:'RCA Quadruple Series', model:'DM-RCA', category:'Cable', emoji:'🔗', hasVideo:false,
+        { id:'dm-rca', priceList:{ '1M':2450000, '2M':3250000, '3M':4000000, '5M':5600000 }, priceUnit:'pair', name:'RCA Quadruple Series', model:'DM-RCA', category:'Cable', emoji:'🔗', hasVideo:false,
           desc:'High performance RCA cable, high purity copper, double shielding, 24K Gold plated RCA jack.',
           specs:{'Conductor':'17 Ing Single Crystal Copper 99.99%','First Shield':'99.99% Copper Braided Mesh','Second Shield':'Aluminum Foil','Connector':'Pure Copper 24K Gold Plated','Unit':'1M / 2M / 3M / 5M Pair'},
           photos:['assets/dm-rca-1.webp','assets/dm-rca-2.webp','assets/dm-rca-3.webp'] },
@@ -3003,19 +3007,19 @@ const BRANDS = [
     desc: 'Kabel RCA premium dengan tembaga anaerobic kemurnian tinggi dan multi-shield, tersedia dalam empat seri dari entry hingga flagship.',
     lines: [
       { name: 'RCA Cable', products: [
-        { id:'og-reddragon', priceList:{ '1M':2100000, '2M':2600000, '3M':3300000, '5M':4500000 }, priceUnit:'pasang', name:'Red Dragon Series', model:'OG Red Dragon', category:'Cable', emoji:'🔗', hasVideo:false,
+        { id:'og-reddragon', priceList:{ '1M':2100000, '2M':2600000, '3M':3300000, '5M':4500000 }, priceUnit:'pair', name:'Red Dragon Series', model:'OG Red Dragon', category:'Cable', emoji:'🔗', hasVideo:false,
           photos:['assets/og-reddragon-1.webp','assets/og-reddragon-2.webp','assets/og-reddragon-3.webp'],
           desc:'RCA Cable flagship — Anaerobic Copper 4N, 6 shield, thick gold plating RCA plug.',
           specs:{'Conductor':'Anaerobic Copper 4N','Pair':'Twisted Pair','Shield':'6 Shield (SR-PVC + Fiber + Al-Mylar + Tin-Plated Copper + PVC)','Plug':'Thick Gold Plating RCA','Unit':'1M / 2M / 3M / 5M Pair'} },
-        { id:'og-reference', priceList:{ '1M':1600000, '2M':2100000, '3M':2300000, '5M':2950000 }, priceUnit:'pasang', name:'Reference Series', model:'OG Reference', category:'Cable', emoji:'🔗', hasVideo:false,
+        { id:'og-reference', priceList:{ '1M':1600000, '2M':2100000, '3M':2300000, '5M':2950000 }, priceUnit:'pair', name:'Reference Series', model:'OG Reference', category:'Cable', emoji:'🔗', hasVideo:false,
           photos:['assets/og-reference-1.webp','assets/og-reference-2.webp','assets/og-reference-3.webp'],
           desc:'RCA Cable — Anaerobic Copper 3N, 5 shield, twisted pair.',
           specs:{'Conductor':'Anaerobic Copper 3N','Pair':'Twisted Pair','Shield':'5 Shield (SR-PVC + Al-Mylar + Tin-Plated Copper + PVC)','Unit':'1M / 2M / 3M / 5M Pair'} },
-        { id:'og-azure', priceList:{ '1M':1050000, '2M':1200000, '3M':1450000, '5M':1850000 }, priceUnit:'pasang', name:'Azure Series', model:'OG Azure', category:'Cable', emoji:'🔗', hasVideo:false,
+        { id:'og-azure', priceList:{ '1M':1050000, '2M':1200000, '3M':1450000, '5M':1850000 }, priceUnit:'pair', name:'Azure Series', model:'OG Azure', category:'Cable', emoji:'🔗', hasVideo:false,
           photos:['assets/og-azure-1.webp','assets/og-azure-2.webp','assets/og-azure-3.webp'],
           desc:'RCA Cable — Anaerobic Copper 99.9% (7×2×0.10 TC), 4 shield.',
           specs:{'Conductor':'Anaerobic Copper 99.9% (7×2×0.10 TC)','Shield':'4 Shield (SR-PVC + Al-Mylar + Tin-Plated Copper + PVC)','Unit':'1M / 2M / 3M / 5M Pair'} },
-        { id:'og-streamline', priceList:{ '1M':580000, '2M':650000, '3M':770000, '5M':1100000 }, priceUnit:'pasang', name:'Stream Line Series', model:'OG Stream Line', category:'Cable', emoji:'🔗', hasVideo:false,
+        { id:'og-streamline', priceList:{ '1M':580000, '2M':650000, '3M':770000, '5M':1100000 }, priceUnit:'pair', name:'Stream Line Series', model:'OG Stream Line', category:'Cable', emoji:'🔗', hasVideo:false,
           photos:['assets/og-streamline-1.webp','assets/og-streamline-2.webp','assets/og-streamline-3.webp','assets/og-streamline-4.webp'],
           desc:'RCA Cable entry — Anaerobic Copper 99.99%, 4 shield.',
           specs:{'Conductor':'Anaerobic Copper 99.99%','Shield':'4 Shield (LD-PE + Polyvinyl + PVC)','Unit':'1M / 2M / 3M / 5M Pair'} },
@@ -3746,13 +3750,16 @@ function filterProducts(cat, brandId) {
   if (brand) renderProducts(brand, cat);
 }
 
-// Harga jual umum (SRP) opsional per produk: `price` (angka rupiah) + `priceUnit` opsional ('set', 'pcs', 'pasang', …)
+// Harga jual umum (SRP) opsional per produk: `price` (angka rupiah) + `priceUnit` opsional ('set', 'pcs', 'pair', …)
 const fmtRp = n => 'Rp ' + Number(n).toLocaleString('id-ID');
 // SRP: `price` (satu harga) atau `priceList` ({ varian: harga }, mis. kabel per panjang → tampil "mulai Rp …")
 const hasPrice = p => !!(p.price || (p.priceList && Object.keys(p.priceList).length));
 const unitText = p => p.priceUnit ? ' / ' + p.priceUnit : '';
-const srpText = p => p.price ? fmtRp(p.price) + unitText(p)
-  : hasPrice(p) ? 'mulai ' + fmtRp(Math.min(...Object.values(p.priceList))) + unitText(p) : '';
+const srpFrom = p => !p.price && hasPrice(p);
+const srpAmount = p => p.price || (hasPrice(p) ? Math.min(...Object.values(p.priceList)) : 0);
+const srpText = p => hasPrice(p) ? (srpFrom(p) ? 'mulai ' : '') + fmtRp(srpAmount(p)) + unitText(p) : '';
+// Baris harga di kartu produk: label kecil di kiri, harga di kanan (tidak berebut tempat dengan nama)
+const srpRow = p => hasPrice(p) ? `<div class="product-price-row" title="Harga jual (SRP)"><span class="pp-tag">${srpFrom(p) ? 'Mulai' : 'SRP'}</span><span class="product-price">${fmtRp(srpAmount(p))}${p.priceUnit ? `<small> / ${p.priceUnit}</small>` : ''}</span></div>` : '';
 
 function productCard(brand, p) {
   const photo = p.photo
@@ -3768,11 +3775,9 @@ function productCard(brand, p) {
         ${sb ? `<span class="product-stock-badge ${sb.cls}">${sb.label}</span>` : ''}
       </div>
       <div class="product-info">
-        <div class="product-name-row">
-          <div class="product-name">${p.name}</div>
-          ${hasPrice(p) ? `<div class="product-price" title="Harga jual (SRP)">${srpText(p)}</div>` : ''}
-        </div>
+        <div class="product-name">${p.name}</div>
         <div class="product-model">${p.model}</div>
+        ${srpRow(p)}
       </div>
     </div>`;
 }
