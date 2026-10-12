@@ -1532,6 +1532,80 @@ body {
     .rd-grid { grid-template-columns: 1fr 1fr; } .rd-grid .rd-wide { grid-column: span 2; }
     .rd-row { grid-template-columns: 28px 64px 1fr; } .rd-btns { grid-column: 3; }
   }
+  /* ── Tanya Jawab Partner (admin) ── */
+  body:not(.is-staff) .staff-sec, body:not(.is-staff) .staff-nav { display: none !important; }
+  .rd-tabs { margin-top: 12px; }
+  .rd-actions[hidden], #qa-pane[hidden], #rd-pane[hidden] { display: none !important; }
+  .qa-live { margin-bottom: 16px; padding: 16px 18px; border-radius: 14px; border: 1px solid var(--border); background: linear-gradient(135deg, #0d1424, #151d33); color: #e8ecf5; }
+  .qa-live.on { border-color: #16a34a; box-shadow: 0 0 0 1px rgba(34,197,94,.35); }
+  .qa-live-head { display: flex; align-items: center; gap: 8px; font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #9aa5bd; }
+  .qa-dot { width: 9px; height: 9px; border-radius: 50%; background: #64748b; flex-shrink: 0; }
+  .qa-dot.on { background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: qaPulse 1.6s infinite; }
+  @keyframes qaPulse { 50% { opacity: .35; } }
+  .qa-live-q { font: 600 19px/1.4 var(--f-display); margin: 10px 0 4px; color: #fff; }
+  .qa-live-who { font-size: 13px; color: #e9c46a; }
+  .qa-live-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .qa-live .gt-btn.ghost { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #e8ecf5; }
+  .qa-form { margin-bottom: 20px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+  .qa-form.editing { border-color: var(--accent); }
+  .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .qa-grid label { display: flex; flex-direction: column; gap: 5px; font: 600 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); }
+  .qa-grid .qa-wide { grid-column: span 2; }
+  .qa-grid label[hidden] { display: none; }
+  .qa-grid textarea { resize: vertical; font: 14px/1.5 var(--f-body); }
+  .qa-hint { margin-left: auto; align-self: center; font-size: 11.5px; color: var(--fg-muted); }
+  .qa-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
+  .qa-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .qa-search { flex: 1; min-width: 180px; }
+  .qa-row { display: grid; grid-template-columns: 58px 1fr auto; gap: 12px; align-items: start; padding: 12px 14px; }
+  .qa-row + .qa-row { border-top: 1px solid var(--border); }
+  .qa-row.onair { background: rgba(34,197,94,.07); box-shadow: inset 3px 0 0 #16a34a; }
+  .qa-no { font: 700 15px var(--f-mono); color: var(--accent); } .qa-no small { display: block; font-size: 11px; font-weight: 500; color: var(--fg-muted); margin-top: 2px; }
+  .qa-q { font-size: 14.5px; line-height: 1.5; color: var(--fg); white-space: pre-wrap; }
+  .qa-who { font-size: 12px; color: var(--fg-muted); margin-top: 4px; }
+  .qa-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .qa-badge { font: 700 10px var(--f-mono); letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 20px; background: var(--surface2); color: var(--fg-muted); white-space: nowrap; }
+  .qa-badge.s-tampil { background: rgba(59,130,246,.14); color: #3b82f6; }
+  .qa-badge.s-dijawab { background: rgba(34,197,94,.14); color: #16a34a; }
+  .qa-badge.onair { background: #16a34a; color: #fff; }
+  .qa-row .rd-btns { flex-wrap: wrap; justify-content: flex-end; }
+  @media (max-width: 640px) {
+    .qa-grid { grid-template-columns: 1fr; } .qa-grid .qa-wide { grid-column: auto; }
+    .qa-hint { display: none; }
+    .qa-row { grid-template-columns: 44px 1fr; } .qa-side { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+    .qa-live-q { font-size: 16px; }
+  }
+
+  /* ── Layar videotron (?layar=qa) ── */
+  body.screen-mode { overflow: hidden; }
+  body.screen-mode #landing { display: none !important; }
+  .qa-screen { position: fixed; inset: 0; z-index: 8500; display: flex; flex-direction: column; color: #fff; font-family: var(--f-body);
+    background: radial-gradient(ellipse at 50% 120%, rgba(233,196,106,.20), transparent 60%), radial-gradient(ellipse at 0% 0%, #1b2440, transparent 55%), #05070d; }
+  .qa-screen[hidden] { display: none; }
+  .qa-screen.hide-cursor, .qa-screen.hide-cursor * { cursor: none !important; }
+  .qs-top { display: flex; align-items: center; gap: 2.2vw; padding: 3vh 4vw 0; }
+  .qs-logo { height: max(34px, 6.5vh); width: auto; }
+  .qs-event { display: flex; flex-direction: column; gap: .4vh; border-left: 2px solid rgba(233,196,106,.6); padding-left: 2vw; }
+  .qs-event b { font: 700 max(13px, 2.2vh) var(--f-mono); letter-spacing: .22em; color: #e9c46a; }
+  .qs-event span { font: 600 max(14px, 2.6vh) var(--f-display); color: #dfe5f2; }
+  .qs-status { margin-left: auto; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; opacity: .55; }
+  .qs-status.off { background: #ef4444; opacity: 1; }
+  .qs-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2vh 7vw; text-align: center; }
+  .qs-stage > div { animation: qsIn .6s ease both; max-width: 100%; }
+  @keyframes qsIn { from { opacity: 0; transform: translateY(2.5vh); } to { opacity: 1; transform: none; } }
+  .qs-kicker { font: 700 max(12px, 2.1vh) var(--f-mono); letter-spacing: .3em; color: #e9c46a; text-transform: uppercase; }
+  .qs-who { font: 700 max(18px, 4.2vh) var(--f-display); margin: 1.2vh 0 3.5vh; color: #fff; }
+  .qs-who small { display: block; font: 500 max(13px, 2.6vh) var(--f-body); color: #aab4c8; margin-top: .6vh; }
+  .qs-quote { font-family: var(--f-display); font-weight: 600; line-height: 1.32; color: #fff; margin: 0; text-wrap: balance; }
+  .qs-quote::before { content: '\201C'; color: #e9c46a; } .qs-quote::after { content: '\201D'; color: #e9c46a; }
+  .qs-idle h1 { font: 700 min(6vw, 11vh)/1.15 var(--f-display); margin: 2.5vh 0; color: #fff; }
+  .qs-idle h1 em { font-style: normal; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .qs-idle p { font-size: max(15px, 3vh); color: #aab4c8; margin: 0; }
+  .qs-login { margin-top: 4vh; padding: 12px 22px; border-radius: 12px; border: 1px solid #e9c46a; background: transparent; color: #e9c46a; font: 600 16px var(--f-body); cursor: pointer; }
+  .qs-foot { padding: 0 4vw 2.5vh; font: 500 max(11px, 1.7vh) var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.35); }
+  .qs-fs { position: absolute; right: 18px; bottom: 16px; padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #dfe5f2; font: 600 13px var(--f-body); cursor: pointer; }
+  .qa-screen.is-fs .qs-fs { display: none; }
+
   /* ── Shopping Gathering ── */
   .gt-terms { margin-top: 8px; font-size: 12px; color: var(--fg-muted); line-height: 1.55; max-width: 900px; }
   .gt-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin: 4px 0 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
@@ -2045,16 +2119,20 @@ body {
       <div id="brand-nav-list"></div>
     </div>
 
-    <div class="sidebar-section sidebar-editor editor-only">
+    <div class="sidebar-section sidebar-editor staff-sec">
       <hr class="sidebar-divider">
-      <div class="sidebar-label">Editor</div>
+      <div class="sidebar-label">Admin &amp; Editor</div>
       <button class="sidebar-item editor-only" id="nav-dealers" onclick="openDealers()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
         Kelola Dealer
       </button>
-      <button class="sidebar-item editor-only" id="nav-rundown" onclick="openRundown()">
+      <button class="sidebar-item staff-nav" id="nav-rundown" onclick="openRundown()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
         Run Down Gathering
+      </button>
+      <button class="sidebar-item staff-nav" id="nav-qa" onclick="openRundown('qa')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg>
+        Tanya Jawab Partner
       </button>
     </div>
   </aside>
@@ -2132,20 +2210,24 @@ body {
     </div>
 
     <!-- VIEW: Kelola Dealer (khusus Editor) -->
-    <!-- VIEW: Run Down Gathering 2026 (khusus Editor; data di tabel Supabase gathering_rundown) -->
+    <!-- VIEW: Gathering 2026 — Run Down + Tanya Jawab Partner (Admin & Editor; tabel gathering_rundown, gathering_questions, gathering_screen) -->
     <div class="view" id="view-rundown">
       <div class="page-header rd-head">
         <div>
-          <div class="page-title">Run Down Gathering 2026</div>
-          <div class="page-subtitle">Jadwal acara Gathering CAI 2026 — tambah, ubah, dan centang sesi yang sudah selesai. Khusus akun Editor.</div>
+          <div class="page-title">Gathering CAI 2026</div>
+          <div class="page-subtitle" id="rd-subtitle">Run down acara — tambah, ubah, dan centang sesi yang sudah selesai. Khusus Admin &amp; Editor.</div>
+          <div class="gt-tabs rd-tabs">
+            <button class="filter-chip active" id="rd-tab-rundown" onclick="setRdTab('rundown')">🗓 Run Down Acara</button>
+            <button class="filter-chip" id="rd-tab-qa" onclick="setRdTab('qa')">🎤 Tanya Jawab Partner</button>
+          </div>
         </div>
-        <div class="rd-actions">
+        <div class="rd-actions" id="rd-actions">
           <button class="gt-btn ghost" onclick="loadRundown()">↻ Muat ulang</button>
           <button class="gt-btn ghost" onclick="printRundown()">🖨 Cetak</button>
           <button class="gt-btn confirm" onclick="openRdForm()">＋ Tambah Sesi</button>
         </div>
       </div>
-      <div class="rd-wrap">
+      <div class="rd-wrap" id="rd-pane">
       <div class="rd-now" id="rd-now" hidden></div>
       <form class="rd-form" id="rd-form" hidden onsubmit="saveRdItem(); return false;">
         <div class="rd-form-title" id="rd-form-title">Tambah sesi</div>
@@ -2164,6 +2246,33 @@ body {
         </div>
       </form>
       <div id="rd-list"><div class="stock-empty">Memuat…</div></div>
+      </div>
+      <div class="rd-wrap" id="qa-pane" hidden>
+        <div class="qa-live" id="qa-live"></div>
+        <form class="qa-form" id="qa-form" onsubmit="qaSave(true); return false;">
+          <div class="rd-form-title" id="qa-form-title">Input pertanyaan dealer</div>
+          <div class="qa-grid">
+            <label>Nama Dealer<input class="gt-input" id="qa-dealer" list="qa-dealer-list" maxlength="80" placeholder="Ketik / pilih nama dealer" autocomplete="off"></label>
+            <label>Kota<input class="gt-input" id="qa-city" maxlength="40" placeholder="opsional"></label>
+            <label class="qa-wide">Pertanyaan<textarea class="gt-input" id="qa-question" rows="3" maxlength="600" placeholder="Ketik pertanyaan dari dealer…" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();qaSave(!qaEditId);}"></textarea></label>
+            <label class="qa-wide" id="qa-answer-wrap" hidden>Catatan jawaban / tindak lanjut<textarea class="gt-input" id="qa-answer" rows="2" maxlength="1000" placeholder="opsional — ringkasan jawaban CAI, janji tindak lanjut, dll."></textarea></label>
+          </div>
+          <datalist id="qa-dealer-list"></datalist>
+          <div class="rd-form-actions">
+            <button class="gt-btn confirm" type="submit" id="qa-save-show">📺 Simpan &amp; Tampilkan</button>
+            <button class="gt-btn ghost" type="button" id="qa-save" onclick="qaSave(false)">＋ Simpan ke Antrian</button>
+            <button class="gt-btn ghost" type="button" id="qa-cancel" onclick="qaCancelEdit()" hidden>Batal</button>
+            <span class="qa-hint">Ctrl + Enter = simpan &amp; tampilkan</span>
+          </div>
+        </form>
+        <div class="line-header"><span class="line-name">Rekap Pertanyaan</span><span class="line-count" id="qa-count">0</span><span class="gt-sub">Listening and Understanding Partner</span></div>
+        <div class="qa-tools">
+          <div class="qa-chips" id="qa-chips"></div>
+          <input class="gt-input qa-search" id="qa-search" type="search" placeholder="Cari dealer / pertanyaan…" oninput="qaSearch=this.value;renderQa()">
+          <button class="gt-btn ghost" onclick="exportQa()">⬇ Excel</button>
+          <button class="gt-btn ghost" onclick="printQa()">🖨 Cetak</button>
+        </div>
+        <div id="qa-list"><div class="stock-empty">Memuat…</div></div>
       </div>
     </div>
 
@@ -2396,9 +2505,13 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
       <span>Dealer</span>
     </button>
-    <button class="mobile-nav-item editor-only" id="mnav-rundown" onclick="openRundown()">
+    <button class="mobile-nav-item staff-nav" id="mnav-rundown" onclick="openRundown()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
       <span>Run Down</span>
+    </button>
+    <button class="mobile-nav-item staff-nav" id="mnav-qa" onclick="openRundown('qa')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg>
+      <span>Tanya Jawab</span>
     </button>
     <button class="mobile-nav-item" id="mnav-dsp" onclick="openDspSoftware()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
@@ -2455,6 +2568,14 @@ body {
 </div>
 
 <!-- DEALER LOGIN -->
+<!-- Layar videotron Tanya Jawab (dibuka lewat ?layar=qa, khusus Admin/Editor yang login) -->
+<div class="qa-screen" id="qa-screen" hidden>
+  <header class="qs-top"><img class="qs-logo" id="qs-logo" alt="CAI"><div class="qs-event"><b>GATHERING CAI 2026</b><span>Listening and Understanding Partner</span></div><span class="qs-status" id="qs-status" title="Status koneksi"></span></header>
+  <main class="qs-stage" id="qs-stage"></main>
+  <footer class="qs-foot">Concerto Audio Indonesia</footer>
+  <button class="qs-fs" id="qs-fs" onclick="qsFullscreen()">⛶ Layar penuh</button>
+</div>
+
 <div class="admin-overlay" id="login-overlay" onclick="if(event.target===this)closeLogin()">
   <div class="admin-panel" role="dialog" aria-modal="true" aria-label="Login dealer" style="width:min(92vw,420px)">
     <div class="admin-header">
@@ -2523,6 +2644,7 @@ body {
           <button class="admin-btn primary" onclick="syncFromSheet()" title="Ambil stok terbaru langsung dari Google Sheet">🔄 Sinkron Google Sheet</button>
           <button class="admin-btn ghost" onclick="toggleImport()">⬆ Import dari Excel</button>
           <button class="admin-btn ghost" onclick="closeAdmin(); openGathering('rekap')">🛍 Rekap Gathering</button>
+          <button class="admin-btn ghost" onclick="closeAdmin(); openRundown('qa')">🎤 Tanya Jawab Partner</button>
           <button class="admin-btn ghost editor-only" onclick="closeAdmin(); openDealers()">👥 Kelola Dealer</button>
         </div>
         <div class="sheet-link" id="sheet-link"></div>
@@ -2568,7 +2690,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T06:53:06Z';
+const LAST_UPDATE = '2026-10-12T07:21:03Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4067,7 +4189,7 @@ function showView(viewId) {
   if (viewId === 'gathering') document.getElementById('nav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('nav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('nav-dealers')?.classList.add('active');
-  if (viewId === 'rundown') document.getElementById('nav-rundown')?.classList.add('active');
+  if (viewId === 'rundown') document.getElementById(rdTab === 'qa' ? 'nav-qa' : 'nav-rundown')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('nav-stock')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
@@ -4081,7 +4203,7 @@ function showView(viewId) {
   if (viewId === 'gathering') document.getElementById('mnav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('mnav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('mnav-dealers')?.classList.add('active');
-  if (viewId === 'rundown') document.getElementById('mnav-rundown')?.classList.add('active');
+  if (viewId === 'rundown') document.getElementById(rdTab === 'qa' ? 'mnav-qa' : 'mnav-rundown')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('mnav-stock')?.classList.add('active');
 }
 
@@ -4647,7 +4769,8 @@ function onAuthChanged() {
     subscribeStock();
   } else {
     if (stockChannel) { supabase.removeChannel(stockChannel); stockChannel = null; }
-    stockMap = {}; stockLoaded = false; guideFiles = null; gtItems = null; gtOrders = null; gtTop = null;
+    stockMap = {}; stockLoaded = false; guideFiles = null; gtItems = null; gtOrders = null; gtTop = null; rdItems = null; qaItems = null;
+    if (qaChannel) { supabase.removeChannel(qaChannel); qaChannel = null; }
     refreshStockUI();
     if (['view-stock', 'view-guides', 'view-dealers', 'view-gathering'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
   }
@@ -4772,7 +4895,9 @@ function updateAuthUI() {
   document.body.classList.toggle('is-editor', isEditor());
   document.body.classList.toggle('is-staff', isAdmin());
   updateWaAccess();
-  if (!isEditor() && ['view-dealers', 'view-rundown'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
+  if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
+  if (!isAdmin() && document.getElementById('view-rundown')?.classList.contains('active')) showView('dashboard');
+  qaScreenAuth();
   const btn = document.getElementById('auth-btn');
   if (btn) btn.title = authUser ? `Login sebagai ${accountLabel(authUser)} (${ROLE_LABEL[userRole()] || 'Dealer'}) — klik untuk keluar` : 'Login dealer';
 }
@@ -6323,18 +6448,19 @@ function gtReset() {
 
 
 /* ══════════════════════════════════════════
-   RUN DOWN GATHERING 2026 — khusus Editor
-   Tabel Supabase `gathering_rundown` (RLS: hanya role editor). Sesi dikelompokkan per tanggal & diurutkan per jam;
+   RUN DOWN GATHERING 2026 — khusus Admin & Editor
+   Tabel Supabase `gathering_rundown` (RLS: role admin/editor). Sesi dikelompokkan per tanggal & diurutkan per jam;
    sesi yang sedang berlangsung / berikutnya ditandai otomatis (waktu WIB).
 ══════════════════════════════════════════ */
 const RUNDOWN_TABLE = 'gathering_rundown';
 let rdItems = null, rdErr = '', rdEditId = null, rdTimer = null;
 
-function openRundown() {
-  if (!requireLogin(openRundown)) return;
-  if (!isEditor()) { showToast('Run Down Gathering khusus akun Editor.'); return; }
+function openRundown(tab) {
+  if (!requireLogin(() => openRundown(tab))) return;
+  if (!isAdmin()) { showToast('Menu Gathering 2026 khusus akun Admin & Editor.'); return; }
   showView('rundown');
   document.querySelector('.main')?.scrollTo(0, 0);
+  setRdTab(tab === 'qa' ? 'qa' : 'rundown');
   renderRundown();
   loadRundown();
   clearInterval(rdTimer);
@@ -6342,7 +6468,7 @@ function openRundown() {
 }
 
 async function loadRundown() {
-  if (!supabase || !isEditor()) return;
+  if (!supabase || !isAdmin()) return;
   try {
     const { data, error } = await supabase.from(RUNDOWN_TABLE).select('*').order('day').order('start_time');
     if (error) throw error;
@@ -6392,7 +6518,7 @@ function renderRundown() {
           <div class="rd-main"><div class="rd-title">${escHtml(x.title)}${live && live.id === x.id ? ' <span class="rd-live-tag">LIVE</span>' : ''}</div>
             <div class="rd-meta">${[x.pic ? '👤 ' + escHtml(x.pic) : '', x.location ? '📍 ' + escHtml(x.location) : ''].filter(Boolean).join('  ·  ')}</div>
             ${x.notes ? `<div class="rd-notes">${escHtml(x.notes)}</div>` : ''}</div>
-          <div class="rd-btns"><button class="gt-btn ghost" onclick="openRdForm(${x.id})" title="Edit">✏️</button><button class="gt-btn ghost gt-del" onclick="deleteRdItem(${x.id})" title="Hapus">🗑</button></div>
+          <div class="rd-btns">${QA_SESSION_RE.test(x.title) ? `<button class="gt-btn ghost" onclick="setRdTab('qa')" title="Buka sistem tanya jawab">🎤 Tanya Jawab</button>` : ''}<button class="gt-btn ghost" onclick="openRdForm(${x.id})" title="Edit">✏️</button><button class="gt-btn ghost gt-del" onclick="deleteRdItem(${x.id})" title="Hapus">🗑</button></div>
         </div>`).join('')}</div></div>`;
   }).join('');
 }
@@ -6455,6 +6581,308 @@ function printRundown() {
       ${items.filter(x => x.day === d).map(x => `<tr><td>${rdT(x.start_time)}${x.end_time ? '–' + rdT(x.end_time) : ''}</td><td>${escHtml(x.title)}</td><td>${escHtml(x.pic || '')}</td><td>${escHtml(x.location || '')}</td><td>${escHtml(x.notes || '')}</td></tr>`).join('')}
       </tbody></table>`).join('')}`;
   window.print();
+}
+
+
+/* ══════════════════════════════════════════
+   TANYA JAWAB PARTNER — sesi "Listening and Understanding Partner" (Admin & Editor)
+   Admin mengetik pertanyaan dealer → tersimpan di `gathering_questions` (rekap) → tombol Tampilkan
+   menulis id pertanyaan ke `gathering_screen` (1 baris). Layar videotron = halaman ?layar=qa yang
+   membaca baris itu secara realtime (+ cek ulang tiap 4 detik).
+══════════════════════════════════════════ */
+const QA_TABLE = 'gathering_questions', QA_SCREEN = 'gathering_screen';
+const QA_SESSION = 'Listening and Understanding Partner';
+const QA_SESSION_RE = /listening|tanya jawab|q ?& ?a/i;
+const QA_STATUS = { baru: 'Antri', tampil: 'Sudah tampil', dijawab: 'Dijawab' };
+let qaItems = null, qaErr = '', qaScreenId = null, qaEditId = null, qaFilter = 'all', qaSearch = '', qaChannel = null, rdTab = 'rundown';
+
+function setRdTab(t) {
+  rdTab = t === 'qa' ? 'qa' : 'rundown';
+  const qa = rdTab === 'qa';
+  document.getElementById('rd-tab-rundown').classList.toggle('active', !qa);
+  document.getElementById('rd-tab-qa').classList.toggle('active', qa);
+  document.getElementById('rd-pane').hidden = qa;
+  document.getElementById('qa-pane').hidden = !qa;
+  document.getElementById('rd-actions').hidden = qa;
+  document.getElementById('rd-subtitle').innerHTML = qa
+    ? 'Sesi <b>Listening and Understanding Partner</b> — ketik pertanyaan dealer, tampilkan di videotron, semua otomatis masuk rekap.'
+    : 'Run down acara — tambah, ubah, dan centang sesi yang sudah selesai. Khusus Admin &amp; Editor.';
+  if (document.getElementById('view-rundown')?.classList.contains('active')) {
+    ['nav-rundown', 'nav-qa', 'mnav-rundown', 'mnav-qa'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+    document.getElementById(qa ? 'nav-qa' : 'nav-rundown')?.classList.add('active');
+    document.getElementById(qa ? 'mnav-qa' : 'mnav-rundown')?.classList.add('active');
+  }
+  if (qa) { renderQa(); loadQa(); subscribeQa(); }
+}
+
+function qaDbError(e) {
+  const m = String(e?.message || e);
+  return /does not exist|relation|schema cache/i.test(m) ? 'Tabel tanya jawab belum dibuat. Jalankan SQL "gathering_questions" di Supabase.' : 'Data tanya jawab tidak bisa dimuat: ' + m;
+}
+
+async function loadQa() {
+  if (!supabase || !isAdmin()) return;
+  try {
+    const [q, s] = await Promise.all([
+      supabase.from(QA_TABLE).select('*').order('id'),
+      supabase.from(QA_SCREEN).select('question_id').eq('id', 1).maybeSingle()]);
+    if (q.error) throw q.error;
+    if (s.error) throw s.error;
+    qaItems = q.data || []; qaScreenId = s.data?.question_id ?? null; qaErr = '';
+  } catch (e) { qaItems = []; qaErr = qaDbError(e); }
+  renderQa();
+}
+
+// Admin lain (atau tab lain) yang mengubah data → daftar ikut segar
+function subscribeQa() {
+  if (!supabase || qaChannel) return;
+  let t; const reload = () => { clearTimeout(t); t = setTimeout(loadQa, 300); };
+  qaChannel = supabase.channel('qa-admin')
+    .on('postgres_changes', { event: '*', schema: 'public', table: QA_TABLE }, reload)
+    .on('postgres_changes', { event: '*', schema: 'public', table: QA_SCREEN }, reload)
+    .subscribe();
+}
+
+const qaWho = x => [x.dealer, x.city].filter(Boolean).join(' · ') || 'Dealer';
+const qaTime = d => d ? new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }) : '';
+
+function renderQa() {
+  const list = document.getElementById('qa-list'), live = document.getElementById('qa-live');
+  if (!list) return;
+  const dl = document.getElementById('qa-dealer-list');
+  if (!dl.children.length) dl.innerHTML = [...GT_DISTRIBUTORS, ...GT_DEALERS].map(n => `<option value="${escHtml(n)}">`).join('');
+  if (qaItems === null || qaErr) {
+    list.innerHTML = `<div class="stock-empty">${qaItems === null ? 'Memuat…' : escHtml(qaErr)}</div>`;
+    live.innerHTML = ''; live.classList.remove('on'); document.getElementById('qa-chips').innerHTML = ''; return;
+  }
+  const no = new Map(qaItems.map((x, i) => [x.id, i + 1]));
+  const cur = qaItems.find(x => x.id === qaScreenId);
+  const queue = qaItems.filter(x => x.status === 'baru' && x.id !== qaScreenId);
+  live.classList.toggle('on', !!cur);
+  live.innerHTML = `<div class="qa-live-head"><span class="qa-dot${cur ? ' on' : ''}"></span>${cur ? 'Sedang tampil di layar videotron' : 'Layar videotron kosong — menampilkan judul sesi'}</div>
+    ${cur ? `<div class="qa-live-q">“${escHtml(cur.question)}”</div><div class="qa-live-who">#${no.get(cur.id)} · ${escHtml(qaWho(cur))}</div>` : ''}
+    <div class="qa-live-btns">
+      <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button>
+      ${queue.length ? `<button class="gt-btn ghost" onclick="qaShow(${queue[0].id})">⏭ Tampilkan antrian berikutnya (${queue.length})</button>` : ''}
+      ${cur ? '<button class="gt-btn ghost" onclick="qaClearScreen()">⏹ Kosongkan Layar</button>' : ''}
+    </div>`;
+  const cnt = k => qaItems.filter(x => x.status === k).length;
+  document.getElementById('qa-count').textContent = qaItems.length;
+  document.getElementById('qa-chips').innerHTML = [['all', 'Semua', qaItems.length], ['baru', 'Antri', cnt('baru')], ['tampil', 'Sudah tampil', cnt('tampil')], ['dijawab', 'Dijawab', cnt('dijawab')]]
+    .map(([k, l, n]) => `<button class="filter-chip${qaFilter === k ? ' active' : ''}" onclick="qaFilter='${k}';renderQa()">${l} · ${n}</button>`).join('');
+  const s = qaSearch.trim().toLowerCase();
+  const rows = qaItems.filter(x => (qaFilter === 'all' || x.status === qaFilter) &&
+    (!s || [x.dealer, x.city, x.question, x.answer].some(v => (v || '').toLowerCase().includes(s)))).reverse();
+  if (!qaItems.length) { list.innerHTML = '<div class="stock-empty">Belum ada pertanyaan. Ketik pertanyaan dealer di atas lalu klik <b>📺 Simpan &amp; Tampilkan</b>.</div>'; return; }
+  if (!rows.length) { list.innerHTML = '<div class="stock-empty">Tidak ada pertanyaan yang cocok.</div>'; return; }
+  list.innerHTML = `<div class="rd-table">${rows.map(x => {
+    const on = x.id === qaScreenId;
+    return `<div class="qa-row${on ? ' onair' : ''}">
+      <div class="qa-no">#${no.get(x.id)}<small>${qaTime(x.created_at)}</small></div>
+      <div><div class="qa-q">${escHtml(x.question)}</div><div class="qa-who">👤 ${escHtml(qaWho(x))}</div>
+        ${x.answer ? `<div class="rd-notes">💬 ${escHtml(x.answer)}</div>` : ''}</div>
+      <div class="qa-side">${on ? '<span class="qa-badge onair">● Di layar</span>' : `<span class="qa-badge s-${x.status}">${QA_STATUS[x.status] || x.status}</span>`}
+        <div class="rd-btns">
+          ${on ? '<button class="gt-btn ghost" onclick="qaClearScreen()" title="Turunkan dari layar">⏹ Turunkan</button>' : `<button class="gt-btn ghost" onclick="qaShow(${x.id})" title="Tampilkan di videotron">📺 Tampilkan</button>`}
+          <button class="gt-btn ghost" onclick="qaToggleAnswered(${x.id})" title="${x.status === 'dijawab' ? 'Batalkan tanda dijawab' : 'Tandai sudah dijawab'}">${x.status === 'dijawab' ? '↺' : '✓ Dijawab'}</button>
+          <button class="gt-btn ghost" onclick="qaEdit(${x.id})" title="Edit / catatan jawaban">✏️</button>
+          <button class="gt-btn ghost gt-del" onclick="qaDelete(${x.id})" title="Hapus">🗑</button>
+        </div></div>
+    </div>`; }).join('')}</div>`;
+}
+
+async function qaSave(show) {
+  if (!supabase) return;
+  const v = k => document.getElementById('qa-' + k).value.trim();
+  const row = { dealer: v('dealer') || null, city: v('city') || null, question: v('question') };
+  if (!row.question) { showToast('Ketik pertanyaannya dulu.'); document.getElementById('qa-question').focus(); return; }
+  const btns = ['qa-save-show', 'qa-save'].map(id => document.getElementById(id));
+  btns.forEach(b => b.disabled = true);
+  try {
+    if (qaEditId) {
+      Object.assign(row, { answer: v('answer') || null, updated_at: new Date().toISOString() });
+      const { error } = await supabase.from(QA_TABLE).update(row).eq('id', qaEditId);
+      if (error) throw error;
+      qaCancelEdit(); showToast('✓ Pertanyaan diperbarui.');
+    } else {
+      const now = new Date().toISOString();
+      Object.assign(row, { session: QA_SESSION, status: show ? 'tampil' : 'baru', shown_at: show ? now : null });
+      const { data, error } = await supabase.from(QA_TABLE).insert(row).select().single();
+      if (error) throw error;
+      ['dealer', 'city', 'question'].forEach(k => { document.getElementById('qa-' + k).value = ''; });
+      if (show && data) {
+        const r = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: data.id, updated_at: now });
+        if (r.error) throw r.error;
+        qaScreenId = data.id; showToast('📺 Tersimpan & tampil di layar.');
+      } else showToast('✓ Masuk antrian.');
+      document.getElementById('qa-dealer').focus();
+    }
+    await loadQa();
+  } catch (e) { showToast('Gagal menyimpan: ' + (e.message || e), 9000); }
+  finally { btns.forEach(b => b.disabled = false); }
+}
+
+async function qaShow(id) {
+  const now = new Date().toISOString();
+  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: id, updated_at: now });
+  if (error) { showToast('Gagal menampilkan: ' + error.message, 8000); return; }
+  qaScreenId = id;
+  const x = qaItems?.find(r => r.id === id);
+  if (x && x.status === 'baru') {
+    Object.assign(x, { status: 'tampil', shown_at: now });
+    await supabase.from(QA_TABLE).update({ status: 'tampil', shown_at: now, updated_at: now }).eq('id', id);
+  }
+  renderQa(); showToast('📺 Pertanyaan tampil di layar.');
+}
+
+async function qaClearScreen() {
+  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: null, updated_at: new Date().toISOString() });
+  if (error) { showToast('Gagal mengosongkan layar: ' + error.message, 8000); return; }
+  qaScreenId = null; renderQa(); showToast('Layar dikosongkan.');
+}
+
+async function qaToggleAnswered(id) {
+  const x = qaItems?.find(r => r.id === id); if (!x) return;
+  const prev = x.status, status = prev === 'dijawab' ? (x.shown_at ? 'tampil' : 'baru') : 'dijawab';
+  x.status = status; renderQa();
+  const { error } = await supabase.from(QA_TABLE).update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) { x.status = prev; renderQa(); showToast('Gagal mengubah status: ' + error.message, 8000); }
+}
+
+function qaEdit(id) {
+  const x = qaItems?.find(r => r.id === id); if (!x) return;
+  qaEditId = id;
+  ['dealer', 'city', 'question', 'answer'].forEach(k => { document.getElementById('qa-' + k).value = x[k] || ''; });
+  document.getElementById('qa-answer-wrap').hidden = false;
+  document.getElementById('qa-form-title').textContent = `Edit pertanyaan #${qaItems.indexOf(x) + 1}`;
+  document.getElementById('qa-save-show').textContent = '💾 Simpan Perubahan';
+  document.getElementById('qa-save').hidden = true;
+  document.getElementById('qa-cancel').hidden = false;
+  const f = document.getElementById('qa-form'); f.classList.add('editing');
+  f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('qa-question').focus();
+}
+function qaCancelEdit() {
+  qaEditId = null;
+  ['dealer', 'city', 'question', 'answer'].forEach(k => { document.getElementById('qa-' + k).value = ''; });
+  document.getElementById('qa-answer-wrap').hidden = true;
+  document.getElementById('qa-form-title').textContent = 'Input pertanyaan dealer';
+  document.getElementById('qa-save-show').textContent = '📺 Simpan & Tampilkan';
+  document.getElementById('qa-save').hidden = false;
+  document.getElementById('qa-cancel').hidden = true;
+  document.getElementById('qa-form').classList.remove('editing');
+}
+
+async function qaDelete(id) {
+  const x = qaItems?.find(r => r.id === id);
+  if (!x || !confirm(`Hapus pertanyaan #${qaItems.indexOf(x) + 1} dari ${qaWho(x)}?`)) return;
+  if (id === qaScreenId) await qaClearScreen();
+  const { error } = await supabase.from(QA_TABLE).delete().eq('id', id);
+  if (error) { showToast('Gagal menghapus: ' + error.message, 8000); return; }
+  if (qaEditId === id) qaCancelEdit();
+  qaItems = qaItems.filter(r => r.id !== id); renderQa(); showToast('Pertanyaan dihapus.');
+}
+
+// Buka di komputer yang tersambung ke videotron (browser yang sama sudah login Admin/Editor)
+function openQaScreen() { window.open(location.origin + location.pathname + '?layar=qa', 'cai-videotron'); }
+
+async function exportQa() {
+  if (!qaItems?.length) { showToast('Belum ada pertanyaan.'); return; }
+  try {
+    const XLSX = await loadXlsx();
+    const rows = [['No', 'Waktu', 'Sesi', 'Nama Dealer', 'Kota', 'Pertanyaan', 'Status', 'Catatan Jawaban'],
+      ...qaItems.map((x, i) => [i + 1, fmtGtTime(x.created_at), x.session || QA_SESSION, x.dealer || '', x.city || '', x.question, QA_STATUS[x.status] || x.status, x.answer || ''])];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:5},{wch:18},{wch:32},{wch:24},{wch:14},{wch:70},{wch:13},{wch:50}];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Tanya Jawab');
+    XLSX.writeFile(wb, `tanya-jawab-gathering-${todayWIB()}.xlsx`);
+  } catch (e) { showToast('Gagal ekspor: ' + (e.message || e), 8000); }
+}
+
+function printQa() {
+  if (!qaItems?.length) { showToast('Belum ada pertanyaan untuk dicetak.'); return; }
+  let el = document.getElementById('gt-print');
+  if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
+  el.innerHTML = `<div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>REKAP TANYA JAWAB</h1><p>${QA_SESSION} · GATHERING CAI 2026 · ${qaItems.length} pertanyaan</p></div></div>
+    <table class="gp-items rd-print"><colgroup><col style="width:5%"><col style="width:9%"><col style="width:20%"><col style="width:40%"><col style="width:26%"></colgroup>
+    <thead><tr><th>No</th><th>Jam</th><th>Dealer</th><th>Pertanyaan</th><th>Catatan Jawaban</th></tr></thead><tbody>
+    ${qaItems.map((x, i) => `<tr><td>${i + 1}</td><td>${qaTime(x.created_at)}</td><td>${escHtml(qaWho(x))}</td><td>${escHtml(x.question)}</td><td>${escHtml(x.answer || '')}</td></tr>`).join('')}
+    </tbody></table>`;
+  window.print();
+}
+
+/* ── Halaman layar videotron: ?layar=qa ── */
+const QA_SCREEN_MODE = new URLSearchParams(location.search).get('layar') === 'qa';
+let qsTimer = null, qsChannel = null, qsKey = null, qsCursorT = null;
+
+function initQaScreen() {
+  if (!QA_SCREEN_MODE) return;
+  document.body.classList.add('screen-mode');
+  document.title = 'Layar Tanya Jawab — Gathering CAI 2026';
+  const el = document.getElementById('qa-screen');
+  el.hidden = false;
+  document.getElementById('qs-logo').src = LOGO_WHITE;
+  qsSetStage('wait', '<div class="qs-idle"><p>Menghubungkan…</p></div>');
+  document.addEventListener('fullscreenchange', () => el.classList.toggle('is-fs', !!document.fullscreenElement));
+  el.addEventListener('mousemove', () => { el.classList.remove('hide-cursor'); clearTimeout(qsCursorT); qsCursorT = setTimeout(() => el.classList.add('hide-cursor'), 3000); });
+  document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') qsFullscreen(); });
+}
+function qsFullscreen() { document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}); }
+
+function qaScreenAuth() {
+  if (!QA_SCREEN_MODE) return;
+  if (isAdmin()) { closeAdmin(); startQaScreen(); return; }
+  stopQaScreen();
+  qsSetStage('login', `<div class="qs-idle"><div class="qs-kicker">Layar Tanya Jawab</div><h1>Listening and Understanding <em>Partner</em></h1>
+    <p>Login sebagai Admin / Editor di browser ini untuk menampilkan pertanyaan.</p><button class="qs-login" onclick="openAdmin()">🔒 Login Admin</button></div>`);
+}
+function startQaScreen() {
+  if (qsTimer) return;
+  qsLoad();
+  qsTimer = setInterval(qsLoad, 4000);
+  qsChannel = supabase.channel('qa-screen')
+    .on('postgres_changes', { event: '*', schema: 'public', table: QA_SCREEN }, qsLoad)
+    .on('postgres_changes', { event: '*', schema: 'public', table: QA_TABLE }, qsLoad)
+    .subscribe();
+}
+function stopQaScreen() {
+  clearInterval(qsTimer); qsTimer = null;
+  if (qsChannel) { supabase.removeChannel(qsChannel); qsChannel = null; }
+}
+
+async function qsLoad() {
+  const st = document.getElementById('qs-status');
+  try {
+    const { data: s, error } = await supabase.from(QA_SCREEN).select('question_id').eq('id', 1).maybeSingle();
+    if (error) throw error;
+    let q = null;
+    if (s?.question_id) {
+      const r = await supabase.from(QA_TABLE).select('*').eq('id', s.question_id).maybeSingle();
+      if (r.error) throw r.error;
+      q = r.data;
+    }
+    st.classList.remove('off');
+    renderQaScreen(q);
+  } catch (e) { st.classList.add('off'); st.title = 'Koneksi bermasalah: ' + (e.message || e); }
+}
+
+function qsSetStage(key, html) {
+  if (key === qsKey) return;
+  qsKey = key;
+  document.getElementById('qs-stage').innerHTML = html;
+}
+
+function renderQaScreen(q) {
+  if (!q) {
+    qsSetStage('idle', `<div class="qs-idle"><div class="qs-kicker">Sesi Tanya Jawab</div><h1>Listening and Understanding <em>Partner</em></h1>
+      <p>Sampaikan pertanyaan &amp; masukan Anda kepada tim Concerto Audio Indonesia</p></div>`);
+    return;
+  }
+  const len = q.question.length;
+  const size = len <= 60 ? 'min(5.6vw, 10vh)' : len <= 120 ? 'min(4.6vw, 8.2vh)' : len <= 200 ? 'min(3.8vw, 6.8vh)' : len <= 320 ? 'min(3.1vw, 5.6vh)' : 'min(2.5vw, 4.6vh)';
+  qsSetStage(['q', q.id, q.question, q.dealer, q.city].join('|'), `<div class="qs-q"><div class="qs-kicker">Pertanyaan dari</div>
+    <div class="qs-who">${escHtml(q.dealer || 'Dealer')}${q.city ? `<small>${escHtml(q.city)}</small>` : ''}</div>
+    <p class="qs-quote" style="font-size:${size}">${escHtml(q.question)}</p></div>`);
 }
 
 /* ══════════════════════════════════════════
@@ -6523,7 +6951,8 @@ function contactGeneral() {
 }
 
 init();
-openDeepLink();
+initQaScreen();
+if (!QA_SCREEN_MODE) openDeepLink();
 updateAcademyStar();
 initSupabase();
 </script>
