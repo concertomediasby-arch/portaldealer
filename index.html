@@ -1558,6 +1558,15 @@ body {
   .gt-top-sub { grid-column: 1; font-size: 12.5px; color: var(--fg-muted); }
   .gt-top-head .gt-btn { grid-column: 2; grid-row: 1 / span 2; }
   .gt-top-list { display: flex; flex-direction: column; gap: 10px; }
+  .gt-top-stats { display: flex; gap: 18px; flex-wrap: wrap; margin: -6px 0 14px; font-size: 13px; color: var(--fg-muted); }
+  .gt-top-stats b { color: var(--fg); } .gt-top-stats span:last-child b { color: var(--accent); }
+  .gt-top-more { margin: 24px 0 8px; }
+  .gt-top-rest { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: hidden; }
+  .gt-rest-row { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; padding: 9px 16px; font-size: 13px; }
+  .gt-rest-row + .gt-rest-row { border-top: 1px solid var(--border); }
+  .gt-rest-rank { font: 600 12px var(--f-mono); color: var(--fg-muted); text-align: center; }
+  .gt-rest-store { min-width: 0; overflow-wrap: anywhere; } .gt-rest-store b { font-weight: 600; color: var(--fg); } .gt-rest-store span { color: var(--fg-muted); font-size: 12px; }
+  .gt-rest-total { font: 600 13px var(--f-mono); color: var(--fg); white-space: nowrap; }
   .gt-top-row { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
   .gt-top-row.rank-1 { border-color: #d8b26a; background: linear-gradient(100deg, rgba(216,178,106,.22), var(--surface) 70%); box-shadow: 0 6px 22px rgba(216,178,106,.18); }
   .gt-top-row.rank-2 { border-color: #b8c0cc; background: linear-gradient(100deg, rgba(184,192,204,.2), var(--surface) 70%); }
@@ -2457,7 +2466,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T04:58:45Z';
+const LAST_UPDATE = '2026-10-12T05:01:23Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5780,12 +5789,13 @@ function setGtTab(t) {
 /* ── Top Spender Gathering 2026 ──
    Dealer (akun bersama) tidak boleh membaca gathering_orders, jadi peringkat diambil lewat fungsi
    Postgres `gathering_top_spenders(lim)` (SECURITY DEFINER) yang hanya mengembalikan agregat per toko. */
-const GT_TOP_LIMIT = 5;
+const GT_TOP_HIGHLIGHT = 5;   // 5 besar ditonjolkan; toko lain tetap tampil di daftar bawahnya
+const GT_TOP_FETCH = 1000;
 let gtTop = null, gtTopErr = '';
 async function loadGtTop() {
   if (!supabase || !authUser) return;
   try {
-    const { data, error } = await supabase.rpc('gathering_top_spenders', { lim: GT_TOP_LIMIT });
+    const { data, error } = await supabase.rpc('gathering_top_spenders', { lim: GT_TOP_FETCH });
     if (error) throw error;
     gtTop = data || []; gtTopErr = '';
   } catch (e) {
@@ -5799,18 +5809,26 @@ function renderGtTop() {
   const el = document.getElementById('gt-top');
   if (!el || gtTab !== 'top') return;
   const head = `<div class="gt-top-head"><div class="gt-top-title">🏆 Top Spender Gathering 2026</div>
-    <div class="gt-top-sub">${GT_TOP_LIMIT} toko dengan total belanja terbesar selama Gathering CAI 2026 · diperbarui otomatis dari pesanan yang masuk</div>
+    <div class="gt-top-sub">Total belanja semua dealer selama Gathering CAI 2026 · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · diperbarui otomatis dari pesanan yang masuk</div>
     <button class="gt-btn ghost" onclick="loadGtTop()">↻ Muat ulang</button></div>`;
   if (gtTop === null) { el.innerHTML = head + '<div class="stock-empty">Memuat peringkat…</div>'; return; }
   if (gtTopErr) { el.innerHTML = head + `<div class="stock-empty">${escHtml(gtTopErr)}</div>`; return; }
   if (!gtTop.length) { el.innerHTML = head + '<div class="stock-empty">Belum ada pesanan. Jadilah toko pertama di papan Top Spender!</div>'; return; }
   const medal = ['🥇', '🥈', '🥉'];
-  el.innerHTML = head + `<div class="gt-top-list">${gtTop.map((r, i) => `
+  const all = gtTop.reduce((a, r) => a + Number(r.total || 0), 0);
+  const rest = gtTop.slice(GT_TOP_HIGHLIGHT);
+  el.innerHTML = head + `<div class="gt-top-stats"><span><b>${gtTop.length}</b> toko</span><span>Total pembelian <b>${fmtRp(all)}</b></span></div>
+    <div class="gt-top-list">${gtTop.slice(0, GT_TOP_HIGHLIGHT).map((r, i) => `
     <div class="gt-top-row rank-${i + 1}">
       <div class="gt-top-rank">${medal[i] || '#' + (i + 1)}</div>
       <div class="gt-top-store"><b>${escHtml(r.store || '-')}</b>${r.city ? `<span>${escHtml(r.city)}</span>` : ''}</div>
       <div class="gt-top-total">${fmtRp(Number(r.total || 0))}</div>
-    </div>`).join('')}</div>`;
+    </div>`).join('')}</div>
+    ${rest.length ? `<div class="line-header gt-top-more"><span class="line-name">Peringkat lainnya</span><span class="line-count">${rest.length}</span></div>
+    <div class="gt-top-rest">${rest.map((r, i) => `
+      <div class="gt-rest-row"><span class="gt-rest-rank">${GT_TOP_HIGHLIGHT + i + 1}</span>
+        <span class="gt-rest-store"><b>${escHtml(r.store || '-')}</b>${r.city ? ` <span>· ${escHtml(r.city)}</span>` : ''}</span>
+        <span class="gt-rest-total">${fmtRp(Number(r.total || 0))}</span></div>`).join('')}</div>` : ''}`;
 }
 
 async function loadGtOrders() {
