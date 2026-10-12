@@ -2250,7 +2250,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T02:50:36Z';
+const LAST_UPDATE = '2026-10-12T02:54:49Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4800,6 +4800,10 @@ const STOCK_ALIASES = {
   dios0a: 'dm-septuple0g', dios4a: 'dm-septuple4g', dios8a: 'dm-septuple8g', kquadm: 'dm-cable',
   ogae1m: 'og-azure', ogae2m: 'og-azure', ogae3m: 'og-azure', ogae5m: 'og-azure',
   ogrf1m: 'og-reference', ogrf2m: 'og-reference', ogrf3m: 'og-reference', ogrf5m: 'og-reference',
+  ogsup1m: 'og-streamline', ogsup2m: 'og-streamline', ogsup3m: 'og-streamline', ogsup5m: 'og-streamline',
+  ogap1m: 'og-reddragon', ogap2m: 'og-reddragon', ogap3m: 'og-reddragon', ogap5m: 'og-reddragon',
+  slc62mkiv: '-',   // hanya SL-C6.2 MK IV S yang dimasukkan (konfirmasi pemilik); '-' = abaikan
+  // ST10PRO ≠ ST10P-PRO (produk berbeda) → ST10PRO tetap masuk "Produk Lain"
 };
 // Pilihan manual admin di pratinjau ('-' = abaikan), disimpan di browser ini
 const ALIAS_KEY = 'cai-stock-alias';
@@ -4888,8 +4892,9 @@ function renderImport() {
     let bk = normKey(cell('brand'));
     const brandMatch = b => [b.name, b.id, b.abbr].some(v => normKey(v || '') === bk);
     if (bk && !BRANDS.some(brandMatch)) bk = '';
-    if (aliases[k] === '-') { ignored++; return; }
-    let hit = byId[aliases[k] || STOCK_ALIASES[k]];
+    const alias = aliases[k] || STOCK_ALIASES[k];
+    if (alias === '-') { ignored++; return; }
+    let hit = byId[alias];
     if (!hit && aliases[k] !== '+') {
       const hits = [...new Map(index.filter(x => x.keys.has(k) && (!bk || brandMatch(x.b))).map(h => [h.p.id, h])).values()];
       if (hits.length === 1) hit = hits[0];
