@@ -2177,16 +2177,17 @@ body {
       <!-- Login form (default) -->
       <div id="admin-login-section">
         <div class="admin-login">
-          <div>
-            <label>Email Admin</label>
-            <input class="admin-input" type="email" id="admin-email" placeholder="email@example.com" autocomplete="email">
+          <div id="admin-email-row" hidden>
+            <label>Email</label>
+            <input class="admin-input" type="email" id="admin-email" placeholder="email@example.com" autocomplete="email" autocapitalize="none" onkeydown="if(event.key==='Enter')adminLogin()">
           </div>
           <div>
-            <label>Password</label>
-            <input class="admin-input" type="password" id="admin-password" placeholder="••••••••" autocomplete="current-password">
+            <label id="admin-pass-label">Kode Admin</label>
+            <input class="admin-input" type="password" id="admin-password" placeholder="Masukkan kode admin" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')adminLogin()">
           </div>
           <div class="admin-error" id="admin-error"></div>
           <button class="admin-btn primary" id="admin-login-btn" onclick="adminLogin()">Masuk</button>
+          <div style="font-size:11.5px;color:#8b93a3;text-align:center"><a href="#" id="admin-mode-link" onclick="setAdminLoginMode(!adminEmailMode); return false;" style="color:inherit;text-decoration:underline">Login Editor (email)</a></div>
         </div>
       </div>
       <div id="admin-noaccess" style="display:none">
@@ -2245,7 +2246,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T02:25:41Z';
+const LAST_UPDATE = '2026-10-12T02:35:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4525,12 +4526,27 @@ function closeAdmin() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAdmin(); closeLogin(); } });
 
+// Admin staff cukup mengetik Kode Admin (= password akun ADMIN_LOGIN_EMAIL, peka huruf besar/kecil).
+// Editor memakai link "Login Editor (email)".
+const ADMIN_LOGIN_EMAIL = 'concerto.stock@gmail.com';
+let adminEmailMode = false;
+function setAdminLoginMode(emailMode) {
+  adminEmailMode = emailMode || !ADMIN_LOGIN_EMAIL;
+  document.getElementById('admin-email-row').hidden = !adminEmailMode;
+  document.getElementById('admin-pass-label').textContent = adminEmailMode ? 'Password' : 'Kode Admin';
+  document.getElementById('admin-password').placeholder = adminEmailMode ? '••••••••' : 'Masukkan kode admin';
+  document.getElementById('admin-mode-link').textContent = adminEmailMode ? '← Login admin (kode)' : 'Login Editor (email)';
+  document.getElementById('admin-mode-link').hidden = !ADMIN_LOGIN_EMAIL;
+  document.getElementById('admin-error').textContent = '';
+  setTimeout(() => document.getElementById(adminEmailMode ? 'admin-email' : 'admin-password')?.focus(), 50);
+}
+
 async function adminLogin() {
-  const email = document.getElementById('admin-email').value.trim();
-  const pass  = document.getElementById('admin-password').value;
+  const email = adminEmailMode ? document.getElementById('admin-email').value.trim() : ADMIN_LOGIN_EMAIL;
+  const pass  = document.getElementById('admin-password').value.trim();
   const btn   = document.getElementById('admin-login-btn');
   const err   = document.getElementById('admin-error');
-  if (!email || !pass) { err.textContent = 'Isi email dan password.'; return; }
+  if (!email || !pass) { err.textContent = adminEmailMode ? 'Isi email dan password.' : 'Masukkan kode admin.'; return; }
   btn.disabled = true; btn.textContent = 'Memverifikasi...'; err.textContent = '';
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
@@ -4538,7 +4554,7 @@ async function adminLogin() {
     authUser = data.user;
     showAdminStockSection();
   } catch(e) {
-    err.textContent = 'Login gagal: ' + (e.message || 'Periksa email/password.');
+    err.textContent = /invalid login/i.test(e.message || '') ? (adminEmailMode ? 'Email atau password salah.' : 'Kode admin salah.') : 'Login gagal: ' + (e.message || e);
     btn.disabled = false; btn.textContent = 'Masuk';
   }
 }
@@ -4564,6 +4580,7 @@ function resetAdminLoginUI() {
   document.getElementById('admin-error').textContent = '';
   document.getElementById('admin-login-btn').disabled = false;
   document.getElementById('admin-login-btn').textContent = 'Masuk';
+  setAdminLoginMode(false);
 }
 
 async function adminLogout() {
