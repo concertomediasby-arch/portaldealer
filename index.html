@@ -1609,6 +1609,10 @@ body {
   .scr-lup-tabs .filter-chip.active { color: #1a1305; background: #e9c46a; border-color: #e9c46a; }
   .scr-lup-tabs small { opacity: .7; font-size: 10px; }
   .scr-live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-right: 4px; vertical-align: 1px; box-shadow: 0 0 6px #22c55e; }
+  .scr-priv { margin-left: 8px; text-transform: none; letter-spacing: 0; font: 500 11px var(--f-body); color: #9aa5bd; }
+  .scr-note { font-size: 12.5px; color: #c3cbdc; margin: 6px 0; }
+  .scr-pks-pages { display: flex; flex-wrap: wrap; gap: 6px; }
+  .scr-pks-pages .scr-lv-btn { min-width: 40px; justify-content: center; }
   .scr-pane { margin-top: 12px; padding: 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.25); }
   .scr-pane-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
   .scr-pane-head b { font: 700 16px var(--f-display); color: #fff; } .scr-pane-head p { margin: 3px 0 0; font-size: 12.5px; color: #9aa5bd; line-height: 1.45; }
@@ -1730,6 +1734,9 @@ body {
   .qs-slide { position: absolute; inset: 0; z-index: 4; background: #000; }
   .qs-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .45s ease; }
   .qs-slide img.in { opacity: 1; }
+  .qs-slide.qs-pks { background: radial-gradient(ellipse at 50% 0%, #1b2440, #05070d 70%); }
+  .qs-slide canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 96vw; max-height: 96vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 2vh 6vh rgba(0,0,0,.6); opacity: 0; transition: opacity .45s ease; background: #fff; }
+  .qs-slide canvas.in { opacity: 1; }
   .qs-vcap { position: absolute; left: 3vw; top: 3vh; padding: 8px 16px; border-radius: 10px; background: rgba(0,0,0,.55); color: #e9c46a; font: 600 max(13px, 2.2vh) var(--f-body); opacity: 0; pointer-events: none; }
   .qs-vcap.show { animation: qsCap 4s ease both; }
   @keyframes qsCap { 0%, 100% { opacity: 0; } 10%, 80% { opacity: 1; } }
@@ -2856,7 +2863,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T10:03:20Z';
+const LAST_UPDATE = '2026-10-12T10:14:11Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7105,11 +7112,17 @@ const OPENING_SPEAKERS = [
   { name: 'Arif', brand: 'Amo Plus' },
   { name: 'Yusak', brand: 'Sound Addict' },
 ];
+// Materi PKS Dealer 2027 (isi diskon/target → TIDAK di repo publik): PDF di Storage privat GUIDES_BUCKET, diunggah admin dari panel.
+// Scene 'kickoff' = judul Kick Off, 'kickoff:<n>' = halaman PKS ke-n (dirender pdf.js).
+const PKS_PATH = 'gathering/pks-dealer-2027.pdf';
+const pksNum = k => { const m = /^kickoff:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
+let pksMeta = null;   // { exists, pages } — di panel admin
 const opNum = k => { const m = /^opening:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
+  if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})` }; }
   const { brand, idx } = launchParts(k), b = brand ? BRANDS.find(x => x.id === brand) : null;
   if (!b) return base;
@@ -7125,6 +7138,7 @@ async function loadScreenRow() {
   const { data, error } = await supabase.from(QA_SCREEN).select('*').eq('id', 1).maybeSingle();
   if (!error) { scrRow = data; qaScreenId = data?.question_id ?? qaScreenId; }
   renderScreenPanel(error);
+  if (pksMeta === null) loadPksMeta();
 }
 
 // Panel layar per sesi: kartu sesi (urutan acara) → pane berisi kontrol khusus sesi terpilih.
@@ -7141,7 +7155,7 @@ const SCR_DESC = {
   launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
   lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
-  kickoff: 'Kick Off 2027: Portal Dealer (QR dealer.concerto.id) & PKS Dealer 2027.',
+  kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
 };
 let scrSel = null;
 const scrOnAir = () => sceneBase(scrRow?.scene) || 'qa';
@@ -7188,6 +7202,18 @@ function renderScreenPanel(err) {
         ${vids.length > 1 ? `<button class="scr-lv-btn${scrRow.scene === all ? ' on' : ''}" onclick="setScene('${all}')">${scrRow.scene === all ? '↻ Ulang semua' : `▶ Putar semua (${vids.length})`}</button>` : ''}
         ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
           return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}</div>`;
+  else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
+    body = `${opts(false)}<div class="scr-actions">${showBtn('Tampilkan judul Kick Off 2027')}</div>
+    <div class="scr-sub-k">Materi PKS Dealer 2027 <span class="scr-priv">🔒 file privat — tidak ikut situs publik</span></div>
+    ${pksMeta === null ? '<div class="scr-note">Memeriksa file PKS…</div>' : !pksMeta.exists
+      ? `<div class="scr-note">Belum ada file PKS. Unggah PDF <b>PKS Dealer 2027</b> sekali saja — tersimpan di penyimpanan privat portal.</div>`
+      : `<div class="scr-fm-nav">
+          <button class="scr-lv-btn" onclick="pksStep(-1)" ${cur > 1 ? '' : 'disabled'}>◀ Sebelumnya</button>
+          <span class="scr-fm-now">${cur ? `Halaman <b>${cur}</b> / ${n || '?'}` : 'Belum tampil'}</span>
+          <button class="scr-lv-btn${cur ? '' : ' on'}" onclick="pksStep(1)" ${!n || cur < n ? '' : 'disabled'}>${cur ? 'Berikutnya ▶' : '▶ Mulai dari halaman 1'}</button>
+        </div>
+        <div class="scr-pks-pages">${Array.from({ length: n }, (_, i) => `<button class="scr-lv-btn${cur === i + 1 ? ' on' : ''}" onclick="setScene('kickoff:${i + 1}')">${i + 1}</button>`).join('')}</div>`}
+    <div class="scr-actions"><label class="gt-btn ghost">⬆ ${pksMeta?.exists ? 'Ganti' : 'Unggah'} PDF PKS<input type="file" accept="application/pdf" hidden onchange="uploadPks(this)"></label></div>`; }
   else body = `${opts(sel === 'coffee' || sel === 'lunch')}<div class="scr-actions">${showBtn()}</div>`;
   el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Tanya Jawab'}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
@@ -7203,6 +7229,56 @@ function renderScreenPanel(err) {
       <div class="scr-pane-head"><span class="scr-pane-ic">${info.icon}</span><div><b>${info.label}</b><p>${SCR_DESC[sel]}</p></div>${live ? '<span class="qa-badge onair">● Sedang tampil</span>' : ''}</div>
       ${body}
     </div>`;
+}
+
+function pksStep(d) {
+  const n = pksNum(scrRow?.scene), max = pksMeta?.pages || 999;
+  const next = Math.min(max, Math.max(1, (n || 0) + d));
+  if (next !== n) setScene('kickoff:' + next);
+}
+// pdf.js dimuat hanya saat materi PKS dipakai
+let pdfLib = null;
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (pdfLib) return pdfLib;
+  pdfLib = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; res(window.pdfjsLib); };
+    s.onerror = () => { pdfLib = null; rej(new Error('Gagal memuat pembaca PDF. Periksa koneksi internet.')); };
+    document.head.appendChild(s);
+  });
+  return pdfLib;
+}
+let pksDoc = null;
+function getPksDoc(fresh) {
+  if (pksDoc && !fresh) return pksDoc;
+  pksDoc = (async () => {
+    const lib = await loadPdfJs();
+    const { data, error } = await supabase.storage.from(GUIDES_BUCKET).createSignedUrl(PKS_PATH, 3600);
+    if (error) throw error;
+    return lib.getDocument(data.signedUrl).promise;
+  })();
+  pksDoc.catch(() => { pksDoc = null; });
+  return pksDoc;
+}
+async function loadPksMeta() {
+  if (!supabase || !isAdmin()) return;
+  try {
+    const { data } = await supabase.storage.from(GUIDES_BUCKET).list('gathering', { limit: 100 });
+    const exists = (data || []).some(f => 'gathering/' + f.name === PKS_PATH);
+    pksMeta = { exists, pages: 0 };
+    if (exists) { const doc = await getPksDoc(); pksMeta.pages = doc.numPages; }
+  } catch (e) { pksMeta = pksMeta || { exists: false, pages: 0 }; showToast('Materi PKS tidak bisa dibaca: ' + (e.message || e), 8000); }
+  renderScreenPanel();
+}
+async function uploadPks(input) {
+  const f = input.files?.[0]; input.value = ''; if (!f) return;
+  if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { showToast('Pilih file PDF.'); return; }
+  showToast('Mengunggah PKS…', 20000);
+  const { error } = await supabase.storage.from(GUIDES_BUCKET).upload(PKS_PATH, f, { upsert: true, contentType: 'application/pdf' });
+  if (error) { showToast('Gagal mengunggah: ' + error.message, 9000); return; }
+  pksDoc = null; await loadPksMeta(); showToast(`✓ PKS tersimpan (${pksMeta?.pages || '?'} halaman).`);
 }
 
 function fmStep(d) {
@@ -7236,6 +7312,7 @@ function renderScene(s) {
   if (String(s.scene).startsWith('launch:')) return renderLaunchVideo(s);
   if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene));
+  if (pksNum(s.scene)) return renderPksPage(pksNum(s.scene));
   const sc = QS_SCENES[sceneBase(s.scene)], t = s.scene_text ? escHtml(s.scene_text) : '';
   const count = s.scene_until ? `<div class="sc-count"><span class="qs-count" data-until="${escHtml(s.scene_until)}">--:--</span><small>sisa waktu</small></div>` : '';
   const next = sc.next ? `<div class="sc-next">Setelah ini · <b>${sc.next}</b></div>` : '';
@@ -7285,6 +7362,34 @@ function renderOpeningSpeaker(n) {
     ${nx ? `<div class="sc-next">Berikutnya · <b>${escHtml(nx.name)}</b> — ${escHtml(nx.brand)}</div>` : '<div class="sc-next">Terima kasih</div>'}</div>`);
 }
 
+
+/* ── Halaman PKS di layar: dirender pdf.js ke canvas setinggi layar (A4 tegak di tengah) ── */
+let qsPksPages = 0;
+async function renderPksPage(n) {
+  if (!qsSetStage('pks|' + n, '<div class="qs-idle"><p>Memuat materi PKS…</p></div>')) return;
+  let ov = document.getElementById('qs-slide');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide qs-pks'; document.getElementById('qa-screen').appendChild(ov); }
+  ov.classList.add('qs-pks');
+  try {
+    const doc = await getPksDoc();
+    qsPksPages = doc.numPages;
+    if (qsKey !== 'pks|' + n) return;   // sudah pindah halaman sementara memuat
+    const page = await doc.getPage(Math.min(n, doc.numPages));
+    const base = page.getViewport({ scale: 1 });
+    const scale = Math.min(window.innerHeight * 0.96 / base.height, window.innerWidth * 0.96 / base.width) * (window.devicePixelRatio || 1);
+    const vp = page.getViewport({ scale });
+    const cv = document.createElement('canvas');
+    cv.width = vp.width; cv.height = vp.height;
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    if (qsKey !== 'pks|' + n) return;
+    ov.appendChild(cv); requestAnimationFrame(() => cv.classList.add('in'));
+    setTimeout(() => [...ov.children].slice(0, -1).forEach(x => x.remove()), 600);
+  } catch (e) {
+    ov.remove();
+    document.getElementById('qs-stage').innerHTML = `<div class="qs-idle"><p>Materi PKS belum tersedia (${escHtml(e.message || e)}). Unggah PDF di panel Kick Off 2027.</p></div>`;
+  }
+}
+
 /* ── Slide presentasi di layar: gambar layar penuh, ganti slide dengan crossfade, slide berikutnya dipra-muat ── */
 function renderFmSlide(n) {
   if (!qsSetStage('fmslide|' + n, '<div class="qs-idle"><p>Fun Marketing</p></div>')) return;
@@ -7302,6 +7407,15 @@ async function qsFmKey(d) {
     const cur = opNum(s.scene), next = Math.min(OPENING_SPEAKERS.length, Math.max(0, cur + d));
     if (next === cur) return;
     const scene = next ? 'opening:' + next : 'opening';
+    renderScene({ scene });
+    await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
+    return;
+  }
+  if (sceneBase(s?.scene) === 'kickoff') {   // PKS: 0 = judul Kick Off, 1..n = halaman
+    const cur = pksNum(s.scene), max = qsPksPages || (await getPksDoc().then(d => d.numPages).catch(() => 0));
+    const next = Math.min(max, Math.max(0, cur + d));
+    if (next === cur || !max) return;
+    const scene = next ? 'kickoff:' + next : 'kickoff';
     renderScene({ scene });
     await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
     return;
@@ -7462,7 +7576,7 @@ function qsSetStage(key, html) {
   if (key === qsKey) return false;
   qsKey = key;
   stopLaunchVideo();
-  if (!String(key).startsWith('fmslide|')) document.getElementById('qs-slide')?.remove();
+  if (!/^(fmslide|pks)\|/.test(String(key))) document.getElementById('qs-slide')?.remove();
   document.getElementById('qs-stage').innerHTML = html;
   return true;
 }
