@@ -2948,7 +2948,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T15:38:19Z';
+const LAST_UPDATE = '2026-10-12T16:01:26Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7210,10 +7210,12 @@ const pksNum = k => { const m = /^kickoff:(\d+)$/.exec(k || ''); return m ? +m[1
 let pksMeta = null;   // { exists, pages } — di panel admin
 const opNum = k => { const m = /^opening:(\d+)(:v)?$/.exec(k || ''); return m ? +m[1] : 0; };
 const opVid = k => /^opening:\d+:v$/.test(k || '');
+const PORTAL_INTRO_VIDEO = 'assets/intro/portal-dealer-intro.mp4';   // video perkenalan portal (scene 'kickoff:v')
 const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
+  if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
   if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
   const { brand, idx } = launchParts(k), b = brand ? BRANDS.find(x => x.id === brand) : null;
@@ -7250,7 +7252,7 @@ const SCR_DESC = {
   launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
   lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
-  kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
+  kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), video perkenalan portal, lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
 };
 let scrSel = null;
 const scrOnAir = () => sceneBase(scrRow?.scene) || 'qa';
@@ -7301,7 +7303,9 @@ function renderScreenPanel(err) {
         ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
           return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}</div>`;
   else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
-    body = `${opts(false)}<div class="scr-actions">${showBtn('Tampilkan judul Kick Off 2027')}</div>
+    const pv = scrRow.scene === 'kickoff:v';
+    body = `${opts(false)}<div class="scr-actions">${showBtn('Tampilkan judul Kick Off 2027')}<button class="gt-btn${pv ? ' confirm' : ' ghost'}" onclick="setScene('kickoff:v')">${pv ? '↻ Putar ulang video perkenalan' : '🎬 Putar Video Perkenalan Portal'}</button></div>
+    <div class="scr-note">Video perkenalan portal (±74 dtk, laptop + HP) diputar layar penuh di videotron; selesai → kembali ke kartu Kick Off. Spasi = jeda/lanjut.</div>
     <div class="scr-sub-k">Materi PKS Dealer 2027 <span class="scr-priv">🔒 file privat — tidak ikut situs publik</span></div>
     ${pksMeta === null ? '<div class="scr-note">Memeriksa file PKS…</div>' : !pksMeta.exists
       ? `<div class="scr-note">Belum ada file PKS. Unggah PDF <b>PKS Dealer 2027</b> sekali saja — tersimpan di penyimpanan privat portal.</div>`
@@ -7455,7 +7459,9 @@ function renderScene(s) {
           <div class="sc-card-body"><div class="sc-pks">PKS</div><ul>${li(PKS_POINTS)}</ul></div></div>
       </div>${count}</div>`,
   }[sceneBase(s.scene)];
-  qsSetStage(['scene', s.scene, s.scene_text, s.scene_until].join('|'), html);
+  const kv = s.scene === 'kickoff:v';   // video perkenalan portal: diputar di atas kartu Kick Off, selesai → kartu Kick Off tetap tampil
+  const changed = qsSetStage(['scene', s.scene, s.scene_text, s.scene_until, kv ? s.updated_at : ''].join('|'), html);
+  if (kv && changed) setTimeout(playPortalVideo, 500);
   qsTick();
 }
 
@@ -7516,6 +7522,32 @@ function playSpeakerVideo(n) {
   };
   um.onclick = () => { v.muted = false; um.hidden = true; };
   v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
+}
+// Video perkenalan portal (Kick Off 2027): overlay layar penuh; file gagal → pilih file lokal
+let qsLocalPortal = null;
+function playPortalVideo() {
+  const src = qsLocalPortal || PORTAL_INTRO_VIDEO;
+  document.getElementById('qs-video')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'qs-video'; ov.className = 'qs-video';
+  ov.innerHTML = '<video id="qs-video-el" playsinline preload="auto"></video><button class="qs-unmute" hidden>🔊 Nyalakan suara</button>';
+  document.getElementById('qa-screen').appendChild(ov);
+  const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute');
+  v.src = src;
+  v.onended = () => { ov.style.transition = 'opacity .8s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 850); };
+  v.onerror = () => {
+    ov.remove();
+    document.querySelector('.sc-kickoff')?.insertAdjacentHTML('beforeend', '<label class="op-pick">📁 Video belum termuat — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="qsPickPortalVideo(this)"></label>');
+  };
+  um.onclick = () => { v.muted = false; um.hidden = true; };
+  v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
+}
+function qsPickPortalVideo(input) {
+  const f = input.files?.[0]; if (!f) return;
+  if (qsLocalPortal) URL.revokeObjectURL(qsLocalPortal);
+  qsLocalPortal = URL.createObjectURL(f);
+  document.querySelector('.op-pick')?.remove();
+  playPortalVideo();
 }
 function qsPickSpeakerVideo(n, input) {
   const f = input.files?.[0]; if (!f) return;
