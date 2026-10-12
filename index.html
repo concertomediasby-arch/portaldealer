@@ -1497,6 +1497,9 @@ body {
   .product-card .product-info { flex: 1; display: flex; flex-direction: column; }
   .product-price-row { margin-top: auto; padding-top: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .product-price-row::before { content: ''; flex-basis: 100%; height: 1px; background: var(--border); margin-bottom: 8px; order: -1; }
+  .sheet-link { font-size: 11.5px; color: #8b93a3 !important; margin: -4px 0 10px; }
+  .sheet-link:empty { display: none; }
+  .sheet-link a { color: #d8b26a !important; }
   .eol-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; vertical-align: 2px;
     font: 700 9.5px var(--f-mono); letter-spacing: .08em; color: #fff; background: #c2410c; }
   .panel-name .eol-tag { font-size: 11px; vertical-align: 4px; }
@@ -2225,9 +2228,11 @@ body {
       <div id="admin-stock-section" style="display:none">
         <div class="admin-tools">
           <button class="admin-btn ghost" onclick="downloadStockTemplate()">⬇ Template Excel</button>
+          <button class="admin-btn primary" onclick="syncFromSheet()" title="Ambil stok terbaru langsung dari Google Sheet">🔄 Sinkron Google Sheet</button>
           <button class="admin-btn ghost" onclick="toggleImport()">⬆ Import dari Excel</button>
           <button class="admin-btn ghost editor-only" onclick="closeAdmin(); openDealers()">👥 Kelola Dealer</button>
         </div>
+        <div class="sheet-link" id="sheet-link"></div>
         <div class="admin-import" id="admin-import" style="display:none">
           <div class="imp-help">
             Unggah file stok gudang CAI apa adanya (kolom <b>Kode Barang</b> + <b>Baru</b>), daftar <b>barang OTW</b>, atau <b>Template Excel</b>.
@@ -2270,7 +2275,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T03:41:07Z';
+const LAST_UPDATE = '2026-10-12T03:46:00Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4679,7 +4684,7 @@ function showAdminStockSection() {
   document.getElementById('admin-footer').style.display = 'block';
   document.getElementById('admin-user-email').textContent = authUser ? `${accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Dealer'}` : '';
   document.getElementById('admin-subtitle').textContent = admin ? 'Kelola ketersediaan produk' : 'Akun ini tidak punya akses admin';
-  if (admin) renderAdminList();
+  if (admin) { renderAdminList(); renderSheetLink(); }
 }
 
 function resetAdminLoginUI() {
@@ -4863,6 +4868,64 @@ function splitDelimited(text) {
   const delim = first.includes('\t') ? '\t' : first.includes(';') ? ';' : first.includes(',') ? ',' : '\t';
   return lines.map(l => l.split(delim).map(c => c.trim().replace(/^"(.*)"$/, '$1')));
 }
+// ── Sinkron dari Google Sheet ──
+// Link sheet disimpan di browser admin (bukan di kode situs, karena index.html bisa dibaca publik).
+// Sheet harus dibagikan "Siapa saja yang memiliki link — Pelihat". Data dibaca lewat endpoint CSV gviz.
+const SHEET_KEY = 'cai-stock-sheet';
+const getSheetLink = () => { try { return localStorage.getItem(SHEET_KEY) || ''; } catch (e) { return ''; } };
+function sheetCsvUrl(link) {
+  const id = (String(link).match(/\/d\/([\w-]{20,})/) || [])[1] || (/^[\w-]{20,}$/.test(link) ? link : '');
+  if (!id) return '';
+  const gid = (String(link).match(/[#&?]gid=(\d+)/) || [])[1];
+  return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv${gid ? '&gid=' + gid : ''}&t=${Date.now()}`;
+}
+function parseCsv(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  text = text.replace(/^﻿/, '');
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+function renderSheetLink() {
+  const el = document.getElementById('sheet-link');
+  if (!el) return;
+  const link = getSheetLink();
+  el.innerHTML = link
+    ? `Sumber: <a href="${escHtml(link)}" target="_blank" rel="noopener">Google Sheet stok</a> · <a href="#" onclick="syncFromSheet(true); return false;">ganti link</a>`
+    : '';
+}
+async function syncFromSheet(change) {
+  let link = getSheetLink();
+  if (change || !link) {
+    const v = prompt('Tempel link Google Sheet stok (Bagikan → "Siapa saja yang memiliki link"):', link);
+    if (v === null) return;
+    if (!sheetCsvUrl(v.trim())) { adminMsg('Link Google Sheet tidak valid.', 'err'); return; }
+    link = v.trim();
+    try { localStorage.setItem(SHEET_KEY, link); } catch (e) {}
+    renderSheetLink();
+    if (change) return;
+  }
+  const box = document.getElementById('admin-import');
+  if (box.style.display === 'none') toggleImport();
+  adminMsg('Mengambil data dari Google Sheet…');
+  try {
+    const res = await fetch(sheetCsvUrl(link), { cache: 'no-store' });
+    const text = await res.text();
+    if (!res.ok || /^\s*<(!doctype|html)/i.test(text)) throw new Error('akses ditolak');
+    adminMsg('');
+    startImport([{ name: 'Google Sheet', rows: parseCsv(text) }], 'Google Sheet');
+  } catch (e) {
+    adminMsg('Gagal membaca Google Sheet — pastikan sheet dibagikan "Siapa saja yang memiliki link" (Pelihat), lalu coba lagi. (' + (e.message || e) + ')', 'err');
+  }
+}
+
 function parseImportText() {
   const text = document.getElementById('imp-text').value;
   if (!text.trim()) { adminMsg('Paste data dari Excel dulu, atau pilih file.', 'err'); return; }
