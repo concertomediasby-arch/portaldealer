@@ -2912,7 +2912,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T12:19:16Z';
+const LAST_UPDATE = '2026-10-12T12:42:23Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7161,9 +7161,9 @@ const OPENING_SPEAKERS = [
   { name: 'Mr. Marc', brand: 'Audiocircle', id: 'audiocircle', ac: '#ef3b36', video: 'assets/opening/audiocircle.mp4' },
   { name: 'Mr. Kelvin', brand: 'STEG', id: 'steg', ac: '#22c476', video: 'assets/opening/steg.mp4' },
   { name: 'Mr. David', brand: 'Zelos', id: 'zelos', ac: '#e3b94f' },
-  { name: 'Juliar Candra', brand: 'Harrison Lab', ac: '#4aa8ff' },
-  { name: 'Arif', brand: 'Amo Plus', ac: '#b66cff' },
-  { name: 'Yusak', brand: 'Sound Addict', ac: '#ff7a3d' },
+  { name: 'Juliar Candra', brand: 'Harrison Lab', logo: 'assets/brands/harrison-lab.webp', ac: '#4aa8ff' },
+  { name: 'Arif', brand: 'Amo Plus', logo: 'assets/brands/amo-plus.webp', ac: '#b66cff' },
+  { name: 'Yusak', brand: 'Sound Addict', logo: 'assets/brands/sound-addict.webp', ac: '#ff7a3d' },
 ];
 // Urutan tampil (clicker): susunan → pembicara 1 → [video 1] → pembicara 2 → …
 const OPENING_SEQ = ['opening', ...OPENING_SPEAKERS.flatMap((sp, i) => [`opening:${i + 1}`, ...(sp.video ? [`opening:${i + 1}:v`] : [])])];
@@ -7241,7 +7241,7 @@ function renderScreenPanel(err) {
   else if (sel === 'opening') body = `<div class="scr-actions">${showBtn('Tampilkan susunan pembicara')}</div>
     <div class="scr-sub-k">Pembicara</div>
     <div class="scr-fm-nav">${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1 && !opVid(scrRow.scene);
-      return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('opening:${i + 1}')" title="${escHtml(sp.brand)}">${i + 1}. ${escHtml(sp.name)} <small class="scr-op-brand">${b?.logo ? `<img src="${b.logo}" alt="">` : escHtml(sp.brand)}</small></button>`
+      return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('opening:${i + 1}')" title="${escHtml(sp.brand)}">${i + 1}. ${escHtml(sp.name)} <small class="scr-op-brand">${(sp.logo || b?.logo) ? `<img src="${sp.logo || b.logo}" alt="">` : escHtml(sp.brand)}</small></button>`
         + (sp.video ? `<button class="scr-lv-btn${opNum(scrRow.scene) === i + 1 && opVid(scrRow.scene) ? ' on' : ''}" onclick="setScene('opening:${i + 1}:v')" title="Putar video sambutan ${escHtml(sp.name)}">🎬 Video</button>` : ''); }).join('')}</div>`;
   else if (sel === 'funmkt') body = `<div class="scr-actions">${showBtn('Tampilkan judul presentasi')}</div>
     <div class="scr-sub-k">Slide materi</div>
@@ -7419,7 +7419,7 @@ function renderScene(s) {
 /* ── Opening Speech di layar: kartu pembicara (logo / nama brand, nama, urutan, berikutnya) ── */
 function opBrandMark(sp, small) {
   const b = BRANDS.find(x => x.id === sp.id);
-  return b?.logo ? `<img class="sc-op-logo${small ? ' sm' : ''}" src="${b.logo}" alt="${escHtml(sp.brand)}">` : `<div class="sc-op-brand${small ? ' sm' : ''}">${escHtml(sp.brand)}</div>`;
+  return (sp.logo || b?.logo) ? `<img class="sc-op-logo${small ? ' sm' : ''}" src="${sp.logo || b.logo}" alt="${escHtml(sp.brand)}">` : `<div class="sc-op-brand${small ? ' sm' : ''}">${escHtml(sp.brand)}</div>`;
 }
 // Kartu pembicara sinematik: aksen warna brand, nama raksasa dengan animasi muncul, lencana brand berputar, equalizer audio, progres.
 function opEqBars(count) {
@@ -7442,7 +7442,7 @@ function renderOpeningSpeaker(n, vid, stamp) {
       <div class="op-role"><i></i>${escHtml(sp.brand)}</div>
     </div>
     <div class="op-right"><div class="op-badge"><i class="op-ring"></i><i class="op-ring r2"></i><div class="op-core">
-      ${b?.logo ? `<img src="${b.logo}" alt="${escHtml(sp.brand)}">` : `<div class="op-mono">${escHtml(sp.brand.split(/\s+/).map(w => w[0]).join('').slice(0, 3))}</div>`}</div></div></div>
+      ${(sp.logo || b?.logo) ? `<img src="${sp.logo || b.logo}" alt="${escHtml(sp.brand)}">` : `<div class="op-mono">${escHtml(sp.brand.split(/\s+/).map(w => w[0]).join('').slice(0, 3))}</div>`}</div></div></div>
     <div class="op-foot">
       <div class="op-dots">${OPENING_SPEAKERS.map((x, i) => `<i class="${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}"></i>`).join('')}</div>
       <div class="op-next">${nx ? `Berikutnya <b>${escHtml(nx.name)}</b><span>${escHtml(nx.brand)}</span>` : '<b>Terima kasih</b>'}</div>
