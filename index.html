@@ -2912,7 +2912,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T12:48:22Z';
+const LAST_UPDATE = '2026-10-12T13:40:33Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6757,7 +6757,7 @@ function openRdForm(id) {
   ['title', 'pic', 'location', 'notes'].forEach(k => { document.getElementById('rd-' + k).value = x?.[k] || ''; });
   document.getElementById('rd-segment').value = x ? (x.segment || '') : (last?.segment || '');
   document.getElementById('rd-flexible').checked = !!x?.flexible;
-  document.getElementById('rd-segment-list').innerHTML = [...new Set((rdItems || []).map(r => r.segment).filter(Boolean).concat(QA_SESSION))].map(n => `<option value="${escHtml(n)}">`).join('');
+  document.getElementById('rd-segment-list').innerHTML = [...new Set((rdItems || []).map(r => r.segment).filter(Boolean).concat(QA_SESSION, FREE_NAME))].map(n => `<option value="${escHtml(n)}">`).join('');
   const f = document.getElementById('rd-form'); f.hidden = false;
   f.scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('rd-title').focus();
@@ -6804,7 +6804,7 @@ async function addRdTemplate() {
   const have = new Set((rdItems || []).filter(r => r.day === day).map(r => rdKey(r.title)));
   const now = new Date().toISOString();
   const rows = RD_TEMPLATE_LUP.filter(t => !have.has(rdKey(t.title)))
-    .map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, segment: LUP_SCENES.includes(sceneForTitle(t.title) || 'qa') ? QA_SESSION : null, updated_at: now }));
+    .map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, segment: LUP_SCENES.includes(sceneForTitle(t.title) || 'qa') ? QA_SESSION : FREE_SCENES.includes(sceneForTitle(t.title)) ? FREE_NAME : null, updated_at: now }));
   if (!rows.length) { showToast('Semua sesi template sudah ada di tanggal itu.'); return; }
   const { error } = await supabase.from(RUNDOWN_TABLE).insert(rows);
   if (error) { showToast('Gagal menambah template: ' + rdColHint(error), 9000); return; }
@@ -7201,8 +7201,11 @@ async function loadScreenRow() {
 const SCR_SESSIONS = ['opening', 'qa', 'coffee', 'refresh', 'launch', 'lunch', 'funmkt', 'kickoff'];
 // Sesi yang masuk kelompok "Listening and Understanding Partner" (satu kartu di panel, tab di dalamnya)
 const LUP_SCENES = ['qa', 'refresh', 'launch', 'funmkt', 'kickoff'];
-const SCR_CARDS = ['opening', 'lup', 'coffee', 'lunch'];
-let scrLupSel = 'qa';
+// Sesi "Free Time" (kelompok kedua): Coffee Break + Makan Siang — satu kartu di panel, tab di dalamnya
+const FREE_SCENES = ['coffee', 'lunch'];
+const FREE_NAME = 'Free Time';
+const SCR_CARDS = ['opening', 'lup', 'free'];
+let scrLupSel = 'qa', scrFreeSel = 'coffee';
 const SCR_DESC = {
   qa: 'Pertanyaan dealer tampil di videotron. Pertanyaan, usul & curhatan dealer tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
   opening: 'Tampilkan susunan pembicara, lalu kartu tiap pembicara secara bergantian. Clicker / panah di komputer videotron juga bisa menggeser.',
@@ -7217,7 +7220,9 @@ let scrSel = null;
 const scrOnAir = () => sceneBase(scrRow?.scene) || 'qa';
 function scrSelect(k) {
   if (k === 'lup') k = LUP_SCENES.includes(scrOnAir()) ? scrOnAir() : scrLupSel;
+  if (k === 'free') k = FREE_SCENES.includes(scrOnAir()) ? scrOnAir() : scrFreeSel;
   if (LUP_SCENES.includes(k)) scrLupSel = k;
+  if (FREE_SCENES.includes(k)) scrFreeSel = k;
   scrSel = k; renderScreenPanel();
 }
 function scrSessionTime(k) {
@@ -7277,12 +7282,12 @@ function renderScreenPanel(err) {
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
     ${sceneCols() ? '' : '<div class="scr-warn">Jalankan SQL kolom <b>scene</b> di Supabase agar tampilan per sesi bisa dipakai.</div>'}
     <div class="scr-sessions">${SCR_CARDS.map((k, i) => {
-      const grp = k === 'lup', v = grp ? { icon: '🤝', label: 'Listening and Understanding Partner' } : QS_SCENES[k];
-      const isSel = grp ? LUP_SCENES.includes(sel) : k === sel, isAir = grp ? LUP_SCENES.includes(air) : k === air;
-      const t = grp ? LUP_SCENES.map(scrSessionTime).filter(Boolean).sort((a, b) => a.replace('± ', '').localeCompare(b.replace('± ', '')))[0] : scrSessionTime(k);
-      return `<button class="scr-btn${grp ? ' grp' : ''}${isSel ? ' sel' : ''}${isAir ? ' on' : ''}" onclick="scrSelect('${k}')">${isAir ? '<i class="scr-live">● LIVE</i>' : ''}<em>${i + 1}</em><span>${v.icon}</span>${v.label}${grp ? `<small>${LUP_SCENES.length} sesi${isAir ? ' · ' + (air === 'qa' ? QA_SHORT : QS_SCENES[air].label) : ''}</small>` : ''}${t && !grp ? `<small>${t}</small>` : ''}</button>`; }).join('')}</div>
+      const G = k === 'lup' ? { scenes: LUP_SCENES, icon: '🤝', label: 'Listening and Understanding Partner' } : k === 'free' ? { scenes: FREE_SCENES, icon: '☕', label: FREE_NAME } : null;
+      const grp = !!G, v = grp ? G : QS_SCENES[k];
+      const isSel = grp ? G.scenes.includes(sel) : k === sel, isAir = grp ? G.scenes.includes(air) : k === air;
+      return `<button class="scr-btn${grp ? ' grp' : ''}${isSel ? ' sel' : ''}${isAir ? ' on' : ''}" onclick="scrSelect('${k}')">${isAir ? '<i class="scr-live">● LIVE</i>' : ''}<em>${i + 1}</em><span>${v.icon}</span>${v.label}${grp ? `<small>${G.scenes.length} sesi${isAir ? ' · ' + (air === 'qa' ? QA_SHORT : QS_SCENES[air].label) : ''}</small>` : `<small>${scrSessionTime(k)}</small>`}</button>`; }).join('')}</div>
     <div class="scr-pane">
-      ${LUP_SCENES.includes(sel) ? `<div class="scr-lup-tabs"><span class="scr-lup-k">🤝 Listening and Understanding Partner</span>${LUP_SCENES.map(k => { const v = k === 'qa' ? { icon: '🎤', label: QA_SHORT } : QS_SCENES[k], tm = scrSessionTime(k);
+      ${LUP_SCENES.includes(sel) || FREE_SCENES.includes(sel) ? `<div class="scr-lup-tabs"><span class="scr-lup-k">${LUP_SCENES.includes(sel) ? '🤝 Listening and Understanding Partner' : '☕ ' + FREE_NAME}</span>${(LUP_SCENES.includes(sel) ? LUP_SCENES : FREE_SCENES).map(k => { const v = k === 'qa' ? { icon: '🎤', label: QA_SHORT } : QS_SCENES[k], tm = scrSessionTime(k);
         return `<button class="filter-chip${k === sel ? ' active' : ''}" onclick="scrSelect('${k}')">${k === air ? '<i class="scr-live-dot"></i>' : ''}${v.icon} ${v.label}${tm ? ` <small>${tm}</small>` : ''}</button>`; }).join('')}</div>` : ''}
       <div class="scr-pane-head"><span class="scr-pane-ic">${info.icon}</span><div><b>${info.label}</b><p>${SCR_DESC[sel]}</p></div>${live ? '<span class="qa-badge onair">● Sedang tampil</span>' : ''}</div>
       ${body}
@@ -7713,7 +7718,7 @@ function qsSetStage(key, html) {
 
 function qsSetEventSub(base) {
   const el = document.getElementById('qs-event-sub'); if (!el) return;
-  el.textContent = !base || LUP_SCENES.includes(base) ? 'Listening and Understanding Partner' : (QS_SCENES[base]?.label || '');
+  el.textContent = !base || LUP_SCENES.includes(base) ? 'Listening and Understanding Partner' : FREE_SCENES.includes(base) ? FREE_NAME : (QS_SCENES[base]?.label || '');
 }
 function renderQaScreen(q) {
   qsSetEventSub(null);
