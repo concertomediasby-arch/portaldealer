@@ -1617,14 +1617,6 @@ body {
   .gt-bank-no { font: 700 15px var(--f-mono); color: var(--fg); letter-spacing: .04em; }
   .gt-copy { padding: 4px 9px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--fg); font: 600 11px var(--f-body); cursor: pointer; }
   .gt-pay-note { margin-top: 10px; font-size: 12px; color: var(--fg-muted); }
-  .gt-mine { margin: 4px 0 16px; padding: 12px 16px; border: 1px solid var(--accent); border-radius: var(--r); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
-  .gt-mine-title { font-weight: 700; font-size: 13.5px; color: var(--fg); margin-bottom: 6px; } .gt-mine-title span { font-weight: 400; font-size: 12px; color: var(--fg-muted); }
-  .gt-mine-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; font-size: 13px; color: var(--fg); }
-  .gt-mine-row + .gt-mine-row { border-top: 1px solid var(--border); }
-  .gt-mine-row b { font-family: var(--f-mono); color: var(--accent); } .gt-mine-row small { display: block; font-size: 11.5px; color: var(--fg-muted); }
-  .gt-mine-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .gt-mine-right .gt-badge { position: static; }
-  .gt-mine-total { font: 700 13px var(--f-mono); }
   .gt-editing { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; border: 1px solid #f59e0b; background: rgba(245,158,11,.1); color: var(--fg); font-size: 13px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .gt-editing[hidden] { display: none; }
   .gt-del:hover { color: #e5484d; border-color: #e5484d; }
@@ -2170,7 +2162,6 @@ body {
       <div id="gt-top" class="gt-top" hidden></div>
       <div id="gt-rekap" class="gt-rekap" hidden></div>
       <div id="gt-form">
-      <div id="gt-mine"></div>
       <div class="gt-editing" id="gt-editing" hidden></div>
       <div class="gt-info">
         <label>Nama Dealer<input class="gt-input" id="gt-dealer" maxlength="60" oninput="gtSaveDraft()"></label>
@@ -2494,7 +2485,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T05:26:50Z';
+const LAST_UPDATE = '2026-10-12T05:31:37Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5638,7 +5629,6 @@ function openGathering(tab) {
   renderGtEditing();
   renderGathering();
   loadGathering();
-  loadGtMine();
   setGtTab(tab === 'rekap' && isAdmin() ? 'rekap' : 'form');
 }
 
@@ -5750,9 +5740,7 @@ const GATHERING_BANKS = [
   { bank: 'BCA', no: '5065685555', name: 'CV Concerto Audio Indonesia' },
   { bank: 'BCA', no: '8221999070', name: 'CV Anak Juan' },
 ];
-const GT_MINE_KEY = 'cai-gathering-orders';   // [{ invoice, token }] pesanan yang dikirim dari browser ini (untuk edit)
-let gtEditing = null, gtMine = null;
-const gtMineLocal = () => { try { return JSON.parse(localStorage.getItem(GT_MINE_KEY) || '[]'); } catch (e) { return []; } };
+let gtEditing = null;
 const gtToken = () => (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''));
 const gtBankLines = () => GATHERING_BANKS.map(b => `${b.bank} ${b.no} a.n ${b.name}`);
 
@@ -5787,8 +5775,7 @@ async function gtSend() {
     const { data, error } = await supabase.rpc('gathering_submit_order', { p: gtOrderPayload(o, i), p_token: token });
     if (error) throw error;
     invoice = (Array.isArray(data) ? data[0]?.invoice : data?.invoice) || '';
-    const mine = gtMineLocal(); mine.unshift({ invoice, token });
-    try { localStorage.setItem(GT_MINE_KEY, JSON.stringify(mine.slice(0, 50))); localStorage.setItem(GT_SENT_KEY, sig); } catch (e) {}
+    try { localStorage.setItem(GT_SENT_KEY, sig); } catch (e) {}
   } catch (e) {
     btn.disabled = false;
     if (win) win.close();
@@ -5810,33 +5797,9 @@ async function gtSend() {
   }
   showToast(`✓ Pesanan ${invoice} terkirim. Silakan transfer & tunggu konfirmasi admin.`, 7000);
   gtQty = {}; gtSaveDraft();
-  renderGathering(); loadGtMine();
+  renderGathering();
 }
 
-// ── Pesanan Saya (dealer): pesanan yang dikirim dari browser ini; bisa diedit selama belum dikonfirmasi admin ──
-async function loadGtMine() {
-  const mine = gtMineLocal();
-  if (!supabase || !authUser || !mine.length) { gtMine = []; renderGtMine(); return; }
-  try {
-    const { data, error } = await supabase.rpc('gathering_my_orders', { p_tokens: mine.map(m => m.token) });
-    if (error) throw error;
-    const tok = Object.fromEntries(mine.map(m => [m.invoice, m.token]));
-    gtMine = (data || []).map(r => ({ ...r, token: tok[r.invoice] }));
-  } catch (e) { console.warn('my orders', e); gtMine = []; }
-  renderGtMine();
-}
-function renderGtMine() {
-  const el = document.getElementById('gt-mine');
-  if (!el) return;
-  if (!gtMine?.length) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="gt-mine"><div class="gt-mine-title">📦 Pesanan Saya <span>(dikirim dari perangkat ini · perubahan pesanan hubungi sales/admin CAI)</span></div>
-    ${gtMine.map(r => `<div class="gt-mine-row">
-      <div><b>${escHtml(r.invoice)}</b> · ${escHtml(r.store || '')}<small>${fmtGtTime(r.created_at)}${r.updated_at ? ' · diubah ' + fmtGtTime(r.updated_at) : ''} · ${r.total_qty} item</small></div>
-      <div class="gt-mine-right"><span class="gt-mine-total">${fmtRp(Number(r.total || 0))}</span>
-        <span class="gt-badge st-${r.status}">${GT_STATUS[r.status] || r.status}</span>
-</div>
-    </div>`).join('')}</div>`;
-}
 // ── Edit pesanan oleh ADMIN (dari Rekap) — dealer tidak bisa mengedit ──
 let gtDraftBackup = null;
 function adminEditGtOrder(id) {
