@@ -2279,7 +2279,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T04:08:31Z';
+const LAST_UPDATE = '2026-10-12T04:13:26Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4476,6 +4476,7 @@ function showToast(text, ms = 3500) {
 function updateAuthUI() {
   document.body.classList.toggle('logged-in', !!authUser);
   document.body.classList.toggle('is-editor', isEditor());
+  updateWaAccess();
   if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
   const btn = document.getElementById('auth-btn');
   if (btn) btn.title = authUser ? `Login sebagai ${accountLabel(authUser)} (${ROLE_LABEL[userRole()] || 'Dealer'}) — klik untuk keluar` : 'Login dealer';
@@ -5385,7 +5386,9 @@ async function deleteDealer(id) {
 // Kosong = semua tombol WhatsApp disembunyikan.
 const CAI_WHATSAPP = '6281325988588';
 const hasWa = () => /^\d{8,15}$/.test(CAI_WHATSAPP);
-document.body.classList.toggle('has-wa', hasWa());
+// Tombol "Tanya CAI via WhatsApp" (class wa-only) hanya untuk akun DEALER yang login — tidak untuk pengunjung umum maupun staff
+function updateWaAccess() { document.body.classList.toggle('has-wa', hasWa() && !!authUser && !isAdmin()); }
+updateWaAccess();
 
 function waIntro() {
   const m = authUser?.user_metadata || {};
