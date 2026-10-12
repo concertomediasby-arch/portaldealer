@@ -1496,6 +1496,78 @@ body {
   .wa-float svg { width: 28px; height: 28px; }
   @media (max-width: 720px) { .wa-float { right: 14px; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); width: 48px; height: 48px; } }
 
+
+  /* ── Shopping Gathering ── */
+  .gt-terms { margin-top: 8px; font-size: 12px; color: var(--fg-muted); line-height: 1.55; max-width: 900px; }
+  .gt-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin: 4px 0 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+  .gt-info label { display: flex; flex-direction: column; gap: 5px; font: 600 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); }
+  .gt-input { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg, transparent); color: var(--fg); font: 13px var(--f-body); outline: none; }
+  .gt-input:focus, .gt-qty:focus { border-color: var(--accent); }
+  .gt-group { margin-bottom: 22px; }
+  .gt-group .line-header { margin-bottom: 8px; }
+  .gt-sub { margin-left: auto; font: 600 11.5px var(--f-mono); color: var(--accent); }
+  .gt-table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .gt-row { display: grid; grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)) 84px minmax(0, 1.1fr); gap: 10px; align-items: center; padding: 9px 14px; font-size: 13px; }
+  .gt-row + .gt-row { border-top: 1px solid var(--border); }
+  .gt-head { font: 600 10px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-muted); background: var(--surface2); }
+  .gt-head span:not(:first-child) { text-align: right; }
+  .gt-row.has-qty { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  .gt-name { font-weight: 600; color: var(--fg); min-width: 0; overflow-wrap: anywhere; }
+  .gt-note { font: 400 11px var(--f-body); color: var(--fg-muted); margin-top: 2px; }
+  .gt-p { text-align: right; font: 500 12.5px var(--f-mono); font-variant-numeric: tabular-nums; color: var(--fg); white-space: nowrap; }
+  .gt-p small { display: block; font-size: 10px; color: var(--fg-muted); }
+  .gt-old { color: var(--fg-muted); }
+  .gt-sp { color: var(--accent); font-weight: 700; }
+  .gt-line { font-weight: 700; }
+  .gt-q { text-align: right; }
+  .gt-qty { width: 72px; padding: 6px 8px; text-align: right; border-radius: 8px; border: 1px solid var(--border); background: var(--bg, transparent); color: var(--fg); font: 600 13px var(--f-mono); outline: none; }
+  .gt-na { font-size: 11px; color: var(--fg-muted); font-style: italic; }
+  .gt-bar { position: sticky; bottom: 0; z-index: 5; margin: 10px -4px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--glass-bar, var(--surface)); backdrop-filter: blur(14px); box-shadow: 0 -6px 24px rgba(0,0,0,.18); }
+  .gt-total { display: flex; flex-direction: column; }
+  .gt-total span { font: 600 11px var(--f-mono); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; }
+  .gt-total b { font: 700 20px var(--f-display); color: var(--accent); }
+  .gt-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .gt-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--fg); font: 600 13px var(--f-body); cursor: pointer; }
+  .gt-btn.wa { background: #25d366; border-color: #25d366; color: #fff; }
+  .gt-bar.empty .gt-btn.wa { opacity: .55; }
+  @media (max-width: 760px) {
+    .gt-head { display: none; }
+    .gt-row { grid-template-columns: 1fr 1fr 1fr; gap: 6px 10px; }
+    .gt-name { grid-column: 1 / -1; }
+    .gt-p { text-align: left; }
+    .gt-p::before { content: attr(data-l); display: block; font: 600 9.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); text-decoration: none; }
+    .gt-q { text-align: left; }
+    .gt-info { grid-template-columns: 1fr 1fr; padding: 12px; gap: 8px; }
+    .gt-bar { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); flex-wrap: nowrap; padding: 8px 10px; gap: 8px; margin: 10px 0 0; }
+    .gt-total span { font-size: 10px; }
+    .gt-total b { font-size: 16px; }
+    .gt-actions { flex-wrap: nowrap; gap: 6px; }
+    .gt-btn { padding: 8px 10px; font-size: 12.5px; }
+    .gt-btn .lbl { display: none; }
+  }
+  body[data-view="gathering"] .wa-float { display: none !important; }   /* jangan menutupi tombol Kirim ke Sales */
+  #gt-print { display: none; }
+  @media print {
+    @page { margin: 12mm 10mm; }
+    body > *:not(#gt-print) { display: none !important; }
+    #gt-print, #gt-print * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #gt-print { display: block !important; color: #000; font: 11px/1.4 Arial, sans-serif; }
+    #gt-print .gp-head { display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #1d2a4d; padding-bottom: 8px; margin-bottom: 10px; }
+    #gt-print .gp-head img { height: 34px; }
+    #gt-print h1 { font-size: 16px; margin: 0; } #gt-print .gp-head p { margin: 2px 0 0; color: #444; }
+    #gt-print h2 { font-size: 12px; margin: 14px 0 4px; text-transform: uppercase; }
+    #gt-print table { width: 100%; border-collapse: collapse; }
+    #gt-print .gp-info td { padding: 1px 4px; } #gt-print .gp-info td:first-child { width: 110px; }
+    #gt-print .gp-items th, #gt-print .gp-items td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
+    #gt-print .gp-items th { background: #1d2a4d; color: #fff; }
+    #gt-print .gp-items td:nth-child(n+3) { text-align: right; }
+    #gt-print .gp-sub td, #gt-print .gp-grand td { font-weight: 700; background: #f1f1f1; }
+    #gt-print .gp-grand { margin-top: 12px; } #gt-print .gp-grand td:last-child { text-align: right; font-size: 13px; }
+    #gt-print .gp-terms { color: #555; margin-top: 10px; }
+    #gt-print .gp-sign { display: flex; justify-content: space-around; margin-top: 30px; text-align: center; }
+  }
+
   /* ── Harga SRP ── */
   .product-card { display: flex; flex-direction: column; }
   .product-card .product-info { flex: 1; display: flex; flex-direction: column; }
@@ -1824,6 +1896,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         Paket Audio
       </button>
+      <button class="sidebar-item" id="nav-gathering" onclick="openGathering()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Shopping Gathering<span class="nav-lock" title="Perlu login">🔒</span>
+      </button>
       <button class="sidebar-item" id="nav-guides" onclick="openGuides()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Panduan Dealer<span class="nav-lock" title="Perlu login">🔒</span>
@@ -1989,6 +2065,38 @@ body {
     </div>
 
     <!-- VIEW: Stok Produk -->
+    <!-- VIEW: Shopping Gathering (khusus dealer login; harga dari tabel Supabase gathering_items) -->
+    <div class="view" id="view-gathering">
+      <div class="page-header">
+        <div class="page-title">Shopping Gathering</div>
+        <div class="page-subtitle">Form belanja dealer <b>Gathering CAI 2026</b>. Isi jumlah pesanan, total dihitung otomatis, lalu kirim ke sales CAI lewat WhatsApp atau cetak sebagai PDF.</div>
+        <div class="gt-terms">* Harga Spesial Gathering = harga lama − diskon 35% − cashback, hanya berlaku selama acara berlangsung. Produk yang tidak masuk promo memakai harga lama. Clearance Sale: harga bersih = harga clearance 50% − cashback, stok terbatas.</div>
+      </div>
+      <div class="gt-info">
+        <label>Nama Dealer<input class="gt-input" id="gt-dealer" maxlength="60" oninput="gtSaveDraft()"></label>
+        <label>Nama Toko<input class="gt-input" id="gt-store" maxlength="60" oninput="gtSaveDraft()"></label>
+        <label>Kota<input class="gt-input" id="gt-city" maxlength="40" oninput="gtSaveDraft()"></label>
+        <label>No. HP<input class="gt-input" id="gt-phone" maxlength="20" inputmode="tel" oninput="gtSaveDraft()"></label>
+        <label>Sales PIC<input class="gt-input" id="gt-pic" maxlength="40" oninput="gtSaveDraft()"></label>
+      </div>
+      <div class="catalog-controls">
+        <div class="catalog-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="gt-search" class="catalog-search" placeholder="Cari produk…" oninput="renderGathering()" autocomplete="off">
+        </div>
+        <div class="catalog-chips" id="gt-chips"></div>
+      </div>
+      <div id="gt-list"><div class="stock-empty">Memuat…</div></div>
+      <div class="gt-bar" id="gt-bar">
+        <div class="gt-total"><span id="gt-count">0 item</span><b id="gt-sum">Rp 0</b></div>
+        <div class="gt-actions">
+          <button class="gt-btn ghost" onclick="gtReset()" title="Kosongkan pesanan">✕<span class="lbl"> Kosongkan</span></button>
+          <button class="gt-btn ghost" onclick="gtPrint()" title="Cetak / simpan PDF">🖨<span class="lbl"> Cetak / PDF</span></button>
+          <button class="gt-btn wa" onclick="gtSend()"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>Kirim ke Sales</button>
+        </div>
+      </div>
+    </div>
+
     <div class="view" id="view-stock">
       <div class="page-header">
         <div class="page-title">Stok Produk</div>
@@ -2123,6 +2231,10 @@ body {
     <button class="mobile-nav-item" id="mnav-paket" onclick="openPaketAudio()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
       <span>Paket</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-gathering" onclick="openGathering()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span>Gathering</span>
     </button>
   </nav>
 
@@ -2279,7 +2391,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T04:13:26Z';
+const LAST_UPDATE = '2026-10-12T04:35:53Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3762,6 +3874,7 @@ function hideViews() {
 
 function showView(viewId) {
   hideViews();
+  document.body.dataset.view = viewId;
   document.getElementById('view-' + viewId)?.classList.add('active');
 
   // Sidebar active
@@ -3774,6 +3887,7 @@ function showView(viewId) {
   if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('nav-paket')?.classList.add('active');
+  if (viewId === 'gathering') document.getElementById('nav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('nav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('nav-dealers')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('nav-stock')?.classList.add('active');
@@ -3786,6 +3900,7 @@ function showView(viewId) {
   if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('mnav-paket')?.classList.add('active');
+  if (viewId === 'gathering') document.getElementById('mnav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('mnav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('mnav-dealers')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('mnav-stock')?.classList.add('active');
@@ -4353,9 +4468,9 @@ function onAuthChanged() {
     subscribeStock();
   } else {
     if (stockChannel) { supabase.removeChannel(stockChannel); stockChannel = null; }
-    stockMap = {}; stockLoaded = false; guideFiles = null;
+    stockMap = {}; stockLoaded = false; guideFiles = null; gtItems = null;
     refreshStockUI();
-    if (['view-stock', 'view-guides', 'view-dealers'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
+    if (['view-stock', 'view-guides', 'view-dealers', 'view-gathering'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
   }
 }
 
@@ -5377,6 +5492,185 @@ async function deleteDealer(id) {
     if (dealerEditId === id) resetDealerForm();
     loadDealers();
   } catch (e) { showToast('Gagal menghapus: ' + e.message, 8000); }
+}
+
+
+/* ══════════════════════════════════════════
+   SHOPPING GATHERING — form belanja dealer (khusus login)
+   Harga (lama/baru/spesial) disimpan di tabel Supabase `gathering_items` (RLS: baca = authenticated),
+   BUKAN di kode situs — index.html bisa dibaca publik dan harga gathering bukan harga publik.
+══════════════════════════════════════════ */
+const GATHERING_TABLE = 'gathering_items';
+const GT_DRAFT_KEY = 'cai-gathering-draft';
+const GT_INFO = ['dealer', 'store', 'city', 'phone', 'pic'];
+let gtItems = null, gtError = '', gtQty = {}, gtFilter = 'all';
+const gtKey = r => `${r.section}|${r.brand}|${r.name}`;
+// Harga yang dipakai menghitung total: spesial gathering, atau (clearance) harga clearance − cashback
+const gtNet = r => r.special_price == null ? null : r.section === 'clearance' ? r.special_price - (r.cashback || 0) : r.special_price;
+const gtRp = n => n == null ? '—' : fmtRp(n);
+const gtGroup = r => r.section === 'clearance' ? 'Clearance Sale' : r.brand;
+
+function gtLoadDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(GT_DRAFT_KEY) || '{}');
+    gtQty = d.qty || {};
+    GT_INFO.forEach(k => { const el = document.getElementById('gt-' + k); if (el && !el.value) el.value = d.info?.[k] || ''; });
+  } catch (e) { gtQty = {}; }
+  const st = document.getElementById('gt-store');
+  if (st && !st.value && authUser?.user_metadata?.store) st.value = authUser.user_metadata.store;
+}
+function gtSaveDraft() {
+  const info = Object.fromEntries(GT_INFO.map(k => [k, document.getElementById('gt-' + k)?.value || '']));
+  try { localStorage.setItem(GT_DRAFT_KEY, JSON.stringify({ qty: gtQty, info })); } catch (e) {}
+}
+
+function openGathering() {
+  if (!requireLogin(openGathering)) return;
+  showView('gathering');
+  document.querySelector('.main')?.scrollTo(0, 0);
+  gtLoadDraft();
+  renderGathering();
+  loadGathering();
+}
+
+async function loadGathering() {
+  if (!supabase || !authUser) return;
+  try {
+    const { data, error } = await supabase.from(GATHERING_TABLE).select('*').order('sort');
+    if (error) throw error;
+    gtItems = data || []; gtError = '';
+  } catch (e) {
+    const m = String(e.message || e);
+    gtItems = [];
+    gtError = /does not exist|relation|schema cache/i.test(m) ? 'Data Shopping Gathering belum dipasang di database. Admin/editor: jalankan SQL setup gathering di Supabase.' : 'Data gathering tidak bisa dimuat: ' + m;
+  }
+  renderGathering();
+}
+
+function setGtFilter(f) { gtFilter = f; renderGathering(); }
+
+function renderGathering() {
+  const list = document.getElementById('gt-list');
+  if (!list) return;
+  if (gtItems === null) { list.innerHTML = '<div class="stock-empty">Memuat…</div>'; gtUpdateBar(); return; }
+  if (gtError) { list.innerHTML = `<div class="stock-empty">${escHtml(gtError)}</div>`; gtUpdateBar(); return; }
+  const groups = [...new Set(gtItems.map(gtGroup))];
+  document.getElementById('gt-chips').innerHTML = ['all', ...groups].map(g =>
+    `<button class="filter-chip${gtFilter === g ? ' active' : ''}" onclick="setGtFilter('${escHtml(g)}')">${g === 'all' ? 'Semua' : escHtml(g)}</button>`).join('');
+  const q = normKey(document.getElementById('gt-search')?.value || '');
+  const rows = gtItems.filter(r => (gtFilter === 'all' || gtGroup(r) === gtFilter) && (!q || normKey(r.name).includes(q)));
+  if (!rows.length) { list.innerHTML = `<div class="stock-empty">${gtItems.length ? 'Tidak ada produk yang cocok.' : 'Belum ada data gathering.'}</div>`; gtUpdateBar(); return; }
+  list.innerHTML = groups.filter(g => rows.some(r => gtGroup(r) === g)).map(g => {
+    const items = rows.filter(r => gtGroup(r) === g);
+    const clear = items[0].section === 'clearance';
+    const head = clear
+      ? '<span>Produk</span><span>Harga Normal</span><span>Clearance 50%</span><span>Harga Bersih</span><span>Qty</span><span>Subtotal</span>'
+      : '<span>Produk</span><span>Harga Lama</span><span>Harga Baru</span><span>Harga Spesial</span><span>Qty</span><span>Subtotal</span>';
+    return `<div class="gt-group">
+      <div class="line-header"><span class="line-name">${escHtml(g)}</span><span class="line-count">${items.length}</span><span class="gt-sub" data-group="${escHtml(g)}"></span></div>
+      <div class="gt-table${clear ? ' clear' : ''}"><div class="gt-row gt-head">${head}</div>
+      ${items.map(r => {
+        const k = gtKey(r), net = gtNet(r), qty = gtQty[k] || 0;
+        const sub = clear
+          ? `${r.stock ? `<div class="gt-note">Stok ${escHtml(r.stock)}</div>` : ''}`
+          : (r.note ? `<div class="gt-note">${escHtml(r.note)}</div>` : '');
+        const cols = clear
+          ? `<span class="gt-p" data-l="Harga Normal">${gtRp(r.old_price)}</span>
+             <span class="gt-p" data-l="Clearance 50%">${gtRp(r.special_price)}${r.cashback ? `<small>cashback ${fmtRp(r.cashback)}</small>` : ''}</span>
+             <span class="gt-p gt-sp" data-l="Harga Bersih">${gtRp(net)}</span>`
+          : `<span class="gt-p gt-old" data-l="Harga Lama">${r.old_price == null ? '—' : `<s>${fmtRp(r.old_price)}</s>`}</span>
+             <span class="gt-p" data-l="Harga Baru">${gtRp(r.new_price)}</span>
+             <span class="gt-p gt-sp" data-l="Harga Spesial">${gtRp(net)}</span>`;
+        return `<div class="gt-row${qty ? ' has-qty' : ''}" data-k="${escHtml(k)}">
+          <span class="gt-name">${escHtml(r.name)}${sub}</span>${cols}
+          <span class="gt-q">${net == null ? '<span class="gt-na">Hubungi sales</span>'
+            : `<input class="gt-qty" type="number" min="0" step="1" inputmode="numeric" value="${qty || ''}" placeholder="0" aria-label="Qty ${escHtml(r.name)}" oninput="gtSetQty(this)">`}</span>
+          <span class="gt-p gt-line" data-l="Subtotal">${qty && net != null ? fmtRp(qty * net) : '—'}</span>
+        </div>`;
+      }).join('')}</div></div>`;
+  }).join('');
+  gtUpdateBar();
+}
+
+function gtSetQty(input) {
+  const row = input.closest('.gt-row'), k = row.dataset.k;
+  const r = gtItems.find(x => gtKey(x) === k);
+  const n = Math.max(0, Math.min(9999, parseInt(input.value, 10) || 0));
+  if (n) gtQty[k] = n; else delete gtQty[k];
+  row.classList.toggle('has-qty', !!n);
+  row.querySelector('.gt-line').textContent = n ? fmtRp(n * gtNet(r)) : '—';
+  gtSaveDraft();
+  gtUpdateBar();
+}
+
+// Item yang dipesan (hanya yang masih ada di data & punya harga), dikelompokkan sesuai urutan data
+function gtOrder() {
+  const lines = (gtItems || []).filter(r => gtQty[gtKey(r)] && gtNet(r) != null)
+    .map(r => ({ r, qty: gtQty[gtKey(r)], price: gtNet(r), total: gtQty[gtKey(r)] * gtNet(r) }));
+  const groups = [...new Set(lines.map(l => gtGroup(l.r)))].map(g => {
+    const ls = lines.filter(l => gtGroup(l.r) === g);
+    return { name: g, lines: ls, qty: ls.reduce((a, l) => a + l.qty, 0), total: ls.reduce((a, l) => a + l.total, 0) };
+  });
+  return { groups, qty: lines.reduce((a, l) => a + l.qty, 0), total: lines.reduce((a, l) => a + l.total, 0) };
+}
+
+function gtUpdateBar() {
+  const o = gtOrder();
+  document.getElementById('gt-count').textContent = `${o.qty} item`;
+  document.getElementById('gt-sum').textContent = fmtRp(o.total);
+  document.getElementById('gt-bar').classList.toggle('empty', !o.qty);
+  document.querySelectorAll('.gt-sub').forEach(el => {
+    const g = o.groups.find(x => x.name === el.dataset.group);
+    el.textContent = g ? `${g.qty} item · ${fmtRp(g.total)}` : '';
+  });
+}
+
+function gtInfo() { return Object.fromEntries(GT_INFO.map(k => [k, (document.getElementById('gt-' + k)?.value || '').trim()])); }
+const gtToday = () => new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+
+function gtCheck() {
+  const o = gtOrder();
+  if (!o.qty) { showToast('Isi jumlah (Qty) minimal satu produk dulu.'); return null; }
+  const i = gtInfo();
+  if (!i.store) { showToast('Isi Nama Toko dulu.'); document.getElementById('gt-store').focus(); return null; }
+  return { o, i };
+}
+
+function gtSend() {
+  const c = gtCheck(); if (!c) return;
+  const { o, i } = c;
+  if (!hasWa()) { showToast('Nomor WhatsApp CAI belum diatur — gunakan Cetak / PDF.'); return; }
+  const txt = ['*FORM BELANJA GATHERING CAI 2026*',
+    `Nama Dealer: ${i.dealer || '-'}`, `Nama Toko: ${i.store}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Sales PIC: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
+    ...o.groups.flatMap(g => [`*${g.name.toUpperCase()}*`,
+      ...g.lines.map(l => `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}`),
+      `Subtotal: ${fmtRp(g.total)}`, '']),
+    `*GRAND TOTAL: ${fmtRp(o.total)}* (${o.qty} item)`, '', `(dari ${PORTAL_URL})`].join('\n');
+  openWa(txt);
+}
+
+function gtPrint() {
+  const c = gtCheck(); if (!c) return;
+  const { o, i } = c;
+  let el = document.getElementById('gt-print');
+  if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
+  const info = [['Nama Dealer', i.dealer], ['Nama Toko', i.store], ['Kota', i.city], ['No. HP', i.phone], ['Sales PIC', i.pic], ['Tanggal', gtToday()]];
+  el.innerHTML = `
+    <div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>FORM BELANJA DEALER</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
+    <table class="gp-info">${info.map(([a, b]) => `<tr><td>${a}</td><td>: ${escHtml(b || '')}</td></tr>`).join('')}</table>
+    ${o.groups.map(g => `<h2>${escHtml(g.name)}</h2>
+      <table class="gp-items"><thead><tr><th>No</th><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead><tbody>
+      ${g.lines.map((l, n) => `<tr><td>${n + 1}</td><td>${escHtml(l.r.name)}</td><td>${l.qty}</td><td>${fmtRp(l.price)}</td><td>${fmtRp(l.total)}</td></tr>`).join('')}
+      <tr class="gp-sub"><td colspan="4">Subtotal ${escHtml(g.name)}</td><td>${fmtRp(g.total)}</td></tr></tbody></table>`).join('')}
+    <table class="gp-items gp-grand"><tr><td>GRAND TOTAL (${o.qty} item)</td><td>${fmtRp(o.total)}</td></tr></table>
+    <p class="gp-terms">Harga Spesial Gathering hanya berlaku selama acara berlangsung. Clearance: harga bersih = harga clearance 50% − cashback, stok terbatas.</p>
+    <div class="gp-sign"><div>Dealer<br><br><br>(______________________)</div><div>Sales / PIC CAI<br><br><br>(______________________)</div></div>`;
+  window.print();
+}
+
+function gtReset() {
+  if (!Object.keys(gtQty).length || !confirm('Kosongkan semua jumlah pesanan?')) return;
+  gtQty = {}; gtSaveDraft(); renderGathering();
 }
 
 /* ══════════════════════════════════════════
