@@ -2141,17 +2141,17 @@ body {
     </div>
     <div class="admin-body">
       <form class="admin-login" onsubmit="dealerLogin(); return false;">
-        <div>
-          <label>ID Dealer</label>
-          <input class="admin-input" type="text" id="login-email" placeholder="CAI" autocomplete="username" autocapitalize="characters" autocorrect="off" spellcheck="false">
+        <div id="login-id-row">
+          <label id="login-id-label">Email staff</label>
+          <input class="admin-input" type="text" id="login-email" placeholder="email@concerto.id" autocomplete="username" autocapitalize="characters" autocorrect="off" spellcheck="false">
         </div>
         <div>
-          <label>PIN</label>
-          <input class="admin-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+          <label id="login-pass-label">Kode Akses</label>
+          <input class="admin-input" type="password" id="login-password" placeholder="Masukkan kode akses dealer" autocomplete="current-password" autocapitalize="characters" autocorrect="off" spellcheck="false">
         </div>
         <div class="admin-error" id="login-error"></div>
         <button class="admin-btn primary" id="login-btn" type="submit">Masuk</button>
-        <div style="font-size:11.5px;color:#6b7280;text-align:center;line-height:1.5">Belum tahu PIN? Hubungi tim Concerto Audio Indonesia.<br>Staff CAI: isi kolom ID Dealer dengan email.</div>
+        <div style="font-size:11.5px;color:#6b7280;text-align:center;line-height:1.5"><span id="login-help">Belum tahu kode akses? Hubungi tim Concerto Audio Indonesia.</span><br><a href="#" id="login-mode-link" onclick="setLoginMode(!loginStaffMode); return false;" style="color:inherit;text-decoration:underline">Login staff (email)</a></div>
       </form>
     </div>
   </div>
@@ -2239,7 +2239,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T02:18:02Z';
+const LAST_UPDATE = '2026-10-12T02:22:21Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4262,10 +4262,19 @@ function openLogin() {
   document.getElementById('login-error').textContent = '';
   document.getElementById('login-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  // Semua dealer memakai satu ID bersama → isi otomatis, dealer cukup mengetik PIN
-  const idEl = document.getElementById('login-email');
-  if (SHARED_DEALER_CODE && !idEl.value) idEl.value = SHARED_DEALER_CODE;
-  setTimeout(() => document.getElementById(idEl.value ? 'login-password' : 'login-email')?.focus(), 50);
+  setLoginMode(loginStaffMode);
+}
+// Dealer: cukup satu Kode Akses (= PIN akun bersama SHARED_DEALER_CODE). Staff: email + password.
+let loginStaffMode = false;
+function setLoginMode(staff) {
+  loginStaffMode = staff || !SHARED_DEALER_CODE;
+  document.getElementById('login-id-row').hidden = !loginStaffMode;
+  document.getElementById('login-pass-label').textContent = loginStaffMode ? 'Password' : 'Kode Akses';
+  document.getElementById('login-password').placeholder = loginStaffMode ? '••••••••' : 'Masukkan kode akses dealer';
+  document.getElementById('login-mode-link').textContent = loginStaffMode ? 'Login dealer (kode akses)' : 'Login staff (email)';
+  document.getElementById('login-mode-link').hidden = !SHARED_DEALER_CODE;
+  document.getElementById('login-error').textContent = '';
+  setTimeout(() => document.getElementById(loginStaffMode && !document.getElementById('login-email').value ? 'login-email' : 'login-password')?.focus(), 50);
 }
 function closeLogin() {
   document.getElementById('login-overlay').classList.remove('open');
@@ -4289,11 +4298,12 @@ function randomPin(len = 6) {
 }
 
 async function dealerLogin() {
-  const ident = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-password').value.trim();
+  const ident = loginStaffMode ? document.getElementById('login-email').value.trim() : SHARED_DEALER_CODE;
+  const raw   = document.getElementById('login-password').value.trim();
+  const pass  = loginStaffMode ? raw : raw.toUpperCase(); // kode akses tidak peka huruf besar/kecil (disimpan HURUF BESAR)
   const btn   = document.getElementById('login-btn');
   const err   = document.getElementById('login-error');
-  if (!ident || !pass) { err.textContent = 'Isi ID Dealer dan PIN.'; return; }
+  if (!ident || !pass) { err.textContent = loginStaffMode ? 'Isi email dan password.' : 'Masukkan kode akses.'; return; }
   const email = loginEmailFor(ident);
   if (!supabase) { err.textContent = 'Tidak dapat terhubung ke server. Periksa koneksi internet.'; return; }
   btn.disabled = true; btn.textContent = 'Memverifikasi…'; err.textContent = '';
@@ -4307,7 +4317,7 @@ async function dealerLogin() {
     showToast(`Masuk sebagai ${authUser.user_metadata?.store || accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Dealer'}`);
     if (next) next();
   } catch (e) {
-    err.textContent = /invalid login/i.test(e.message || '') ? 'ID Dealer atau PIN salah.' : 'Login gagal: ' + (e.message || e);
+    err.textContent = /invalid login/i.test(e.message || '') ? (loginStaffMode ? 'Email atau password salah.' : 'Kode akses salah.') : 'Login gagal: ' + (e.message || e);
   } finally {
     btn.disabled = false; btn.textContent = 'Masuk';
   }
