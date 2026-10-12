@@ -1611,6 +1611,9 @@ body {
   .scr-live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-right: 4px; vertical-align: 1px; box-shadow: 0 0 6px #22c55e; }
   .scr-priv { margin-left: 8px; text-transform: none; letter-spacing: 0; font: 500 11px var(--f-body); color: #9aa5bd; }
   .scr-note { font-size: 12.5px; color: #c3cbdc; margin: 6px 0; }
+  .scr-pks-prev-wrap { display: flex; align-items: flex-end; gap: 10px; margin: 6px 0 10px; }
+  .scr-pks-prev { height: 130px; width: auto; border-radius: 3px; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+  .scr-pks-prev-wrap span { font-size: 11.5px; color: #9aa5bd; }
   .scr-pks-pages { display: flex; flex-wrap: wrap; gap: 6px; }
   .scr-pks-pages .scr-lv-btn { min-width: 40px; justify-content: center; }
   .scr-pane { margin-top: 12px; padding: 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.25); }
@@ -2863,7 +2866,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T10:14:11Z';
+const LAST_UPDATE = '2026-10-12T10:26:26Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7212,6 +7215,7 @@ function renderScreenPanel(err) {
           <span class="scr-fm-now">${cur ? `Halaman <b>${cur}</b> / ${n || '?'}` : 'Belum tampil'}</span>
           <button class="scr-lv-btn${cur ? '' : ' on'}" onclick="pksStep(1)" ${!n || cur < n ? '' : 'disabled'}>${cur ? 'Berikutnya ▶' : '▶ Mulai dari halaman 1'}</button>
         </div>
+        ${cur ? `<div class="scr-pks-prev-wrap"><canvas id="scr-pks-prev" class="scr-pks-prev"></canvas><span>Pratinjau yang tampil di videotron · hal. ${cur}</span></div>` : ''}
         <div class="scr-pks-pages">${Array.from({ length: n }, (_, i) => `<button class="scr-lv-btn${cur === i + 1 ? ' on' : ''}" onclick="setScene('kickoff:${i + 1}')">${i + 1}</button>`).join('')}</div>`}
     <div class="scr-actions"><label class="gt-btn ghost">⬆ ${pksMeta?.exists ? 'Ganti' : 'Unggah'} PDF PKS<input type="file" accept="application/pdf" hidden onchange="uploadPks(this)"></label></div>`; }
   else body = `${opts(sel === 'coffee' || sel === 'lunch')}<div class="scr-actions">${showBtn()}</div>`;
@@ -7229,8 +7233,19 @@ function renderScreenPanel(err) {
       <div class="scr-pane-head"><span class="scr-pane-ic">${info.icon}</span><div><b>${info.label}</b><p>${SCR_DESC[sel]}</p></div>${live ? '<span class="qa-badge onair">● Sedang tampil</span>' : ''}</div>
       ${body}
     </div>`;
+  if (sel === 'kickoff' && pksNum(scrRow.scene) && pksMeta?.exists) renderPksPreview(pksNum(scrRow.scene));
 }
 
+// Pratinjau kecil halaman PKS yang sedang tampil, di panel admin
+async function renderPksPreview(n) {
+  try {
+    const doc = await getPksDoc(), page = await doc.getPage(n);
+    const cv = document.getElementById('scr-pks-prev'); if (!cv) return;
+    const vp = page.getViewport({ scale: 260 / page.getViewport({ scale: 1 }).height * (window.devicePixelRatio || 1) });
+    cv.width = vp.width; cv.height = vp.height;
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+  } catch (e) {}
+}
 function pksStep(d) {
   const n = pksNum(scrRow?.scene), max = pksMeta?.pages || 999;
   const next = Math.min(max, Math.max(1, (n || 0) + d));
@@ -7386,6 +7401,7 @@ async function renderPksPage(n) {
     setTimeout(() => [...ov.children].slice(0, -1).forEach(x => x.remove()), 600);
   } catch (e) {
     ov.remove();
+    qsKey = null;   // coba lagi otomatis di poll berikutnya (mis. PDF baru saja diunggah)
     document.getElementById('qs-stage').innerHTML = `<div class="qs-idle"><p>Materi PKS belum tersedia (${escHtml(e.message || e)}). Unggah PDF di panel Kick Off 2027.</p></div>`;
   }
 }
@@ -7517,8 +7533,20 @@ function qsTick() {
 const QA_SCREEN_MODE = new URLSearchParams(location.search).get('layar') === 'qa';
 let qsTimer = null, qsChannel = null, qsKey = null, qsCursorT = null;
 
+// Layar videotron memuat ulang sendiri bila ada versi portal baru (cek tiap 60 dtk; ditunda selama video diputar)
+let qsBuildSig = null;
+async function qsCheckBuild() {
+  try {
+    const t = await (await fetch(location.pathname + '?build=' + Date.now(), { cache: 'no-store' })).text();
+    const sig = t.length + ':' + t.slice(-200);
+    if (qsBuildSig === null) { qsBuildSig = sig; return; }
+    const v = document.getElementById('qs-video-el');
+    if (sig !== qsBuildSig && !(v && !v.paused)) location.reload();
+  } catch (e) {}
+}
 function initQaScreen() {
   if (!QA_SCREEN_MODE) return;
+  qsCheckBuild(); setInterval(qsCheckBuild, 60000);
   document.body.classList.add('screen-mode');
   document.title = 'Layar Tanya Jawab — Gathering CAI 2026';
   const el = document.getElementById('qa-screen');
