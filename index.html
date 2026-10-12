@@ -1819,6 +1819,19 @@ body {
   .qs-slide { position: absolute; inset: 0; z-index: 4; background: #000; }
   .qs-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .45s ease; }
   .qs-slide img.in { opacity: 1; }
+  .qs-slide.qs-bd { background: #05070d; }
+  .bd-s { position: absolute; inset: 0; opacity: 0; }
+  .bd-s.in { opacity: 1; animation: qsFade .9s ease both; }
+  .bd-s.alt { animation: bdAlt var(--dur) ease-in-out infinite; }
+  @keyframes bdAlt { 0% { opacity: 0; } 4% { opacity: 1; } 46% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 0; } }   /* untuk 2 foto (siklus = 2 × BACKDROP_SEC) */
+  .qs-slide.qs-bd .bd-s img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 1; transition: none; }
+  .bd-s .bd-bg { object-fit: cover; filter: blur(34px) brightness(.55); transform: scale(1.12); }
+  .bd-s .bd-fg { object-fit: contain; filter: drop-shadow(0 0 4vh rgba(0,0,0,.5)); }
+  .scr-bd { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 14px; margin: 4px 0 12px; }
+  .scr-bd-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #e8ecf5; cursor: pointer; text-align: left; font: inherit; }
+  .scr-bd-card img { width: 100%; aspect-ratio: 5/4; object-fit: cover; border-radius: 9px; }
+  .scr-bd-card b { font-size: 13px; } .scr-bd-card span { font-size: 11.5px; color: #e9c46a; }
+  .scr-bd-card.on { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; background: rgba(233,196,106,.1); }
   .qs-slide.qs-pks { background: radial-gradient(ellipse at 50% 0%, #1b2440, #05070d 70%); }
   .qs-slide canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 96vw; max-height: 96vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 2vh 6vh rgba(0,0,0,.6); opacity: 0; transition: opacity .45s ease; background: #fff; }
   .qs-slide canvas.in { opacity: 1; }
@@ -2948,7 +2961,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T16:01:26Z';
+const LAST_UPDATE = '2026-10-12T16:45:16Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7152,6 +7165,7 @@ const QS_SCENES = {
   lunch:   { label: 'Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan|lunch/i },
   funmkt:  { label: 'Fun Marketing', icon: '🎯', match: /fun ?marketing/i },
   kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
+  backdrop: { label: 'Backdrop', icon: '🖼', match: /backdrop/i },
 };
 const PORTAL_POINTS = ['Katalog produk & harga SRP resmi', 'Stok produk real-time', 'Panduan Dealer & Concerto Academy', 'Paket Audio & Shopping Gathering'];
 const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitmen kerja sama', 'Program & dukungan untuk dealer'];
@@ -7215,6 +7229,7 @@ const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] 
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
+  if (sceneBase(k) === 'backdrop') return { ...base, label: bdNum(k) ? `Backdrop · ${BACKDROPS[bdNum(k) - 1]?.t}` : 'Backdrop · bergantian' };
   if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
   if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
@@ -7240,7 +7255,14 @@ const SCR_SESSIONS = ['opening', 'qa', 'coffee', 'refresh', 'launch', 'lunch', '
 // Sesi yang masuk kelompok "Listening and Understanding Partner" (satu kartu di panel, tab di dalamnya)
 const LUP_SCENES = ['qa', 'refresh', 'launch', 'funmkt', 'kickoff'];
 // Sesi "Free Time" (kelompok kedua): Coffee Break + Makan Siang — satu kartu di panel, tab di dalamnya
-const FREE_SCENES = ['coffee', 'lunch'];
+const FREE_SCENES = ['coffee', 'lunch', 'backdrop'];
+// Backdrop (Free Time): 2 foto layar penuh. 'backdrop:1' / 'backdrop:2' = satu foto, 'backdrop' = bergantian otomatis
+const BACKDROPS = [
+  { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp', th: 'assets/backdrop/reset-button-thumb.webp' },
+  { t: '5th Annual Gathering · Dinner', src: 'assets/backdrop/gathering-dinner.webp', th: 'assets/backdrop/gathering-dinner-thumb.webp' },
+];
+const BACKDROP_SEC = 12;   // detik per foto saat bergantian
+const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
 const FREE_NAME = 'Free Time';
 const SCR_CARDS = ['opening', 'lup', 'free'];
 let scrLupSel = 'qa', scrFreeSel = 'coffee';
@@ -7251,6 +7273,7 @@ const SCR_DESC = {
   refresh: 'Judul sesi dengan strip logo brand berjalan.',
   launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
   lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
+  backdrop: 'Dua foto backdrop acara tampil layar penuh — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
   kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), video perkenalan portal, lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
 };
@@ -7281,6 +7304,9 @@ function renderScreenPanel(err) {
   const showBtn = (label) => `<button class="gt-btn confirm" onclick="setScene(${sel === 'qa' ? 'null' : `'${sel}'`})">${live && (sel === 'qa' || scrRow.scene === sel) ? '↻ ' : '📺 '}${label || 'Tampilkan di layar'}</button>`;
   let body = '';
   if (sel === 'qa') body = `<div class="scr-actions">${showBtn('Tampilkan Open Mic di layar')}<button class="gt-btn ghost" onclick="setRdTab('qa')">🎤 Buka menu Open Mic</button></div>`;
+  else if (sel === 'backdrop') { const cur = bdNum(scrRow.scene), alt = scrRow.scene === 'backdrop';
+    body = `<div class="scr-bd">${BACKDROPS.map((b, i) => `<button class="scr-bd-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('backdrop:${i + 1}')"><img src="${b.th}" alt="${escHtml(b.t)}"><b>${i + 1}. ${escHtml(b.t)}</b><span>${cur === i + 1 ? '● Tampil · klik untuk ulang' : '▶ Tampilkan'}</span></button>`).join('')}</div>
+    <div class="scr-actions"><button class="gt-btn${alt ? ' confirm' : ' ghost'}" onclick="setScene('backdrop')">${alt ? '↻ Bergantian otomatis (aktif)' : `🔁 Tampilkan bergantian (${BACKDROP_SEC} dtk)`}</button></div>`; }
   else if (sel === 'opening') body = `<div class="scr-actions">${showBtn('Tampilkan susunan pembicara')}</div>
     <div class="scr-sub-k">Pembicara</div>
     <div class="scr-fm-nav">${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1 && !opVid(scrRow.scene);
@@ -7425,6 +7451,7 @@ function renderScene(s) {
   qsSetEventSub(sceneBase(s.scene));
   if (String(s.scene).startsWith('launch:')) return renderLaunchVideo(s);
   if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
+  if (sceneBase(s.scene) === 'backdrop') return renderBackdrop(s);
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene), opVid(s.scene), s.updated_at);
   if (pksNum(s.scene)) return renderPksPage(pksNum(s.scene));
   const sc = QS_SCENES[sceneBase(s.scene)], t = s.scene_text ? escHtml(s.scene_text) : '';
@@ -7616,6 +7643,14 @@ async function qsFmKey(d) {
     await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
     return;
   }
+  if (sceneBase(s?.scene) === 'backdrop') {   // Backdrop: panah = ganti foto
+    const cur = bdNum(s.scene) || 0, next = cur === 0 ? (d > 0 ? 1 : 2) : Math.min(BACKDROPS.length, Math.max(1, cur + d));
+    if (next === cur) return;
+    const scene = 'backdrop:' + next;
+    renderScene({ scene });
+    await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
+    return;
+  }
   const cur = sceneBase(s?.scene) === 'funmkt' ? fmNum(s.scene) : null;
   if (cur === null) return;
   const next = Math.min(FM_SLIDES, Math.max(1, cur + d));
@@ -7793,11 +7828,21 @@ function qsSetStage(key, html) {
   if (key === qsKey) return false;
   qsKey = key;
   stopLaunchVideo();
-  if (!/^(fmslide|pks)\|/.test(String(key))) document.getElementById('qs-slide')?.remove();
+  if (!/^(fmslide|pks|bd)\|/.test(String(key))) document.getElementById('qs-slide')?.remove();
   document.getElementById('qs-stage').innerHTML = html;
   return true;
 }
 
+// Backdrop: foto layar penuh (blur sebagai latar), satu foto atau bergantian crossfade
+function renderBackdrop(s) {
+  const n = bdNum(s.scene), list = n ? [BACKDROPS[n - 1]] : BACKDROPS;
+  if (!qsSetStage(['bd', s.scene, n ? '' : s.updated_at].join('|'), '<div class="qs-idle"><p>Backdrop</p></div>')) return;
+  document.getElementById('qs-slide')?.remove();
+  const ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide qs-bd';
+  const dur = BACKDROP_SEC * list.length;
+  ov.innerHTML = list.map((b, i) => `<div class="bd-s${list.length > 1 ? ' alt' : ' in'}" style="--n:${list.length};--dur:${dur}s;animation-delay:${i * BACKDROP_SEC}s"><img class="bd-bg" src="${b.src}" alt=""><img class="bd-fg" src="${b.src}" alt="${escHtml(b.t)}"></div>`).join('');
+  document.getElementById('qa-screen').appendChild(ov);
+}
 function qsSetEventSub(base) {
   const el = document.getElementById('qs-event-sub'); if (!el) return;
   el.textContent = !base || LUP_SCENES.includes(base) ? 'Listening and Understanding Partner' : FREE_SCENES.includes(base) ? FREE_NAME : (QS_SCENES[base]?.label || '');
