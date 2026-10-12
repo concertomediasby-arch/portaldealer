@@ -2485,7 +2485,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T05:31:37Z';
+const LAST_UPDATE = '2026-10-12T05:38:00Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6011,6 +6011,7 @@ function renderGtRekap() {
             ${o.phone ? `<a class="gt-btn ghost" href="https://wa.me/${o.phone.replace(/\D/g, '').replace(/^0/, '62')}" target="_blank" rel="noopener">💬 WA ${escHtml(o.phone)}</a>` : ''}
             <label class="gt-status">Status
               <select onchange="setGtOrderStatus(${o.id}, this.value)">${Object.entries(GT_STATUS).map(([k, v]) => `<option value="${k}"${o.status === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+            <button class="gt-btn ghost" onclick="downloadGtInvoice(${o.id})">⬇ Download Invoice</button>
             <button class="gt-btn ghost" onclick="adminEditGtOrder(${o.id})">✏️ Edit Pesanan</button>
             ${o.status === 'baru' ? `<button class="gt-btn confirm" onclick="confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button>` : ''}
             <button class="gt-btn ghost gt-del" onclick="deleteGtOrder(${o.id})">🗑 Hapus</button>
@@ -6021,6 +6022,128 @@ function renderGtRekap() {
     <div class="gt-table gt-prod-table"><div class="gt-row gt-head"><span>Produk</span><span>Grup</span><span>Pesanan</span><span>Total Qty</span><span>Total Nilai</span></div>
       ${prods.map(p => `<div class="gt-row"><span class="gt-name">${escHtml(p.name)}</span><span class="gt-p" data-l="Grup">${escHtml(p.group)}</span><span class="gt-p" data-l="Pesanan">${p.orders}</span><span class="gt-p gt-sp" data-l="Total Qty">${p.qty}</span><span class="gt-p gt-line" data-l="Total Nilai">${fmtRp(p.total)}</span></div>`).join('')}
     </div>` : ''}`;
+}
+
+
+// ── Invoice PDF (jsPDF) — format "INVOICE BELANJA · GATHERING CAI 2026" ──
+function terbilang(n) {
+  n = Math.floor(Math.abs(Number(n) || 0));
+  const a = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+  const t = x => x < 12 ? a[x] : x < 20 ? t(x - 10) + ' belas' : x < 100 ? t(Math.floor(x / 10)) + ' puluh ' + t(x % 10)
+    : x < 200 ? 'seratus ' + t(x - 100) : x < 1000 ? t(Math.floor(x / 100)) + ' ratus ' + t(x % 100)
+    : x < 2000 ? 'seribu ' + t(x - 1000) : x < 1e6 ? t(Math.floor(x / 1000)) + ' ribu ' + t(x % 1000)
+    : x < 1e9 ? t(Math.floor(x / 1e6)) + ' juta ' + t(x % 1e6) : x < 1e12 ? t(Math.floor(x / 1e9)) + ' miliar ' + t(x % 1e9)
+    : t(Math.floor(x / 1e12)) + ' triliun ' + t(x % 1e12);
+  const w = t(n).replace(/\s+/g, ' ').trim();
+  return w ? w.charAt(0).toUpperCase() + w.slice(1) + ' rupiah' : 'Nol rupiah';
+}
+
+function downloadGtInvoice(id) {
+  const o = gtOrders?.find(x => x.id === id);
+  if (!o) return;
+  if (!window.jspdf) { showToast('Komponen PDF belum termuat — periksa koneksi lalu coba lagi.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const NAVY = [12, 22, 48], GOLD = [198, 160, 72], HEAD = [47, 58, 92], GRID = [176, 181, 199], ZEBRA = [242, 243, 247];
+  const L = 14, R = 196, W = R - L;
+  const nf = n => Number(n || 0).toLocaleString('id-ID');
+  const rp = n => n == null ? '' : nf(n);
+  const items = o.items || [];
+  const date = new Date(o.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+  let page = 0;
+
+  const header = () => {
+    page++;
+    doc.setFillColor(...NAVY); doc.rect(L, 12, W, 22, 'F');
+    try { doc.addImage(LOGO_WHITE, 'PNG', L + 8, 15.5, 40, 40 * 156 / 431); } catch (e) {}
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+    doc.text('INVOICE BELANJA', R - 4, 21, { align: 'right' });
+    doc.setTextColor(...GOLD); doc.setFontSize(11.5); doc.text('GATHERING CAI 2026', R - 4, 26.5, { align: 'right' });
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.text('Concerto Audio Indonesia', R - 4, 31, { align: 'right' });
+  };
+  const footer = () => {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(140, 140, 150);
+    doc.text(`CAI – Concerto Audio Indonesia  |  Gathering CAI 2026  |  ${o.invoice || ''}  |  Hal. ${page}`, 105, 288, { align: 'center' });
+  };
+  const field = (label, value, x, y, lineEnd) => {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(20, 20, 30); doc.text(label, x, y);
+    doc.setFont('helvetica', 'normal'); doc.text(':', x + 30, y);
+    doc.text(String(value || '-'), x + 33, y, { maxWidth: lineEnd - x - 34 });
+    doc.setDrawColor(170, 170, 180); doc.setLineDashPattern([0.4, 0.6], 0); doc.line(x + 32, y + 1.4, lineEnd, y + 1.4); doc.setLineDashPattern([], 0);
+  };
+
+  header();
+  let y = 44;
+  const lf = [['No. Invoice', o.invoice], ['Nama Dealer', o.dealer], ['Nama Toko', o.store], ['Kota', o.city]];
+  const rf = [['Tanggal', date], ['No. HP', o.phone], ['Sales PIC', o.pic], ['Status', GT_STATUS[o.status] || o.status]];
+  lf.forEach(([k, v], n) => field(k, v, L, y + n * 6.2, 100));
+  rf.forEach(([k, v], n) => field(k, v, 108, y + n * 6.2, R));
+  y += 4 * 6.2 + 6;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(...NAVY); doc.text('RINCIAN INVOICE', L, y);
+  doc.setDrawColor(...GOLD); doc.setLineWidth(0.8); doc.line(L, y + 2, R, y + 2); doc.setLineWidth(0.2);
+  y += 7;
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(90, 90, 100);
+  doc.text('Rincian produk sesuai pesanan Shopping Gathering (termasuk item Clearance Sale 50%). Harga = harga spesial gathering / harga bersih clearance.', L, y, { maxWidth: W });
+  y += 5;
+
+  // table
+  const cols = [{ t: 'No', w: 9, a: 'center' }, { t: 'Brand', w: 30, a: 'left' }, { t: 'Seri Produk Dipilih', w: 63, a: 'left' },
+                { t: 'Qty', w: 13, a: 'center' }, { t: 'Harga Gathering (Rp)', w: 34, a: 'right' }, { t: 'Subtotal (Rp)', w: 33, a: 'right' }];
+  const rowH = 5.6;
+  const thead = () => {
+    doc.setFillColor(...HEAD); doc.rect(L, y, W, 7, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(255, 255, 255);
+    let x = L; cols.forEach(c => { doc.text(c.t, x + c.w / 2, y + 4.7, { align: 'center' }); x += c.w; });
+    y += 7;
+  };
+  const cell = (c, x, txt) => {
+    const tx = c.a === 'center' ? x + c.w / 2 : c.a === 'right' ? x + c.w - 2 : x + 2;
+    doc.text(String(txt), tx, y + 3.9, { align: c.a, maxWidth: c.w - 3 });
+  };
+  thead();
+  const rows = items.map((it, n) => [n + 1, it.brand || it.group || '', it.name + (it.section === 'clearance' ? ' (Clearance)' : ''), it.qty, rp(it.price), rp(it.total)]);
+  const minRows = Math.max(rows.length, rows.length <= 20 ? 20 : rows.length);
+  for (let n = 0; n < minRows; n++) {
+    if (y + rowH > 250) { footer(); doc.addPage(); header(); y = 44; thead(); }
+    if (n % 2) { doc.setFillColor(...ZEBRA); doc.rect(L, y, W, rowH, 'F'); }
+    doc.setDrawColor(...GRID); doc.setLineWidth(0.15);
+    let x = L; cols.forEach(c => { doc.rect(x, y, c.w, rowH); x += c.w; });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(25, 25, 35);
+    const r = rows[n] || [n + 1, '', '', '', '', ''];
+    x = L; cols.forEach((c, k) => { cell(c, x, r[k]); x += c.w; });
+    y += rowH;
+  }
+  // grand total
+  if (y + 8 > 255) { footer(); doc.addPage(); header(); y = 44; }
+  const wLabel = cols[0].w + cols[1].w + cols[2].w;
+  doc.setFillColor(...GOLD); doc.rect(L, y, wLabel, 8, 'F');
+  doc.setFillColor(248, 241, 222); doc.rect(L + wLabel, y, W - wLabel, 8, 'F');
+  doc.setDrawColor(...GRID); doc.rect(L, y, W, 8); doc.line(L + wLabel, y, L + wLabel, y + 8);
+  doc.line(L + wLabel + cols[3].w, y, L + wLabel + cols[3].w, y + 8); doc.line(L + wLabel + cols[3].w + cols[4].w, y, L + wLabel + cols[3].w + cols[4].w, y + 8);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(20, 20, 30);
+  doc.text('GRAND TOTAL', L + wLabel - 3, y + 5.5, { align: 'right' });
+  doc.setFontSize(9.5);
+  doc.text(String(o.total_qty || items.reduce((a, it) => a + it.qty, 0)), L + wLabel + cols[3].w / 2, y + 5.5, { align: 'center' });
+  doc.text(rp(Number(o.total || 0)), R - 2, y + 5.5, { align: 'right' });
+  y += 14;
+
+  // terbilang & catatan
+  if (y + 50 > 284) { footer(); doc.addPage(); header(); y = 44; }
+  const note = `Transfer ke: ${gtBankLines().join(' / ')} · Berita: ${o.invoice || ''}`
+    + (o.confirmed_at ? ` · Pembayaran dikonfirmasi ${fmtGtTime(o.confirmed_at)}` : '');
+  field('Terbilang', terbilang(o.total), L, y, R);
+  const noteLines = doc.splitTextToSize(note, R - L - 34);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.text('Catatan', L, y + 8);
+  doc.setFont('helvetica', 'normal'); doc.text(':', L + 30, y + 8); doc.setFontSize(8.5); doc.text(noteLines, L + 33, y + 8);
+  y += 14 + noteLines.length * 3.6;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(20, 20, 30);
+  doc.text('Dealer', 60, y, { align: 'center' }); doc.text('Sales / PIC CAI', 150, y, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setDrawColor(40, 40, 50); doc.setLineWidth(0.3);
+  [60, 150].forEach(cx => { doc.text('(', cx - 25, y + 22); doc.text(')', cx + 24, y + 22); doc.line(cx - 23, y + 22.6, cx + 23, y + 22.6); });
+  if (o.pic) { doc.setFontSize(9); doc.text(o.pic, 150, y + 20.5, { align: 'center' }); }
+  footer();
+  doc.save(`Invoice-${o.invoice || o.id}-${(o.store || '').replace(/[^\w]+/g, '_')}.pdf`);
 }
 
 async function confirmGtOrder(id) {
