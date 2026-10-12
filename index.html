@@ -1515,6 +1515,13 @@ body {
   .rd-form-actions { display: flex; gap: 8px; margin-top: 12px; }
   .rd-wrap { padding: 16px 28px 48px; max-width: 1100px; }
   @media (max-width: 720px) { .rd-wrap { padding: 12px 16px 32px; } }
+  .rd-seg { display: flex; align-items: center; gap: 10px; padding: 9px 14px; font: 700 12px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); background: rgba(212,175,106,.10); border-bottom: 1px solid var(--border); }
+  .rd-row + .rd-seg { border-top: 1px solid var(--border); }
+  .rd-seg span { margin-left: auto; font-weight: 500; color: var(--fg-muted); text-transform: none; letter-spacing: 0; }
+  .rd-row.in-seg { box-shadow: inset 3px 0 0 rgba(212,175,106,.55); }
+  .rd-row.in-seg.live { box-shadow: inset 3px 0 0 #16a34a; }
+  .rd-time small.rd-flex { color: var(--accent); font-style: italic; }
+  .rd-grid .rd-flex-opt { justify-content: flex-end; } .rd-grid .rd-flex-opt span { display: flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font: 500 13px var(--f-body); color: var(--fg); padding-bottom: 8px; }
   .rd-day { margin-bottom: 22px; } .rd-day .line-header { margin-bottom: 8px; }
   .rd-table { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
   .rd-row { display: grid; grid-template-columns: 34px 92px 1fr auto; gap: 12px; align-items: start; padding: 11px 14px; }
@@ -1764,7 +1771,7 @@ body {
     #gt-print .gp-items th, #gt-print .gp-items td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
     #gt-print .gp-items th { background: #1d2a4d; color: #fff; }
     #gt-print .gp-items td:nth-child(n+3) { text-align: right; }
-    #gt-print .rd-print { table-layout: fixed; } #gt-print .rd-print td:nth-child(n+3) { text-align: left; }
+    #gt-print .rd-print { table-layout: fixed; } #gt-print .gp-seg td { background: #f3ead2; font-weight: 700; } #gt-print .rd-print td:nth-child(n+3) { text-align: left; }
     #gt-print .gp-sub td, #gt-print .gp-grand td { font-weight: 700; background: #f1f1f1; }
     #gt-print .gp-grand { margin-top: 12px; } #gt-print .gp-grand td:last-child { text-align: right; font-size: 13px; }
     #gt-print .gp-terms { color: #555; margin-top: 10px; }
@@ -2233,6 +2240,7 @@ body {
         <div class="rd-actions" id="rd-actions">
           <button class="gt-btn ghost" onclick="loadRundown()">↻ Muat ulang</button>
           <button class="gt-btn ghost" onclick="printRundown()">🖨 Cetak</button>
+          <button class="gt-btn ghost" onclick="addRdTemplate()" title="Masukkan 6 sesi Listening and Understanding Partner sekaligus">＋ Template LUP</button>
           <button class="gt-btn confirm" onclick="openRdForm()">＋ Tambah Sesi</button>
         </div>
       </div>
@@ -2245,6 +2253,8 @@ body {
           <label>Mulai<input class="gt-input" type="time" id="rd-start" required></label>
           <label>Selesai<input class="gt-input" type="time" id="rd-end"></label>
           <label class="rd-wide">Acara / Sesi<input class="gt-input" id="rd-title" maxlength="120" required placeholder="mis. Registrasi & welcome drink"></label>
+          <label class="rd-wide">Bagian Acara <span class="qa-opt">(opsional — sesi dengan bagian sama dikelompokkan)</span><input class="gt-input" id="rd-segment" list="rd-segment-list" maxlength="80" placeholder="mis. Listening and Understanding Partner"><datalist id="rd-segment-list"></datalist></label>
+          <label class="rd-flex-opt"><span><input type="checkbox" id="rd-flexible"> Waktu menyesuaikan</span></label>
           <label>PIC<input class="gt-input" id="rd-pic" maxlength="60" placeholder="mis. Tim Sales"></label>
           <label>Lokasi<input class="gt-input" id="rd-location" maxlength="80" placeholder="mis. Ballroom Lt. 2"></label>
           <label class="rd-wide">Catatan<input class="gt-input" id="rd-notes" maxlength="300" placeholder="opsional — perlengkapan, MC, materi, dll."></label>
@@ -2699,7 +2709,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T07:30:42Z';
+const LAST_UPDATE = '2026-10-12T07:53:26Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6520,10 +6530,10 @@ function renderRundown() {
     const done = rows.filter(x => x.done).length;
     return `<div class="rd-day">
       <div class="line-header"><span class="line-name">Hari ${n + 1} · ${fmtRdDay(d)}</span><span class="line-count">${rows.length}</span><span class="gt-sub">${done}/${rows.length} selesai</span></div>
-      <div class="rd-table">${rows.map(x => `
-        <div class="rd-row${x.done ? ' done' : ''}${live && live.id === x.id ? ' live' : ''}">
+      <div class="rd-table">${rows.map((x, i) => `${x.segment && x.segment !== rows[i - 1]?.segment ? `<div class="rd-seg">◆ ${escHtml(x.segment)}<span>${rows.filter(r => r.segment === x.segment).length} sesi</span></div>` : ''}
+        <div class="rd-row${x.done ? ' done' : ''}${live && live.id === x.id ? ' live' : ''}${x.segment ? ' in-seg' : ''}">
           <label class="rd-check" title="Tandai selesai"><input type="checkbox"${x.done ? ' checked' : ''} onchange="toggleRdDone(${x.id}, this.checked)"></label>
-          <div class="rd-time">${rdT(x.start_time)}${x.end_time ? `<small>– ${rdT(x.end_time)}</small>` : ''}</div>
+          <div class="rd-time">${x.flexible ? '± ' : ''}${rdT(x.start_time)}${x.end_time ? `<small>– ${rdT(x.end_time)}</small>` : ''}${x.flexible ? '<small class="rd-flex">menyesuaikan</small>' : ''}</div>
           <div class="rd-main"><div class="rd-title">${escHtml(x.title)}${live && live.id === x.id ? ' <span class="rd-live-tag">LIVE</span>' : ''}</div>
             <div class="rd-meta">${[x.pic ? '👤 ' + escHtml(x.pic) : '', x.location ? '📍 ' + escHtml(x.location) : ''].filter(Boolean).join('  ·  ')}</div>
             ${x.notes ? `<div class="rd-notes">${escHtml(x.notes)}</div>` : ''}</div>
@@ -6541,6 +6551,9 @@ function openRdForm(id) {
   document.getElementById('rd-start').value = rdT(x?.start_time) || rdT(last?.end_time) || '';
   document.getElementById('rd-end').value = rdT(x?.end_time);
   ['title', 'pic', 'location', 'notes'].forEach(k => { document.getElementById('rd-' + k).value = x?.[k] || ''; });
+  document.getElementById('rd-segment').value = x ? (x.segment || '') : (last?.segment || '');
+  document.getElementById('rd-flexible').checked = !!x?.flexible;
+  document.getElementById('rd-segment-list').innerHTML = [...new Set((rdItems || []).map(r => r.segment).filter(Boolean).concat(QA_SESSION))].map(n => `<option value="${escHtml(n)}">`).join('');
   const f = document.getElementById('rd-form'); f.hidden = false;
   f.scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('rd-title').focus();
@@ -6549,7 +6562,8 @@ function closeRdForm() { document.getElementById('rd-form').hidden = true; rdEdi
 
 async function saveRdItem() {
   const v = k => document.getElementById('rd-' + k).value.trim();
-  const row = { day: v('day'), start_time: v('start'), end_time: v('end') || null, title: v('title'), pic: v('pic') || null, location: v('location') || null, notes: v('notes') || null, updated_at: new Date().toISOString() };
+  const row = { day: v('day'), start_time: v('start'), end_time: v('end') || null, title: v('title'), pic: v('pic') || null, location: v('location') || null, notes: v('notes') || null,
+    segment: v('segment') || null, flexible: document.getElementById('rd-flexible').checked, updated_at: new Date().toISOString() };
   if (!row.day || !row.start_time || !row.title) { showToast('Isi tanggal, jam mulai, dan nama acara.'); return; }
   if (row.end_time && row.end_time <= row.start_time) { showToast('Jam selesai harus setelah jam mulai.'); return; }
   const btn = document.getElementById('rd-save'); btn.disabled = true;
@@ -6559,8 +6573,34 @@ async function saveRdItem() {
     if (error) throw error;
     showToast(rdEditId ? '✓ Sesi diperbarui.' : '✓ Sesi ditambahkan.');
     closeRdForm(); loadRundown();
-  } catch (e) { showToast('Gagal menyimpan: ' + (e.message || e), 9000); }
+  } catch (e) { showToast('Gagal menyimpan: ' + rdColHint(e), 9000); }
   finally { btn.disabled = false; }
+}
+const rdColHint = e => { const m = String(e?.message || e); return /segment|flexible/.test(m) ? m + ' — jalankan SQL kolom segment & flexible.' : m; };
+
+// Template susunan sesi "Listening and Understanding Partner" (jam ± = waktu menyesuaikan, bisa diubah lewat ✏️)
+const RD_TEMPLATE_LUP = [
+  { title: 'Tanya Jawab Partner', start_time: '09:00', end_time: '12:00', notes: 'Pertanyaan dealer diketik admin & tampil di videotron — menu Tanya Jawab Partner.' },
+  { title: 'Coffee Break', start_time: '12:00', end_time: '12:20', notes: '20 menit' },
+  { title: 'Refreshment Product', start_time: '12:20', flexible: true },
+  { title: 'Product Launch', start_time: '13:00', flexible: true },
+  { title: 'Makan Siang', start_time: '13:45', flexible: true },
+  { title: 'Kick Off 2027', start_time: '14:45', flexible: true, notes: 'Membahas situs Portal Dealer CAI (dealer.concerto.id) & PKS Dealer (Perjanjian Kerja Sama) 2027.' },
+];
+async function addRdTemplate() {
+  const def = (rdItems?.length ? [...rdItems].sort((a, b) => b.day.localeCompare(a.day))[0].day : '') || rdNowWIB().day;
+  const day = (prompt(`Tanggal sesi "${QA_SESSION}" (format TTTT-BB-HH):`, def) || '').trim();
+  if (!day) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || isNaN(new Date(day + 'T00:00:00'))) { showToast('Format tanggal salah, contoh: 2026-11-20'); return; }
+  const have = new Set((rdItems || []).filter(r => r.day === day).map(r => r.title.toLowerCase()));
+  const now = new Date().toISOString();
+  const rows = RD_TEMPLATE_LUP.filter(t => !have.has(t.title.toLowerCase()))
+    .map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, segment: QA_SESSION, updated_at: now }));
+  if (!rows.length) { showToast('Semua sesi template sudah ada di tanggal itu.'); return; }
+  const { error } = await supabase.from(RUNDOWN_TABLE).insert(rows);
+  if (error) { showToast('Gagal menambah template: ' + rdColHint(error), 9000); return; }
+  showToast(`✓ ${rows.length} sesi ${QA_SESSION} ditambahkan.`);
+  loadRundown();
 }
 
 async function toggleRdDone(id, done) {
@@ -6587,7 +6627,7 @@ function printRundown() {
   el.innerHTML = `<div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>RUN DOWN ACARA</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
     ${days.map((d, n) => `<h2>Hari ${n + 1} — ${fmtRdDay(d)}</h2>
       <table class="gp-items rd-print"><colgroup><col style="width:13%"><col style="width:32%"><col style="width:15%"><col style="width:15%"><col style="width:25%"></colgroup><thead><tr><th>Waktu</th><th>Acara / Sesi</th><th>PIC</th><th>Lokasi</th><th>Catatan</th></tr></thead><tbody>
-      ${items.filter(x => x.day === d).map(x => `<tr><td>${rdT(x.start_time)}${x.end_time ? '–' + rdT(x.end_time) : ''}</td><td>${escHtml(x.title)}</td><td>${escHtml(x.pic || '')}</td><td>${escHtml(x.location || '')}</td><td>${escHtml(x.notes || '')}</td></tr>`).join('')}
+      ${items.filter(x => x.day === d).map((x, i, a) => `${x.segment && x.segment !== a[i - 1]?.segment ? `<tr class="gp-seg"><td colspan="5">${escHtml(x.segment)}</td></tr>` : ''}<tr><td>${x.flexible ? '± ' : ''}${rdT(x.start_time)}${x.end_time ? '–' + rdT(x.end_time) : ''}${x.flexible ? ' (menyesuaikan)' : ''}</td><td>${escHtml(x.title)}</td><td>${escHtml(x.pic || '')}</td><td>${escHtml(x.location || '')}</td><td>${escHtml(x.notes || '')}</td></tr>`).join('')}
       </tbody></table>`).join('')}`;
   window.print();
 }
