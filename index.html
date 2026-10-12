@@ -2275,7 +2275,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T03:46:00Z';
+const LAST_UPDATE = '2026-10-12T03:58:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4313,7 +4313,9 @@ const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':
 // "OTW CAI: 30 SET" di catatan gudang = barang dalam perjalanan → ditampilkan sebagai 🚚 OTW, bukan sebagai catatan
 const OTW_NOTE_RE = /\botw(?:\s*cai)?\s*:?\s*(\d+)\s*(set|pcs|pc|unit|pair|psg)?\b/i;
 const otwFromNote = note => { const m = String(note || '').match(OTW_NOTE_RE); return m ? `${m[1]} ${(m[2] || 'unit').toLowerCase().replace(/^pc$/, 'pcs')}` : ''; };
-const DEALER_HIDDEN_NOTE = [/\b(free|pinjam|2nd|pasang)\s*:?\s*\d+(\s*(pcs|set|unit))?/gi, /tidak ada di template\.?/gi, new RegExp(OTW_NOTE_RE.source, 'gi')];
+// No. invoice (INV0241, (INV-0237), INV 12/A) & FOC (barang bonus) hanya untuk internal → tidak tampil ke dealer
+const DEALER_HIDDEN_NOTE = [/\b(free|pinjam|2nd|pasang)\s*:?\s*\d+(\s*(pcs|set|unit))?/gi, /tidak ada di template\.?/gi, new RegExp(OTW_NOTE_RE.source, 'gi'),
+  /\(?\s*\b(no\.?\s*)?inv(oice)?[\s.:#\-]*\d[\w\-\/]*\s*\)?/gi, /\bfoc\s*:?\s*\d+(\s*(pcs|set|unit))?/gi, /\(\s*\)/g];
 const dealerNote = n => DEALER_HIDDEN_NOTE.reduce((s, re) => s.replace(re, ''), String(n || ''))
   .split(/[|;]/).map(x => x.replace(/^[\s.,]+|[\s,]+$/g, '').replace(/\s{2,}/g, ' ')).filter(Boolean).join(' | ');
 const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || otwFromNote(r.note), updated_at: r.updated_at || null });
