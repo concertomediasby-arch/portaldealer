@@ -1545,6 +1545,12 @@ body {
   .qa-live-q { font: 600 19px/1.4 var(--f-display); margin: 10px 0 4px; color: #fff; }
   .qa-live-who { font-size: 13px; color: #e9c46a; }
   .qa-live-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .qa-live-ans { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+  .qa-live-ans label { display: flex; align-items: center; gap: 8px; font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #e9c46a; margin-bottom: 6px; }
+  .qa-live-ans textarea { width: 100%; box-sizing: border-box; resize: vertical; font: 14px/1.5 var(--f-body); background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.18); color: #fff; }
+  .qa-live-ans .qa-live-btns { margin-top: 8px; }
+  .qa-opt { text-transform: none; letter-spacing: 0; font: 400 11px var(--f-body); }
+  .qa-ans-note b { color: #16a34a; font-weight: 600; }
   .qa-live .gt-btn.ghost { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #e8ecf5; }
   .qa-form { margin-bottom: 20px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
   .qa-form.editing { border-color: var(--accent); }
@@ -1598,6 +1604,9 @@ body {
   .qs-who small { display: block; font: 500 max(13px, 2.6vh) var(--f-body); color: #aab4c8; margin-top: .6vh; }
   .qs-quote { font-family: var(--f-display); font-weight: 600; line-height: 1.32; color: #fff; margin: 0; text-wrap: balance; }
   .qs-quote::before { content: '\201C'; color: #e9c46a; } .qs-quote::after { content: '\201D'; color: #e9c46a; }
+  .qs-q.has-ans .qs-who { margin: .8vh 0 2vh; font-size: max(16px, 3.4vh); }
+  .qs-ans { margin: 4vh auto 0; padding: 2.6vh 3vw 3vh; max-width: 80vw; border-radius: 2vh; background: rgba(233,196,106,.08); border: 1px solid rgba(233,196,106,.35); animation: qsIn .6s ease both; }
+  .qs-ans p { margin: 1.4vh 0 0; font-weight: 500; line-height: 1.4; color: #f3ead2; text-wrap: pretty; }
   .qs-idle h1 { font: 700 min(6vw, 11vh)/1.15 var(--f-display); margin: 2.5vh 0; color: #fff; }
   .qs-idle h1 em { font-style: normal; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .qs-idle p { font-size: max(15px, 3vh); color: #aab4c8; margin: 0; }
@@ -2255,7 +2264,7 @@ body {
             <label>Nama Dealer<input class="gt-input" id="qa-dealer" list="qa-dealer-list" maxlength="80" placeholder="Ketik / pilih nama dealer" autocomplete="off"></label>
             <label>Kota<input class="gt-input" id="qa-city" maxlength="40" placeholder="opsional"></label>
             <label class="qa-wide">Pertanyaan<textarea class="gt-input" id="qa-question" rows="3" maxlength="600" placeholder="Ketik pertanyaan dari dealer…" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();qaSave(!qaEditId);}"></textarea></label>
-            <label class="qa-wide" id="qa-answer-wrap" hidden>Catatan jawaban / tindak lanjut<textarea class="gt-input" id="qa-answer" rows="2" maxlength="1000" placeholder="opsional — ringkasan jawaban CAI, janji tindak lanjut, dll."></textarea></label>
+            <label class="qa-wide" id="qa-answer-wrap">Jawaban CAI <span class="qa-opt">(opsional — bisa diisi nanti saat pertanyaan tampil)</span><textarea class="gt-input" id="qa-answer" rows="2" maxlength="1000" placeholder="Ketik jawaban yang diberikan tim CAI…"></textarea></label>
           </div>
           <datalist id="qa-dealer-list"></datalist>
           <div class="rd-form-actions">
@@ -2690,7 +2699,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T07:21:03Z';
+const LAST_UPDATE = '2026-10-12T07:30:42Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6660,7 +6669,16 @@ function renderQa() {
   const queue = qaItems.filter(x => x.status === 'baru' && x.id !== qaScreenId);
   live.classList.toggle('on', !!cur);
   live.innerHTML = `<div class="qa-live-head"><span class="qa-dot${cur ? ' on' : ''}"></span>${cur ? 'Sedang tampil di layar videotron' : 'Layar videotron kosong — menampilkan judul sesi'}</div>
-    ${cur ? `<div class="qa-live-q">“${escHtml(cur.question)}”</div><div class="qa-live-who">#${no.get(cur.id)} · ${escHtml(qaWho(cur))}</div>` : ''}
+    ${cur ? `<div class="qa-live-q">“${escHtml(cur.question)}”</div><div class="qa-live-who">#${no.get(cur.id)} · ${escHtml(qaWho(cur))}</div>
+      <div class="qa-live-ans">
+        <label>💬 Jawaban CAI ${cur.answer && cur.answer_shown ? '<span class="qa-badge onair">● Tampil di layar</span>' : cur.answer ? '<span class="qa-badge">Belum ditampilkan</span>' : ''}</label>
+        <textarea class="gt-input" id="qa-live-answer" rows="3" maxlength="1000" placeholder="Ketik jawaban yang diberikan, lalu klik Tampilkan Jawaban…"
+          oninput="qaLiveDraft={id:${cur.id},text:this.value}" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();qaShowAnswer();}">${escHtml(qaLiveDraft.id === cur.id ? qaLiveDraft.text : (cur.answer || ''))}</textarea>
+        <div class="qa-live-btns">
+          <button class="gt-btn confirm" onclick="qaShowAnswer()">💬 ${cur.answer_shown ? 'Perbarui' : 'Tampilkan'} Jawaban di Layar</button>
+          ${cur.answer_shown ? '<button class="gt-btn ghost" onclick="qaHideAnswer()">🙈 Sembunyikan Jawaban</button>' : ''}
+        </div>
+      </div>` : ''}
     <div class="qa-live-btns">
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button>
       ${queue.length ? `<button class="gt-btn ghost" onclick="qaShow(${queue[0].id})">⏭ Tampilkan antrian berikutnya (${queue.length})</button>` : ''}
@@ -6680,12 +6698,12 @@ function renderQa() {
     return `<div class="qa-row${on ? ' onair' : ''}">
       <div class="qa-no">#${no.get(x.id)}<small>${qaTime(x.created_at)}</small></div>
       <div><div class="qa-q">${escHtml(x.question)}</div><div class="qa-who">👤 ${escHtml(qaWho(x))}</div>
-        ${x.answer ? `<div class="rd-notes">💬 ${escHtml(x.answer)}</div>` : ''}</div>
+        ${x.answer ? `<div class="rd-notes qa-ans-note"><b>💬 Jawaban${on && x.answer_shown ? ' · tampil di layar' : ''}:</b> ${escHtml(x.answer)}</div>` : ''}</div>
       <div class="qa-side">${on ? '<span class="qa-badge onair">● Di layar</span>' : `<span class="qa-badge s-${x.status}">${QA_STATUS[x.status] || x.status}</span>`}
         <div class="rd-btns">
           ${on ? '<button class="gt-btn ghost" onclick="qaClearScreen()" title="Turunkan dari layar">⏹ Turunkan</button>' : `<button class="gt-btn ghost" onclick="qaShow(${x.id})" title="Tampilkan di videotron">📺 Tampilkan</button>`}
           <button class="gt-btn ghost" onclick="qaToggleAnswered(${x.id})" title="${x.status === 'dijawab' ? 'Batalkan tanda dijawab' : 'Tandai sudah dijawab'}">${x.status === 'dijawab' ? '↺' : '✓ Dijawab'}</button>
-          <button class="gt-btn ghost" onclick="qaEdit(${x.id})" title="Edit / catatan jawaban">✏️</button>
+          <button class="gt-btn ghost" onclick="qaEdit(${x.id})" title="Edit pertanyaan / jawaban">✏️</button>
           <button class="gt-btn ghost gt-del" onclick="qaDelete(${x.id})" title="Hapus">🗑</button>
         </div></div>
     </div>`; }).join('')}</div>`;
@@ -6700,16 +6718,21 @@ async function qaSave(show) {
   btns.forEach(b => b.disabled = true);
   try {
     if (qaEditId) {
+      const old = qaItems?.find(r => r.id === qaEditId);
       Object.assign(row, { answer: v('answer') || null, updated_at: new Date().toISOString() });
+      if (!row.answer) row.answer_shown = false;
+      if (row.answer && old?.status !== 'dijawab') row.status = 'dijawab';
       const { error } = await supabase.from(QA_TABLE).update(row).eq('id', qaEditId);
       if (error) throw error;
       qaCancelEdit(); showToast('✓ Pertanyaan diperbarui.');
     } else {
       const now = new Date().toISOString();
-      Object.assign(row, { session: QA_SESSION, status: show ? 'tampil' : 'baru', shown_at: show ? now : null });
+      const answer = v('answer') || null;
+      Object.assign(row, { session: QA_SESSION, status: answer ? 'dijawab' : show ? 'tampil' : 'baru', shown_at: show ? now : null, answer });
+      if (answer) row.answer_shown = !!show;
       const { data, error } = await supabase.from(QA_TABLE).insert(row).select().single();
       if (error) throw error;
-      ['dealer', 'city', 'question'].forEach(k => { document.getElementById('qa-' + k).value = ''; });
+      ['dealer', 'city', 'question', 'answer'].forEach(k => { document.getElementById('qa-' + k).value = ''; });
       if (show && data) {
         const r = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: data.id, updated_at: now });
         if (r.error) throw r.error;
@@ -6741,6 +6764,25 @@ async function qaClearScreen() {
   qaScreenId = null; renderQa(); showToast('Layar dikosongkan.');
 }
 
+// Jawaban untuk pertanyaan yang sedang tampil → simpan + munculkan di bawah pertanyaan di videotron
+let qaLiveDraft = { id: null, text: '' };
+async function qaShowAnswer() {
+  const x = qaItems?.find(r => r.id === qaScreenId); if (!x) return;
+  const answer = document.getElementById('qa-live-answer').value.trim();
+  if (!answer) { showToast('Ketik jawabannya dulu.'); document.getElementById('qa-live-answer').focus(); return; }
+  const upd = { answer, answer_shown: true, status: 'dijawab', updated_at: new Date().toISOString() };
+  const { error } = await supabase.from(QA_TABLE).update(upd).eq('id', x.id);
+  if (error) { showToast('Gagal menyimpan jawaban: ' + error.message + (/answer_shown/.test(error.message) ? ' — jalankan SQL kolom answer_shown.' : ''), 9000); return; }
+  Object.assign(x, upd); qaLiveDraft = { id: null, text: '' };
+  renderQa(); showToast('💬 Jawaban tampil di layar.');
+}
+async function qaHideAnswer() {
+  const x = qaItems?.find(r => r.id === qaScreenId); if (!x) return;
+  const { error } = await supabase.from(QA_TABLE).update({ answer_shown: false, updated_at: new Date().toISOString() }).eq('id', x.id);
+  if (error) { showToast('Gagal: ' + error.message, 8000); return; }
+  x.answer_shown = false; renderQa(); showToast('Jawaban disembunyikan dari layar.');
+}
+
 async function qaToggleAnswered(id) {
   const x = qaItems?.find(r => r.id === id); if (!x) return;
   const prev = x.status, status = prev === 'dijawab' ? (x.shown_at ? 'tampil' : 'baru') : 'dijawab';
@@ -6753,7 +6795,6 @@ function qaEdit(id) {
   const x = qaItems?.find(r => r.id === id); if (!x) return;
   qaEditId = id;
   ['dealer', 'city', 'question', 'answer'].forEach(k => { document.getElementById('qa-' + k).value = x[k] || ''; });
-  document.getElementById('qa-answer-wrap').hidden = false;
   document.getElementById('qa-form-title').textContent = `Edit pertanyaan #${qaItems.indexOf(x) + 1}`;
   document.getElementById('qa-save-show').textContent = '💾 Simpan Perubahan';
   document.getElementById('qa-save').hidden = true;
@@ -6765,7 +6806,6 @@ function qaEdit(id) {
 function qaCancelEdit() {
   qaEditId = null;
   ['dealer', 'city', 'question', 'answer'].forEach(k => { document.getElementById('qa-' + k).value = ''; });
-  document.getElementById('qa-answer-wrap').hidden = true;
   document.getElementById('qa-form-title').textContent = 'Input pertanyaan dealer';
   document.getElementById('qa-save-show').textContent = '📺 Simpan & Tampilkan';
   document.getElementById('qa-save').hidden = false;
@@ -6790,7 +6830,7 @@ async function exportQa() {
   if (!qaItems?.length) { showToast('Belum ada pertanyaan.'); return; }
   try {
     const XLSX = await loadXlsx();
-    const rows = [['No', 'Waktu', 'Sesi', 'Nama Dealer', 'Kota', 'Pertanyaan', 'Status', 'Catatan Jawaban'],
+    const rows = [['No', 'Waktu', 'Sesi', 'Nama Dealer', 'Kota', 'Pertanyaan', 'Status', 'Jawaban'],
       ...qaItems.map((x, i) => [i + 1, fmtGtTime(x.created_at), x.session || QA_SESSION, x.dealer || '', x.city || '', x.question, QA_STATUS[x.status] || x.status, x.answer || ''])];
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws['!cols'] = [{wch:5},{wch:18},{wch:32},{wch:24},{wch:14},{wch:70},{wch:13},{wch:50}];
@@ -6804,8 +6844,8 @@ function printQa() {
   let el = document.getElementById('gt-print');
   if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
   el.innerHTML = `<div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>REKAP TANYA JAWAB</h1><p>${QA_SESSION} · GATHERING CAI 2026 · ${qaItems.length} pertanyaan</p></div></div>
-    <table class="gp-items rd-print"><colgroup><col style="width:5%"><col style="width:9%"><col style="width:20%"><col style="width:40%"><col style="width:26%"></colgroup>
-    <thead><tr><th>No</th><th>Jam</th><th>Dealer</th><th>Pertanyaan</th><th>Catatan Jawaban</th></tr></thead><tbody>
+    <table class="gp-items rd-print"><colgroup><col style="width:5%"><col style="width:8%"><col style="width:18%"><col style="width:34%"><col style="width:35%"></colgroup>
+    <thead><tr><th>No</th><th>Jam</th><th>Dealer</th><th>Pertanyaan</th><th>Jawaban</th></tr></thead><tbody>
     ${qaItems.map((x, i) => `<tr><td>${i + 1}</td><td>${qaTime(x.created_at)}</td><td>${escHtml(qaWho(x))}</td><td>${escHtml(x.question)}</td><td>${escHtml(x.answer || '')}</td></tr>`).join('')}
     </tbody></table>`;
   window.print();
@@ -6878,11 +6918,17 @@ function renderQaScreen(q) {
       <p>Sampaikan pertanyaan &amp; masukan Anda kepada tim Concerto Audio Indonesia</p></div>`);
     return;
   }
-  const len = q.question.length;
-  const size = len <= 60 ? 'min(5.6vw, 10vh)' : len <= 120 ? 'min(4.6vw, 8.2vh)' : len <= 200 ? 'min(3.8vw, 6.8vh)' : len <= 320 ? 'min(3.1vw, 5.6vh)' : 'min(2.5vw, 4.6vh)';
-  qsSetStage(['q', q.id, q.question, q.dealer, q.city].join('|'), `<div class="qs-q"><div class="qs-kicker">Pertanyaan dari</div>
+  const len = q.question.length, ans = q.answer_shown && q.answer ? q.answer : '';
+  // tanpa jawaban: pertanyaan memenuhi layar; dengan jawaban: pertanyaan mengecil, jawaban di bawahnya
+  const size = !ans
+    ? (len <= 60 ? 'min(5.6vw, 10vh)' : len <= 120 ? 'min(4.6vw, 8.2vh)' : len <= 200 ? 'min(3.8vw, 6.8vh)' : len <= 320 ? 'min(3.1vw, 5.6vh)' : 'min(2.5vw, 4.6vh)')
+    : (len <= 80 ? 'min(3.4vw, 6vh)' : len <= 180 ? 'min(2.8vw, 5vh)' : 'min(2.2vw, 4vh)');
+  const alen = ans.length;
+  const asize = alen <= 120 ? 'min(3.3vw, 5.8vh)' : alen <= 260 ? 'min(2.7vw, 4.8vh)' : alen <= 450 ? 'min(2.2vw, 3.9vh)' : 'min(1.8vw, 3.2vh)';
+  qsSetStage(['q', q.id, q.question, q.dealer, q.city, ans].join('|'), `<div class="qs-q${ans ? ' has-ans' : ''}"><div class="qs-kicker">Pertanyaan dari</div>
     <div class="qs-who">${escHtml(q.dealer || 'Dealer')}${q.city ? `<small>${escHtml(q.city)}</small>` : ''}</div>
-    <p class="qs-quote" style="font-size:${size}">${escHtml(q.question)}</p></div>`);
+    <p class="qs-quote" style="font-size:${size}">${escHtml(q.question)}</p>
+    ${ans ? `<div class="qs-ans"><div class="qs-kicker">Jawaban CAI</div><p style="font-size:${asize}">${escHtml(ans)}</p></div>` : ''}</div>`);
 }
 
 /* ══════════════════════════════════════════
