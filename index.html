@@ -1497,6 +1497,10 @@ body {
   .product-card .product-info { flex: 1; display: flex; flex-direction: column; }
   .product-price-row { margin-top: auto; padding-top: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .product-price-row::before { content: ''; flex-basis: 100%; height: 1px; background: var(--border); margin-bottom: 8px; order: -1; }
+  .eol-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; vertical-align: 2px;
+    font: 700 9.5px var(--f-mono); letter-spacing: .08em; color: #fff; background: #c2410c; }
+  .panel-name .eol-tag { font-size: 11px; vertical-align: 4px; }
+  .eol-note { font: 500 12px var(--f-body); color: #c2410c; margin-top: 4px; }
   .pp-tag { font: 600 9.5px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); }
   .product-price { font: 700 13px var(--f-mono); color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .product-price small { font-size: 10.5px; font-weight: 500; color: var(--fg-muted); }
@@ -2266,7 +2270,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T03:33:55Z';
+const LAST_UPDATE = '2026-10-12T03:41:07Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -2445,7 +2449,7 @@ const BRANDS = [
           photo:'assets/ac-blw6.jpg', video:'assets/ac-berlinline.mp4?v=1', videoPoster:'assets/ac-berlinline-poster.jpg?v=1',
           desc:'6.5" Mid woofer — seri kompetisi Berlin Line.',
           specs:{'Peak Power Handling':'60 W','Power Rating':'30 W','Min. Amplifier Power':'15 W','Sensitivity':'89 dB','Freq. Response':'52 Hz – 6 kHz','Impedansi':'4 Ω','External Diameter':'166 mm','Fastening Diameter':'155 mm','Mounting Depth':'67 mm'} },
-        { id:'ac-blt26', price:5500000, priceUnit:'set', name:'BL-T26 MKII', model:'BL-T26 MKII', category:'Tweeter', emoji:'🎺', hasVideo:true,
+        { id:'ac-blt26', price:6000000, priceUnit:'set', name:'BL-T26 MKII', model:'BL-T26 MKII', category:'Tweeter', emoji:'🎺', hasVideo:true,
           photo:'assets/ac-blt26.jpg', video:'assets/ac-berlinline.mp4?v=1', videoPoster:'assets/ac-berlinline-poster.jpg?v=1',
           desc:'26mm Silk Dome Tweeter.',
           specs:{'Peak Power Handling':'30 W','Power Rating':'15 W','Min. Amplifier Power':'10 W','Sensitivity':'87 dB','Freq. Response':'850 Hz – 22 kHz','Impedansi':'4 Ω','External Diameter':'58 mm','Fastening Diameter':'49 mm','Mounting Depth':'22 mm'} },
@@ -2485,7 +2489,7 @@ const BRANDS = [
           specs:{'Handling Power':'20 W','SPL':'84 dB','Freq. Response':'1500 Hz – 22 kHz','Impedansi':'4 Ω','Outer Diameter':'42 mm','Inner Diameter':'35 mm','Mounting Depth':'17 mm'} },
       ]},
       { name: 'Munich Line', products: [
-        { id:'ac-mlc62', price:10000000, priceUnit:'set', name:'ML-C6.2 MKIII', model:'ML-C6.2 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-mlc62', price:10000000, eol:true, priceUnit:'set', name:'ML-C6.2 MKIII', model:'ML-C6.2 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-mlc62-2.webp', 'assets/ac-mlc62-1.webp','assets/ac-mlc62-3.webp','assets/ac-mlc62-4.webp'],
           desc:'6.5" Two Way Component — Black Aluminum Former, Nomex Spider, Carbon Fibre Cone, Custom Steel Basket, 25mm Silk Dome Tweeter, 3×12dB inline crossover.',
           specs:{
@@ -2500,7 +2504,7 @@ const BRANDS = [
             'Tweeter':'Silk dome 25 mm',
             'Crossover':'3× inline, 12 dB/oct',
           } },
-        { id:'ac-mlc63', price:15000000, priceUnit:'set', name:'ML-C6.3 MKIII', model:'ML-C6.3 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ac-mlc63', price:15000000, eol:true, priceUnit:'set', name:'ML-C6.3 MKIII', model:'ML-C6.3 MKIII', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/ac-mlc63-4.webp','assets/ac-mlc63-1.webp','assets/ac-mlc63-2.webp','assets/ac-mlc63-5.webp'],
           desc:'6.5" Three Way Component — Black Aluminum Former, Nomax Spider, Carbon Fibre Cone, Custom Steel Basket, 25mm Silk Dome Tweeter, 2×12dB inline crossover.',
           specs:{
@@ -2678,17 +2682,17 @@ const BRANDS = [
     philosophy: 'Music is emotion in acoustic waves.\n\nIt touches people like no other medium.\n\nThe STEG brand was born with the idea to reproduce this audio experience as accurate and realistic as possible. Nothing shall stand in the way of pure musical enjoyment. Not even the automobile interior with its less than ideal acoustic conditions. Based on this vision, GTTRADING creates legendary high-end hi-fi components for automotive applications since 1983. There is only one goal: absolutely uncompromising sound.\n\nIf high-end audio reproduction in cars is the question, STEG will be the answer.',
     lines: [
       { name: 'Master Stroke — SQ Series', products: [
-        { id:'ms-mss6', price:26500000, priceUnit:'set', name:'MSS6', model:'MSS6', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ms-mss6', price:25000000, priceUnit:'set', name:'MSS6', model:'MSS6', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'SQ Woofer — Hand Crafted Audiophile series, High End.',
           photos:['assets/ms-mss6-1.webp','assets/ms-mss6-2.webp','assets/ms-mss6-3.webp','assets/ms-mss6-4.webp','assets/ms-mss6-5.webp'],
           specs:{'Speaker Size':'6.6 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.25 mH','VC Former':'BASV, 1-EISVW','Membrane':'Carbon fiber + resin','Magnet':'Neodymium','Net Weight':'1.38 kg','Outer Diameter':'158 mm','Mounting Diameter':'141 mm','Overall Depth':'62.3 mm','Qms':'6.64','Qts':'0.81','BL':'4.9 T·m','Centering Device':'Konex','Suspension Cone':'55sh Rubber','Fs':'68 Hz','Freq. Response':'60 Hz – 4.5 kHz','SPL':'87 dB','Power RMS (Hi-pass 150 Hz)':'200 W','Mms':'14.6 g','Cms':'374 µm/N','Vas':'14.5 L','Sd':'138.9 cm²','Xmax':'6.2 mm'} },
-        { id:'ms-mss3', price:18000000, priceUnit:'set', name:'MSS3', model:'MSS3', category:'Midrange', emoji:'🔉', hasVideo:false,
+        { id:'ms-mss3', price:17000000, priceUnit:'set', name:'MSS3', model:'MSS3', category:'Midrange', emoji:'🔉', hasVideo:false,
           desc:'SQ Midrange — Hand Crafted Audiophile series, High End.',
           photos:['assets/ms-mss3-1.webp','assets/ms-mss3-2.webp','assets/ms-mss3-3.webp','assets/ms-mss3-4.webp','assets/ms-mss3-5.webp'],
           specs:{'Speaker Size':'4.3 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.09 mH','VC Former':'Kapton CCAW','Membrane':'Carbon fiber loaded with resin','Magnet':'Neodymium','Net Weight':'0.36 kg','Qms':'6.08','Qts':'0.65','BL':'3.76 T·m','Centering Device':'Konex','Suspension Cone':'50sh Rubber','Fs':'97 Hz','Freq. Response':'100 Hz – 12 kHz','SPL':'86 dB','Power RMS (Hi-pass 150 Hz)':'70 W','Mms':'4.74 g','Cms':'568 µm/N','Vas':'2.04 L','Sd':'50 cm²','Xmax':'3 mm','Outer Diameter':'105 mm','Mounting Depth':'41 mm'} },
       ]},
       { name: 'Master Stroke — MGL 3-Way Component', products: [
-        { id:'ms-mgl1', price:9150000, priceUnit:'set', name:'MGL1', model:'MGL1', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'ms-mgl1', price:9500000, eol:true, priceUnit:'set', name:'MGL1', model:'MGL1', category:'Tweeter', emoji:'🎺', hasVideo:false,
           desc:'Tweeter — concave metal diaphragm, CNC aluminium faceplate, 25mm copper voice coil, Neodymium magnet.',
           photos:['assets/ms-mgl1-1.webp','assets/ms-mgl1-2.webp','assets/ms-mgl1-3.webp','assets/ms-mgl1-4.webp','assets/ms-mgl1-5.webp'],
           specs:{'Rated Power':'20 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'1100 Hz – 40 kHz','Qms':'10.019','Qes':'1.412','Qts':'1.237','Magnet':'NdFeB','Mounting Depth':'26 mm','Mounting Diameter':'55 mm','Outer Diameter':'68.5 mm'} },
@@ -2696,13 +2700,13 @@ const BRANDS = [
           desc:'Midrange — vented die cast aluminium chassis, Neodymium magnet, special treatment metal cone.',
           photos:['assets/ms-mgl3-1.webp','assets/ms-mgl3-2.webp','assets/ms-mgl3-3.webp','assets/ms-mgl3-4.webp','assets/ms-mgl3-5.webp'],
           specs:{'Rated Power':'30 W','Impedansi':'4 Ω','Sensitivity':'87 dB','Freq. Response':'145 Hz – 15 kHz','Qms':'5.381','Qes':'0.668','Qts':'0.594','Mms':'3.346 g','Vas':'0.558 L','Magnet':'NdFeB','Mounting Depth':'40 mm','Mounting Diameter':'73 mm','Outer Diameter':'92.5 mm'} },
-        { id:'ms-mgl6', price:15000000, priceUnit:'set', name:'MGL6', model:'MGL6', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'ms-mgl6', price:15000000, eol:true, priceUnit:'set', name:'MGL6', model:'MGL6', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'Woofer — special treatment metal cone, CNC motor metal parts, large Ferrite magnet, vented die cast chassis.',
           photos:['assets/ms-mgl6-1.webp','assets/ms-mgl6-2.webp','assets/ms-mgl6-3.webp','assets/ms-mgl6-4.webp','assets/ms-mgl6-5.webp'],
           specs:{'System':'3-way 6.5″ & 3.5″ & 1″ active component set','Power RMS':'60 W','Power Max':'120 W','Voice Coil':'35.6 mm','Freq. Response':'60 Hz – 40 kHz','SPL':'88 dB','DC Resistance (Re)':'3.9 Ω','Fs':'68 Hz','Xmax':'6.2 mm','Vas':'8.15 L','Qts':'0.397','Qms':'6.606','Qes':'0.423','Mounting Diameter':'144 mm','Mounting Depth':'71 mm','Net Weight':'4.2 kg'} },
       ]},
       { name: 'K Series Speaker', products: [
-        { id:'st-k1c', price:7800000, priceUnit:'pair', name:'K1C', model:'K1C', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'st-k1c', price:7500000, priceUnit:'pair', name:'K1C', model:'K1C', category:'Tweeter', emoji:'🎺', hasVideo:false,
           desc:'K Series Tweeter (per Pair) — Neodymium magnet, high sensitivity pod-style tweeter.',
           photos:['assets/st-k1c-1.webp','assets/st-k1c-2.webp'],
           specs:{'Impedansi':'6 Ω','Freq. Response':'700 Hz – 20 kHz','Rated Power':'20 W','Sensitivity':'90 dB','Qms':'1.464','Qes':'1.619','Qts':'0.769','Magnet':'NdFeB','Mounting Diameter':'56 mm','Mounting Depth':'23.5 mm','Outer Diameter':'62.4 mm'} },
@@ -2718,13 +2722,13 @@ const BRANDS = [
           desc:'K Series 6" Woofer (per Pair) — Ferrite magnet, Developed in Italy by GT Trading.',
           photos:['assets/st-k6c-1.webp','assets/st-k6c-2.webp','assets/st-k6c-3.webp','assets/st-k6c-4.webp'],
           specs:{'Impedansi':'4 Ω','Freq. Response':'50 Hz – 8 kHz','Rated Power':'60 W','Sensitivity':'88 dB','Qms':'4.424','Qes':'0.599','Qts':'0.525','Mms':'14.662 g','Vas':'15.92 L','Magnet':'Ferrite','Mounting Diameter':'148 mm','Mounting Depth':'77 mm','Outer Diameter':'168 mm'} },
-        { id:'st-k8c', price:18750000, priceUnit:'pair', name:'K8C', model:'K8C', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'st-k8c', price:18000000, priceUnit:'pair', name:'K8C', model:'K8C', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/st-k8c-1.webp','assets/st-k8c-2.webp','assets/st-k8c-3.webp','assets/st-k8c-4.webp'],
           desc:'K Series 8" Woofer (per Pair).',
           specs:{'Impedansi':'4 Ω','Freq. Response':'47 Hz – 3 kHz','Rated Power':'60 W','Sensitivity':'88 dB','Qms':'3.531','Qes':'0.719','Qts':'0.597','Mms':'29.556 g','Vas':'26.76 L','Magnet':'Ferrite','Mounting Diameter':'188 mm','Mounting Depth':'82 mm','Outer Diameter':'211 mm'} },
       ]},
       { name: 'Coaxial', products: [
-        { id:'st-q4c', price:11000000, priceUnit:'set', name:'Q4C', model:'Q4C', category:'Speaker', emoji:'🔊', hasVideo:false,
+        { id:'st-q4c', price:10000000, priceUnit:'set', name:'Q4C', model:'Q4C', category:'Speaker', emoji:'🔊', hasVideo:false,
           photos:['assets/st-q4c-1.webp','assets/st-q4c-2.webp','assets/st-q4c-3.webp','assets/st-q4c-4.webp'],
           desc:'Same Point Coaxial Speaker — vented die cast chassis, Neodymium magnet, 1.4" voice coil, 1.2" titanium dome tweeter.',
           specs:{'Impedansi':'4 Ω','Freq. Response':'127 Hz – 20 kHz','Rated Power':'30 W','Sensitivity':'95 dB','Qms':'4.576','Qes':'0.304','Qts':'0.285','Mms':'2.246 g','Vas':'1.646 L','Magnet':'NdFeB','Mounting Diameter':'81 mm','Mounting Depth':'34 mm'} },
@@ -2785,7 +2789,7 @@ const BRANDS = [
           photos:['assets/st-dsps6-1.webp','assets/st-dsps6-2.webp','assets/st-dsps6-3.webp','assets/st-dsps6-4.webp','assets/st-dsps6-5.webp'], video:'assets/st-dsps6.mp4?v=1', videoPoster:'assets/st-dsps6-poster.jpg?v=1',
           desc:'OTG DSP Power Amplifier — High Level 6 In 8 Out, AKM7735 High Performance DSP Chip, 31-Band EQ.',
           specs:{'DSP Chip':'AKM7735','Channel':'6CH + 8 RCA Out','Power Output':'6×35 W (4Ω)','Amplifier':'Class-D','EQ':'31-Band','Bluetooth':'5.1','Sampling Rate':'48 kHz','SNR':'≥100 dB','THD':'≤0.01%','Operating Voltage':'9 – 18 V'} },
-        { id:'st-dsps12', price:8500000, name:'DSP-S12', model:'DSP-S12', category:'DSP', emoji:'💻', hasVideo:true,
+        { id:'st-dsps12', price:8600000, name:'DSP-S12', model:'DSP-S12', category:'DSP', emoji:'💻', hasVideo:true,
           photos:['assets/st-dsps12-1.webp','assets/st-dsps12-2.webp','assets/st-dsps12-3.webp','assets/st-dsps12-4.webp','assets/st-dsps12-5.webp'], video:'assets/st-dsps12.mp4?v=1', videoPoster:'assets/st-dsps12-poster.jpg?v=1',
           desc:'Car DSP Amplifier — 12-Channel DSP Processing, Built-in Class-D Amplifier, 31-Band Independent EQ per channel.',
           specs:{'Channel':'12CH DSP + 12 RCA Out','Input':'12 High-Level + 2 AUX','Power Output':'10×35 W (4Ω) + 2×90 W (2Ω)','Amplifier':'Class-D','EQ':'31-Band Independent','Crossover':'20 Hz – 20 kHz','Bluetooth':'Wi-Fi / BT','Optical':'TOSLINK In','Connectivity':'USB-OTG, COAX In'} },
@@ -2793,7 +2797,7 @@ const BRANDS = [
           desc:'HI-RES Digital Signal Processor 192kHz/32-bit — Dual-core DSPG ADSP21565, DAC ES9039PRO.',
           specs:{'DSP Chip':'Dual-core DSPG ADSP21565','Resolution':'192 kHz / 32-bit','Output':'16 RCA Outputs','Bluetooth':'5.1 (aptX HD)','Freq. Range':'20 Hz – 80 kHz','SNR':'≥130 dB','THD':'<0.00001%','Operating Voltage':'6 – 26 V'},
           photos:['assets/st-ss16-1.webp','assets/st-ss16-2.webp'] },
-        { id:'st-ssdsp16', price:47000000, name:'SS-DSP16 II', model:'SS-DSP16 II', category:'DSP', emoji:'💻', hasVideo:false,
+        { id:'st-ssdsp16', price:43950000, name:'SS-DSP16 II', model:'SS-DSP16 II', category:'DSP', emoji:'💻', hasVideo:false,
           photos:['assets/st-ssdsp16-1.webp','assets/st-ssdsp16-2.webp','assets/st-ssdsp16-3.webp','assets/st-ssdsp16-4.webp','assets/st-ssdsp16-5.webp'],
           desc:'OTG DSP Class D Amplifier — High Level 16 In 16 Out, 192kHz/32-bit, ADAU1452.',
           specs:{'DSP Chip':'ADAU1452','Channel':'16 In 16 Out','Power Output':'16×80 W (4Ω)','Resolution':'192 kHz / 32-bit','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 16 V'} },
@@ -2808,7 +2812,7 @@ const BRANDS = [
           photos:['assets/st-mdsp10d-1.webp','assets/st-mdsp10d-2.webp','assets/st-mdsp10d-3.webp','assets/st-mdsp10d-4.webp','assets/st-mdsp10d-5.webp'],
           desc:'OTG DSP Power Amplifier — High Level 8 In 10 Out, AKM7735 DSP Chip.',
           specs:{'DSP Chip':'AKM7735','Channel':'8 In 10 Out','Power Output':'6×50 W/4Ω + 2×90 W/2Ω','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 17 V'} },
-        { id:'st-mdsp8', price:8000000, name:'MDSP8', model:'MDSP8', category:'DSP', emoji:'💻', hasVideo:false,
+        { id:'st-mdsp8', price:7500000, name:'MDSP8', model:'MDSP8', category:'DSP', emoji:'💻', hasVideo:false,
           photos:['assets/st-mdsp8-1.webp','assets/st-mdsp8-2.webp','assets/st-mdsp8-3.webp'],
           desc:'OTG DSP Power Amplifier — High Level 6 In 8 Out, AKM7735 High Performance DSP Chip.',
           specs:{'DSP Chip':'AKM7735','Channel':'6 In 8 Out','Power Output':'6×50 W (4Ω)','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 18 V'} },
@@ -2822,11 +2826,11 @@ const BRANDS = [
           photos:['assets/st-dk2006-1.webp','assets/st-dk2006-2.webp','assets/st-dk2006-3.webp','assets/st-dk2006-4.webp','assets/st-dk2006-5.webp'],
           desc:'6 Channel Power Amplifier — DK Line, Made in Italy.',
           specs:{'Channel':'6CH','Output (4Ω)':'200 W × 6','Output (2Ω)':'350 W × 6','Bridged (4Ω)':'700 W × 3','SNR':'≥95 dB','Max Size':'350.5 × 187 × 50 mm'} },
-        { id:'st-dk5001', price:9500000, name:'DK500.1', model:'DK500.1', category:'Amplifier', emoji:'⚡', hasVideo:false,
+        { id:'st-dk5001', price:9000000, name:'DK500.1', model:'DK500.1', category:'Amplifier', emoji:'⚡', hasVideo:false,
           photos:['assets/st-dk5001-1.webp','assets/st-dk5001-2.webp','assets/st-dk5001-3.webp','assets/st-dk5001-4.webp','assets/st-dk5001-5.webp'],
           desc:'Mono Power Amplifier — DK Line, Made in Italy.',
           specs:{'Channel':'1CH (Mono)','Output (4Ω)':'250 W','Output (2Ω)':'500 W','Output (1Ω)':'800 W','THD':'<0.1%','Low Pass Filter':'50 – 250 Hz','Max Size':'200.5 × 176 × 50 mm'} },
-        { id:'st-dk10001', price:12850000, name:'DK1000.1', model:'DK1000.1', category:'Amplifier', emoji:'⚡', hasVideo:false,
+        { id:'st-dk10001', price:12000000, name:'DK1000.1', model:'DK1000.1', category:'Amplifier', emoji:'⚡', hasVideo:false,
           photos:['assets/st-dk10001-1.webp','assets/st-dk10001-2.webp','assets/st-dk10001-3.webp','assets/st-dk10001-4.webp'],
           desc:'Mono Power Amplifier — DK Line, Made in Italy.',
           specs:{'Channel':'1CH (Mono)','Output (4Ω)':'500 W','Output (2Ω)':'1000 W','Output (1Ω)':'1200 W','THD':'<0.1%','Low Pass Filter':'50 – 250 Hz','Max Size':'240.5 × 176 × 50 mm'} },
@@ -2850,7 +2854,7 @@ const BRANDS = [
           photos:['assets/st-st10pro-1.webp','assets/st-st10pro-2.webp','assets/st-st10pro-3.webp'],
           desc:'10 inch Subwoofer — Aluminum Alloy Bracket, Special Glass Fiber Basin.',
           specs:{'Speaker Size':'10 inch','RMS Power':'400 W','Impedansi':'2 Ω','Magnet':'53.4 Oz','Voice Coil':'2" Aluminum','Mounting Depth':'112 mm','Magnet Diameter':'156 mm'} },
-        { id:'st-s8', price:4900000, name:'S8', model:'S8', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+        { id:'st-s8', price:3900000, eol:true, name:'S8', model:'S8', category:'Subwoofer', emoji:'🥁', hasVideo:false,
           photos:['assets/st-s8-1.webp','assets/st-s8-2.webp','assets/st-s8-3.webp','assets/st-s8-4.webp','assets/st-s8-5.webp'],
           desc:'8 inch Subwoofer.',
           specs:{'Speaker Size':'8 inch','RMS Power':'150 W','Fo':'45 Hz','Impedansi':'4 + 4 Ω','Sensitivity':'81 dB','Freq. Range':'45 Hz – 1 kHz','Magnet':'58.5 Oz','Voice Coil':'2 inch','Mounting Depth':'120 mm','Mounting Diameter':'183 mm'} },
@@ -3827,6 +3831,9 @@ const fmtRp = n => 'Rp ' + Number(n).toLocaleString('id-ID');
 // SRP: `price` (satu harga) atau `priceList` ({ varian: harga }, mis. kabel per panjang → tampil "mulai Rp …")
 const hasPrice = p => !!(p.price || (p.priceList && Object.keys(p.priceList).length));
 const unitText = p => p.priceUnit ? ' / ' + p.priceUnit : '';
+// EOL (End of Line): produk tidak diproduksi lagi, dijual selama stok masih ada → field `eol:true`
+const EOL_TITLE = 'End of Line — tidak diproduksi lagi, selama stok masih ada';
+const eolTag = p => p.eol ? `<span class="eol-tag" title="${EOL_TITLE}">EOL</span>` : '';
 const srpFrom = p => !p.price && hasPrice(p);
 const srpAmount = p => p.price || (hasPrice(p) ? Math.min(...Object.values(p.priceList)) : 0);
 const srpText = p => hasPrice(p) ? (srpFrom(p) ? 'mulai ' : '') + fmtRp(srpAmount(p)) + unitText(p) : '';
@@ -3847,7 +3854,7 @@ function productCard(brand, p) {
         ${sb ? `<span class="product-stock-badge ${sb.cls}">${sb.label}</span>` : ''}
       </div>
       <div class="product-info">
-        <div class="product-name">${p.name}</div>
+        <div class="product-name">${p.name}${eolTag(p)}</div>
         <div class="product-model">${p.model}</div>
         ${srpRow(p)}
       </div>
@@ -3962,7 +3969,8 @@ function showProduct(brandId, productId) {
 
   document.getElementById('product-back-label').textContent = brand.name;
   document.getElementById('panel-brand').textContent = brand.name + (line ? ' · ' + line : '');
-  document.getElementById('panel-name').textContent = product.name;
+  document.getElementById('panel-name').innerHTML = escHtml(product.name) + eolTag(product)
+    + (product.eol ? `<div class="eol-note">${EOL_TITLE}</div>` : '');
   document.getElementById('panel-model').textContent = product.model;
   const pp = document.getElementById('panel-price');
   pp.hidden = !hasPrice(product);
@@ -4608,7 +4616,7 @@ function renderStockView() {
       const mq = s.status === 'ready' && s.qty != null ? `<span class="sr-mq"> · ${s.qty}</span>` : '';
       const open = b === EXTRA_GROUP ? 'style="cursor:default"' : `onclick="showProduct('${b.id}','${p.id}')"`;
       return `<div class="stock-row" ${open}>
-        <div style="min-width:0"><div class="sr-name">${escHtml(p.name)}</div><div class="sr-model">${escHtml(p.model)}${hasPrice(p) ? ` · <span class="sr-price">SRP ${srpText(p)}</span>` : ''}</div></div>
+        <div style="min-width:0"><div class="sr-name">${escHtml(p.name)}${eolTag(p)}</div><div class="sr-model">${escHtml(p.model)}${hasPrice(p) ? ` · <span class="sr-price">SRP ${srpText(p)}</span>` : ''}</div></div>
         <div><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}${mq}</span></div>
         <div class="sr-qty">${s.qty ?? ''}</div>
         <div class="sr-note">${s.incoming ? `<div class="sr-otw">🚚 OTW ${escHtml(s.incoming)}</div>` : ''}${escHtml(dealerNote(s.note))}</div>
