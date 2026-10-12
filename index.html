@@ -1595,12 +1595,27 @@ body {
   .scr-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
   .scr-head b { color: #e9c46a; } .scr-head .gt-btn { margin-left: auto; }
   .scr-warn { margin-top: 8px; font-size: 12.5px; color: #fbbf24; }
+  .scr-sessions { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 12px; }
+  .scr-sessions .scr-btn { position: relative; padding-top: 16px; }
+  .scr-btn em { position: absolute; left: 8px; top: 6px; font: 700 10px var(--f-mono); font-style: normal; color: #8b95ab; }
+  .scr-btn small { font: 500 10.5px var(--f-mono); color: #9aa5bd; }
+  .scr-btn.sel { border-color: #e9c46a; background: rgba(233,196,106,.12); box-shadow: 0 0 0 1px rgba(233,196,106,.45); }
+  .scr-live { position: absolute; right: 6px; top: 5px; font: 700 9px var(--f-mono); font-style: normal; color: #22c55e; }
+  .scr-pane { margin-top: 12px; padding: 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.25); }
+  .scr-pane-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .scr-pane-head b { font: 700 16px var(--f-display); color: #fff; } .scr-pane-head p { margin: 3px 0 0; font-size: 12.5px; color: #9aa5bd; line-height: 1.45; }
+  .scr-pane-head .qa-badge { margin-left: auto; flex-shrink: 0; }
+  .scr-pane-ic { font-size: 26px; line-height: 1; }
+  .scr-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .scr-sub-k { margin: 14px 0 6px; font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #e9c46a; }
+  .scr-opts.one { grid-template-columns: 1fr; }
+  .scr-pane .scr-lv { margin-top: 0; padding-top: 0; border-top: 0; }
   .scr-scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 12px; }
   .scr-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf5; font: 600 12.5px var(--f-body); cursor: pointer; transition: all .15s; }
   .scr-btn span { font-size: 24px; }
   .scr-btn:hover { border-color: #e9c46a; }
   .scr-btn.on { border-color: #22c55e; background: rgba(34,197,94,.16); box-shadow: 0 0 0 1px rgba(34,197,94,.4); }
-  .scr-opts { display: grid; grid-template-columns: 1fr 190px; gap: 8px; margin-top: 10px; }
+  .scr-opts { display: grid; grid-template-columns: 1fr 250px; gap: 8px; margin-top: 10px; }
   .scr-opts .gt-input { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #fff; }
   .gt-btn.scr-on { border-color: #16a34a; color: #16a34a; }
   .scr-fm { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
@@ -1623,7 +1638,7 @@ body {
   .scr-lv-btn.on { border-color: #22c55e; background: rgba(34,197,94,.16); }
   .qa-scene-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(251,191,36,.12); color: #fde68a; font-size: 13px; }
   .qa-scene-note .gt-btn { margin-left: auto; }
-  @media (max-width: 640px) { .scr-opts { grid-template-columns: 1fr; } .scr-scenes { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .scr-opts { grid-template-columns: 1fr; } .scr-scenes, .scr-sessions { grid-template-columns: repeat(2, 1fr); } .scr-pane-head { flex-wrap: wrap; } }
 
   /* ── Layar videotron: desain per sesi ── */
   .qs-stage { position: relative; overflow: hidden; }
@@ -2833,7 +2848,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T09:54:46Z';
+const LAST_UPDATE = '2026-10-12T10:00:34Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7104,42 +7119,68 @@ async function loadScreenRow() {
   renderScreenPanel(error);
 }
 
+// Panel layar per sesi: kartu sesi (urutan acara) → pane berisi kontrol khusus sesi terpilih.
+const SCR_SESSIONS = ['opening', 'qa', 'coffee', 'refresh', 'launch', 'lunch', 'funmkt', 'kickoff'];
+const SCR_DESC = {
+  qa: 'Pertanyaan dealer tampil di videotron. Ketik & atur antrian pertanyaan di tab Tanya Jawab Partner.',
+  opening: 'Tampilkan susunan pembicara, lalu kartu tiap pembicara secara bergantian. Clicker / panah di komputer videotron juga bisa menggeser.',
+  coffee: 'Layar rehat dengan hitung mundur (default 20 menit) dan info sesi berikutnya.',
+  refresh: 'Judul sesi dengan strip logo brand berjalan.',
+  launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
+  lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
+  funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
+  kickoff: 'Kick Off 2027: Portal Dealer (QR dealer.concerto.id) & PKS Dealer 2027.',
+};
+let scrSel = null;
+const scrOnAir = () => sceneBase(scrRow?.scene) || 'qa';
+function scrSelect(k) { scrSel = k; renderScreenPanel(); }
+function scrSessionTime(k) {
+  const x = (rdItems || []).find(r => k === 'qa' ? QA_SESSION_RE.test(r.title) && !sceneForTitle(r.title) : sceneForTitle(r.title) === k);
+  return x ? `${x.flexible ? '± ' : ''}${rdT(x.start_time)}` : '';
+}
+
 function renderScreenPanel(err) {
   const el = document.getElementById('scr-panel'); if (!el) return;
   if (err || !scrRow) { el.innerHTML = `<div class="scr-warn">Layar videotron belum siap: ${escHtml(err ? qaDbError(err) : 'jalankan SQL "gathering_screen".')}</div>`; return; }
-  const sc = sceneInfo(scrRow.scene);
-  el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Tanya Jawab'}</b></span>
+  const sc = sceneInfo(scrRow.scene), air = scrOnAir();
+  const sel = scrSel || air;
+  const info = sel === 'qa' ? { icon: '🎤', label: 'Tanya Jawab Partner' } : QS_SCENES[sel];
+  const live = sel === air;
+  const opts = (mins, ph) => `<div class="scr-opts${mins ? '' : ' one'}">
+      <input class="gt-input" id="scr-text" maxlength="120" placeholder="${ph || 'Teks tambahan (opsional) — mengganti kalimat bawah di layar'}">
+      ${mins ? `<input class="gt-input" id="scr-mins" type="number" min="1" max="180" placeholder="Hitung mundur (menit${QS_SCENES[sel]?.mins ? ', kosong = ' + QS_SCENES[sel].mins : ''})">` : ''}</div>`;
+  const showBtn = (label) => `<button class="gt-btn confirm" onclick="setScene(${sel === 'qa' ? 'null' : `'${sel}'`})">${live && (sel === 'qa' || scrRow.scene === sel) ? '↻ ' : '📺 '}${label || 'Tampilkan di layar'}</button>`;
+  let body = '';
+  if (sel === 'qa') body = `<div class="scr-actions">${showBtn('Tampilkan Tanya Jawab di layar')}<button class="gt-btn ghost" onclick="setRdTab('qa')">🎤 Buka menu Tanya Jawab</button></div>`;
+  else if (sel === 'opening') body = `<div class="scr-actions">${showBtn('Tampilkan susunan pembicara')}</div>
+    <div class="scr-sub-k">Pembicara</div>
+    <div class="scr-fm-nav">${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1;
+      return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('opening:${i + 1}')" title="${escHtml(sp.brand)}">${i + 1}. ${escHtml(sp.name)} <small class="scr-op-brand">${b?.logo ? `<img src="${b.logo}" alt="">` : escHtml(sp.brand)}</small></button>`; }).join('')}</div>`;
+  else if (sel === 'funmkt') body = `<div class="scr-actions">${showBtn('Tampilkan judul presentasi')}</div>
+    <div class="scr-sub-k">Slide materi</div>
+    <div class="scr-fm-nav">
+      <button class="scr-lv-btn" onclick="fmStep(-1)" ${fmNum(scrRow.scene) > 1 ? '' : 'disabled'}>◀ Sebelumnya</button>
+      <span class="scr-fm-now">${fmNum(scrRow.scene) ? `Slide <b>${fmNum(scrRow.scene)}</b> / ${FM_SLIDES}` : 'Belum tampil'}</span>
+      <button class="scr-lv-btn${fmNum(scrRow.scene) ? '' : ' on'}" onclick="fmStep(1)" ${fmNum(scrRow.scene) < FM_SLIDES ? '' : 'disabled'}>${fmNum(scrRow.scene) ? 'Berikutnya ▶' : '▶ Mulai dari slide 1'}</button>
+    </div>
+    <div class="scr-fm-thumbs">${Array.from({ length: FM_SLIDES }, (_, i) => `<button class="scr-fm-th${fmNum(scrRow.scene) === i + 1 ? ' on' : ''}" onclick="setScene('funmkt:${i + 1}')" title="Slide ${i + 1}">${FM_TITLE_SLIDES.includes(i + 1) ? '<b>FUN<br>MARKETING</b>' : `<img src="${fmSlide(i + 1, true)}" alt="" loading="lazy">`}<span>${i + 1}</span></button>`).join('')}</div>`;
+  else if (sel === 'launch') body = `${opts(false, 'Nama produk yang diluncurkan (opsional) — tampil besar di layar')}
+    <div class="scr-actions">${showBtn('Tampilkan judul Product Launch')}</div>
+    <div class="scr-sub-k">Video per brand</div>
+    <div class="scr-lv">${Object.entries(LAUNCH_VIDEOS).map(([id, vids]) => { const b = BRANDS.find(x => x.id === id); const all = 'launch:' + id;
+      return `<div class="scr-lv-row"><span class="scr-lv-brand">${b?.logo ? `<img src="${b.logo}" alt="${escHtml(b.name)}">` : escHtml(b?.name || id)}</span>
+        ${vids.length > 1 ? `<button class="scr-lv-btn${scrRow.scene === all ? ' on' : ''}" onclick="setScene('${all}')">${scrRow.scene === all ? '↻ Ulang semua' : `▶ Putar semua (${vids.length})`}</button>` : ''}
+        ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
+          return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}</div>`;
+  else body = `${opts(sel === 'coffee' || sel === 'lunch')}<div class="scr-actions">${showBtn()}</div>`;
+  el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Tanya Jawab'}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
     ${sceneCols() ? '' : '<div class="scr-warn">Jalankan SQL kolom <b>scene</b> di Supabase agar tampilan per sesi bisa dipakai.</div>'}
-    <div class="scr-scenes">
-      <button class="scr-btn${!sc ? ' on' : ''}" onclick="setScene(null)"><span>🎤</span>Tanya Jawab</button>
-      ${Object.entries(QS_SCENES).map(([k, v]) => `<button class="scr-btn${scrRow.scene === k ? ' on' : ''}" onclick="setScene('${k}')"><span>${v.icon}</span>${v.label}</button>`).join('')}
-    </div>
-    <div class="scr-fm"><div class="scr-lv-k">🎙 Opening Speech — pembicara</div>
-      <div class="scr-fm-nav">
-        <button class="scr-lv-btn${scrRow.scene === 'opening' ? ' on' : ''}" onclick="setScene('opening')">☰ Susunan pembicara</button>
-        ${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1;
-          return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('opening:${i + 1}')" title="${escHtml(sp.brand)}">${i + 1}. ${escHtml(sp.name)} <small class="scr-op-brand">${b?.logo ? `<img src="${b.logo}" alt="">` : escHtml(sp.brand)}</small></button>`; }).join('')}
-      </div>
-    </div>
-    <div class="scr-fm"><div class="scr-lv-k">🎯 Slide Presentasi Fun Marketing</div>
-      <div class="scr-fm-nav">
-        <button class="scr-lv-btn" onclick="fmStep(-1)" ${fmNum(scrRow.scene) > 1 ? '' : 'disabled'}>◀ Sebelumnya</button>
-        <span class="scr-fm-now">${fmNum(scrRow.scene) ? `Slide <b>${fmNum(scrRow.scene)}</b> / ${FM_SLIDES}` : 'Belum tampil'}</span>
-        <button class="scr-lv-btn${fmNum(scrRow.scene) ? '' : ' on'}" onclick="fmStep(1)" ${fmNum(scrRow.scene) < FM_SLIDES ? '' : 'disabled'}>${fmNum(scrRow.scene) ? 'Berikutnya ▶' : '▶ Mulai dari slide 1'}</button>
-      </div>
-      <div class="scr-fm-thumbs">${Array.from({ length: FM_SLIDES }, (_, i) => `<button class="scr-fm-th${fmNum(scrRow.scene) === i + 1 ? ' on' : ''}" onclick="setScene('funmkt:${i + 1}')" title="Slide ${i + 1}">${FM_TITLE_SLIDES.includes(i + 1) ? '<b>FUN<br>MARKETING</b>' : `<img src="${fmSlide(i + 1, true)}" alt="" loading="lazy">`}<span>${i + 1}</span></button>`).join('')}</div>
-    </div>
-    <div class="scr-lv"><div class="scr-lv-k">🎬 Video Product Launch</div>
-      ${Object.entries(LAUNCH_VIDEOS).map(([id, vids]) => { const b = BRANDS.find(x => x.id === id); const all = 'launch:' + id;
-        return `<div class="scr-lv-row"><span class="scr-lv-brand">${b?.logo ? `<img src="${b.logo}" alt="${escHtml(b.name)}">` : escHtml(b?.name || id)}</span>
-          ${vids.length > 1 ? `<button class="scr-lv-btn${scrRow.scene === all ? ' on' : ''}" onclick="setScene('${all}')">${scrRow.scene === all ? '↻ Ulang semua' : `▶ Putar semua (${vids.length})`}</button>` : ''}
-          ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
-            return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}
-    </div>
-    <div class="scr-opts">
-      <input class="gt-input" id="scr-text" maxlength="120" placeholder="Teks tambahan (opsional) — mis. nama produk yang diluncurkan">
-      <input class="gt-input" id="scr-mins" type="number" min="1" max="180" placeholder="Hitung mundur (menit, opsional)">
+    <div class="scr-sessions">${SCR_SESSIONS.map((k, i) => { const v = k === 'qa' ? { icon: '🎤', label: 'Tanya Jawab' } : QS_SCENES[k]; const t = scrSessionTime(k);
+      return `<button class="scr-btn${k === sel ? ' sel' : ''}${k === air ? ' on' : ''}" onclick="scrSelect('${k}')">${k === air ? '<i class="scr-live">● LIVE</i>' : ''}<em>${i + 1}</em><span>${v.icon}</span>${v.label}${t ? `<small>${t}</small>` : ''}</button>`; }).join('')}</div>
+    <div class="scr-pane">
+      <div class="scr-pane-head"><span class="scr-pane-ic">${info.icon}</span><div><b>${info.label}</b><p>${SCR_DESC[sel]}</p></div>${live ? '<span class="qa-badge onair">● Sedang tampil</span>' : ''}</div>
+      ${body}
     </div>`;
 }
 
