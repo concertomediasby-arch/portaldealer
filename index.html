@@ -1603,6 +1603,16 @@ body {
   .scr-opts { display: grid; grid-template-columns: 1fr 190px; gap: 8px; margin-top: 10px; }
   .scr-opts .gt-input { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #fff; }
   .gt-btn.scr-on { border-color: #16a34a; color: #16a34a; }
+  .scr-fm { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
+  .scr-fm-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+  .scr-fm-now { font-size: 13px; color: #c3cbdc; min-width: 110px; text-align: center; } .scr-fm-now b { color: #e9c46a; font-size: 16px; }
+  .scr-lv-btn:disabled { opacity: .35; cursor: default; }
+  .scr-fm-thumbs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .scr-fm-th { position: relative; flex: 0 0 auto; width: 96px; aspect-ratio: 16/9; padding: 0; border-radius: 6px; overflow: hidden; border: 2px solid transparent; background: #000; cursor: pointer; }
+  .scr-fm-th img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .8; }
+  .scr-fm-th b { display: grid; place-items: center; height: 100%; font: 800 10px/1.1 var(--f-display); color: #e9c46a; background: #14110c; }
+  .scr-fm-th span { position: absolute; left: 3px; bottom: 2px; font: 700 10px var(--f-mono); color: #fff; background: rgba(0,0,0,.6); padding: 0 4px; border-radius: 3px; }
+  .scr-fm-th.on { border-color: #22c55e; } .scr-fm-th.on img, .scr-fm-th:hover img { opacity: 1; }
   .scr-lv { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
   .scr-lv-k { font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #e9c46a; margin-right: 4px; }
   .scr-lv-btn { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf5; font: 600 12.5px var(--f-body); cursor: pointer; }
@@ -1683,6 +1693,9 @@ body {
   .qs-video video { width: 100%; height: 100%; object-fit: contain; background: #000; }
   .qs-unmute { position: absolute; left: 50%; bottom: 5vh; transform: translateX(-50%); padding: 12px 22px; border-radius: 12px; border: 1px solid #e9c46a; background: rgba(0,0,0,.7); color: #e9c46a; font: 600 16px var(--f-body); cursor: pointer; }
   .qs-unmute[hidden] { display: none; }
+  .qs-slide { position: absolute; inset: 0; z-index: 4; background: #000; }
+  .qs-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .45s ease; }
+  .qs-slide img.in { opacity: 1; }
   .qs-vcap { position: absolute; left: 3vw; top: 3vh; padding: 8px 16px; border-radius: 10px; background: rgba(0,0,0,.55); color: #e9c46a; font: 600 max(13px, 2.2vh) var(--f-body); opacity: 0; pointer-events: none; }
   .qs-vcap.show { animation: qsCap 4s ease both; }
   @keyframes qsCap { 0%, 100% { opacity: 0; } 10%, 80% { opacity: 1; } }
@@ -2809,7 +2822,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T09:25:14Z';
+const LAST_UPDATE = '2026-10-12T09:33:16Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7041,8 +7054,15 @@ const LAUNCH_VIDEOS = {
 };
 const sceneBase = k => String(k || '').split(':')[0];
 const launchParts = k => { const [, brand, n] = String(k || '').split(':'); return { brand, idx: n == null || n === '' ? null : +n }; };
+// Materi presentasi Fun Marketing (PDF pemilik → gambar 1920×1080). Scene 'funmkt' = judul, 'funmkt:<n>' = slide ke-n.
+const FM_SLIDES = 14;
+// Slide 1 asli (foto orang sungguhan) belum dipublikasikan — diganti desain judul Fun Marketing sampai pemilik menyetujui.
+const FM_TITLE_SLIDES = [1];
+const fmSlide = (n, thumb) => `assets/funmarketing/slide-${String(n).padStart(2, '0')}${thumb ? '-thumb' : ''}.webp`;
+const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
+  if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
   const { brand, idx } = launchParts(k), b = brand ? BRANDS.find(x => x.id === brand) : null;
   if (!b) return base;
   const v = idx != null ? LAUNCH_VIDEOS[brand]?.[idx] : null;
@@ -7070,6 +7090,14 @@ function renderScreenPanel(err) {
       <button class="scr-btn${!sc ? ' on' : ''}" onclick="setScene(null)"><span>🎤</span>Tanya Jawab</button>
       ${Object.entries(QS_SCENES).map(([k, v]) => `<button class="scr-btn${scrRow.scene === k ? ' on' : ''}" onclick="setScene('${k}')"><span>${v.icon}</span>${v.label}</button>`).join('')}
     </div>
+    <div class="scr-fm"><div class="scr-lv-k">🎯 Slide Presentasi Fun Marketing</div>
+      <div class="scr-fm-nav">
+        <button class="scr-lv-btn" onclick="fmStep(-1)" ${fmNum(scrRow.scene) > 1 ? '' : 'disabled'}>◀ Sebelumnya</button>
+        <span class="scr-fm-now">${fmNum(scrRow.scene) ? `Slide <b>${fmNum(scrRow.scene)}</b> / ${FM_SLIDES}` : 'Belum tampil'}</span>
+        <button class="scr-lv-btn${fmNum(scrRow.scene) ? '' : ' on'}" onclick="fmStep(1)" ${fmNum(scrRow.scene) < FM_SLIDES ? '' : 'disabled'}>${fmNum(scrRow.scene) ? 'Berikutnya ▶' : '▶ Mulai dari slide 1'}</button>
+      </div>
+      <div class="scr-fm-thumbs">${Array.from({ length: FM_SLIDES }, (_, i) => `<button class="scr-fm-th${fmNum(scrRow.scene) === i + 1 ? ' on' : ''}" onclick="setScene('funmkt:${i + 1}')" title="Slide ${i + 1}">${FM_TITLE_SLIDES.includes(i + 1) ? '<b>FUN<br>MARKETING</b>' : `<img src="${fmSlide(i + 1, true)}" alt="" loading="lazy">`}<span>${i + 1}</span></button>`).join('')}</div>
+    </div>
     <div class="scr-lv"><div class="scr-lv-k">🎬 Video Product Launch</div>
       ${Object.entries(LAUNCH_VIDEOS).map(([id, vids]) => { const b = BRANDS.find(x => x.id === id); const all = 'launch:' + id;
         return `<div class="scr-lv-row"><span class="scr-lv-brand">${b?.logo ? `<img src="${b.logo}" alt="${escHtml(b.name)}">` : escHtml(b?.name || id)}</span>
@@ -7081,6 +7109,12 @@ function renderScreenPanel(err) {
       <input class="gt-input" id="scr-text" maxlength="120" placeholder="Teks tambahan (opsional) — mis. nama produk yang diluncurkan">
       <input class="gt-input" id="scr-mins" type="number" min="1" max="180" placeholder="Hitung mundur (menit, opsional)">
     </div>`;
+}
+
+function fmStep(d) {
+  const n = fmNum(scrRow?.scene);
+  const next = Math.min(FM_SLIDES, Math.max(1, (n || 0) + d));
+  if (next !== n) setScene('funmkt:' + next);
 }
 
 async function setScene(key) {
@@ -7095,7 +7129,7 @@ async function setScene(key) {
   if (error) { showToast('Gagal mengubah layar: ' + error.message, 9000); return; }
   scrRow = { ...scrRow, ...row };
   renderScreenPanel(); renderRundown(); if (rdTab === 'qa') renderQa();
-  showToast(key ? `🖥 Layar: ${sceneInfo(key).label}${mins ? ` · hitung mundur ${mins} menit` : ''}` : '🖥 Layar kembali ke Tanya Jawab');
+  if (!fmNum(key)) showToast(key ? `🖥 Layar: ${sceneInfo(key).label}${mins ? ` · hitung mundur ${mins} menit` : ''}` : '🖥 Layar kembali ke Tanya Jawab');
 }
 
 /* Desain tiap sesi di layar videotron */
@@ -7105,7 +7139,8 @@ const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><
 
 function renderScene(s) {
   if (String(s.scene).startsWith('launch:')) return renderLaunchVideo(s);
-  const sc = QS_SCENES[s.scene], t = s.scene_text ? escHtml(s.scene_text) : '';
+  if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
+  const sc = QS_SCENES[sceneBase(s.scene)], t = s.scene_text ? escHtml(s.scene_text) : '';
   const count = s.scene_until ? `<div class="sc-count"><span class="qs-count" data-until="${escHtml(s.scene_until)}">--:--</span><small>sisa waktu</small></div>` : '';
   const next = sc.next ? `<div class="sc-next">Setelah ini · <b>${sc.next}</b></div>` : '';
   const logos = BRANDS.filter(b => b.logo).map(b => `<img src="${b.logo}" alt="${escHtml(b.name)}">`).join('');
@@ -7129,11 +7164,33 @@ function renderScene(s) {
         <div class="sc-card"><div class="sc-card-k">02 · PKS Dealer 2027</div><div class="sc-card-t">Perjanjian Kerja Sama</div>
           <div class="sc-card-body"><div class="sc-pks">PKS</div><ul>${li(PKS_POINTS)}</ul></div></div>
       </div>${count}</div>`,
-  }[s.scene];
+  }[sceneBase(s.scene)];
   qsSetStage(['scene', s.scene, s.scene_text, s.scene_until].join('|'), html);
   qsTick();
 }
 
+
+
+/* ── Slide presentasi di layar: gambar layar penuh, ganti slide dengan crossfade, slide berikutnya dipra-muat ── */
+function renderFmSlide(n) {
+  if (!qsSetStage('fmslide|' + n, '<div class="qs-idle"><p>Fun Marketing</p></div>')) return;
+  let ov = document.getElementById('qs-slide');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide'; document.getElementById('qa-screen').appendChild(ov); }
+  const img = new Image();
+  img.alt = 'Slide ' + n; img.src = fmSlide(n);
+  img.onload = () => { ov.appendChild(img); requestAnimationFrame(() => img.classList.add('in')); setTimeout(() => [...ov.children].slice(0, -1).forEach(x => x.remove()), 600); };
+  [n + 1, n - 1].filter(x => x >= 1 && x <= FM_SLIDES && !FM_TITLE_SLIDES.includes(x)).forEach(x => { new Image().src = fmSlide(x); });
+}
+// Clicker presentasi / tombol panah di komputer videotron → ganti slide (ditulis ke tabel agar panel admin ikut)
+async function qsFmKey(d) {
+  const { data: s } = await supabase.from(QA_SCREEN).select('scene').eq('id', 1).maybeSingle();
+  const cur = sceneBase(s?.scene) === 'funmkt' ? fmNum(s.scene) : null;
+  if (cur === null) return;
+  const next = Math.min(FM_SLIDES, Math.max(1, cur + d));
+  if (next === cur) return;
+  if (FM_TITLE_SLIDES.includes(next)) { qsKey = null; renderScene({ scene: 'funmkt:' + next }); } else renderFmSlide(next);
+  await supabase.from(QA_SCREEN).upsert({ id: 1, scene: 'funmkt:' + next, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
+}
 
 /* ── Video Product Launch di layar: intro logo brand → video layar penuh → penutup ── */
 let qsLvTimer = null;
@@ -7235,7 +7292,9 @@ function initQaScreen() {
   qsSetStage('wait', '<div class="qs-idle"><p>Menghubungkan…</p></div>');
   document.addEventListener('fullscreenchange', () => el.classList.toggle('is-fs', !!document.fullscreenElement));
   el.addEventListener('mousemove', () => { el.classList.remove('hide-cursor'); clearTimeout(qsCursorT); qsCursorT = setTimeout(() => el.classList.add('hide-cursor'), 3000); });
-  document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') qsFullscreen(); if (e.key === ' ') { const v = document.getElementById('qs-video-el'); if (v) { e.preventDefault(); v.paused ? v.play() : v.pause(); } } });
+  document.addEventListener('keydown', e => { if (e.key === 'f' || e.key === 'F') qsFullscreen(); if (e.key === ' ') { const v = document.getElementById('qs-video-el'); if (v) { e.preventDefault(); v.paused ? v.play() : v.pause(); } }
+    if (['ArrowRight', 'PageDown', 'ArrowDown'].includes(e.key)) { e.preventDefault(); qsFmKey(1); }
+    if (['ArrowLeft', 'PageUp', 'ArrowUp'].includes(e.key)) { e.preventDefault(); qsFmKey(-1); } });
 }
 function qsFullscreen() { document.fullscreenElement ? document.exitFullscreen?.() : document.documentElement.requestFullscreen?.().catch(() => {}); }
 
@@ -7281,6 +7340,7 @@ function qsSetStage(key, html) {
   if (key === qsKey) return false;
   qsKey = key;
   stopLaunchVideo();
+  if (!String(key).startsWith('fmslide|')) document.getElementById('qs-slide')?.remove();
   document.getElementById('qs-stage').innerHTML = html;
   return true;
 }
