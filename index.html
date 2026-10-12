@@ -1634,6 +1634,32 @@ body {
   .sc-track { display: flex; align-items: center; gap: 7vw; width: max-content; animation: scMarquee 28s linear infinite; }
   .sc-track img { height: min(7vw, 11vh); width: auto; max-width: 22vw; object-fit: contain; opacity: .92; }
   @keyframes scMarquee { to { transform: translateX(-50%); } }
+  .qs-stage > .sc-bubbles { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; animation: qsFade 1s ease both; }
+  .sc-bubbles i { position: absolute; bottom: -10vh; border-radius: 50%; opacity: .55; animation: scRise linear infinite; }
+  .sc-bubbles i:nth-child(4n+1) { background: radial-gradient(circle at 30% 30%, #f3d899, #a9823a); }
+  .sc-bubbles i:nth-child(4n+2) { background: radial-gradient(circle at 30% 30%, #ff8f8f, #c0392b); }
+  .sc-bubbles i:nth-child(4n+3) { background: radial-gradient(circle at 30% 30%, #8fd1ff, #2c6fb3); }
+  .sc-bubbles i:nth-child(4n)   { background: radial-gradient(circle at 30% 30%, #9ff0b8, #178a4c); }
+  .sc-bubbles i:nth-child(1) { left: 43%; width: 4vh; height: auto; aspect-ratio: 1; animation-duration: 15s; animation-delay: -1s; }
+  .sc-bubbles i:nth-child(2) { left: 11%; width: 9vh; height: auto; aspect-ratio: 1; animation-duration: 17s; animation-delay: -3s; }
+  .sc-bubbles i:nth-child(3) { left: 48%; width: 7vh; height: auto; aspect-ratio: 1; animation-duration: 9s; animation-delay: -6s; }
+  .sc-bubbles i:nth-child(4) { left: 6%; width: 3vh; height: auto; aspect-ratio: 1; animation-duration: 15s; animation-delay: -13s; }
+  .sc-bubbles i:nth-child(5) { left: 10%; width: 4vh; height: auto; aspect-ratio: 1; animation-duration: 10s; animation-delay: -13s; }
+  .sc-bubbles i:nth-child(6) { left: 9%; width: 9vh; height: auto; aspect-ratio: 1; animation-duration: 18s; animation-delay: -3s; }
+  .sc-bubbles i:nth-child(7) { left: 30%; width: 8vh; height: auto; aspect-ratio: 1; animation-duration: 18s; animation-delay: -1s; }
+  .sc-bubbles i:nth-child(8) { left: 75%; width: 7vh; height: auto; aspect-ratio: 1; animation-duration: 15s; animation-delay: -1s; }
+  .sc-bubbles i:nth-child(9) { left: 30%; width: 3vh; height: auto; aspect-ratio: 1; animation-duration: 17s; animation-delay: -4s; }
+  .sc-bubbles i:nth-child(10) { left: 39%; width: 6vh; height: auto; aspect-ratio: 1; animation-duration: 11s; animation-delay: -3s; }
+  .sc-bubbles i:nth-child(11) { left: 75%; width: 5vh; height: auto; aspect-ratio: 1; animation-duration: 17s; animation-delay: -5s; }
+  .sc-bubbles i:nth-child(12) { left: 15%; width: 7vh; height: auto; aspect-ratio: 1; animation-duration: 18s; animation-delay: -6s; }
+  .sc-bubbles i:nth-child(13) { left: 49%; width: 3vh; height: auto; aspect-ratio: 1; animation-duration: 17s; animation-delay: -2s; }
+  .sc-bubbles i:nth-child(14) { left: 74%; width: 3vh; height: auto; aspect-ratio: 1; animation-duration: 18s; animation-delay: -6s; }
+  @keyframes scRise { from { transform: translateY(0) scale(.9); } to { transform: translateY(-140vh) scale(1.1); } }
+  .sc-mega { transform-origin: 30% 60%; animation: scWobble 2.4s ease-in-out infinite; }
+  .sc-waves path { animation: scWave 1.6s ease-in-out infinite; opacity: 0; }
+  .sc-waves path:nth-child(2) { animation-delay: .25s; } .sc-waves path:nth-child(3) { animation-delay: .5s; }
+  @keyframes scWave { 0% { opacity: 0; } 40% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes scWobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
   .sc-rays { position: absolute; left: 50%; top: 50%; width: 160vmax; height: 160vmax; transform: translate(-50%, -50%); z-index: 0; pointer-events: none;
     background: repeating-conic-gradient(from 0deg, rgba(233,196,106,.10) 0deg 6deg, transparent 6deg 18deg); animation: scSpin 60s linear infinite;
     -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 55%); mask-image: radial-gradient(circle, #000 0%, transparent 55%); }
@@ -2783,7 +2809,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T09:01:44Z';
+const LAST_UPDATE = '2026-10-12T09:25:14Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6660,7 +6686,8 @@ const RD_TEMPLATE_LUP = [
   { title: 'Refreshment Product', start_time: '12:20', flexible: true },
   { title: 'Product Launch', start_time: '13:00', flexible: true },
   { title: 'Makan Siang', start_time: '13:45', flexible: true },
-  { title: 'Kick Off 2027', start_time: '14:45', flexible: true, notes: 'Membahas situs Portal Dealer CAI (dealer.concerto.id) & PKS Dealer (Perjanjian Kerja Sama) 2027.' },
+  { title: 'Presentasi Fun Marketing', start_time: '14:45', flexible: true },
+  { title: 'Kick Off 2027', start_time: '15:30', flexible: true, notes: 'Membahas situs Portal Dealer CAI (dealer.concerto.id) & PKS Dealer (Perjanjian Kerja Sama) 2027.' },
 ];
 async function addRdTemplate() {
   const def = (rdItems?.length ? [...rdItems].sort((a, b) => b.day.localeCompare(a.day))[0].day : '') || rdNowWIB().day;
@@ -6979,6 +7006,7 @@ const QS_SCENES = {
   refresh: { label: 'Refreshment Product', icon: '🔊', match: /refresh|referes/i },
   launch:  { label: 'Product Launch', icon: '🚀', match: /launch|peluncuran/i },
   lunch:   { label: 'Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan|lunch/i },
+  funmkt:  { label: 'Fun Marketing', icon: '🎯', match: /fun ?marketing/i },
   kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
 };
 const PORTAL_POINTS = ['Katalog produk & harga SRP resmi', 'Stok produk real-time', 'Panduan Dealer & Concerto Academy', 'Paket Audio & Shopping Gathering'];
@@ -7072,6 +7100,7 @@ async function setScene(key) {
 
 /* Desain tiap sesi di layar videotron */
 const SC_CUP = '<svg class="sc-svg" viewBox="0 0 120 120" aria-hidden="true"><g class="sc-steam" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linecap="round"><path d="M44 40c-6-8 6-12 0-20"/><path d="M60 40c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g><path d="M26 50h66v20a30 30 0 0 1-30 30h-6a30 30 0 0 1-30-30z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M92 56h5a12 12 0 0 1 0 24h-7" fill="none" stroke="#fff" stroke-width="5"/><line x1="18" y1="110" x2="102" y2="110" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"/></svg>';
+const SC_MEGA = '<svg class="sc-svg sc-mega" viewBox="0 0 140 120" aria-hidden="true"><path d="M22 50h18l46-26v72L40 70H22a6 6 0 0 1-6-6V56a6 6 0 0 1 6-6z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M34 70l8 26h12l-6-24" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><g class="sc-waves" fill="none" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"><path d="M100 46a20 20 0 0 1 0 28"/><path d="M110 36a34 34 0 0 1 0 48"/><path d="M120 26a48 48 0 0 1 0 68"/></g></svg>';
 const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><circle cx="70" cy="62" r="36" fill="rgba(233,196,106,.10)" stroke="#fff" stroke-width="5"/><circle cx="70" cy="62" r="22" fill="none" stroke="#e9c46a" stroke-width="3"/><path d="M16 28v22a7 7 0 0 0 14 0V28M23 28v74" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M122 28c-9 6-9 28 0 34v40" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function renderScene(s) {
@@ -7091,6 +7120,8 @@ function renderScene(s) {
       <div class="sc-launch-name">${t || 'Produk Terbaru 2027'}</div><p class="sc-sub">Concerto Audio Indonesia</p>${count}</div>`,
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
+    funmkt: `<div class="sc-bubbles">${'<i></i>'.repeat(14)}</div><div class="qs-scene sc-fun">${SC_MEGA}<div class="qs-kicker">Presentasi</div>
+      <h1 class="sc-title">Fun <em>Marketing</em></h1><p class="sc-sub">${t || 'Ide pemasaran yang seru, kreatif &amp; mudah dipraktikkan di toko Anda'}</p>${count}</div>`,
     kickoff: `<div class="qs-scene sc-kickoff"><div class="qs-kicker">Kick Off</div><h1 class="sc-year">2027</h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
       <div class="sc-cards">
         <div class="sc-card"><div class="sc-card-k">01 · Portal Dealer CAI</div><div class="sc-card-t">dealer.concerto.id</div>
