@@ -2822,7 +2822,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T09:33:16Z';
+const LAST_UPDATE = '2026-10-12T09:37:01Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7056,8 +7056,9 @@ const sceneBase = k => String(k || '').split(':')[0];
 const launchParts = k => { const [, brand, n] = String(k || '').split(':'); return { brand, idx: n == null || n === '' ? null : +n }; };
 // Materi presentasi Fun Marketing (PDF pemilik → gambar 1920×1080). Scene 'funmkt' = judul, 'funmkt:<n>' = slide ke-n.
 const FM_SLIDES = 14;
-// Slide 1 asli (foto orang sungguhan) belum dipublikasikan — diganti desain judul Fun Marketing sampai pemilik menyetujui.
-const FM_TITLE_SLIDES = [1];
+// Slide yang diganti desain judul Fun Marketing (kosong = semua slide asli tampil). Slide 1 dipasang setelah pemilik
+// mengonfirmasi orang di kedua fotonya sudah setuju (Okt 2026).
+const FM_TITLE_SLIDES = [];
 const fmSlide = (n, thumb) => `assets/funmarketing/slide-${String(n).padStart(2, '0')}${thumb ? '-thumb' : ''}.webp`;
 const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const sceneInfo = k => {
