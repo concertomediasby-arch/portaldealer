@@ -1497,6 +1497,41 @@ body {
   @media (max-width: 720px) { .wa-float { right: 14px; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); width: 48px; height: 48px; } }
 
 
+
+  /* ── Run Down Gathering ── */
+  .rd-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  .rd-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rd-now { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .rd-chip { padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); display: flex; flex-direction: column; gap: 2px; }
+  .rd-chip span { font: 600 10.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-muted); }
+  .rd-chip b { font-size: 15px; color: var(--fg); } .rd-chip small { font-size: 12px; color: var(--fg-muted); }
+  .rd-chip.live { border-color: #16a34a; background: rgba(34,197,94,.08); } .rd-chip.live span { color: #16a34a; }
+  .rd-form { margin-bottom: 18px; padding: 14px 16px; border: 1px solid var(--accent); border-radius: var(--r); background: var(--surface); }
+  .rd-form[hidden] { display: none; }
+  .rd-form-title { font-weight: 700; margin-bottom: 10px; color: var(--fg); }
+  .rd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .rd-grid label { display: flex; flex-direction: column; gap: 5px; font: 600 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); }
+  .rd-grid .rd-wide { grid-column: span 3; }
+  .rd-form-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .rd-wrap { padding: 16px 28px 48px; max-width: 1100px; }
+  @media (max-width: 720px) { .rd-wrap { padding: 12px 16px 32px; } }
+  .rd-day { margin-bottom: 22px; } .rd-day .line-header { margin-bottom: 8px; }
+  .rd-table { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .rd-row { display: grid; grid-template-columns: 34px 92px 1fr auto; gap: 12px; align-items: start; padding: 11px 14px; }
+  .rd-row + .rd-row { border-top: 1px solid var(--border); }
+  .rd-row.done .rd-title { text-decoration: line-through; color: var(--fg-muted); }
+  .rd-row.live { background: rgba(34,197,94,.07); box-shadow: inset 3px 0 0 #16a34a; }
+  .rd-check input { width: 18px; height: 18px; accent-color: #16a34a; cursor: pointer; margin-top: 2px; }
+  .rd-time { font: 700 14px var(--f-mono); color: var(--accent); } .rd-time small { display: block; font-size: 11.5px; font-weight: 500; color: var(--fg-muted); }
+  .rd-title { font-weight: 600; font-size: 14px; color: var(--fg); }
+  .rd-live-tag { font: 700 9.5px var(--f-mono); color: #fff; background: #16a34a; padding: 1px 6px; border-radius: 4px; vertical-align: 2px; display: inline-block; text-decoration: none; }
+  .rd-meta { font-size: 12px; color: var(--fg-muted); margin-top: 3px; }
+  .rd-notes { font-size: 12.5px; color: var(--fg); margin-top: 5px; padding: 6px 9px; border-radius: 8px; background: var(--surface2); }
+  .rd-btns { display: flex; gap: 6px; } .rd-btns .gt-btn { padding: 6px 9px; }
+  @media (max-width: 640px) {
+    .rd-grid { grid-template-columns: 1fr 1fr; } .rd-grid .rd-wide { grid-column: span 2; }
+    .rd-row { grid-template-columns: 28px 64px 1fr; } .rd-btns { grid-column: 3; }
+  }
   /* ── Shopping Gathering ── */
   .gt-terms { margin-top: 8px; font-size: 12px; color: var(--fg-muted); line-height: 1.55; max-width: 900px; }
   .gt-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin: 4px 0 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
@@ -1646,6 +1681,7 @@ body {
     #gt-print .gp-items th, #gt-print .gp-items td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
     #gt-print .gp-items th { background: #1d2a4d; color: #fff; }
     #gt-print .gp-items td:nth-child(n+3) { text-align: right; }
+    #gt-print .rd-print { table-layout: fixed; } #gt-print .rd-print td:nth-child(n+3) { text-align: left; }
     #gt-print .gp-sub td, #gt-print .gp-grand td { font-weight: 700; background: #f1f1f1; }
     #gt-print .gp-grand { margin-top: 12px; } #gt-print .gp-grand td:last-child { text-align: right; font-size: 13px; }
     #gt-print .gp-terms { color: #555; margin-top: 10px; }
@@ -2016,6 +2052,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
         Kelola Dealer
       </button>
+      <button class="sidebar-item editor-only" id="nav-rundown" onclick="openRundown()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
+        Run Down Gathering
+      </button>
     </div>
   </aside>
 
@@ -2092,6 +2132,41 @@ body {
     </div>
 
     <!-- VIEW: Kelola Dealer (khusus Editor) -->
+    <!-- VIEW: Run Down Gathering 2026 (khusus Editor; data di tabel Supabase gathering_rundown) -->
+    <div class="view" id="view-rundown">
+      <div class="page-header rd-head">
+        <div>
+          <div class="page-title">Run Down Gathering 2026</div>
+          <div class="page-subtitle">Jadwal acara Gathering CAI 2026 — tambah, ubah, dan centang sesi yang sudah selesai. Khusus akun Editor.</div>
+        </div>
+        <div class="rd-actions">
+          <button class="gt-btn ghost" onclick="loadRundown()">↻ Muat ulang</button>
+          <button class="gt-btn ghost" onclick="printRundown()">🖨 Cetak</button>
+          <button class="gt-btn confirm" onclick="openRdForm()">＋ Tambah Sesi</button>
+        </div>
+      </div>
+      <div class="rd-wrap">
+      <div class="rd-now" id="rd-now" hidden></div>
+      <form class="rd-form" id="rd-form" hidden onsubmit="saveRdItem(); return false;">
+        <div class="rd-form-title" id="rd-form-title">Tambah sesi</div>
+        <div class="rd-grid">
+          <label>Tanggal<input class="gt-input" type="date" id="rd-day" required></label>
+          <label>Mulai<input class="gt-input" type="time" id="rd-start" required></label>
+          <label>Selesai<input class="gt-input" type="time" id="rd-end"></label>
+          <label class="rd-wide">Acara / Sesi<input class="gt-input" id="rd-title" maxlength="120" required placeholder="mis. Registrasi & welcome drink"></label>
+          <label>PIC<input class="gt-input" id="rd-pic" maxlength="60" placeholder="mis. Tim Sales"></label>
+          <label>Lokasi<input class="gt-input" id="rd-location" maxlength="80" placeholder="mis. Ballroom Lt. 2"></label>
+          <label class="rd-wide">Catatan<input class="gt-input" id="rd-notes" maxlength="300" placeholder="opsional — perlengkapan, MC, materi, dll."></label>
+        </div>
+        <div class="rd-form-actions">
+          <button class="gt-btn confirm" type="submit" id="rd-save">Simpan</button>
+          <button class="gt-btn ghost" type="button" onclick="closeRdForm()">Batal</button>
+        </div>
+      </form>
+      <div id="rd-list"><div class="stock-empty">Memuat…</div></div>
+      </div>
+    </div>
+
     <div class="view" id="view-dealers">
       <div class="page-header">
         <div class="page-title">Kelola Dealer</div>
@@ -2321,6 +2396,10 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
       <span>Dealer</span>
     </button>
+    <button class="mobile-nav-item editor-only" id="mnav-rundown" onclick="openRundown()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
+      <span>Run Down</span>
+    </button>
     <button class="mobile-nav-item" id="mnav-dsp" onclick="openDspSoftware()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
       <span>DSP</span>
@@ -2489,7 +2568,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T06:27:29Z';
+const LAST_UPDATE = '2026-10-12T06:53:06Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3988,6 +4067,7 @@ function showView(viewId) {
   if (viewId === 'gathering') document.getElementById('nav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('nav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('nav-dealers')?.classList.add('active');
+  if (viewId === 'rundown') document.getElementById('nav-rundown')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('nav-stock')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
@@ -4001,6 +4081,7 @@ function showView(viewId) {
   if (viewId === 'gathering') document.getElementById('mnav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('mnav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('mnav-dealers')?.classList.add('active');
+  if (viewId === 'rundown') document.getElementById('mnav-rundown')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('mnav-stock')?.classList.add('active');
 }
 
@@ -4691,7 +4772,7 @@ function updateAuthUI() {
   document.body.classList.toggle('is-editor', isEditor());
   document.body.classList.toggle('is-staff', isAdmin());
   updateWaAccess();
-  if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
+  if (!isEditor() && ['view-dealers', 'view-rundown'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
   const btn = document.getElementById('auth-btn');
   if (btn) btn.title = authUser ? `Login sebagai ${accountLabel(authUser)} (${ROLE_LABEL[userRole()] || 'Dealer'}) — klik untuk keluar` : 'Login dealer';
 }
@@ -6238,6 +6319,142 @@ async function exportGtOrders() {
 function gtReset() {
   if (!Object.keys(gtQty).length || !confirm('Kosongkan semua jumlah pesanan?')) return;
   gtQty = {}; gtSaveDraft(); renderGathering();
+}
+
+
+/* ══════════════════════════════════════════
+   RUN DOWN GATHERING 2026 — khusus Editor
+   Tabel Supabase `gathering_rundown` (RLS: hanya role editor). Sesi dikelompokkan per tanggal & diurutkan per jam;
+   sesi yang sedang berlangsung / berikutnya ditandai otomatis (waktu WIB).
+══════════════════════════════════════════ */
+const RUNDOWN_TABLE = 'gathering_rundown';
+let rdItems = null, rdErr = '', rdEditId = null, rdTimer = null;
+
+function openRundown() {
+  if (!requireLogin(openRundown)) return;
+  if (!isEditor()) { showToast('Run Down Gathering khusus akun Editor.'); return; }
+  showView('rundown');
+  document.querySelector('.main')?.scrollTo(0, 0);
+  renderRundown();
+  loadRundown();
+  clearInterval(rdTimer);
+  rdTimer = setInterval(() => { if (document.getElementById('view-rundown')?.classList.contains('active')) renderRundown(); else clearInterval(rdTimer); }, 60000);
+}
+
+async function loadRundown() {
+  if (!supabase || !isEditor()) return;
+  try {
+    const { data, error } = await supabase.from(RUNDOWN_TABLE).select('*').order('day').order('start_time');
+    if (error) throw error;
+    rdItems = data || []; rdErr = '';
+  } catch (e) {
+    const m = String(e.message || e);
+    rdItems = [];
+    rdErr = /does not exist|relation|schema cache/i.test(m) ? 'Tabel run down belum dibuat. Jalankan SQL "gathering_rundown" di Supabase.' : 'Run down tidak bisa dimuat: ' + m;
+  }
+  renderRundown();
+}
+
+const rdT = t => (t || '').slice(0, 5);
+const rdNowWIB = () => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
+    .formatToParts(new Date()).map(x => [x.type, x.value]));
+  return { day: `${p.year}-${p.month}-${p.day}`, time: `${p.hour === '24' ? '00' : p.hour}:${p.minute}` };
+};
+const fmtRdDay = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+function renderRundown() {
+  const el = document.getElementById('rd-list');
+  if (!el) return;
+  if (rdItems === null) { el.innerHTML = '<div class="stock-empty">Memuat…</div>'; return; }
+  if (rdErr) { el.innerHTML = `<div class="stock-empty">${escHtml(rdErr)}</div>`; return; }
+  const now = rdNowWIB();
+  const items = [...rdItems].sort((a, b) => (a.day + rdT(a.start_time)).localeCompare(b.day + rdT(b.start_time)));
+  // sesi berlangsung = hari ini & mulai ≤ sekarang < selesai (atau < mulai sesi berikutnya bila jam selesai kosong)
+  const today = items.filter(x => x.day === now.day);
+  const live = today.find((x, i) => { const end = rdT(x.end_time) || rdT(today[i + 1]?.start_time) || '23:59'; return rdT(x.start_time) <= now.time && now.time < end; });
+  const next = items.find(x => (x.day > now.day || (x.day === now.day && rdT(x.start_time) > now.time)) && !x.done);
+  const nowEl = document.getElementById('rd-now');
+  nowEl.hidden = !(live || next);
+  nowEl.innerHTML = [live ? `<div class="rd-chip live"><span>● Sedang berlangsung</span><b>${escHtml(live.title)}</b><small>${rdT(live.start_time)}${live.end_time ? '–' + rdT(live.end_time) : ''}${live.location ? ' · ' + escHtml(live.location) : ''}</small></div>` : '',
+    next ? `<div class="rd-chip"><span>⏭ Berikutnya</span><b>${escHtml(next.title)}</b><small>${next.day !== now.day ? fmtRdDay(next.day) + ', ' : ''}${rdT(next.start_time)}${next.pic ? ' · PIC ' + escHtml(next.pic) : ''}</small></div>` : ''].join('');
+  if (!items.length) { el.innerHTML = '<div class="stock-empty">Belum ada sesi. Klik <b>＋ Tambah Sesi</b> untuk mulai menyusun run down.</div>'; return; }
+  const days = [...new Set(items.map(x => x.day))];
+  el.innerHTML = days.map((d, n) => {
+    const rows = items.filter(x => x.day === d);
+    const done = rows.filter(x => x.done).length;
+    return `<div class="rd-day">
+      <div class="line-header"><span class="line-name">Hari ${n + 1} · ${fmtRdDay(d)}</span><span class="line-count">${rows.length}</span><span class="gt-sub">${done}/${rows.length} selesai</span></div>
+      <div class="rd-table">${rows.map(x => `
+        <div class="rd-row${x.done ? ' done' : ''}${live && live.id === x.id ? ' live' : ''}">
+          <label class="rd-check" title="Tandai selesai"><input type="checkbox"${x.done ? ' checked' : ''} onchange="toggleRdDone(${x.id}, this.checked)"></label>
+          <div class="rd-time">${rdT(x.start_time)}${x.end_time ? `<small>– ${rdT(x.end_time)}</small>` : ''}</div>
+          <div class="rd-main"><div class="rd-title">${escHtml(x.title)}${live && live.id === x.id ? ' <span class="rd-live-tag">LIVE</span>' : ''}</div>
+            <div class="rd-meta">${[x.pic ? '👤 ' + escHtml(x.pic) : '', x.location ? '📍 ' + escHtml(x.location) : ''].filter(Boolean).join('  ·  ')}</div>
+            ${x.notes ? `<div class="rd-notes">${escHtml(x.notes)}</div>` : ''}</div>
+          <div class="rd-btns"><button class="gt-btn ghost" onclick="openRdForm(${x.id})" title="Edit">✏️</button><button class="gt-btn ghost gt-del" onclick="deleteRdItem(${x.id})" title="Hapus">🗑</button></div>
+        </div>`).join('')}</div></div>`;
+  }).join('');
+}
+
+function openRdForm(id) {
+  const x = id ? rdItems?.find(r => r.id === id) : null;
+  rdEditId = x ? x.id : null;
+  const last = rdItems?.length ? [...rdItems].sort((a, b) => (b.day + rdT(b.start_time)).localeCompare(a.day + rdT(a.start_time)))[0] : null;
+  document.getElementById('rd-form-title').textContent = x ? 'Edit sesi' : 'Tambah sesi';
+  document.getElementById('rd-day').value = x?.day || last?.day || rdNowWIB().day;
+  document.getElementById('rd-start').value = rdT(x?.start_time) || rdT(last?.end_time) || '';
+  document.getElementById('rd-end').value = rdT(x?.end_time);
+  ['title', 'pic', 'location', 'notes'].forEach(k => { document.getElementById('rd-' + k).value = x?.[k] || ''; });
+  const f = document.getElementById('rd-form'); f.hidden = false;
+  f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('rd-title').focus();
+}
+function closeRdForm() { document.getElementById('rd-form').hidden = true; rdEditId = null; }
+
+async function saveRdItem() {
+  const v = k => document.getElementById('rd-' + k).value.trim();
+  const row = { day: v('day'), start_time: v('start'), end_time: v('end') || null, title: v('title'), pic: v('pic') || null, location: v('location') || null, notes: v('notes') || null, updated_at: new Date().toISOString() };
+  if (!row.day || !row.start_time || !row.title) { showToast('Isi tanggal, jam mulai, dan nama acara.'); return; }
+  if (row.end_time && row.end_time <= row.start_time) { showToast('Jam selesai harus setelah jam mulai.'); return; }
+  const btn = document.getElementById('rd-save'); btn.disabled = true;
+  try {
+    const q = rdEditId ? supabase.from(RUNDOWN_TABLE).update(row).eq('id', rdEditId) : supabase.from(RUNDOWN_TABLE).insert(row);
+    const { error } = await q;
+    if (error) throw error;
+    showToast(rdEditId ? '✓ Sesi diperbarui.' : '✓ Sesi ditambahkan.');
+    closeRdForm(); loadRundown();
+  } catch (e) { showToast('Gagal menyimpan: ' + (e.message || e), 9000); }
+  finally { btn.disabled = false; }
+}
+
+async function toggleRdDone(id, done) {
+  const x = rdItems?.find(r => r.id === id); if (!x) return;
+  x.done = done; renderRundown();
+  const { error } = await supabase.from(RUNDOWN_TABLE).update({ done, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) { x.done = !done; renderRundown(); showToast('Gagal mengubah status: ' + error.message, 8000); }
+}
+
+async function deleteRdItem(id) {
+  const x = rdItems?.find(r => r.id === id);
+  if (!x || !confirm(`Hapus sesi "${x.title}" (${rdT(x.start_time)})?`)) return;
+  const { error } = await supabase.from(RUNDOWN_TABLE).delete().eq('id', id);
+  if (error) { showToast('Gagal menghapus: ' + error.message, 8000); return; }
+  rdItems = rdItems.filter(r => r.id !== id); renderRundown(); showToast('Sesi dihapus.');
+}
+
+function printRundown() {
+  if (!rdItems?.length) { showToast('Belum ada sesi untuk dicetak.'); return; }
+  let el = document.getElementById('gt-print');
+  if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
+  const items = [...rdItems].sort((a, b) => (a.day + rdT(a.start_time)).localeCompare(b.day + rdT(b.start_time)));
+  const days = [...new Set(items.map(x => x.day))];
+  el.innerHTML = `<div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>RUN DOWN ACARA</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
+    ${days.map((d, n) => `<h2>Hari ${n + 1} — ${fmtRdDay(d)}</h2>
+      <table class="gp-items rd-print"><colgroup><col style="width:13%"><col style="width:32%"><col style="width:15%"><col style="width:15%"><col style="width:25%"></colgroup><thead><tr><th>Waktu</th><th>Acara / Sesi</th><th>PIC</th><th>Lokasi</th><th>Catatan</th></tr></thead><tbody>
+      ${items.filter(x => x.day === d).map(x => `<tr><td>${rdT(x.start_time)}${x.end_time ? '–' + rdT(x.end_time) : ''}</td><td>${escHtml(x.title)}</td><td>${escHtml(x.pic || '')}</td><td>${escHtml(x.location || '')}</td><td>${escHtml(x.notes || '')}</td></tr>`).join('')}
+      </tbody></table>`).join('')}`;
+  window.print();
 }
 
 /* ══════════════════════════════════════════
