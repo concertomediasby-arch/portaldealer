@@ -1549,7 +1549,26 @@ body {
 
   .staff-only { display: none !important; }
   body.is-staff .staff-only { display: flex !important; }
-  .gt-tabs { gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .gt-tabs { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .gt-tabs .staff-only { display: none !important; }
+  body.is-staff .gt-tabs .staff-only { display: inline-flex !important; }
+  .gt-top { max-width: 760px; }
+  .gt-top-head { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; margin: 10px 0 16px; }
+  .gt-top-title { font: 700 20px var(--f-display); color: var(--fg); }
+  .gt-top-sub { grid-column: 1; font-size: 12.5px; color: var(--fg-muted); }
+  .gt-top-head .gt-btn { grid-column: 2; grid-row: 1 / span 2; }
+  .gt-top-list { display: flex; flex-direction: column; gap: 10px; }
+  .gt-top-row { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+  .gt-top-row.rank-1 { border-color: #d8b26a; background: linear-gradient(100deg, rgba(216,178,106,.22), var(--surface) 70%); box-shadow: 0 6px 22px rgba(216,178,106,.18); }
+  .gt-top-row.rank-2 { border-color: #b8c0cc; background: linear-gradient(100deg, rgba(184,192,204,.2), var(--surface) 70%); }
+  .gt-top-row.rank-3 { border-color: #c98a5a; background: linear-gradient(100deg, rgba(201,138,90,.18), var(--surface) 70%); }
+  .gt-top-rank { font: 700 26px var(--f-display); text-align: center; color: var(--fg-muted); }
+  .gt-top-row.rank-1 .gt-top-rank { font-size: 34px; }
+  .gt-top-store { min-width: 0; } .gt-top-store b { display: block; font-size: 15px; color: var(--fg); overflow-wrap: anywhere; }
+  .gt-top-store span { font-size: 12px; color: var(--fg-muted); }
+  .gt-top-total { font: 700 16px var(--f-mono); color: var(--accent); white-space: nowrap; }
+  .gt-top-row.rank-1 .gt-top-total { font-size: 19px; }
+  @media (max-width: 560px) { .gt-top-row { grid-template-columns: 40px 1fr; } .gt-top-total { grid-column: 2; font-size: 14px; } .gt-top-rank { font-size: 22px; } }
   #view-gathering.rekap-mode .page-subtitle, #view-gathering.rekap-mode .gt-terms { display: none; }
   .gt-tabs + .page-subtitle { margin-top: 10px; }
   .gt-rk-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 16px 0 14px; }
@@ -2106,13 +2125,15 @@ body {
     <div class="view" id="view-gathering">
       <div class="page-header">
         <div class="page-title">Shopping Gathering</div>
-        <div class="gt-tabs staff-only">
+        <div class="gt-tabs">
           <button class="filter-chip active" id="gt-tab-form" onclick="setGtTab('form')">🛍 Form Belanja</button>
-          <button class="filter-chip" id="gt-tab-rekap" onclick="setGtTab('rekap')">📋 Rekap Pesanan Dealer</button>
+          <button class="filter-chip" id="gt-tab-top" onclick="setGtTab('top')">🏆 Top Spender</button>
+          <button class="filter-chip staff-only" id="gt-tab-rekap" onclick="setGtTab('rekap')">📋 Rekap Pesanan Dealer</button>
         </div>
         <div class="page-subtitle">Form belanja dealer <b>Gathering CAI 2026</b>. Isi jumlah pesanan, total dihitung otomatis, lalu kirim ke sales CAI lewat WhatsApp atau cetak sebagai PDF.</div>
         <div class="gt-terms">* Harga Spesial Gathering = harga lama − diskon 35% − cashback, hanya berlaku selama acara berlangsung. Produk yang tidak masuk promo memakai harga lama. Clearance Sale: harga bersih = harga clearance 50% − cashback, stok terbatas.</div>
       </div>
+      <div id="gt-top" class="gt-top" hidden></div>
       <div id="gt-rekap" class="gt-rekap" hidden></div>
       <div id="gt-form">
       <div class="gt-info">
@@ -2436,7 +2457,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T04:47:27Z';
+const LAST_UPDATE = '2026-10-12T04:58:45Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4513,7 +4534,7 @@ function onAuthChanged() {
     subscribeStock();
   } else {
     if (stockChannel) { supabase.removeChannel(stockChannel); stockChannel = null; }
-    stockMap = {}; stockLoaded = false; guideFiles = null; gtItems = null; gtOrders = null;
+    stockMap = {}; stockLoaded = false; guideFiles = null; gtItems = null; gtOrders = null; gtTop = null;
     refreshStockUI();
     if (['view-stock', 'view-guides', 'view-dealers', 'view-gathering'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
   }
@@ -5746,13 +5767,50 @@ const GT_STATUS = { baru: 'Baru', diproses: 'Diproses', selesai: 'Selesai', bata
 let gtOrders = null, gtOrdersErr = '', gtTab = 'form', gtOrderFilter = 'all', gtOpenOrder = null;
 
 function setGtTab(t) {
-  gtTab = t === 'rekap' && isAdmin() ? 'rekap' : 'form';
-  document.getElementById('gt-form').hidden = gtTab !== 'form';
-  document.getElementById('gt-rekap').hidden = gtTab !== 'rekap';
-  document.getElementById('view-gathering').classList.toggle('rekap-mode', gtTab === 'rekap');
-  document.getElementById('gt-tab-form')?.classList.toggle('active', gtTab === 'form');
-  document.getElementById('gt-tab-rekap')?.classList.toggle('active', gtTab === 'rekap');
+  gtTab = t === 'rekap' ? (isAdmin() ? 'rekap' : 'form') : t === 'top' ? 'top' : 'form';
+  ['form', 'top', 'rekap'].forEach(k => {
+    document.getElementById('gt-' + k).hidden = gtTab !== k;
+    document.getElementById('gt-tab-' + k)?.classList.toggle('active', gtTab === k);
+  });
+  document.getElementById('view-gathering').classList.toggle('rekap-mode', gtTab !== 'form');
   if (gtTab === 'rekap') { renderGtRekap(); loadGtOrders(); }
+  if (gtTab === 'top') { renderGtTop(); loadGtTop(); }
+}
+
+/* ── Top Spender Gathering 2026 ──
+   Dealer (akun bersama) tidak boleh membaca gathering_orders, jadi peringkat diambil lewat fungsi
+   Postgres `gathering_top_spenders(lim)` (SECURITY DEFINER) yang hanya mengembalikan agregat per toko. */
+const GT_TOP_LIMIT = 5;
+let gtTop = null, gtTopErr = '';
+async function loadGtTop() {
+  if (!supabase || !authUser) return;
+  try {
+    const { data, error } = await supabase.rpc('gathering_top_spenders', { lim: GT_TOP_LIMIT });
+    if (error) throw error;
+    gtTop = data || []; gtTopErr = '';
+  } catch (e) {
+    const m = String(e.message || e);
+    gtTop = [];
+    gtTopErr = /function|does not exist|schema cache|404/i.test(m) ? 'Papan Top Spender belum diaktifkan. Admin/editor: jalankan SQL fungsi gathering_top_spenders di Supabase.' : 'Top Spender tidak bisa dimuat: ' + m;
+  }
+  renderGtTop();
+}
+function renderGtTop() {
+  const el = document.getElementById('gt-top');
+  if (!el || gtTab !== 'top') return;
+  const head = `<div class="gt-top-head"><div class="gt-top-title">🏆 Top Spender Gathering 2026</div>
+    <div class="gt-top-sub">${GT_TOP_LIMIT} toko dengan total belanja terbesar selama Gathering CAI 2026 · diperbarui otomatis dari pesanan yang masuk</div>
+    <button class="gt-btn ghost" onclick="loadGtTop()">↻ Muat ulang</button></div>`;
+  if (gtTop === null) { el.innerHTML = head + '<div class="stock-empty">Memuat peringkat…</div>'; return; }
+  if (gtTopErr) { el.innerHTML = head + `<div class="stock-empty">${escHtml(gtTopErr)}</div>`; return; }
+  if (!gtTop.length) { el.innerHTML = head + '<div class="stock-empty">Belum ada pesanan. Jadilah toko pertama di papan Top Spender!</div>'; return; }
+  const medal = ['🥇', '🥈', '🥉'];
+  el.innerHTML = head + `<div class="gt-top-list">${gtTop.map((r, i) => `
+    <div class="gt-top-row rank-${i + 1}">
+      <div class="gt-top-rank">${medal[i] || '#' + (i + 1)}</div>
+      <div class="gt-top-store"><b>${escHtml(r.store || '-')}</b>${r.city ? `<span>${escHtml(r.city)}</span>` : ''}</div>
+      <div class="gt-top-total">${fmtRp(Number(r.total || 0))}</div>
+    </div>`).join('')}</div>`;
 }
 
 async function loadGtOrders() {
