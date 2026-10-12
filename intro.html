@@ -65,7 +65,7 @@
   .fi .fd { max-height: 0; overflow: hidden; opacity: 0; font: 500 21px/1.4 var(--f-body); color: #d5dbe9; padding-left: 50px; transition: max-height .7s ease, opacity .7s ease, margin .7s ease; }
   .fi.on { background: linear-gradient(135deg, rgba(233,196,106,.16), rgba(233,196,106,.04)); border-color: rgba(233,196,106,.45); color: #fff; box-shadow: 0 0 50px rgba(233,196,106,.12); }
   .fi.on .fn { background: var(--gold); color: #1a1305; border-color: var(--gold); }
-  .fi.on .fd { max-height: 110px; opacity: 1; margin-top: 8px; padding-bottom: 8px; }
+  .fi.on .fd { max-height: 140px; opacity: 1; margin-top: 8px; padding-bottom: 8px; }
   .fi.done { color: #c3cbdc; } .fi.done .fn { border-color: var(--gold); color: var(--gold); }
   .fbar { position: absolute; left: 22px; right: 22px; bottom: 10px; height: 3px; border-radius: 3px; background: rgba(255,255,255,.08); overflow: hidden; opacity: 0; }
   .fi.on .fbar { opacity: 1; }
@@ -143,9 +143,15 @@ const FEATURES = [
   { t: 'DSP Software',         d: 'Unduh software tuning DSP langsung dari portal.', s: 'd-9-dsp', m: 'm-9-dsp' },
   { t: 'Update Terbaru',       d: 'Riwayat data, foto, dan video produk yang baru ditambahkan.', s: 'd-10-updates', m: 'm-10-updates' },
 ];
-const FEAT_DUR = 3.9;                 // detik per fitur
+const STEPS = [
+  { t: 'Temukan menu bergembok',  d: 'Stok Produk, Panduan Dealer & Shopping Gathering bertanda gembok 🔒 — khusus dealer resmi.', s: 'd-13-locked', m: 'm-13-locked' },
+  { t: 'Masukkan Kode Akses',     d: 'Klik menu tersebut, lalu ketik Kode Akses dealer yang diberikan sales CAI. Tidak perlu email.', s: 'd-14-login', m: 'm-14-login' },
+  { t: 'Menu langsung terbuka',   d: 'Gembok hilang. Stok & panduan siap dibuka dari laptop maupun handphone.', s: 'd-15-unlocked', m: 'm-15-unlocked' },
+];
+const FEAT_DUR = 3.9, STEP_DUR = 4.6;  // detik per fitur / per langkah
 const T = { open: 0, openOut: 5.4, devices: 6.0, landing: 6.2, feat0: 9.4, phone: 10.3 };
-T.closing = T.feat0 + FEATURES.length * FEAT_DUR + 0.4;
+T.steps = T.feat0 + FEATURES.length * FEAT_DUR;
+T.closing = T.steps + 0.9 + STEPS.length * STEP_DUR + 0.4;
 T.end = T.closing + 7.5;
 
 const $ = id => document.getElementById(id);
@@ -158,16 +164,22 @@ if (location.search.includes('rec')) document.body.classList.add('rec');
 $('sparks').innerHTML = Array.from({ length: 30 }, () => { const s = (4 + Math.random() * 9).toFixed(1); return `<i class="spark" style="left:${Math.round(Math.random() * 1900)}px;top:${Math.round(300 + Math.random() * 760)}px;width:${s}px;height:${s}px;animation-delay:${(Math.random() * 7).toFixed(2)}s;animation-duration:${(5 + Math.random() * 5).toFixed(1)}s"></i>`; }).join('');
 
 // daftar fitur + layar perangkat
-$('feat').innerHTML = `<div class="fk">Fitur Portal</div>` + FEATURES.map((f, i) => `<div class="fi" id="fi${i}"><div class="ft"><span class="fn">${i + 1}</span>${f.t}</div><div class="fd">${f.d}</div><div class="fbar"><i style="--dur:${FEAT_DUR}s"></i></div></div>`).join('');
-const shots = [{ s: 'd-1-landing', m: 'm-1-landing' }, ...FEATURES];
+const GROUPS = [{ k: 'Fitur Portal', items: FEATURES, off: 1, dur: FEAT_DUR }, { k: 'Buka Menu Bergembok 🔒', items: STEPS, off: 1 + FEATURES.length, dur: STEP_DUR }];
+let curGroup = 0;
+function buildList(g) {
+  curGroup = g; const G = GROUPS[g];
+  $('feat').innerHTML = `<div class="fk">${G.k}</div>` + G.items.map((f, i) => `<div class="fi" id="fi${i}"><div class="ft"><span class="fn">${i + 1}</span>${f.t}</div><div class="fd">${f.d}</div><div class="fbar"><i style="--dur:${G.dur}s"></i></div></div>`).join('');
+}
+buildList(0);
+const shots = [{ s: 'd-1-landing', m: 'm-1-landing' }, ...FEATURES, ...STEPS];
 $('lapScreen').innerHTML = shots.map((f, i) => `<img class="shot" id="ls${i}" src="assets/intro/${f.s}.webp" alt="">`).join('');
 $('phScreen').innerHTML = shots.map((f, i) => `<img class="shot" id="ps${i}" src="assets/intro/${f.m}.webp" alt="">`).join('');
 function show(i, which) { shots.forEach((_, k) => { const el = $((which === 'l' ? 'ls' : 'ps') + k); if (el) el.classList.toggle('on', k === i); }); }
 function setFeat(i) {
   curFeat = i;
-  FEATURES.forEach((_, k) => { const el = $('fi' + k); el.classList.toggle('on', k === i); el.classList.toggle('done', k < i);
+  GROUPS[curGroup].items.forEach((_, k) => { const el = $('fi' + k); el.classList.toggle('on', k === i); el.classList.toggle('done', k < i);
     if (k === i) { const bar = el.querySelector('.fbar i'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; } });
-  show(i + 1, 'l'); if ($('phone').classList.contains('on')) show(i + 1, 'p');
+  const sh = i + GROUPS[curGroup].off; show(sh, 'l'); if ($('phone').classList.contains('on')) show(sh, 'p');
 }
 
 let timers = [], t0 = 0, raf = 0, curFeat = 0;
@@ -176,7 +188,7 @@ function reset() {
   timers.forEach(clearTimeout); timers = []; cancelAnimationFrame(raf);
   ['opening'].forEach(id => $(id).classList.remove('in', 'out'));
   ['devices', 'laptop', 'phone', 'feat', 'brandtag', 'closing'].forEach(id => $(id).classList.remove('on'));
-  FEATURES.forEach((_, k) => $('fi' + k).classList.remove('on', 'done'));
+  buildList(0);
   shots.forEach((_, k) => { $('ls' + k).classList.remove('on'); $('ps' + k).classList.remove('on'); });
 }
 function play() {
@@ -186,7 +198,10 @@ function play() {
   at(T.devices, () => { $('devices').classList.add('on'); $('laptop').classList.add('on'); $('brandtag').classList.add('on'); show(0, 'l'); });
   at(T.landing + 1.4, () => $('feat').classList.add('on'));
   FEATURES.forEach((_, i) => at(T.feat0 + i * FEAT_DUR, () => setFeat(i)));
-  at(T.phone, () => { $('phone').classList.add('on'); show(curFeat + 1, 'p'); });
+  at(T.steps, () => $('feat').classList.remove('on'));
+  at(T.steps + 0.8, () => { buildList(1); void $('feat').offsetWidth; $('feat').classList.add('on'); });
+  STEPS.forEach((_, i) => at(T.steps + 0.9 + i * STEP_DUR, () => setFeat(i)));
+  at(T.phone, () => { $('phone').classList.add('on'); show(curFeat + GROUPS[curGroup].off, 'p'); });
   at(T.closing, () => { $('closing').classList.add('on'); $('feat').classList.remove('on'); $('devices').classList.remove('on'); $('brandtag').classList.remove('on'); });
   at(T.end, () => { window.__done = true; if (!document.body.classList.contains('rec')) play(); });
   const tick = () => { $('bar').style.width = Math.min(100, (performance.now() - t0) / (T.end * 10)) + '%'; raf = requestAnimationFrame(tick); };
