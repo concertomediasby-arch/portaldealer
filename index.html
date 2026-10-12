@@ -1589,6 +1589,59 @@ body {
     .qa-live-q { font-size: 16px; }
   }
 
+  /* ── Panel kontrol layar (Run Down) ── */
+  .scr-panel { margin-bottom: 16px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(135deg, #0d1424, #151d33); color: #e8ecf5; border: 1px solid rgba(233,196,106,.35); }
+  .scr-panel:empty { display: none; }
+  .scr-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+  .scr-head b { color: #e9c46a; } .scr-head .gt-btn { margin-left: auto; }
+  .scr-warn { margin-top: 8px; font-size: 12.5px; color: #fbbf24; }
+  .scr-scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 12px; }
+  .scr-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf5; font: 600 12.5px var(--f-body); cursor: pointer; transition: all .15s; }
+  .scr-btn span { font-size: 24px; }
+  .scr-btn:hover { border-color: #e9c46a; }
+  .scr-btn.on { border-color: #22c55e; background: rgba(34,197,94,.16); box-shadow: 0 0 0 1px rgba(34,197,94,.4); }
+  .scr-opts { display: grid; grid-template-columns: 1fr 190px; gap: 8px; margin-top: 10px; }
+  .scr-opts .gt-input { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #fff; }
+  .gt-btn.scr-on { border-color: #16a34a; color: #16a34a; }
+  .qa-scene-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(251,191,36,.12); color: #fde68a; font-size: 13px; }
+  .qa-scene-note .gt-btn { margin-left: auto; }
+  @media (max-width: 640px) { .scr-opts { grid-template-columns: 1fr; } .scr-scenes { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ── Layar videotron: desain per sesi ── */
+  .qs-stage { position: relative; overflow: hidden; }
+  .qs-scene { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+  .sc-svg { width: min(15vw, 22vh); height: auto; margin-bottom: 1.5vh; filter: drop-shadow(0 0 3vh rgba(233,196,106,.25)); }
+  .sc-steam path { animation: scSteam 2.6s ease-in-out infinite; opacity: 0; }
+  .sc-steam path:nth-child(2) { animation-delay: .5s; } .sc-steam path:nth-child(3) { animation-delay: 1s; }
+  @keyframes scSteam { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+  .sc-title { font: 700 min(8vw, 14vh)/1.05 var(--f-display); margin: 1.5vh 0 2vh; color: #fff; letter-spacing: -.01em; }
+  .sc-title em, .sc-launch-name { font-style: normal; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sc-sub { font-size: max(15px, 3.2vh); color: #c3cbdc; margin: 0; max-width: 70vw; }
+  .sc-count { margin-top: 4vh; display: flex; flex-direction: column; align-items: center; padding: 1.6vh 4vw; border-radius: 2vh; border: 1px solid rgba(233,196,106,.4); background: rgba(233,196,106,.07); }
+  .qs-count { font: 700 min(9vw, 15vh)/1 var(--f-mono); color: #fff; letter-spacing: .04em; }
+  .sc-count small { font: 600 max(11px, 1.8vh) var(--f-mono); letter-spacing: .25em; text-transform: uppercase; color: #e9c46a; margin-top: 1vh; }
+  .sc-count.over .qs-count { color: #e9c46a; animation: qaPulse 1.2s infinite; }
+  .sc-next { margin-top: 3.5vh; font-size: max(14px, 2.8vh); color: #aab4c8; } .sc-next b { color: #fff; }
+  .sc-logos { width: 86vw; overflow: hidden; margin-top: 6vh; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+  .sc-track { display: flex; align-items: center; gap: 7vw; width: max-content; animation: scMarquee 28s linear infinite; }
+  .sc-track img { height: min(7vw, 11vh); width: auto; max-width: 22vw; object-fit: contain; opacity: .92; }
+  @keyframes scMarquee { to { transform: translateX(-50%); } }
+  .sc-rays { position: absolute; left: 50%; top: 50%; width: 160vmax; height: 160vmax; transform: translate(-50%, -50%); z-index: 0; pointer-events: none;
+    background: repeating-conic-gradient(from 0deg, rgba(233,196,106,.10) 0deg 6deg, transparent 6deg 18deg); animation: scSpin 60s linear infinite;
+    -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 55%); mask-image: radial-gradient(circle, #000 0%, transparent 55%); }
+  @keyframes scSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+  .sc-launch .sc-title { font-size: min(6vw, 10vh); }
+  .sc-launch-name { font: 800 min(9vw, 16vh)/1.05 var(--f-display); margin-bottom: 2vh; text-wrap: balance; }
+  .sc-year { font: 800 min(16vw, 26vh)/1 var(--f-display); margin: .5vh 0 1vh; letter-spacing: .02em; background: linear-gradient(180deg, #fff3d6 0%, #e9c46a 45%, #9c7330 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 4vh rgba(233,196,106,.3)); }
+  .sc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; margin-top: 3vh; width: min(86vw, 1500px); text-align: left; }
+  .sc-card { padding: 3vh 2.4vw; border-radius: 2.4vh; background: rgba(255,255,255,.05); border: 1px solid rgba(233,196,106,.35); }
+  .sc-card-k { font: 700 max(11px, 1.9vh) var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: #e9c46a; }
+  .sc-card-t { font: 700 max(18px, 4.4vh) var(--f-display); color: #fff; margin: 1vh 0 2vh; }
+  .sc-card-body { display: flex; gap: 2vw; align-items: center; }
+  .sc-card ul { margin: 0; padding-left: 1.2em; font-size: max(13px, 2.6vh); line-height: 1.55; color: #dfe5f2; }
+  .sc-qr { width: min(11vw, 20vh); height: auto; border-radius: 1.2vh; background: #fff; padding: .6vh; flex-shrink: 0; }
+  .sc-pks { flex-shrink: 0; width: min(11vw, 20vh); aspect-ratio: 1; border-radius: 1.2vh; display: grid; place-items: center; font: 800 min(3.6vw, 6.5vh) var(--f-display); color: #1a1305; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); }
+
   /* ── Layar videotron (?layar=qa) ── */
   body.screen-mode { overflow: hidden; }
   body.screen-mode #landing { display: none !important; }
@@ -2245,6 +2298,7 @@ body {
         </div>
       </div>
       <div class="rd-wrap" id="rd-pane">
+      <div class="scr-panel" id="scr-panel"></div>
       <div class="rd-now" id="rd-now" hidden></div>
       <form class="rd-form" id="rd-form" hidden onsubmit="saveRdItem(); return false;">
         <div class="rd-form-title" id="rd-form-title">Tambah sesi</div>
@@ -2709,7 +2763,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T07:53:26Z';
+const LAST_UPDATE = '2026-10-12T08:04:43Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6498,6 +6552,7 @@ async function loadRundown() {
     rdErr = /does not exist|relation|schema cache/i.test(m) ? 'Tabel run down belum dibuat. Jalankan SQL "gathering_rundown" di Supabase.' : 'Run down tidak bisa dimuat: ' + m;
   }
   renderRundown();
+  loadScreenRow();
 }
 
 const rdT = t => (t || '').slice(0, 5);
@@ -6537,7 +6592,7 @@ function renderRundown() {
           <div class="rd-main"><div class="rd-title">${escHtml(x.title)}${live && live.id === x.id ? ' <span class="rd-live-tag">LIVE</span>' : ''}</div>
             <div class="rd-meta">${[x.pic ? '👤 ' + escHtml(x.pic) : '', x.location ? '📍 ' + escHtml(x.location) : ''].filter(Boolean).join('  ·  ')}</div>
             ${x.notes ? `<div class="rd-notes">${escHtml(x.notes)}</div>` : ''}</div>
-          <div class="rd-btns">${QA_SESSION_RE.test(x.title) ? `<button class="gt-btn ghost" onclick="setRdTab('qa')" title="Buka sistem tanya jawab">🎤 Tanya Jawab</button>` : ''}<button class="gt-btn ghost" onclick="openRdForm(${x.id})" title="Edit">✏️</button><button class="gt-btn ghost gt-del" onclick="deleteRdItem(${x.id})" title="Hapus">🗑</button></div>
+          <div class="rd-btns">${QA_SESSION_RE.test(x.title) ? `<button class="gt-btn ghost" onclick="setScene(null); setRdTab('qa')" title="Buka sistem tanya jawab">🎤 Tanya Jawab</button>` : ''}${sceneForTitle(x.title) ? `<button class="gt-btn ghost${scrRow?.scene === sceneForTitle(x.title) ? ' scr-on' : ''}" onclick="setScene('${sceneForTitle(x.title)}')" title="Tampilkan desain sesi ini di videotron">🖥 Layar</button>` : ''}<button class="gt-btn ghost" onclick="openRdForm(${x.id})" title="Edit">✏️</button><button class="gt-btn ghost gt-del" onclick="deleteRdItem(${x.id})" title="Hapus">🗑</button></div>
         </div>`).join('')}</div></div>`;
   }).join('');
 }
@@ -6674,10 +6729,10 @@ async function loadQa() {
   try {
     const [q, s] = await Promise.all([
       supabase.from(QA_TABLE).select('*').order('id'),
-      supabase.from(QA_SCREEN).select('question_id').eq('id', 1).maybeSingle()]);
+      supabase.from(QA_SCREEN).select('*').eq('id', 1).maybeSingle()]);
     if (q.error) throw q.error;
     if (s.error) throw s.error;
-    qaItems = q.data || []; qaScreenId = s.data?.question_id ?? null; qaErr = '';
+    qaItems = q.data || []; qaScreenId = s.data?.question_id ?? null; scrRow = s.data || scrRow; qaErr = '';
   } catch (e) { qaItems = []; qaErr = qaDbError(e); }
   renderQa();
 }
@@ -6708,7 +6763,10 @@ function renderQa() {
   const cur = qaItems.find(x => x.id === qaScreenId);
   const queue = qaItems.filter(x => x.status === 'baru' && x.id !== qaScreenId);
   live.classList.toggle('on', !!cur);
-  live.innerHTML = `<div class="qa-live-head"><span class="qa-dot${cur ? ' on' : ''}"></span>${cur ? 'Sedang tampil di layar videotron' : 'Layar videotron kosong — menampilkan judul sesi'}</div>
+  const sc = QS_SCENES[scrRow?.scene];
+  live.innerHTML = `${sc ? `<div class="qa-scene-note">🖥 Layar sedang menampilkan <b>${sc.icon} ${sc.label}</b> — pertanyaan tidak terlihat sampai layar dikembalikan ke Tanya Jawab.
+      <button class="gt-btn confirm" onclick="setScene(null)">🎤 Kembali ke Tanya Jawab</button></div>` : ''}
+    <div class="qa-live-head"><span class="qa-dot${cur && !sc ? ' on' : ''}"></span>${cur ? (sc ? 'Pertanyaan terakhir (tersembunyi selama tampilan sesi)' : 'Sedang tampil di layar videotron') : 'Layar videotron kosong — menampilkan judul sesi'}</div>
     ${cur ? `<div class="qa-live-q">“${escHtml(cur.question)}”</div><div class="qa-live-who">#${no.get(cur.id)} · ${escHtml(qaWho(cur))}</div>
       <div class="qa-live-ans">
         <label>💬 Jawaban CAI ${cur.answer && cur.answer_shown ? '<span class="qa-badge onair">● Tampil di layar</span>' : cur.answer ? '<span class="qa-badge">Belum ditampilkan</span>' : ''}</label>
@@ -6774,8 +6832,9 @@ async function qaSave(show) {
       if (error) throw error;
       ['dealer', 'city', 'question', 'answer'].forEach(k => { document.getElementById('qa-' + k).value = ''; });
       if (show && data) {
-        const r = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: data.id, updated_at: now });
+        const r = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: data.id, ...sceneReset(), updated_at: now });
         if (r.error) throw r.error;
+        scrRow = { ...scrRow, question_id: data.id, ...sceneReset() };
         qaScreenId = data.id; showToast('📺 Tersimpan & tampil di layar.');
       } else showToast('✓ Masuk antrian.');
       document.getElementById('qa-dealer').focus();
@@ -6787,9 +6846,9 @@ async function qaSave(show) {
 
 async function qaShow(id) {
   const now = new Date().toISOString();
-  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: id, updated_at: now });
+  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: id, ...sceneReset(), updated_at: now });
   if (error) { showToast('Gagal menampilkan: ' + error.message, 8000); return; }
-  qaScreenId = id;
+  qaScreenId = id; scrRow = { ...scrRow, question_id: id, ...sceneReset() };
   const x = qaItems?.find(r => r.id === id);
   if (x && x.status === 'baru') {
     Object.assign(x, { status: 'tampil', shown_at: now });
@@ -6799,9 +6858,9 @@ async function qaShow(id) {
 }
 
 async function qaClearScreen() {
-  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: null, updated_at: new Date().toISOString() });
+  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, question_id: null, ...sceneReset(), updated_at: new Date().toISOString() });
   if (error) { showToast('Gagal mengosongkan layar: ' + error.message, 8000); return; }
-  qaScreenId = null; renderQa(); showToast('Layar dikosongkan.');
+  qaScreenId = null; scrRow = { ...scrRow, question_id: null, ...sceneReset() }; renderQa(); showToast('Layar dikosongkan.');
 }
 
 // Jawaban untuk pertanyaan yang sedang tampil → simpan + munculkan di bawah pertanyaan di videotron
@@ -6891,6 +6950,106 @@ function printQa() {
   window.print();
 }
 
+
+/* ── Layar videotron: tampilan per sesi (scene) ──
+   gathering_screen.scene = null → mode Tanya Jawab; selain itu salah satu kunci QS_SCENES.
+   scene_text = teks tambahan opsional, scene_until = akhir hitung mundur (opsional). */
+const QS_SCENES = {
+  coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Refreshment Product', match: /coff?ee|break|rehat/i },
+  refresh: { label: 'Refreshment Product', icon: '🔊', match: /refresh|referes/i },
+  launch:  { label: 'Product Launch', icon: '🚀', match: /launch|peluncuran/i },
+  lunch:   { label: 'Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan|lunch/i },
+  kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
+};
+const PORTAL_POINTS = ['Katalog produk & harga SRP resmi', 'Stok produk real-time', 'Panduan Dealer & Concerto Academy', 'Paket Audio & Shopping Gathering'];
+const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitmen kerja sama', 'Program & dukungan untuk dealer'];
+const sceneForTitle = t => Object.keys(QS_SCENES).find(k => QS_SCENES[k].match.test(t || ''));
+let scrRow = null;
+const sceneCols = () => !!scrRow && 'scene' in scrRow;
+const sceneReset = () => sceneCols() ? { scene: null, scene_text: null, scene_until: null } : {};
+
+async function loadScreenRow() {
+  if (!supabase || !isAdmin()) return;
+  const { data, error } = await supabase.from(QA_SCREEN).select('*').eq('id', 1).maybeSingle();
+  if (!error) { scrRow = data; qaScreenId = data?.question_id ?? qaScreenId; }
+  renderScreenPanel(error);
+}
+
+function renderScreenPanel(err) {
+  const el = document.getElementById('scr-panel'); if (!el) return;
+  if (err || !scrRow) { el.innerHTML = `<div class="scr-warn">Layar videotron belum siap: ${escHtml(err ? qaDbError(err) : 'jalankan SQL "gathering_screen".')}</div>`; return; }
+  const sc = QS_SCENES[scrRow.scene];
+  el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Tanya Jawab'}</b></span>
+      <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
+    ${sceneCols() ? '' : '<div class="scr-warn">Jalankan SQL kolom <b>scene</b> di Supabase agar tampilan per sesi bisa dipakai.</div>'}
+    <div class="scr-scenes">
+      <button class="scr-btn${!sc ? ' on' : ''}" onclick="setScene(null)"><span>🎤</span>Tanya Jawab</button>
+      ${Object.entries(QS_SCENES).map(([k, v]) => `<button class="scr-btn${scrRow.scene === k ? ' on' : ''}" onclick="setScene('${k}')"><span>${v.icon}</span>${v.label}</button>`).join('')}
+    </div>
+    <div class="scr-opts">
+      <input class="gt-input" id="scr-text" maxlength="120" placeholder="Teks tambahan (opsional) — mis. nama produk yang diluncurkan">
+      <input class="gt-input" id="scr-mins" type="number" min="1" max="180" placeholder="Hitung mundur (menit, opsional)">
+    </div>`;
+}
+
+async function setScene(key) {
+  if (!supabase) return;
+  if (key && !sceneCols()) { showToast('Jalankan SQL kolom scene di Supabase dulu.', 8000); return; }
+  if (!key && !scrRow?.scene) { renderScreenPanel(); return; }
+  const text = document.getElementById('scr-text')?.value.trim() || null;
+  const minsIn = parseInt(document.getElementById('scr-mins')?.value, 10);
+  const mins = key ? (minsIn > 0 ? minsIn : (QS_SCENES[key].mins || 0)) : 0;
+  const row = { id: 1, scene: key, scene_text: key ? text : null, scene_until: mins ? new Date(Date.now() + mins * 60000).toISOString() : null, updated_at: new Date().toISOString() };
+  const { error } = await supabase.from(QA_SCREEN).upsert(row);
+  if (error) { showToast('Gagal mengubah layar: ' + error.message, 9000); return; }
+  scrRow = { ...scrRow, ...row };
+  renderScreenPanel(); renderRundown(); if (rdTab === 'qa') renderQa();
+  showToast(key ? `🖥 Layar: ${QS_SCENES[key].label}${mins ? ` · hitung mundur ${mins} menit` : ''}` : '🖥 Layar kembali ke Tanya Jawab');
+}
+
+/* Desain tiap sesi di layar videotron */
+const SC_CUP = '<svg class="sc-svg" viewBox="0 0 120 120" aria-hidden="true"><g class="sc-steam" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linecap="round"><path d="M44 40c-6-8 6-12 0-20"/><path d="M60 40c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g><path d="M26 50h66v20a30 30 0 0 1-30 30h-6a30 30 0 0 1-30-30z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M92 56h5a12 12 0 0 1 0 24h-7" fill="none" stroke="#fff" stroke-width="5"/><line x1="18" y1="110" x2="102" y2="110" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"/></svg>';
+const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><circle cx="70" cy="62" r="36" fill="rgba(233,196,106,.10)" stroke="#fff" stroke-width="5"/><circle cx="70" cy="62" r="22" fill="none" stroke="#e9c46a" stroke-width="3"/><path d="M16 28v22a7 7 0 0 0 14 0V28M23 28v74" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M122 28c-9 6-9 28 0 34v40" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function renderScene(s) {
+  const sc = QS_SCENES[s.scene], t = s.scene_text ? escHtml(s.scene_text) : '';
+  const count = s.scene_until ? `<div class="sc-count"><span class="qs-count" data-until="${escHtml(s.scene_until)}">--:--</span><small>sisa waktu</small></div>` : '';
+  const next = sc.next ? `<div class="sc-next">Setelah ini · <b>${sc.next}</b></div>` : '';
+  const logos = BRANDS.filter(b => b.logo).map(b => `<img src="${b.logo}" alt="${escHtml(b.name)}">`).join('');
+  const li = a => a.map(x => `<li>${escHtml(x)}</li>`).join('');
+  const html = {
+    coffee: `<div class="qs-scene sc-coffee">${SC_CUP}<div class="qs-kicker">Rehat Sejenak</div><h1 class="sc-title">Coffee <em>Break</em></h1>
+      <p class="sc-sub">${t || 'Silakan menikmati kopi &amp; snack yang telah disediakan'}</p>${count}${next}</div>`,
+    refresh: `<div class="qs-scene sc-refresh"><div class="qs-kicker">Listening and Understanding Partner</div><h1 class="sc-title">Refreshment <em>Product</em></h1>
+      <p class="sc-sub">${t || 'Mengenal kembali lini produk unggulan Concerto Audio Indonesia'}</p>
+      <div class="sc-logos"><div class="sc-track">${logos}${logos}</div></div>${count}</div>`,
+    launch: `<div class="qs-scene sc-launch"><div class="sc-rays"></div><div class="qs-kicker">Introducing</div><h1 class="sc-title">Product <em>Launch</em></h1>
+      <div class="sc-launch-name">${t || 'Produk Terbaru 2027'}</div><p class="sc-sub">Concerto Audio Indonesia</p>${count}</div>`,
+    lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
+      <p class="sc-sub">${t || 'Selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
+    kickoff: `<div class="qs-scene sc-kickoff"><div class="qs-kicker">Kick Off</div><h1 class="sc-year">2027</h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
+      <div class="sc-cards">
+        <div class="sc-card"><div class="sc-card-k">01 · Portal Dealer CAI</div><div class="sc-card-t">dealer.concerto.id</div>
+          <div class="sc-card-body"><img class="sc-qr" src="assets/qr-portal.svg" alt="QR dealer.concerto.id"><ul>${li(PORTAL_POINTS)}</ul></div></div>
+        <div class="sc-card"><div class="sc-card-k">02 · PKS Dealer 2027</div><div class="sc-card-t">Perjanjian Kerja Sama</div>
+          <div class="sc-card-body"><div class="sc-pks">PKS</div><ul>${li(PKS_POINTS)}</ul></div></div>
+      </div>${count}</div>`,
+  }[s.scene];
+  qsSetStage(['scene', s.scene, s.scene_text, s.scene_until].join('|'), html);
+  qsTick();
+}
+
+// Hitung mundur di layar (Coffee Break dll.)
+function qsTick() {
+  document.querySelectorAll('#qs-stage .qs-count').forEach(el => {
+    const ms = new Date(el.dataset.until) - Date.now();
+    const sec = Math.max(0, Math.ceil(ms / 1000));
+    el.textContent = `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+    el.parentElement.classList.toggle('over', sec === 0);
+    if (sec === 0) el.nextElementSibling.textContent = 'sesi berikutnya segera dimulai';
+  });
+}
+
 /* ── Halaman layar videotron: ?layar=qa ── */
 const QA_SCREEN_MODE = new URLSearchParams(location.search).get('layar') === 'qa';
 let qsTimer = null, qsChannel = null, qsKey = null, qsCursorT = null;
@@ -6902,6 +7061,7 @@ function initQaScreen() {
   const el = document.getElementById('qa-screen');
   el.hidden = false;
   document.getElementById('qs-logo').src = LOGO_WHITE;
+  setInterval(qsTick, 1000);
   qsSetStage('wait', '<div class="qs-idle"><p>Menghubungkan…</p></div>');
   document.addEventListener('fullscreenchange', () => el.classList.toggle('is-fs', !!document.fullscreenElement));
   el.addEventListener('mousemove', () => { el.classList.remove('hide-cursor'); clearTimeout(qsCursorT); qsCursorT = setTimeout(() => el.classList.add('hide-cursor'), 3000); });
@@ -6933,8 +7093,9 @@ function stopQaScreen() {
 async function qsLoad() {
   const st = document.getElementById('qs-status');
   try {
-    const { data: s, error } = await supabase.from(QA_SCREEN).select('question_id').eq('id', 1).maybeSingle();
+    const { data: s, error } = await supabase.from(QA_SCREEN).select('*').eq('id', 1).maybeSingle();
     if (error) throw error;
+    if (s?.scene && QS_SCENES[s.scene]) { st.classList.remove('off'); renderScene(s); return; }
     let q = null;
     if (s?.question_id) {
       const r = await supabase.from(QA_TABLE).select('*').eq('id', s.question_id).maybeSingle();
