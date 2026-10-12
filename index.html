@@ -2254,7 +2254,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T03:14:02Z';
+const LAST_UPDATE = '2026-10-12T03:27:50Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -2286,17 +2286,19 @@ const ACADEMY = [
 ];
 // ── Panduan Dealer ────────────────────────────────────────────
 // PDF disimpan di Supabase Storage bucket privat "guides" dengan nama file = `path` (bukan di repo/GitHub).
+// `hidden:true` = kartu dinonaktifkan sementara (tidak tampil).
 // Tersedia otomatis begitu file di-upload (admin: tombol Upload di kartu panduan); dibuka lewat signed URL 10 menit.
 const DEALER_GUIDES = [
   { id:'guide-selling', title:'Tips & Teknik Penjualan Produk', category:'Penjualan', icon:'💡',
     desc:'Panduan praktis cara mempresentasikan dan menjual produk CAI: argumen nilai, perbandingan kompetitor, dan closing technique.',
-    path:'tips-penjualan.pdf' },
+    // Memakai file yang sudah ter-upload (Munich ML-S10 — Panduan Dealer); "Ganti PDF" untuk memperbarui
+    path:'product-knowledge.pdf' },
   { id:'guide-pk', title:'Product Knowledge — Semua Brand', category:'Produk', icon:'📋',
     desc:'Ringkasan spesifikasi, keunggulan, dan positioning setiap brand CAI dalam satu dokumen referensi cepat.',
-    path:'product-knowledge.pdf' },
+    path:'product-knowledge-semua-brand.pdf', hidden:true },
   { id:'guide-install', title:'Panduan Instalasi & After Sales', category:'Instalasi', icon:'🔧',
     desc:'Prosedur instalasi standar, tips perawatan produk, dan penanganan klaim garansi untuk dealer & installer resmi.',
-    path:'panduan-instalasi.pdf' },
+    path:'panduan-instalasi.pdf', hidden:true },
 ];
 
 // ── Paket Audio ───────────────────────────────────────────────
@@ -3350,7 +3352,7 @@ function renderGuides() {
   if (!el) return;
   const catColor = { 'Penjualan':'#d8b26a', 'Produk':'#6fd3e6', 'Instalasi':'#52c38a' };
   const admin = isAdmin();
-  el.innerHTML = DEALER_GUIDES.map(g => {
+  el.innerHTML = DEALER_GUIDES.filter(g => !g.hidden).map(g => {
     const color = catColor[g.category] || 'var(--accent)';
     const f = guideFiles?.get(g.path);
     const when = f ? new Date(f.updated_at || f.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) : '';
