@@ -1605,6 +1605,7 @@ body {
 
   .gt-order-inv { font: 700 12px var(--f-mono); color: var(--accent); letter-spacing: .03em; } .gt-order-inv span { font-weight: 500; color: var(--fg-muted); letter-spacing: 0; }
   .gt-confirm-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 16px; border-top: 1px dashed var(--border); background: color-mix(in srgb, var(--accent) 7%, transparent); font-size: 12.5px; color: var(--fg-muted); }
+  .gt-confirm-bar.ok { background: rgba(34,197,94,.08); color: #16a34a; }
   .gt-btn.confirm { background: #16a34a; border-color: #16a34a; color: #fff; }
   .gt-badge.st-dikonfirmasi { background: rgba(59,130,246,.15); color: #3b82f6; }
   .gt-order.st-dikonfirmasi { border-left-color: #3b82f6; }
@@ -1621,7 +1622,6 @@ body {
   .gt-mine-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; font-size: 13px; color: var(--fg); }
   .gt-mine-row + .gt-mine-row { border-top: 1px solid var(--border); }
   .gt-mine-row b { font-family: var(--f-mono); color: var(--accent); } .gt-mine-row small { display: block; font-size: 11.5px; color: var(--fg-muted); }
-  .gt-mine-row.editing { background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: 8px; padding: 8px; }
   .gt-mine-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .gt-mine-right .gt-badge { position: static; }
   .gt-mine-total { font: 700 13px var(--f-mono); }
@@ -2494,7 +2494,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T05:14:41Z';
+const LAST_UPDATE = '2026-10-12T05:26:50Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5624,6 +5624,7 @@ function gtLoadDraft() {
   if (st && !st.value && authUser?.user_metadata?.store) st.value = authUser.user_metadata.store;
 }
 function gtSaveDraft() {
+  if (gtEditing?.admin) return;   // jangan timpa draf saat admin mengedit pesanan dealer
   const info = Object.fromEntries(GT_INFO.map(k => [k, document.getElementById('gt-' + k)?.value || '']));
   try { localStorage.setItem(GT_DRAFT_KEY, JSON.stringify({ qty: gtQty, info })); } catch (e) {}
 }
@@ -5773,38 +5774,30 @@ function gtOrderPayload(o, i) {
 async function gtSend() {
   const c = gtCheck(); if (!c) return;
   const { o, i } = c;
-  const editing = gtEditing;
+  if (gtEditing?.admin) return gtAdminSave(o, i);   // perubahan pesanan hanya oleh admin
   const sig = JSON.stringify([i.store, o.groups.map(g => g.lines.map(l => [l.r.name, l.qty]))]);
-  if (!editing) {
-    let last = ''; try { last = localStorage.getItem(GT_SENT_KEY) || ''; } catch (e) {}
-    if (sig === last && !confirm('Pesanan yang sama sudah pernah dikirim. Kirim lagi sebagai pesanan baru?')) return;
-  }
+  let last = ''; try { last = localStorage.getItem(GT_SENT_KEY) || ''; } catch (e) {}
+  if (sig === last && !confirm('Pesanan yang sama sudah pernah dikirim. Kirim lagi sebagai pesanan baru?')) return;
   // Buka tab WA langsung di dalam klik (agar tidak diblokir popup), isi alamatnya setelah pesanan tersimpan
   const win = hasWa() ? window.open('', '_blank') : null;
   const btn = document.getElementById('gt-send'); btn.disabled = true;
-  let invoice = editing?.invoice || '';
+  let invoice = '';
   try {
-    if (editing) {
-      const { error } = await supabase.rpc('gathering_update_order', { p_invoice: editing.invoice, p_token: editing.token, p: gtOrderPayload(o, i) });
-      if (error) throw error;
-    } else {
-      const token = gtToken();
-      const { data, error } = await supabase.rpc('gathering_submit_order', { p: gtOrderPayload(o, i), p_token: token });
-      if (error) throw error;
-      invoice = (Array.isArray(data) ? data[0]?.invoice : data?.invoice) || '';
-      const mine = gtMineLocal(); mine.unshift({ invoice, token });
-      try { localStorage.setItem(GT_MINE_KEY, JSON.stringify(mine.slice(0, 50))); localStorage.setItem(GT_SENT_KEY, sig); } catch (e) {}
-    }
+    const token = gtToken();
+    const { data, error } = await supabase.rpc('gathering_submit_order', { p: gtOrderPayload(o, i), p_token: token });
+    if (error) throw error;
+    invoice = (Array.isArray(data) ? data[0]?.invoice : data?.invoice) || '';
+    const mine = gtMineLocal(); mine.unshift({ invoice, token });
+    try { localStorage.setItem(GT_MINE_KEY, JSON.stringify(mine.slice(0, 50))); localStorage.setItem(GT_SENT_KEY, sig); } catch (e) {}
   } catch (e) {
     btn.disabled = false;
     if (win) win.close();
     const m = String(e.message || e);
-    showToast((editing ? 'Perubahan gagal disimpan: ' : 'Pesanan gagal dikirim: ') + (/function|schema cache|404/i.test(m) ? 'fitur pesanan belum diaktifkan di server (hubungi CAI).' : m), 10000);
+    showToast('Pesanan gagal dikirim: ' + (/function|schema cache|404/i.test(m) ? 'fitur pesanan belum diaktifkan di server (hubungi CAI).' : m), 10000);
     return;
   }
   btn.disabled = false;
-  const txt = [editing ? `*PERUBAHAN PESANAN GATHERING CAI 2026*` : '*FORM BELANJA GATHERING CAI 2026*',
-    `No. Invoice: *${invoice}*`,
+  const txt = ['*FORM BELANJA GATHERING CAI 2026*', `No. Invoice: *${invoice}*`,
     `Nama Dealer: ${i.dealer || '-'}`, `Nama Toko: ${i.store}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Sales PIC: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
     ...o.groups.flatMap(g => [`*${g.name.toUpperCase()}*`,
       ...g.lines.map(l => `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}`),
@@ -5815,9 +5808,9 @@ async function gtSend() {
     const url = `https://wa.me/${CAI_WHATSAPP}?text=${encodeURIComponent(txt)}`;
     if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
   }
-  showToast(editing ? `✓ Perubahan pesanan ${invoice} tersimpan.` : `✓ Pesanan ${invoice} terkirim. Silakan transfer & tunggu konfirmasi admin.`, 7000);
-  gtEditing = null; gtQty = {}; gtSaveDraft();
-  renderGtEditing(); renderGathering(); loadGtMine();
+  showToast(`✓ Pesanan ${invoice} terkirim. Silakan transfer & tunggu konfirmasi admin.`, 7000);
+  gtQty = {}; gtSaveDraft();
+  renderGathering(); loadGtMine();
 }
 
 // ── Pesanan Saya (dealer): pesanan yang dikirim dari browser ini; bisa diedit selama belum dikonfirmasi admin ──
@@ -5836,32 +5829,57 @@ function renderGtMine() {
   const el = document.getElementById('gt-mine');
   if (!el) return;
   if (!gtMine?.length) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="gt-mine"><div class="gt-mine-title">📦 Pesanan Saya <span>(dikirim dari perangkat ini)</span></div>
-    ${gtMine.map(r => `<div class="gt-mine-row${gtEditing?.invoice === r.invoice ? ' editing' : ''}">
+  el.innerHTML = `<div class="gt-mine"><div class="gt-mine-title">📦 Pesanan Saya <span>(dikirim dari perangkat ini · perubahan pesanan hubungi sales/admin CAI)</span></div>
+    ${gtMine.map(r => `<div class="gt-mine-row">
       <div><b>${escHtml(r.invoice)}</b> · ${escHtml(r.store || '')}<small>${fmtGtTime(r.created_at)}${r.updated_at ? ' · diubah ' + fmtGtTime(r.updated_at) : ''} · ${r.total_qty} item</small></div>
       <div class="gt-mine-right"><span class="gt-mine-total">${fmtRp(Number(r.total || 0))}</span>
         <span class="gt-badge st-${r.status}">${GT_STATUS[r.status] || r.status}</span>
-        ${r.status === 'baru' ? `<button class="gt-btn ghost" onclick="gtStartEdit('${escHtml(r.invoice)}')">✏️ Edit</button>` : ''}</div>
+</div>
     </div>`).join('')}</div>`;
 }
-function gtStartEdit(invoice) {
-  const r = gtMine?.find(x => x.invoice === invoice);
-  if (!r || !gtItems) return;
-  gtEditing = { invoice: r.invoice, token: r.token };
+// ── Edit pesanan oleh ADMIN (dari Rekap) — dealer tidak bisa mengedit ──
+let gtDraftBackup = null;
+function adminEditGtOrder(id) {
+  const o = gtOrders?.find(x => x.id === id);
+  if (!o || !isAdmin() || !gtItems) return;
+  if (!gtEditing) gtDraftBackup = { qty: gtQty, info: gtInfo() };
+  gtEditing = { admin: true, id: o.id, invoice: o.invoice || '#' + o.id, store: o.store };
   gtQty = {};
-  (r.items || []).forEach(it => {
+  const missing = [];
+  (o.items || []).forEach(it => {
     const row = gtItems.find(x => x.section === it.section && x.brand === it.brand && x.name === it.name);
-    if (row) gtQty[gtKey(row)] = it.qty;
+    if (row) gtQty[gtKey(row)] = it.qty; else missing.push(it.name);
   });
-  ['dealer', 'store', 'city', 'phone', 'pic'].forEach(k => { const el = document.getElementById('gt-' + k); if (el && r[k] != null) el.value = r[k]; });
-  gtSaveDraft(); renderGtEditing(); renderGathering(); renderGtMine();
-  document.getElementById('gt-editing').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  ['dealer', 'store', 'city', 'phone', 'pic'].forEach(k => { const el = document.getElementById('gt-' + k); if (el) el.value = o[k] || ''; });
+  setGtTab('form'); renderGtEditing(); renderGathering();
+  document.querySelector('.main')?.scrollTo(0, 0);
+  if (missing.length) showToast('Produk ini tidak ada lagi di daftar gathering: ' + missing.join(', '), 9000);
 }
-function gtCancelEdit() { gtEditing = null; gtQty = {}; gtSaveDraft(); renderGtEditing(); renderGathering(); renderGtMine(); }
+function gtEndEdit(backToRekap) {
+  gtEditing = null;
+  if (gtDraftBackup) {
+    gtQty = gtDraftBackup.qty || {};
+    Object.entries(gtDraftBackup.info || {}).forEach(([k, v]) => { const el = document.getElementById('gt-' + k); if (el) el.value = v; });
+    gtDraftBackup = null;
+  }
+  renderGtEditing(); renderGathering();
+  if (backToRekap) setGtTab('rekap');
+}
+function gtCancelEdit() { gtEndEdit(true); }
+async function gtAdminSave(o, i) {
+  const btn = document.getElementById('gt-send'); btn.disabled = true;
+  try {
+    const { error } = await supabase.from(GATHERING_ORDERS).update({ ...gtOrderPayload(o, i), updated_at: new Date().toISOString() }).eq('id', gtEditing.id);
+    if (error) throw error;
+    showToast(`✓ Pesanan ${gtEditing.invoice} diperbarui.`);
+    gtOrders = null; gtEndEdit(true);
+  } catch (e) { showToast('Gagal menyimpan perubahan: ' + (e.message || e), 9000); }
+  finally { btn.disabled = false; }
+}
 function renderGtEditing() {
   const el = document.getElementById('gt-editing'), btn = document.getElementById('gt-send');
   el.hidden = !gtEditing;
-  el.innerHTML = gtEditing ? `✏️ Mengedit pesanan <b>${escHtml(gtEditing.invoice)}</b> — ubah Qty lalu tekan <b>Simpan Perubahan</b>. <button class="gt-btn ghost" onclick="gtCancelEdit()">Batal edit</button>` : '';
+  el.innerHTML = gtEditing ? `✏️ <b>Admin</b> mengedit pesanan <b>${escHtml(gtEditing.invoice)}</b> · ${escHtml(gtEditing.store || '')} — ubah Qty / data dealer lalu tekan <b>Simpan Perubahan</b>. <button class="gt-btn ghost" onclick="gtCancelEdit()">Batal edit</button>` : '';
   if (btn) btn.lastChild.textContent = gtEditing ? 'Simpan Perubahan' : 'Kirim ke Sales';
 }
 
@@ -6013,14 +6031,15 @@ function renderGtRekap() {
       <div class="gt-order st-${o.status}">
         <div class="gt-order-head" onclick="toggleGtOrder(${o.id})">
           <div class="gt-order-main">
-            <div class="gt-order-inv">${escHtml(o.invoice || '—')}${o.updated_at ? ' <span>· diubah dealer ' + fmtGtTime(o.updated_at) + '</span>' : ''}</div>
+            <div class="gt-order-inv">${escHtml(o.invoice || '—')}${o.updated_at ? ' <span>· diubah ' + fmtGtTime(o.updated_at) + '</span>' : ''}</div>
             <div class="gt-order-store">${escHtml(o.store || '-')}${o.city ? ` <span>· ${escHtml(o.city)}</span>` : ''}</div>
             <div class="gt-order-sub">${fmtGtTime(o.created_at)} · ${escHtml([o.dealer, o.pic ? 'Sales: ' + o.pic : ''].filter(Boolean).join(' · ') || '—')}</div>
           </div>
           <div class="gt-order-total"><b>${fmtRp(Number(o.total || 0))}</b><span>${o.total_qty} item</span></div>
         </div>
-        ${o.status === 'baru' ? `<div class="gt-confirm-bar"><span>Cek transfer pembayaran${o.invoice ? ' (berita: ' + escHtml(o.invoice) + ')' : ''}, lalu konfirmasi agar masuk Top Spender.</span>
-          <button class="gt-btn confirm" onclick="event.stopPropagation(); confirmGtOrder(${o.id})">✓ Konfirmasi Pembelian</button></div>` : ''}
+        ${o.status === 'baru' ? `<div class="gt-confirm-bar"><span>⏳ Menunggu pembayaran. Setelah transfer${o.invoice ? ' (berita: ' + escHtml(o.invoice) + ')' : ''} diterima, klik konfirmasi — pembelian langsung masuk Top Spender.</span>
+          <button class="gt-btn confirm" onclick="event.stopPropagation(); confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button></div>`
+          : gtConfirmed(o) ? `<div class="gt-confirm-bar ok"><span>✅ Pembayaran dikonfirmasi${o.confirmed_at ? ' · ' + fmtGtTime(o.confirmed_at) : ''} — masuk Top Spender.</span></div>` : ''}
         ${gtOpenOrder === o.id ? `<div class="gt-order-body">
           <table class="gt-order-items"><thead><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead><tbody>
           ${(o.items || []).map(it => `<tr><td>${escHtml(it.name)}<small>${escHtml(it.group)}</small></td><td>${it.qty}</td><td>${fmtRp(it.price)}</td><td>${fmtRp(it.total)}</td></tr>`).join('')}
@@ -6029,6 +6048,8 @@ function renderGtRekap() {
             ${o.phone ? `<a class="gt-btn ghost" href="https://wa.me/${o.phone.replace(/\D/g, '').replace(/^0/, '62')}" target="_blank" rel="noopener">💬 WA ${escHtml(o.phone)}</a>` : ''}
             <label class="gt-status">Status
               <select onchange="setGtOrderStatus(${o.id}, this.value)">${Object.entries(GT_STATUS).map(([k, v]) => `<option value="${k}"${o.status === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+            <button class="gt-btn ghost" onclick="adminEditGtOrder(${o.id})">✏️ Edit Pesanan</button>
+            ${o.status === 'baru' ? `<button class="gt-btn confirm" onclick="confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button>` : ''}
             <button class="gt-btn ghost gt-del" onclick="deleteGtOrder(${o.id})">🗑 Hapus</button>
           </div></div>` : ''}
         <span class="gt-badge st-${o.status}">${GT_STATUS[o.status] || o.status}</span>
@@ -6041,7 +6062,7 @@ function renderGtRekap() {
 
 async function confirmGtOrder(id) {
   const o = gtOrders.find(x => x.id === id);
-  if (!o || !confirm(`Konfirmasi pembelian ${o.invoice || ''} — ${o.store} (${fmtRp(Number(o.total || 0))})?\n\nSetelah dikonfirmasi, dealer tidak bisa mengedit pesanan ini dan pembelian masuk Top Spender.`)) return;
+  if (!o || !confirm(`Pembayaran ${o.invoice || ''} — ${o.store} (${fmtRp(Number(o.total || 0))}) sudah diterima?\n\nPembelian akan dikonfirmasi dan masuk Top Spender.`)) return;
   await setGtOrderStatus(id, 'dikonfirmasi');
 }
 
