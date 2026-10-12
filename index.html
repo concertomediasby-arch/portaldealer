@@ -2142,8 +2142,8 @@ body {
     <div class="admin-body">
       <form class="admin-login" onsubmit="dealerLogin(); return false;">
         <div>
-          <label>Kode Dealer</label>
-          <input class="admin-input" type="text" id="login-email" placeholder="mis. SBY-SINARAUDIO" autocomplete="username" autocapitalize="characters" autocorrect="off" spellcheck="false">
+          <label>ID Dealer</label>
+          <input class="admin-input" type="text" id="login-email" placeholder="CAI" autocomplete="username" autocapitalize="characters" autocorrect="off" spellcheck="false">
         </div>
         <div>
           <label>PIN</label>
@@ -2151,7 +2151,7 @@ body {
         </div>
         <div class="admin-error" id="login-error"></div>
         <button class="admin-btn primary" id="login-btn" type="submit">Masuk</button>
-        <div style="font-size:11.5px;color:#6b7280;text-align:center;line-height:1.5">Belum punya kode? Hubungi tim Concerto Audio Indonesia.<br>Staff CAI: isi kolom Kode Dealer dengan email.</div>
+        <div style="font-size:11.5px;color:#6b7280;text-align:center;line-height:1.5">Belum tahu PIN? Hubungi tim Concerto Audio Indonesia.<br>Staff CAI: isi kolom ID Dealer dengan email.</div>
       </form>
     </div>
   </div>
@@ -2239,7 +2239,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T02:11:31Z';
+const LAST_UPDATE = '2026-10-12T02:18:02Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4262,7 +4262,10 @@ function openLogin() {
   document.getElementById('login-error').textContent = '';
   document.getElementById('login-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  setTimeout(() => document.getElementById('login-email')?.focus(), 50);
+  // Semua dealer memakai satu ID bersama → isi otomatis, dealer cukup mengetik PIN
+  const idEl = document.getElementById('login-email');
+  if (SHARED_DEALER_CODE && !idEl.value) idEl.value = SHARED_DEALER_CODE;
+  setTimeout(() => document.getElementById(idEl.value ? 'login-password' : 'login-email')?.focus(), 50);
 }
 function closeLogin() {
   document.getElementById('login-overlay').classList.remove('open');
@@ -4272,6 +4275,8 @@ function closeLogin() {
 /* Kode Dealer: akun dealer memakai email internal <kode>@dealer.concerto.id (tidak pernah dikirimi email).
    Dealer cukup mengetik kode + PIN; staff (dan akun dealer lama) tetap bisa login dengan email. */
 const DEALER_CODE_DOMAIN = 'dealer.concerto.id';
+// ID dealer bersama (satu akun untuk semua dealer: cai@dealer.concerto.id). Kosongkan '' jika kelak tiap dealer punya kode sendiri.
+const SHARED_DEALER_CODE = 'CAI';
 const normDealerCode = c => String(c || '').trim().toUpperCase().replace(/\s+/g, '-');
 const validDealerCode = c => /^[A-Z0-9](?:[A-Z0-9-]{1,28})[A-Z0-9]$/.test(c);
 const loginEmailFor = id => id.includes('@') ? id.toLowerCase() : `${normDealerCode(id).toLowerCase()}@${DEALER_CODE_DOMAIN}`;
@@ -4288,7 +4293,7 @@ async function dealerLogin() {
   const pass  = document.getElementById('login-password').value.trim();
   const btn   = document.getElementById('login-btn');
   const err   = document.getElementById('login-error');
-  if (!ident || !pass) { err.textContent = 'Isi Kode Dealer dan PIN.'; return; }
+  if (!ident || !pass) { err.textContent = 'Isi ID Dealer dan PIN.'; return; }
   const email = loginEmailFor(ident);
   if (!supabase) { err.textContent = 'Tidak dapat terhubung ke server. Periksa koneksi internet.'; return; }
   btn.disabled = true; btn.textContent = 'Memverifikasi…'; err.textContent = '';
@@ -4302,7 +4307,7 @@ async function dealerLogin() {
     showToast(`Masuk sebagai ${authUser.user_metadata?.store || accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Dealer'}`);
     if (next) next();
   } catch (e) {
-    err.textContent = /invalid login/i.test(e.message || '') ? 'Kode Dealer atau PIN salah.' : 'Login gagal: ' + (e.message || e);
+    err.textContent = /invalid login/i.test(e.message || '') ? 'ID Dealer atau PIN salah.' : 'Login gagal: ' + (e.message || e);
   } finally {
     btn.disabled = false; btn.textContent = 'Masuk';
   }
