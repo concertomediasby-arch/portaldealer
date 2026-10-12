@@ -1500,6 +1500,8 @@ body {
   /* ── Shopping Gathering ── */
   .gt-terms { margin-top: 8px; font-size: 12px; color: var(--fg-muted); line-height: 1.55; max-width: 900px; }
   .gt-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin: 4px 0 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+  .gt-dealer-field select.gt-input { cursor: pointer; }
+  .gt-dealer-field input[hidden] { display: none; }
   .gt-info label { display: flex; flex-direction: column; gap: 5px; font: 600 10.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); }
   .gt-input { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg, transparent); color: var(--fg); font: 13px var(--f-body); outline: none; }
   .gt-input:focus, .gt-qty:focus { border-color: var(--accent); }
@@ -2164,8 +2166,10 @@ body {
       <div id="gt-form">
       <div class="gt-editing" id="gt-editing" hidden></div>
       <div class="gt-info">
-        <label>Nama Dealer<input class="gt-input" id="gt-dealer" maxlength="60" oninput="gtSaveDraft()"></label>
-        <label>Nama Toko<input class="gt-input" id="gt-store" maxlength="60" oninput="gtSaveDraft()"></label>
+        <label class="gt-dealer-field">Nama Dealer
+          <select class="gt-input" id="gt-dealer-sel" onchange="gtDealerChanged()"></select>
+          <input class="gt-input" id="gt-dealer" maxlength="60" placeholder="Ketik nama dealer…" oninput="gtSaveDraft()" hidden>
+        </label>
         <label>Kota<input class="gt-input" id="gt-city" maxlength="40" oninput="gtSaveDraft()"></label>
         <label>No. HP<input class="gt-input" id="gt-phone" maxlength="20" inputmode="tel" oninput="gtSaveDraft()"></label>
         <label>Sales PIC<input class="gt-input" id="gt-pic" maxlength="40" oninput="gtSaveDraft()"></label>
@@ -2485,7 +2489,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T05:42:03Z';
+const LAST_UPDATE = '2026-10-12T06:27:29Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5597,7 +5601,36 @@ async function deleteDealer(id) {
 ══════════════════════════════════════════ */
 const GATHERING_TABLE = 'gathering_items';
 const GT_DRAFT_KEY = 'cai-gathering-draft';
-const GT_INFO = ['dealer', 'store', 'city', 'phone', 'pic'];
+const GT_INFO = ['dealer', 'city', 'phone', 'pic'];
+// Daftar pilihan "Nama Dealer" (dari list_rank.xlsx pemilik: Distributor + Dealer). "Lainnya" = ketik manual.
+const GT_DISTRIBUTORS = ["[DIST] SGU", "[DIST] THV", "[DIST] H2R RONNY", "[DIST] CT MALANG", "[DIST] SINYO", "[DIST] VIN AUDIOWORKS"];
+const GT_DEALERS = ["ALTEPRO", "Atmos Autosound", "Auto Schoon", "Auto Sound Gallery", "Blitz Audioworkshop", "CAR AUDIO MERUYA", "CAS Audio", "Central Garage", "Concerto Tulungagung", "Creativ Variasi", "DB Auto", "Dinata Audio", "DR Audio", "Dream Sound", "Duta Variasi", "Gema Audio", "Helmi Saputra", "Linggom Variasi", "Mars Audio", "Mcm Audiomobile", "MEGA AUDIO JAKARTA", "MM Audioworks", "NAI Audioworks", "Nico Kenzo", "Oscar Variasi", "OTOFINE GARAGE SEMARANG", "Pelita Kisaran", "Prima Variasi", "Project Audio", "Sound Art Blitar", "SP AUDIOWORKS", "STERINDO AUTOSOUND", "SUNJAYA", "Terang Jaya", "The Peak Garage", "Victory Audio", "West Audioworks", "Zona Audio Medan"];
+const GT_OTHER = '__other';
+function renderGtDealerSelect() {
+  const sel = document.getElementById('gt-dealer-sel');
+  if (!sel || sel.options.length) return;
+  const opt = n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`;
+  sel.innerHTML = '<option value="">— Pilih dealer —</option>'
+    + `<optgroup label="Distributor">${GT_DISTRIBUTORS.map(opt).join('')}</optgroup>`
+    + `<optgroup label="Dealer">${GT_DEALERS.map(opt).join('')}</optgroup>`
+    + `<option value="${GT_OTHER}">Lainnya (ketik manual)…</option>`;
+}
+// Sinkronkan select ↔ input tersembunyi #gt-dealer (sumber nilai yang disimpan)
+function gtSyncDealerSelect() {
+  renderGtDealerSelect();
+  const sel = document.getElementById('gt-dealer-sel'), inp = document.getElementById('gt-dealer');
+  const v = inp.value.trim(), known = [...GT_DISTRIBUTORS, ...GT_DEALERS].includes(v);
+  sel.value = !v ? '' : known ? v : GT_OTHER;
+  inp.hidden = sel.value !== GT_OTHER;
+}
+function gtDealerChanged() {
+  const sel = document.getElementById('gt-dealer-sel'), inp = document.getElementById('gt-dealer');
+  const other = sel.value === GT_OTHER;
+  inp.hidden = !other;
+  inp.value = other ? '' : sel.value;
+  if (other) inp.focus();
+  gtSaveDraft();
+}
 let gtItems = null, gtError = '', gtQty = {}, gtFilter = 'all';
 const gtKey = r => `${r.section}|${r.brand}|${r.name}`;
 // Harga yang dipakai menghitung total: spesial gathering, atau (clearance) harga clearance − cashback
@@ -5611,8 +5644,7 @@ function gtLoadDraft() {
     gtQty = d.qty || {};
     GT_INFO.forEach(k => { const el = document.getElementById('gt-' + k); if (el && !el.value) el.value = d.info?.[k] || ''; });
   } catch (e) { gtQty = {}; }
-  const st = document.getElementById('gt-store');
-  if (st && !st.value && authUser?.user_metadata?.store) st.value = authUser.user_metadata.store;
+  gtSyncDealerSelect();
 }
 function gtSaveDraft() {
   if (gtEditing?.admin) return;   // jangan timpa draf saat admin mengedit pesanan dealer
@@ -5724,14 +5756,17 @@ function gtUpdateBar() {
   });
 }
 
-function gtInfo() { return Object.fromEntries(GT_INFO.map(k => [k, (document.getElementById('gt-' + k)?.value || '').trim()])); }
+function gtInfo() {
+  const i = Object.fromEntries(GT_INFO.map(k => [k, (document.getElementById('gt-' + k)?.value || '').trim()]));
+  return { ...i, store: i.dealer };   // "Nama Toko" dihapus — nama dealer dipakai sebagai identitas toko (rekap, Top Spender)
+}
 const gtToday = () => new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
 
 function gtCheck() {
   const o = gtOrder();
   if (!o.qty) { showToast('Isi jumlah (Qty) minimal satu produk dulu.'); return null; }
   const i = gtInfo();
-  if (!i.store) { showToast('Isi Nama Toko dulu.'); document.getElementById('gt-store').focus(); return null; }
+  if (!i.dealer) { showToast('Pilih Nama Dealer dulu.'); document.getElementById(document.getElementById('gt-dealer').hidden ? 'gt-dealer-sel' : 'gt-dealer').focus(); return null; }
   return { o, i };
 }
 
@@ -5785,7 +5820,7 @@ async function gtSend() {
   }
   btn.disabled = false;
   const txt = ['*FORM BELANJA GATHERING CAI 2026*', `No. Invoice: *${invoice}*`,
-    `Nama Dealer: ${i.dealer || '-'}`, `Nama Toko: ${i.store}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Sales PIC: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
+    `Nama Dealer: ${i.dealer}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Sales PIC: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
     ...o.groups.flatMap(g => [`*${g.name.toUpperCase()}*`,
       ...g.lines.map(l => `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}`),
       `Subtotal: ${fmtRp(g.total)}`, '']),
@@ -5813,7 +5848,9 @@ function adminEditGtOrder(id) {
     const row = gtItems.find(x => x.section === it.section && x.brand === it.brand && x.name === it.name);
     if (row) gtQty[gtKey(row)] = it.qty; else missing.push(it.name);
   });
-  ['dealer', 'store', 'city', 'phone', 'pic'].forEach(k => { const el = document.getElementById('gt-' + k); if (el) el.value = o[k] || ''; });
+  ['city', 'phone', 'pic'].forEach(k => { const el = document.getElementById('gt-' + k); if (el) el.value = o[k] || ''; });
+  document.getElementById('gt-dealer').value = o.dealer || o.store || '';
+  gtSyncDealerSelect();
   setGtTab('form'); renderGtEditing(); renderGathering();
   document.querySelector('.main')?.scrollTo(0, 0);
   if (missing.length) showToast('Produk ini tidak ada lagi di daftar gathering: ' + missing.join(', '), 9000);
@@ -5823,6 +5860,7 @@ function gtEndEdit(backToRekap) {
   if (gtDraftBackup) {
     gtQty = gtDraftBackup.qty || {};
     Object.entries(gtDraftBackup.info || {}).forEach(([k, v]) => { const el = document.getElementById('gt-' + k); if (el) el.value = v; });
+    gtSyncDealerSelect();
     gtDraftBackup = null;
   }
   renderGtEditing(); renderGathering();
@@ -5851,7 +5889,7 @@ function gtPrint() {
   const { o, i } = c;
   let el = document.getElementById('gt-print');
   if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
-  const info = [...(gtEditing ? [['No. Invoice', gtEditing.invoice]] : []), ['Nama Dealer', i.dealer], ['Nama Toko', i.store], ['Kota', i.city], ['No. HP', i.phone], ['Sales PIC', i.pic], ['Tanggal', gtToday()]];
+  const info = [...(gtEditing ? [['No. Invoice', gtEditing.invoice]] : []), ['Nama Dealer', i.dealer], ['Kota', i.city], ['No. HP', i.phone], ['Sales PIC', i.pic], ['Tanggal', gtToday()]];
   el.innerHTML = `
     <div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>FORM BELANJA DEALER</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
     <table class="gp-info">${info.map(([a, b]) => `<tr><td>${a}</td><td>: ${escHtml(b || '')}</td></tr>`).join('')}</table>
@@ -5996,7 +6034,7 @@ function renderGtRekap() {
           <div class="gt-order-main">
             <div class="gt-order-inv">${escHtml(o.invoice || '—')}${o.updated_at ? ' <span>· diubah ' + fmtGtTime(o.updated_at) + '</span>' : ''}</div>
             <div class="gt-order-store">${escHtml(o.store || '-')}${o.city ? ` <span>· ${escHtml(o.city)}</span>` : ''}</div>
-            <div class="gt-order-sub">${fmtGtTime(o.created_at)} · ${escHtml([o.dealer, o.pic ? 'Sales: ' + o.pic : ''].filter(Boolean).join(' · ') || '—')}</div>
+            <div class="gt-order-sub">${fmtGtTime(o.created_at)} · ${escHtml([o.dealer && o.dealer !== o.store ? o.dealer : '', o.pic ? 'Sales: ' + o.pic : ''].filter(Boolean).join(' · ') || '—')}</div>
           </div>
           <div class="gt-order-total"><b>${fmtRp(Number(o.total || 0))}</b><span>${o.total_qty} item</span></div>
         </div>
@@ -6074,7 +6112,7 @@ function downloadGtInvoice(id) {
 
   header();
   let y = 44;
-  const lf = [['No. Invoice', o.invoice], ['Nama Dealer', o.dealer], ['Nama Toko', o.store], ['Kota', o.city]];
+  const lf = [['No. Invoice', o.invoice], ['Nama Dealer', o.store || o.dealer], ['Kota', o.city]];
   const rf = [['Tanggal', date], ['No. HP', o.phone], ['Sales PIC', o.pic], ['Status', GT_STATUS[o.status] || o.status]];
   lf.forEach(([k, v], n) => field(k, v, L, y + n * 6.2, 100));
   rf.forEach(([k, v], n) => field(k, v, 108, y + n * 6.2, R));
