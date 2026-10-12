@@ -1587,7 +1587,7 @@ body {
   .gt-orders { display: flex; flex-direction: column; gap: 10px; margin-bottom: 26px; }
   .gt-order { position: relative; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 12px; background: var(--surface); overflow: hidden; }
   .gt-order.st-diproses { border-left-color: #3b82f6; } .gt-order.st-selesai { border-left-color: #22c55e; } .gt-order.st-batal { border-left-color: #9ca3af; opacity: .7; }
-  .gt-order-head { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; padding-right: 96px; cursor: pointer; }
+  .gt-order-head { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; padding-right: 190px; cursor: pointer; }
   .gt-order-store { font-weight: 700; color: var(--fg); } .gt-order-store span { font-weight: 500; color: var(--fg-muted); }
   .gt-order-sub { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
   .gt-order-total { text-align: right; flex-shrink: 0; } .gt-order-total b { display: block; font: 700 15px var(--f-mono); color: var(--accent); } .gt-order-total span { font-size: 11.5px; color: var(--fg-muted); }
@@ -1602,6 +1602,31 @@ body {
   .gt-order-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
   .gt-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-muted); }
   .gt-status select { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--fg); font: 600 12.5px var(--f-body); }
+
+  .gt-order-inv { font: 700 12px var(--f-mono); color: var(--accent); letter-spacing: .03em; } .gt-order-inv span { font-weight: 500; color: var(--fg-muted); letter-spacing: 0; }
+  .gt-confirm-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 16px; border-top: 1px dashed var(--border); background: color-mix(in srgb, var(--accent) 7%, transparent); font-size: 12.5px; color: var(--fg-muted); }
+  .gt-btn.confirm { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .gt-badge.st-dikonfirmasi { background: rgba(59,130,246,.15); color: #3b82f6; }
+  .gt-order.st-dikonfirmasi { border-left-color: #3b82f6; }
+  .gt-pay { margin: -6px 0 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+  .gt-pay-title { font-weight: 700; font-size: 13.5px; color: var(--fg); margin-bottom: 10px; }
+  .gt-pay-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .gt-bank { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2px 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface2); }
+  .gt-bank b { font: 800 13px var(--f-display); color: #1d4ed8; } .gt-bank small { grid-column: 1 / -1; font-size: 12px; color: var(--fg-muted); }
+  .gt-bank-no { font: 700 15px var(--f-mono); color: var(--fg); letter-spacing: .04em; }
+  .gt-copy { padding: 4px 9px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--fg); font: 600 11px var(--f-body); cursor: pointer; }
+  .gt-pay-note { margin-top: 10px; font-size: 12px; color: var(--fg-muted); }
+  .gt-mine { margin: 4px 0 16px; padding: 12px 16px; border: 1px solid var(--accent); border-radius: var(--r); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+  .gt-mine-title { font-weight: 700; font-size: 13.5px; color: var(--fg); margin-bottom: 6px; } .gt-mine-title span { font-weight: 400; font-size: 12px; color: var(--fg-muted); }
+  .gt-mine-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; font-size: 13px; color: var(--fg); }
+  .gt-mine-row + .gt-mine-row { border-top: 1px solid var(--border); }
+  .gt-mine-row b { font-family: var(--f-mono); color: var(--accent); } .gt-mine-row small { display: block; font-size: 11.5px; color: var(--fg-muted); }
+  .gt-mine-row.editing { background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: 8px; padding: 8px; }
+  .gt-mine-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .gt-mine-right .gt-badge { position: static; }
+  .gt-mine-total { font: 700 13px var(--f-mono); }
+  .gt-editing { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; border: 1px solid #f59e0b; background: rgba(245,158,11,.1); color: var(--fg); font-size: 13px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .gt-editing[hidden] { display: none; }
   .gt-del:hover { color: #e5484d; border-color: #e5484d; }
   .gt-rk-head { margin-bottom: 8px; }
   .gt-prod-table .gt-row { grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.2fr) 80px 90px minmax(0, 1.2fr); }
@@ -2145,6 +2170,8 @@ body {
       <div id="gt-top" class="gt-top" hidden></div>
       <div id="gt-rekap" class="gt-rekap" hidden></div>
       <div id="gt-form">
+      <div id="gt-mine"></div>
+      <div class="gt-editing" id="gt-editing" hidden></div>
       <div class="gt-info">
         <label>Nama Dealer<input class="gt-input" id="gt-dealer" maxlength="60" oninput="gtSaveDraft()"></label>
         <label>Nama Toko<input class="gt-input" id="gt-store" maxlength="60" oninput="gtSaveDraft()"></label>
@@ -2152,6 +2179,7 @@ body {
         <label>No. HP<input class="gt-input" id="gt-phone" maxlength="20" inputmode="tel" oninput="gtSaveDraft()"></label>
         <label>Sales PIC<input class="gt-input" id="gt-pic" maxlength="40" oninput="gtSaveDraft()"></label>
       </div>
+      <div class="gt-pay" id="gt-pay"></div>
       <div class="catalog-controls">
         <div class="catalog-search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -2466,7 +2494,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T05:01:23Z';
+const LAST_UPDATE = '2026-10-12T05:14:41Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5605,8 +5633,11 @@ function openGathering(tab) {
   showView('gathering');
   document.querySelector('.main')?.scrollTo(0, 0);
   gtLoadDraft();
+  renderGtPay();
+  renderGtEditing();
   renderGathering();
   loadGathering();
+  loadGtMine();
   setGtTab(tab === 'rekap' && isAdmin() ? 'rekap' : 'form');
 }
 
@@ -5713,39 +5744,125 @@ function gtCheck() {
   return { o, i };
 }
 
+// Pembayaran Gathering — rekening tujuan transfer (ditampilkan di form, pesan WA, dan cetakan)
+const GATHERING_BANKS = [
+  { bank: 'BCA', no: '5065685555', name: 'CV Concerto Audio Indonesia' },
+  { bank: 'BCA', no: '8221999070', name: 'CV Anak Juan' },
+];
+const GT_MINE_KEY = 'cai-gathering-orders';   // [{ invoice, token }] pesanan yang dikirim dari browser ini (untuk edit)
+let gtEditing = null, gtMine = null;
+const gtMineLocal = () => { try { return JSON.parse(localStorage.getItem(GT_MINE_KEY) || '[]'); } catch (e) { return []; } };
+const gtToken = () => (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''));
+const gtBankLines = () => GATHERING_BANKS.map(b => `${b.bank} ${b.no} a.n ${b.name}`);
+
+function renderGtPay() {
+  const el = document.getElementById('gt-pay');
+  if (el) el.innerHTML = `<div class="gt-pay-title">💳 Pembayaran Gathering — transfer ke salah satu rekening:</div>
+    <div class="gt-pay-list">${GATHERING_BANKS.map(b => `<div class="gt-bank"><b>${escHtml(b.bank)}</b>
+      <span class="gt-bank-no">${escHtml(b.no)}</span><button class="gt-copy" onclick="gtCopy('${b.no}')" title="Salin nomor rekening">Salin</button>
+      <small>a.n ${escHtml(b.name)}</small></div>`).join('')}</div>
+    <div class="gt-pay-note">Pesanan masuk peringkat Top Spender setelah pembayarannya dikonfirmasi admin CAI. Sertakan nomor invoice saat transfer.</div>`;
+}
+async function gtCopy(t) { try { await navigator.clipboard.writeText(t); showToast('Nomor rekening disalin: ' + t); } catch (e) { showToast(t); } }
+
+function gtOrderPayload(o, i) {
+  return { dealer: i.dealer, store: i.store, city: i.city, phone: i.phone, pic: i.pic, total_qty: o.qty, total: o.total,
+    items: o.groups.flatMap(g => g.lines.map(l => ({ group: g.name, brand: l.r.brand, section: l.r.section, name: l.r.name, qty: l.qty, price: l.price, total: l.total }))) };
+}
+
 async function gtSend() {
   const c = gtCheck(); if (!c) return;
   const { o, i } = c;
+  const editing = gtEditing;
   const sig = JSON.stringify([i.store, o.groups.map(g => g.lines.map(l => [l.r.name, l.qty]))]);
-  let last = ''; try { last = localStorage.getItem(GT_SENT_KEY) || ''; } catch (e) {}
-  if (sig === last && !confirm('Pesanan yang sama sudah pernah dikirim. Kirim lagi sebagai pesanan baru?')) return;
+  if (!editing) {
+    let last = ''; try { last = localStorage.getItem(GT_SENT_KEY) || ''; } catch (e) {}
+    if (sig === last && !confirm('Pesanan yang sama sudah pernah dikirim. Kirim lagi sebagai pesanan baru?')) return;
+  }
   // Buka tab WA langsung di dalam klik (agar tidak diblokir popup), isi alamatnya setelah pesanan tersimpan
   const win = hasWa() ? window.open('', '_blank') : null;
   const btn = document.getElementById('gt-send'); btn.disabled = true;
-  let saved = false;
+  let invoice = editing?.invoice || '';
   try {
-    const { error } = await supabase.from(GATHERING_ORDERS).insert({
-      dealer: i.dealer, store: i.store, city: i.city, phone: i.phone, pic: i.pic,
-      total_qty: o.qty, total: o.total,
-      items: o.groups.flatMap(g => g.lines.map(l => ({ group: g.name, brand: l.r.brand, section: l.r.section, name: l.r.name, qty: l.qty, price: l.price, total: l.total }))),
-    });
-    if (error) throw error;
-    saved = true;
-    try { localStorage.setItem(GT_SENT_KEY, sig); } catch (e) {}
+    if (editing) {
+      const { error } = await supabase.rpc('gathering_update_order', { p_invoice: editing.invoice, p_token: editing.token, p: gtOrderPayload(o, i) });
+      if (error) throw error;
+    } else {
+      const token = gtToken();
+      const { data, error } = await supabase.rpc('gathering_submit_order', { p: gtOrderPayload(o, i), p_token: token });
+      if (error) throw error;
+      invoice = (Array.isArray(data) ? data[0]?.invoice : data?.invoice) || '';
+      const mine = gtMineLocal(); mine.unshift({ invoice, token });
+      try { localStorage.setItem(GT_MINE_KEY, JSON.stringify(mine.slice(0, 50))); localStorage.setItem(GT_SENT_KEY, sig); } catch (e) {}
+    }
   } catch (e) {
-    console.warn('gathering order', e);
-    showToast('Pesanan belum tercatat di sistem (' + (e.message || e) + '), tapi tetap dikirim lewat WhatsApp.', 9000);
-  } finally { btn.disabled = false; }
-  if (!hasWa()) { if (saved) showToast('✓ Pesanan tercatat. Nomor WhatsApp CAI belum diatur — gunakan Cetak / PDF.'); return; }
-  const txt = ['*FORM BELANJA GATHERING CAI 2026*',
+    btn.disabled = false;
+    if (win) win.close();
+    const m = String(e.message || e);
+    showToast((editing ? 'Perubahan gagal disimpan: ' : 'Pesanan gagal dikirim: ') + (/function|schema cache|404/i.test(m) ? 'fitur pesanan belum diaktifkan di server (hubungi CAI).' : m), 10000);
+    return;
+  }
+  btn.disabled = false;
+  const txt = [editing ? `*PERUBAHAN PESANAN GATHERING CAI 2026*` : '*FORM BELANJA GATHERING CAI 2026*',
+    `No. Invoice: *${invoice}*`,
     `Nama Dealer: ${i.dealer || '-'}`, `Nama Toko: ${i.store}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Sales PIC: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
     ...o.groups.flatMap(g => [`*${g.name.toUpperCase()}*`,
       ...g.lines.map(l => `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}`),
       `Subtotal: ${fmtRp(g.total)}`, '']),
-    `*GRAND TOTAL: ${fmtRp(o.total)}* (${o.qty} item)`, '', `(dari ${PORTAL_URL})`].join('\n');
-  const url = `https://wa.me/${CAI_WHATSAPP}?text=${encodeURIComponent(txt)}`;
-  if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
-  if (saved) showToast('✓ Pesanan tercatat & dikirim ke sales CAI.');
+    `*GRAND TOTAL: ${fmtRp(o.total)}* (${o.qty} item)`, '',
+    '*Pembayaran (transfer ke salah satu):*', ...gtBankLines().map(b => '• ' + b), `Berita transfer: ${invoice}`, '', `(dari ${PORTAL_URL})`].join('\n');
+  if (hasWa()) {
+    const url = `https://wa.me/${CAI_WHATSAPP}?text=${encodeURIComponent(txt)}`;
+    if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
+  }
+  showToast(editing ? `✓ Perubahan pesanan ${invoice} tersimpan.` : `✓ Pesanan ${invoice} terkirim. Silakan transfer & tunggu konfirmasi admin.`, 7000);
+  gtEditing = null; gtQty = {}; gtSaveDraft();
+  renderGtEditing(); renderGathering(); loadGtMine();
+}
+
+// ── Pesanan Saya (dealer): pesanan yang dikirim dari browser ini; bisa diedit selama belum dikonfirmasi admin ──
+async function loadGtMine() {
+  const mine = gtMineLocal();
+  if (!supabase || !authUser || !mine.length) { gtMine = []; renderGtMine(); return; }
+  try {
+    const { data, error } = await supabase.rpc('gathering_my_orders', { p_tokens: mine.map(m => m.token) });
+    if (error) throw error;
+    const tok = Object.fromEntries(mine.map(m => [m.invoice, m.token]));
+    gtMine = (data || []).map(r => ({ ...r, token: tok[r.invoice] }));
+  } catch (e) { console.warn('my orders', e); gtMine = []; }
+  renderGtMine();
+}
+function renderGtMine() {
+  const el = document.getElementById('gt-mine');
+  if (!el) return;
+  if (!gtMine?.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="gt-mine"><div class="gt-mine-title">📦 Pesanan Saya <span>(dikirim dari perangkat ini)</span></div>
+    ${gtMine.map(r => `<div class="gt-mine-row${gtEditing?.invoice === r.invoice ? ' editing' : ''}">
+      <div><b>${escHtml(r.invoice)}</b> · ${escHtml(r.store || '')}<small>${fmtGtTime(r.created_at)}${r.updated_at ? ' · diubah ' + fmtGtTime(r.updated_at) : ''} · ${r.total_qty} item</small></div>
+      <div class="gt-mine-right"><span class="gt-mine-total">${fmtRp(Number(r.total || 0))}</span>
+        <span class="gt-badge st-${r.status}">${GT_STATUS[r.status] || r.status}</span>
+        ${r.status === 'baru' ? `<button class="gt-btn ghost" onclick="gtStartEdit('${escHtml(r.invoice)}')">✏️ Edit</button>` : ''}</div>
+    </div>`).join('')}</div>`;
+}
+function gtStartEdit(invoice) {
+  const r = gtMine?.find(x => x.invoice === invoice);
+  if (!r || !gtItems) return;
+  gtEditing = { invoice: r.invoice, token: r.token };
+  gtQty = {};
+  (r.items || []).forEach(it => {
+    const row = gtItems.find(x => x.section === it.section && x.brand === it.brand && x.name === it.name);
+    if (row) gtQty[gtKey(row)] = it.qty;
+  });
+  ['dealer', 'store', 'city', 'phone', 'pic'].forEach(k => { const el = document.getElementById('gt-' + k); if (el && r[k] != null) el.value = r[k]; });
+  gtSaveDraft(); renderGtEditing(); renderGathering(); renderGtMine();
+  document.getElementById('gt-editing').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function gtCancelEdit() { gtEditing = null; gtQty = {}; gtSaveDraft(); renderGtEditing(); renderGathering(); renderGtMine(); }
+function renderGtEditing() {
+  const el = document.getElementById('gt-editing'), btn = document.getElementById('gt-send');
+  el.hidden = !gtEditing;
+  el.innerHTML = gtEditing ? `✏️ Mengedit pesanan <b>${escHtml(gtEditing.invoice)}</b> — ubah Qty lalu tekan <b>Simpan Perubahan</b>. <button class="gt-btn ghost" onclick="gtCancelEdit()">Batal edit</button>` : '';
+  if (btn) btn.lastChild.textContent = gtEditing ? 'Simpan Perubahan' : 'Kirim ke Sales';
 }
 
 function gtPrint() {
@@ -5753,7 +5870,7 @@ function gtPrint() {
   const { o, i } = c;
   let el = document.getElementById('gt-print');
   if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
-  const info = [['Nama Dealer', i.dealer], ['Nama Toko', i.store], ['Kota', i.city], ['No. HP', i.phone], ['Sales PIC', i.pic], ['Tanggal', gtToday()]];
+  const info = [...(gtEditing ? [['No. Invoice', gtEditing.invoice]] : []), ['Nama Dealer', i.dealer], ['Nama Toko', i.store], ['Kota', i.city], ['No. HP', i.phone], ['Sales PIC', i.pic], ['Tanggal', gtToday()]];
   el.innerHTML = `
     <div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>FORM BELANJA DEALER</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
     <table class="gp-info">${info.map(([a, b]) => `<tr><td>${a}</td><td>: ${escHtml(b || '')}</td></tr>`).join('')}</table>
@@ -5762,6 +5879,7 @@ function gtPrint() {
       ${g.lines.map((l, n) => `<tr><td>${n + 1}</td><td>${escHtml(l.r.name)}</td><td>${l.qty}</td><td>${fmtRp(l.price)}</td><td>${fmtRp(l.total)}</td></tr>`).join('')}
       <tr class="gp-sub"><td colspan="4">Subtotal ${escHtml(g.name)}</td><td>${fmtRp(g.total)}</td></tr></tbody></table>`).join('')}
     <table class="gp-items gp-grand"><tr><td>GRAND TOTAL (${o.qty} item)</td><td>${fmtRp(o.total)}</td></tr></table>
+    <p class="gp-terms"><b>Pembayaran (transfer ke salah satu):</b><br>${gtBankLines().map(escHtml).join('<br>')}</p>
     <p class="gp-terms">Harga Spesial Gathering hanya berlaku selama acara berlangsung. Clearance: harga bersih = harga clearance 50% − cashback, stok terbatas.</p>
     <div class="gp-sign"><div>Dealer<br><br><br>(______________________)</div><div>Sales / PIC CAI<br><br><br>(______________________)</div></div>`;
   window.print();
@@ -5772,7 +5890,8 @@ function gtPrint() {
    Tabel `gathering_orders`: dealer (akun bersama) hanya boleh INSERT; baca/ubah/hapus hanya admin/editor. */
 const GATHERING_ORDERS = 'gathering_orders';
 const GT_SENT_KEY = 'cai-gathering-sent';
-const GT_STATUS = { baru: 'Baru', diproses: 'Diproses', selesai: 'Selesai', batal: 'Batal' };
+const GT_STATUS = { baru: 'Menunggu Konfirmasi', dikonfirmasi: 'Dikonfirmasi', selesai: 'Selesai', batal: 'Batal' };
+const gtConfirmed = o => o.status === 'dikonfirmasi' || o.status === 'selesai';
 let gtOrders = null, gtOrdersErr = '', gtTab = 'form', gtOrderFilter = 'all', gtOpenOrder = null;
 
 function setGtTab(t) {
@@ -5809,11 +5928,11 @@ function renderGtTop() {
   const el = document.getElementById('gt-top');
   if (!el || gtTab !== 'top') return;
   const head = `<div class="gt-top-head"><div class="gt-top-title">🏆 Top Spender Gathering 2026</div>
-    <div class="gt-top-sub">Total belanja semua dealer selama Gathering CAI 2026 · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · diperbarui otomatis dari pesanan yang masuk</div>
+    <div class="gt-top-sub">Total belanja semua dealer selama Gathering CAI 2026 · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · dihitung dari pembelian yang sudah dikonfirmasi admin</div>
     <button class="gt-btn ghost" onclick="loadGtTop()">↻ Muat ulang</button></div>`;
   if (gtTop === null) { el.innerHTML = head + '<div class="stock-empty">Memuat peringkat…</div>'; return; }
   if (gtTopErr) { el.innerHTML = head + `<div class="stock-empty">${escHtml(gtTopErr)}</div>`; return; }
-  if (!gtTop.length) { el.innerHTML = head + '<div class="stock-empty">Belum ada pesanan. Jadilah toko pertama di papan Top Spender!</div>'; return; }
+  if (!gtTop.length) { el.innerHTML = head + '<div class="stock-empty">Belum ada pembelian yang dikonfirmasi. Jadilah toko pertama di papan Top Spender!</div>'; return; }
   const medal = ['🥇', '🥈', '🥉'];
   const all = gtTop.reduce((a, r) => a + Number(r.total || 0), 0);
   const rest = gtTop.slice(GT_TOP_HIGHLIGHT);
@@ -5871,18 +5990,18 @@ function renderGtRekap() {
   const act = gtActive();
   const q = normKey(document.getElementById('gt-rk-search')?.value || '');
   const list = gtOrders.filter(o => (gtOrderFilter === 'all' || o.status === gtOrderFilter) &&
-    (!q || normKey([o.store, o.city, o.dealer, o.pic, o.phone].join(' ')).includes(q)));
+    (!q || normKey([o.invoice, o.store, o.city, o.dealer, o.pic, o.phone].join(' ')).includes(q)));
   const prods = gtProductTotals();
   const count = st => gtOrders.filter(o => o.status === st).length;
   el.innerHTML = `
     <div class="stock-summary">
-      <div class="stock-sum"><b>${act.length}</b><span>Pesanan aktif</span></div>
-      <div class="stock-sum"><b>${new Set(act.map(o => normKey(o.store))).size}</b><span>Toko</span></div>
-      <div class="stock-sum"><b>${act.reduce((a, o) => a + (o.total_qty || 0), 0)}</b><span>Total item</span></div>
-      <div class="stock-sum gt-sum-val"><b>${fmtRp(act.reduce((a, o) => a + Number(o.total || 0), 0))}</b><span>Total nilai</span></div>
+      <div class="stock-sum"><b>${count('baru')}</b><span>Menunggu konfirmasi</span></div>
+      <div class="stock-sum"><b>${gtOrders.filter(gtConfirmed).length}</b><span>Dikonfirmasi</span></div>
+      <div class="stock-sum"><b>${act.reduce((a, o) => a + (o.total_qty || 0), 0)}</b><span>Total item (tanpa batal)</span></div>
+      <div class="stock-sum gt-sum-val"><b>${fmtRp(gtOrders.filter(gtConfirmed).reduce((a, o) => a + Number(o.total || 0), 0))}</b><span>Nilai dikonfirmasi</span></div>
     </div>
     <div class="gt-rk-tools">
-      <input id="gt-rk-search" class="catalog-search gt-rk-search" placeholder="Cari toko, kota, dealer, sales…" value="${escHtml(document.getElementById('gt-rk-search')?.value || '')}" oninput="renderGtRekap(); this.focus(); this.setSelectionRange(this.value.length, this.value.length)">
+      <input id="gt-rk-search" class="catalog-search gt-rk-search" placeholder="Cari invoice, toko, kota, dealer, sales…" value="${escHtml(document.getElementById('gt-rk-search')?.value || '')}" oninput="renderGtRekap(); this.focus(); this.setSelectionRange(this.value.length, this.value.length)">
       <div class="catalog-chips">${['all', ...Object.keys(GT_STATUS)].map(st =>
         `<button class="filter-chip${gtOrderFilter === st ? ' active' : ''}" onclick="setGtOrderFilter('${st}')">${st === 'all' ? 'Semua' : GT_STATUS[st]} (${st === 'all' ? gtOrders.length : count(st)})</button>`).join('')}</div>
       <div class="gt-rk-actions">
@@ -5894,11 +6013,14 @@ function renderGtRekap() {
       <div class="gt-order st-${o.status}">
         <div class="gt-order-head" onclick="toggleGtOrder(${o.id})">
           <div class="gt-order-main">
+            <div class="gt-order-inv">${escHtml(o.invoice || '—')}${o.updated_at ? ' <span>· diubah dealer ' + fmtGtTime(o.updated_at) + '</span>' : ''}</div>
             <div class="gt-order-store">${escHtml(o.store || '-')}${o.city ? ` <span>· ${escHtml(o.city)}</span>` : ''}</div>
             <div class="gt-order-sub">${fmtGtTime(o.created_at)} · ${escHtml([o.dealer, o.pic ? 'Sales: ' + o.pic : ''].filter(Boolean).join(' · ') || '—')}</div>
           </div>
           <div class="gt-order-total"><b>${fmtRp(Number(o.total || 0))}</b><span>${o.total_qty} item</span></div>
         </div>
+        ${o.status === 'baru' ? `<div class="gt-confirm-bar"><span>Cek transfer pembayaran${o.invoice ? ' (berita: ' + escHtml(o.invoice) + ')' : ''}, lalu konfirmasi agar masuk Top Spender.</span>
+          <button class="gt-btn confirm" onclick="event.stopPropagation(); confirmGtOrder(${o.id})">✓ Konfirmasi Pembelian</button></div>` : ''}
         ${gtOpenOrder === o.id ? `<div class="gt-order-body">
           <table class="gt-order-items"><thead><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead><tbody>
           ${(o.items || []).map(it => `<tr><td>${escHtml(it.name)}<small>${escHtml(it.group)}</small></td><td>${it.qty}</td><td>${fmtRp(it.price)}</td><td>${fmtRp(it.total)}</td></tr>`).join('')}
@@ -5917,12 +6039,19 @@ function renderGtRekap() {
     </div>` : ''}`;
 }
 
+async function confirmGtOrder(id) {
+  const o = gtOrders.find(x => x.id === id);
+  if (!o || !confirm(`Konfirmasi pembelian ${o.invoice || ''} — ${o.store} (${fmtRp(Number(o.total || 0))})?\n\nSetelah dikonfirmasi, dealer tidak bisa mengedit pesanan ini dan pembelian masuk Top Spender.`)) return;
+  await setGtOrderStatus(id, 'dikonfirmasi');
+}
+
 async function setGtOrderStatus(id, status) {
   try {
-    const { error } = await supabase.from(GATHERING_ORDERS).update({ status }).eq('id', id);
+    const patch = { status, ...(status === 'dikonfirmasi' ? { confirmed_at: new Date().toISOString() } : {}) };
+    const { error } = await supabase.from(GATHERING_ORDERS).update(patch).eq('id', id);
     if (error) throw error;
     const o = gtOrders.find(x => x.id === id); if (o) o.status = status;
-    renderGtRekap(); showToast('Status pesanan diperbarui.');
+    renderGtRekap(); showToast(status === 'dikonfirmasi' ? '✓ Pembelian dikonfirmasi — masuk Top Spender.' : 'Status pesanan diperbarui.');
   } catch (e) { showToast('Gagal mengubah status: ' + (e.message || e), 8000); }
 }
 
@@ -5941,12 +6070,12 @@ async function exportGtOrders() {
   if (!gtOrders?.length) { showToast('Belum ada pesanan untuk diekspor.'); return; }
   try {
     const XLSX = await loadXlsx();
-    const rows = [['Waktu', 'Status', 'Nama Toko', 'Kota', 'Nama Dealer', 'No. HP', 'Sales PIC', 'Grup', 'Produk', 'Qty', 'Harga', 'Subtotal', 'Total Pesanan']];
-    gtOrders.forEach(o => (o.items || []).forEach((it, n) => rows.push([fmtGtTime(o.created_at), GT_STATUS[o.status] || o.status, o.store, o.city, o.dealer, o.phone, o.pic,
+    const rows = [['No. Invoice', 'Waktu', 'Status', 'Nama Toko', 'Kota', 'Nama Dealer', 'No. HP', 'Sales PIC', 'Grup', 'Produk', 'Qty', 'Harga', 'Subtotal', 'Total Pesanan']];
+    gtOrders.forEach(o => (o.items || []).forEach((it, n) => rows.push([o.invoice || '', fmtGtTime(o.created_at), GT_STATUS[o.status] || o.status, o.store, o.city, o.dealer, o.phone, o.pic,
       it.group, it.name, it.qty, it.price, it.total, n === 0 ? Number(o.total || 0) : ''])));
     const prod = [['Produk', 'Grup', 'Jumlah Pesanan', 'Total Qty', 'Total Nilai'], ...gtProductTotals().map(p => [p.name, p.group, p.orders, p.qty, p.total])];
     const wb = XLSX.utils.book_new();
-    const ws1 = XLSX.utils.aoa_to_sheet(rows); ws1['!cols'] = [{wch:18},{wch:9},{wch:22},{wch:14},{wch:18},{wch:15},{wch:14},{wch:14},{wch:32},{wch:6},{wch:13},{wch:14},{wch:15}];
+    const ws1 = XLSX.utils.aoa_to_sheet(rows); ws1['!cols'] = [{wch:12},{wch:18},{wch:9},{wch:22},{wch:14},{wch:18},{wch:15},{wch:14},{wch:14},{wch:32},{wch:6},{wch:13},{wch:14},{wch:15}];
     const ws2 = XLSX.utils.aoa_to_sheet(prod); ws2['!cols'] = [{wch:34},{wch:16},{wch:15},{wch:10},{wch:15}];
     XLSX.utils.book_append_sheet(wb, ws1, 'Pesanan');
     XLSX.utils.book_append_sheet(wb, ws2, 'Rekap Produk');
