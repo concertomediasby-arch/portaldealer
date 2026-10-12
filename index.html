@@ -2783,7 +2783,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T08:42:31Z';
+const LAST_UPDATE = '2026-10-12T08:52:25Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6987,10 +6987,29 @@ const sceneForTitle = t => Object.keys(QS_SCENES).find(k => QS_SCENES[k].match.t
 // Video Product Launch per brand — scene 'launch:<id brand>'. File MP4 (H.264) di assets/launch/.
 // Bila file belum ada / internet putus, operator di komputer videotron bisa memilih file video lokal.
 // Banyak video per brand: scene 'launch:<brand>' = putar semua berurutan, 'launch:<brand>:<n>' = video ke-n saja.
+// Sumber: folder Google Drive per brand dari pemilik (Okt 2026). Urutan = urutan putar "Putar semua".
 const LAUNCH_VIDEOS = {
-  audiocircle: [{ title: 'Audiocircle', src: 'assets/launch/audiocircle-1.mp4' }],
-  steg:        [{ title: 'STEG', src: 'assets/launch/steg-1.mp4' }],
-  audiosystem: [{ title: 'Audio System', src: 'assets/launch/audiosystem-1.mp4' }],
+  audiocircle: [
+    { title: 'Pro Line', src: 'assets/launch/ac-proline.mp4' },
+    { title: 'Concerto Line', src: 'assets/launch/ac-concertoline.mp4', alt: ['Cocnerto Line'] },
+    { title: 'Berlin Line', src: 'assets/launch/ac-berlinline.mp4' },
+    { title: 'Köln KL-C6.2', src: 'assets/launch/ac-koln-klc62.mp4' },
+    { title: 'IQ-LES10A', src: 'assets/launch/ac-iq-les10a.mp4' },
+  ],
+  steg: [
+    { title: 'SEC650', src: 'assets/launch/steg-sec650.mp4' },
+    { title: 'SEC650C', src: 'assets/launch/steg-sec650c.mp4' },
+    { title: 'K Series 136', src: 'assets/launch/steg-k136.mp4' },
+    { title: 'DSP S6', src: 'assets/launch/steg-dsp-s6.mp4' },
+    { title: 'DSP S12', src: 'assets/launch/steg-dsp-s12.mp4' },
+  ],
+  audiosystem: [
+    { title: 'AY65', src: 'assets/launch/as-ay65.mp4' },
+    { title: 'AY65C', src: 'assets/launch/as-ay65c.mp4' },
+    { title: 'AS10', src: 'assets/launch/as-as10.mp4' },
+    { title: 'AS500.1', src: 'assets/launch/as-as500-1.mp4' },
+    { title: 'DSP AS6', src: 'assets/launch/as-dsp-as6.mp4' },
+  ],
 };
 const sceneBase = k => String(k || '').split(':')[0];
 const launchParts = k => { const [, brand, n] = String(k || '').split(':'); return { brand, idx: n == null || n === '' ? null : +n }; };
@@ -7095,7 +7114,10 @@ function stopLaunchVideo() {
 }
 function launchList(brand, idx) {
   const local = qsLocalVideos[brand];
-  if (local?.length) return idx != null && local[idx] ? [local[idx]] : local;
+  if (local?.length) {
+    if (idx != null) { const t = LAUNCH_VIDEOS[brand]?.[idx]?.title, hit = local.find(x => x.title === t); if (hit) return [hit]; }
+    return local;
+  }
   const vids = LAUNCH_VIDEOS[brand] || [];
   return idx != null ? vids.slice(idx, idx + 1) : vids;
 }
@@ -7139,12 +7161,21 @@ function playLaunchVideo(brand, idx, pos) {
   v.muted = wasMuted;
   v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
 }
+// Nama file dicocokkan ke judul di LAUNCH_VIDEOS (mis. "AS500.1 (CAI).mp4" → AS500.1) → urutan & indeks ikut daftar;
+// file yang tak cocok ditaruh di akhir (urut nama).
+const vidKey = t => String(t).normalize('NFD').replace(/\.(mp4|mov|m4v|webm|mkv|avi)$/i, '').replace(/\(cai\)/ig, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 function qsPickVideo(brand, idx, input) {
   const files = [...(input.files || [])]; if (!files.length) return;
-  (qsLocalVideos[brand] || []).forEach(x => URL.revokeObjectURL(x.src));
-  qsLocalVideos[brand] = files.sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }))
-    .map(f => ({ title: f.name.replace(/\.[^.]+$/, ''), src: URL.createObjectURL(f) }));
-  playLaunchVideo(brand, files.length > 1 ? null : idx, 0);
+  (qsLocalVideos[brand] || []).forEach(x => x && URL.revokeObjectURL(x.src));
+  const left = files.sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }));
+  const take = v => { const keys = [v.title, ...(v.alt || [])].map(vidKey);
+    const i = left.findIndex(f => keys.some(k => vidKey(f.name).endsWith(k))); return i < 0 ? null : left.splice(i, 1)[0]; };
+  const toItem = (f, title) => ({ title: title || f.name.replace(/\.[^.]+$/, ''), src: URL.createObjectURL(f) });
+  const matched = (LAUNCH_VIDEOS[brand] || []).map(v => { const f = take(v); return f ? toItem(f, v.title) : null; });
+  const list = matched.filter(Boolean).concat(left.map(f => toItem(f)));
+  qsLocalVideos[brand] = list;
+  // satu video dipilih & cocok dengan tombol yang diklik → putar itu saja; selain itu putar semua
+  playLaunchVideo(brand, idx != null && matched[idx] ? idx : null, 0);
 }
 
 // Hitung mundur di layar (Coffee Break dll.)
