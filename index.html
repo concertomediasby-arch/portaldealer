@@ -1670,6 +1670,17 @@ body {
   .sc-waves path:nth-child(2) { animation-delay: .25s; } .sc-waves path:nth-child(3) { animation-delay: .5s; }
   @keyframes scWave { 0% { opacity: 0; } 40% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes scWobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+  .sc-op-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6vw; margin-top: 4vh; width: min(84vw, 1500px); }
+  .sc-op-item { display: flex; flex-direction: column; align-items: center; gap: 1.2vh; padding: 2.4vh 1.5vw; border-radius: 2vh; background: rgba(255,255,255,.05); border: 1px solid rgba(233,196,106,.3); position: relative; }
+  .sc-op-item span { position: absolute; left: 1.2vw; top: 1.2vh; font: 700 max(12px, 2vh) var(--f-mono); color: #e9c46a; }
+  .sc-op-item b { font: 700 max(15px, 3.2vh) var(--f-display); color: #fff; }
+  .sc-op-logo { height: min(12vw, 20vh); width: auto; max-width: 60vw; object-fit: contain; margin: 2vh 0 1vh; filter: drop-shadow(0 0 3vh rgba(233,196,106,.25)); }
+  .sc-op-logo.sm { height: min(4vw, 6.5vh); max-width: 22vw; margin: 0; }
+  .sc-op-brand { font: 800 min(7vw, 12vh)/1.05 var(--f-display); letter-spacing: .04em; text-transform: uppercase; margin: 2vh 0 1vh; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sc-op-brand.sm { font-size: min(2.6vw, 4.6vh); margin: 0; min-height: min(4vw, 6.5vh); display: flex; align-items: center; }
+  .sc-op-name { font: 700 min(7.5vw, 13vh)/1.05 var(--f-display); color: #fff; margin: 1vh 0 1.5vh; }
+  .sc-op-card .sc-sub { text-transform: uppercase; letter-spacing: .25em; font-size: max(13px, 2.4vh); color: #e9c46a; }
+  .scr-op-brand { margin-left: 4px; opacity: .75; font-weight: 500; } .scr-op-brand img { height: 14px; width: auto; vertical-align: -2px; }
   .sc-rays { position: absolute; left: 50%; top: 50%; width: 160vmax; height: 160vmax; transform: translate(-50%, -50%); z-index: 0; pointer-events: none;
     background: repeating-conic-gradient(from 0deg, rgba(233,196,106,.10) 0deg 6deg, transparent 6deg 18deg); animation: scSpin 60s linear infinite;
     -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 55%); mask-image: radial-gradient(circle, #000 0%, transparent 55%); }
@@ -2822,7 +2833,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T09:37:01Z';
+const LAST_UPDATE = '2026-10-12T09:54:46Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6694,6 +6705,7 @@ const rdColHint = e => { const m = String(e?.message || e); return /segment|flex
 
 // Template susunan sesi "Listening and Understanding Partner" (jam ± = waktu menyesuaikan, bisa diubah lewat ✏️)
 const RD_TEMPLATE_LUP = [
+  { title: 'Opening Speech', start_time: '08:00', end_time: '09:00', flexible: true, notes: 'Mr. Marc (Audiocircle) → Mr. Kelvin (STEG) → Mr. David (Zelos) → Juliar Candra (Harrison Lab) → Arif (Amo Plus) → Yusak (Sound Addict).' },
   { title: 'Tanya Jawab Partner', start_time: '09:00', end_time: '12:00', notes: 'Pertanyaan dealer diketik admin & tampil di videotron — menu Tanya Jawab Partner.' },
   { title: 'Coffee Break', start_time: '12:00', end_time: '12:20', notes: '20 menit' },
   { title: 'Refreshment Product', start_time: '12:20', flexible: true },
@@ -7015,6 +7027,7 @@ function printQa() {
    gathering_screen.scene = null → mode Tanya Jawab; selain itu salah satu kunci QS_SCENES.
    scene_text = teks tambahan opsional, scene_until = akhir hitung mundur (opsional). */
 const QS_SCENES = {
+  opening: { label: 'Opening Speech', icon: '🎙', match: /opening/i },
   coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Refreshment Product', match: /coff?ee|break|rehat/i },
   refresh: { label: 'Refreshment Product', icon: '🔊', match: /refresh|referes/i },
   launch:  { label: 'Product Launch', icon: '🚀', match: /launch|peluncuran/i },
@@ -7060,10 +7073,21 @@ const FM_SLIDES = 14;
 // mengonfirmasi orang di kedua fotonya sudah setuju (Okt 2026).
 const FM_TITLE_SLIDES = [];
 const fmSlide = (n, thumb) => `assets/funmarketing/slide-${String(n).padStart(2, '0')}${thumb ? '-thumb' : ''}.webp`;
+// Opening Speech: scene 'opening' = susunan pembicara, 'opening:<n>' = kartu pembicara ke-n. id = brand di BRANDS (pakai logo).
+const OPENING_SPEAKERS = [
+  { name: 'Mr. Marc', brand: 'Audiocircle', id: 'audiocircle' },
+  { name: 'Mr. Kelvin', brand: 'STEG', id: 'steg' },
+  { name: 'Mr. David', brand: 'Zelos', id: 'zelos' },
+  { name: 'Juliar Candra', brand: 'Harrison Lab' },
+  { name: 'Arif', brand: 'Amo Plus' },
+  { name: 'Yusak', brand: 'Sound Addict' },
+];
+const opNum = k => { const m = /^opening:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
+  if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})` }; }
   const { brand, idx } = launchParts(k), b = brand ? BRANDS.find(x => x.id === brand) : null;
   if (!b) return base;
   const v = idx != null ? LAUNCH_VIDEOS[brand]?.[idx] : null;
@@ -7090,6 +7114,13 @@ function renderScreenPanel(err) {
     <div class="scr-scenes">
       <button class="scr-btn${!sc ? ' on' : ''}" onclick="setScene(null)"><span>🎤</span>Tanya Jawab</button>
       ${Object.entries(QS_SCENES).map(([k, v]) => `<button class="scr-btn${scrRow.scene === k ? ' on' : ''}" onclick="setScene('${k}')"><span>${v.icon}</span>${v.label}</button>`).join('')}
+    </div>
+    <div class="scr-fm"><div class="scr-lv-k">🎙 Opening Speech — pembicara</div>
+      <div class="scr-fm-nav">
+        <button class="scr-lv-btn${scrRow.scene === 'opening' ? ' on' : ''}" onclick="setScene('opening')">☰ Susunan pembicara</button>
+        ${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1;
+          return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('opening:${i + 1}')" title="${escHtml(sp.brand)}">${i + 1}. ${escHtml(sp.name)} <small class="scr-op-brand">${b?.logo ? `<img src="${b.logo}" alt="">` : escHtml(sp.brand)}</small></button>`; }).join('')}
+      </div>
     </div>
     <div class="scr-fm"><div class="scr-lv-k">🎯 Slide Presentasi Fun Marketing</div>
       <div class="scr-fm-nav">
@@ -7141,6 +7172,7 @@ const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><
 function renderScene(s) {
   if (String(s.scene).startsWith('launch:')) return renderLaunchVideo(s);
   if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
+  if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene));
   const sc = QS_SCENES[sceneBase(s.scene)], t = s.scene_text ? escHtml(s.scene_text) : '';
   const count = s.scene_until ? `<div class="sc-count"><span class="qs-count" data-until="${escHtml(s.scene_until)}">--:--</span><small>sisa waktu</small></div>` : '';
   const next = sc.next ? `<div class="sc-next">Setelah ini · <b>${sc.next}</b></div>` : '';
@@ -7156,6 +7188,8 @@ function renderScene(s) {
       <div class="sc-launch-name">${t || 'Produk Terbaru 2027'}</div><p class="sc-sub">Concerto Audio Indonesia</p>${count}</div>`,
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
+    opening: `<div class="qs-scene sc-open"><div class="qs-kicker">Gathering CAI 2026</div><h1 class="sc-title">Opening <em>Speech</em></h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
+      <div class="sc-op-list">${OPENING_SPEAKERS.map((sp, i) => `<div class="sc-op-item"><span>${i + 1}</span>${opBrandMark(sp, true)}<b>${escHtml(sp.name)}</b></div>`).join('')}</div></div>`,
     funmkt: `<div class="sc-bubbles">${'<i></i>'.repeat(14)}</div><div class="qs-scene sc-fun">${SC_MEGA}<div class="qs-kicker">Presentasi</div>
       <h1 class="sc-title">Fun <em>Marketing</em></h1><p class="sc-sub">${t || 'Ide pemasaran yang seru, kreatif &amp; mudah dipraktikkan di toko Anda'}</p>${count}</div>`,
     kickoff: `<div class="qs-scene sc-kickoff"><div class="qs-kicker">Kick Off</div><h1 class="sc-year">2027</h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
@@ -7172,6 +7206,22 @@ function renderScene(s) {
 
 
 
+
+/* ── Opening Speech di layar: kartu pembicara (logo / nama brand, nama, urutan, berikutnya) ── */
+function opBrandMark(sp, small) {
+  const b = BRANDS.find(x => x.id === sp.id);
+  return b?.logo ? `<img class="sc-op-logo${small ? ' sm' : ''}" src="${b.logo}" alt="${escHtml(sp.brand)}">` : `<div class="sc-op-brand${small ? ' sm' : ''}">${escHtml(sp.brand)}</div>`;
+}
+function renderOpeningSpeaker(n) {
+  const sp = OPENING_SPEAKERS[n - 1], nx = OPENING_SPEAKERS[n];
+  if (!sp) return;
+  qsSetStage('opening|' + n, `<div class="qs-scene sc-open sc-op-card"><div class="qs-kicker">Opening Speech · ${n} / ${OPENING_SPEAKERS.length}</div>
+    ${opBrandMark(sp)}
+    <h1 class="sc-op-name">${escHtml(sp.name)}</h1>
+    ${BRANDS.find(x => x.id === sp.id)?.logo ? `<p class="sc-sub">${escHtml(sp.brand)}</p>` : ''}
+    ${nx ? `<div class="sc-next">Berikutnya · <b>${escHtml(nx.name)}</b> — ${escHtml(nx.brand)}</div>` : '<div class="sc-next">Terima kasih</div>'}</div>`);
+}
+
 /* ── Slide presentasi di layar: gambar layar penuh, ganti slide dengan crossfade, slide berikutnya dipra-muat ── */
 function renderFmSlide(n) {
   if (!qsSetStage('fmslide|' + n, '<div class="qs-idle"><p>Fun Marketing</p></div>')) return;
@@ -7185,6 +7235,14 @@ function renderFmSlide(n) {
 // Clicker presentasi / tombol panah di komputer videotron → ganti slide (ditulis ke tabel agar panel admin ikut)
 async function qsFmKey(d) {
   const { data: s } = await supabase.from(QA_SCREEN).select('scene').eq('id', 1).maybeSingle();
+  if (sceneBase(s?.scene) === 'opening') {   // Opening Speech: 0 = susunan pembicara, 1..n = pembicara
+    const cur = opNum(s.scene), next = Math.min(OPENING_SPEAKERS.length, Math.max(0, cur + d));
+    if (next === cur) return;
+    const scene = next ? 'opening:' + next : 'opening';
+    renderScene({ scene });
+    await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
+    return;
+  }
   const cur = sceneBase(s?.scene) === 'funmkt' ? fmNum(s.scene) : null;
   if (cur === null) return;
   const next = Math.min(FM_SLIDES, Math.max(1, cur + d));
