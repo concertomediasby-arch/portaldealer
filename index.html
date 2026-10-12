@@ -2485,7 +2485,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T05:38:00Z';
+const LAST_UPDATE = '2026-10-12T05:42:03Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6129,13 +6129,20 @@ function downloadGtInvoice(id) {
 
   // terbilang & catatan
   if (y + 50 > 284) { footer(); doc.addPage(); header(); y = 44; }
-  const note = `Transfer ke: ${gtBankLines().join(' / ')} · Berita: ${o.invoice || ''}`
-    + (o.confirmed_at ? ` · Pembayaran dikonfirmasi ${fmtGtTime(o.confirmed_at)}` : '');
   field('Terbilang', terbilang(o.total), L, y, R);
-  const noteLines = doc.splitTextToSize(note, R - L - 34);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.text('Catatan', L, y + 8);
-  doc.setFont('helvetica', 'normal'); doc.text(':', L + 30, y + 8); doc.setFontSize(8.5); doc.text(noteLines, L + 33, y + 8);
-  y += 14 + noteLines.length * 3.6;
+  // Catatan: satu informasi per baris (rekening, berita transfer, konfirmasi)
+  const noteLines = [['Transfer ke', ''], ...GATHERING_BANKS.map(b => ['', `•  ${b.bank} ${b.no}  a.n ${b.name}`]),
+    ['Berita transfer', o.invoice || '-'], ...(o.confirmed_at ? [['Dikonfirmasi', fmtGtTime(o.confirmed_at)]] : [])];
+  let ny = y + 8;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(20, 20, 30); doc.text('Catatan', L, ny);
+  doc.setFont('helvetica', 'normal'); doc.text(':', L + 30, ny);
+  noteLines.forEach(([k, v]) => {
+    doc.setFontSize(8.8);
+    if (k) { doc.setFont('helvetica', 'bold'); doc.text(k, L + 33, ny); doc.setFont('helvetica', 'normal'); if (v) doc.text(': ' + v, L + 60, ny); }
+    else doc.text(v, L + 36, ny);
+    ny += 4.6;
+  });
+  y = ny + 6;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(20, 20, 30);
   doc.text('Dealer', 60, y, { align: 'center' }); doc.text('Sales / PIC CAI', 150, y, { align: 'center' });
   doc.setFont('helvetica', 'normal');
