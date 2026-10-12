@@ -2304,7 +2304,7 @@ body {
       </button>
       <button class="sidebar-item staff-nav" id="nav-qa" onclick="openRundown('qa')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg>
-        Tanya Jawab Partner
+        Open Mic Partner
       </button>
     </div>
   </aside>
@@ -2382,7 +2382,7 @@ body {
     </div>
 
     <!-- VIEW: Kelola Dealer (khusus Editor) -->
-    <!-- VIEW: Gathering 2026 — Run Down + Tanya Jawab Partner (Admin & Editor; tabel gathering_rundown, gathering_questions, gathering_screen) -->
+    <!-- VIEW: Gathering 2026 — Run Down + Open Mic Partner (Admin & Editor; tabel gathering_rundown, gathering_questions, gathering_screen) -->
     <div class="view" id="view-rundown">
       <div class="page-header rd-head">
         <div>
@@ -2390,7 +2390,7 @@ body {
           <div class="page-subtitle" id="rd-subtitle">Run down acara — tambah, ubah, dan centang sesi yang sudah selesai. Khusus Admin &amp; Editor.</div>
           <div class="gt-tabs rd-tabs">
             <button class="filter-chip active" id="rd-tab-rundown" onclick="setRdTab('rundown')">🗓 Run Down Acara</button>
-            <button class="filter-chip" id="rd-tab-qa" onclick="setRdTab('qa')">🎤 Tanya Jawab Partner</button>
+            <button class="filter-chip" id="rd-tab-qa" onclick="setRdTab('qa')">🎤 Open Mic Partner</button>
           </div>
         </div>
         <div class="rd-actions" id="rd-actions">
@@ -2687,7 +2687,7 @@ body {
     </button>
     <button class="mobile-nav-item staff-nav" id="mnav-qa" onclick="openRundown('qa')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg>
-      <span>Tanya Jawab</span>
+      <span>Open Mic</span>
     </button>
     <button class="mobile-nav-item" id="mnav-dsp" onclick="openDspSoftware()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
@@ -2744,7 +2744,7 @@ body {
 </div>
 
 <!-- DEALER LOGIN -->
-<!-- Layar videotron Tanya Jawab (dibuka lewat ?layar=qa, khusus Admin/Editor yang login) -->
+<!-- Layar videotron Open Mic Partner (dibuka lewat ?layar=qa, khusus Admin/Editor yang login) -->
 <div class="qa-screen" id="qa-screen" hidden>
   <header class="qs-top"><img class="qs-logo" id="qs-logo" alt="CAI"><div class="qs-event"><b>GATHERING CAI 2026</b><span id="qs-event-sub">Listening and Understanding Partner</span></div><span class="qs-status" id="qs-status" title="Status koneksi"></span></header>
   <main class="qs-stage" id="qs-stage"></main>
@@ -2820,7 +2820,7 @@ body {
           <button class="admin-btn primary" onclick="syncFromSheet()" title="Ambil stok terbaru langsung dari Google Sheet">🔄 Sinkron Google Sheet</button>
           <button class="admin-btn ghost" onclick="toggleImport()">⬆ Import dari Excel</button>
           <button class="admin-btn ghost" onclick="closeAdmin(); openGathering('rekap')">🛍 Rekap Gathering</button>
-          <button class="admin-btn ghost" onclick="closeAdmin(); openRundown('qa')">🎤 Tanya Jawab Partner</button>
+          <button class="admin-btn ghost" onclick="closeAdmin(); openRundown('qa')">🎤 Open Mic Partner</button>
           <button class="admin-btn ghost editor-only" onclick="closeAdmin(); openDealers()">👥 Kelola Dealer</button>
         </div>
         <div class="sheet-link" id="sheet-link"></div>
@@ -2866,7 +2866,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T10:26:26Z';
+const LAST_UPDATE = '2026-10-12T11:54:57Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6695,7 +6695,7 @@ function renderRundown() {
           <div class="rd-main"><div class="rd-title">${escHtml(x.title)}${live && live.id === x.id ? ' <span class="rd-live-tag">LIVE</span>' : ''}</div>
             <div class="rd-meta">${[x.pic ? '👤 ' + escHtml(x.pic) : '', x.location ? '📍 ' + escHtml(x.location) : ''].filter(Boolean).join('  ·  ')}</div>
             ${x.notes ? `<div class="rd-notes">${escHtml(x.notes)}</div>` : ''}</div>
-          <div class="rd-btns">${QA_SESSION_RE.test(x.title) ? `<button class="gt-btn ghost" onclick="setScene(null); setRdTab('qa')" title="Buka sistem tanya jawab">🎤 Tanya Jawab</button>` : ''}${sceneForTitle(x.title) ? `<button class="gt-btn ghost${scrRow?.scene === sceneForTitle(x.title) ? ' scr-on' : ''}" onclick="setScene('${sceneForTitle(x.title)}')" title="Tampilkan desain sesi ini di videotron">🖥 Layar</button>` : ''}<button class="gt-btn ghost" onclick="openRdForm(${x.id})" title="Edit">✏️</button><button class="gt-btn ghost gt-del" onclick="deleteRdItem(${x.id})" title="Hapus">🗑</button></div>
+          <div class="rd-btns">${QA_SESSION_RE.test(x.title) ? `<button class="gt-btn ghost" onclick="setScene(null); setRdTab('qa')" title="Buka ${QA_NAME}">🎤 Open Mic</button>` : ''}${sceneForTitle(x.title) ? `<button class="gt-btn ghost${scrRow?.scene === sceneForTitle(x.title) ? ' scr-on' : ''}" onclick="setScene('${sceneForTitle(x.title)}')" title="Tampilkan desain sesi ini di videotron">🖥 Layar</button>` : ''}<button class="gt-btn ghost" onclick="openRdForm(${x.id})" title="Edit">✏️</button><button class="gt-btn ghost gt-del" onclick="deleteRdItem(${x.id})" title="Hapus">🗑</button></div>
         </div>`).join('')}</div></div>`;
   }).join('');
 }
@@ -6737,9 +6737,11 @@ async function saveRdItem() {
 const rdColHint = e => { const m = String(e?.message || e); return /segment|flexible/.test(m) ? m + ' — jalankan SQL kolom segment & flexible.' : m; };
 
 // Template susunan sesi "Listening and Understanding Partner" (jam ± = waktu menyesuaikan, bisa diubah lewat ✏️)
+// Nama sesi tanya-jawab dealer (dulu "Tanya Jawab Partner"); QA_SHORT dipakai di menu/tab/kartu yang sempit.
+const QA_NAME = 'Open Mic Partner: Curhat Bebas', QA_SHORT = 'Open Mic Partner';
 const RD_TEMPLATE_LUP = [
   { title: 'Opening Speech', start_time: '08:00', end_time: '09:00', flexible: true, notes: 'Mr. Marc (Audiocircle) → Mr. Kelvin (STEG) → Mr. David (Zelos) → Juliar Candra (Harrison Lab) → Arif (Amo Plus) → Yusak (Sound Addict).' },
-  { title: 'Tanya Jawab Partner', start_time: '09:00', end_time: '12:00', notes: 'Pertanyaan dealer diketik admin & tampil di videotron — menu Tanya Jawab Partner.' },
+  { title: QA_NAME, start_time: '09:00', end_time: '12:00', notes: 'Pertanyaan, usul & unek-unek dealer diketik admin & tampil di videotron — menu Open Mic Partner.' },
   { title: 'Coffee Break', start_time: '12:00', end_time: '12:20', notes: '20 menit' },
   { title: 'Refreshment Product', start_time: '12:20', flexible: true },
   { title: 'Product Launch', start_time: '13:00', flexible: true },
@@ -6752,9 +6754,10 @@ async function addRdTemplate() {
   const day = (prompt(`Tanggal sesi "${QA_SESSION}" (format TTTT-BB-HH):`, def) || '').trim();
   if (!day) return;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || isNaN(new Date(day + 'T00:00:00'))) { showToast('Format tanggal salah, contoh: 2026-11-20'); return; }
-  const have = new Set((rdItems || []).filter(r => r.day === day).map(r => r.title.toLowerCase()));
+  const rdKey = t => sceneForTitle(t) || (QA_SESSION_RE.test(t) ? 'qa' : String(t).toLowerCase());
+  const have = new Set((rdItems || []).filter(r => r.day === day).map(r => rdKey(r.title)));
   const now = new Date().toISOString();
-  const rows = RD_TEMPLATE_LUP.filter(t => !have.has(t.title.toLowerCase()))
+  const rows = RD_TEMPLATE_LUP.filter(t => !have.has(rdKey(t.title)))
     .map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, segment: LUP_SCENES.includes(sceneForTitle(t.title) || 'qa') ? QA_SESSION : null, updated_at: now }));
   if (!rows.length) { showToast('Semua sesi template sudah ada di tanggal itu.'); return; }
   const { error } = await supabase.from(RUNDOWN_TABLE).insert(rows);
@@ -6801,7 +6804,7 @@ function printRundown() {
 ══════════════════════════════════════════ */
 const QA_TABLE = 'gathering_questions', QA_SCREEN = 'gathering_screen';
 const QA_SESSION = 'Listening and Understanding Partner';
-const QA_SESSION_RE = /listening|tanya jawab|q ?& ?a/i;
+const QA_SESSION_RE = /listening|tanya jawab|q ?& ?a|open ?mic|curhat/i;   // judul lama "Tanya Jawab Partner" tetap dikenali
 const QA_STATUS = { baru: 'Antri', tampil: 'Sudah tampil', dijawab: 'Dijawab' };
 let qaItems = null, qaErr = '', qaScreenId = null, qaEditId = null, qaFilter = 'all', qaSearch = '', qaChannel = null, rdTab = 'rundown';
 
@@ -6814,7 +6817,7 @@ function setRdTab(t) {
   document.getElementById('qa-pane').hidden = !qa;
   document.getElementById('rd-actions').hidden = qa;
   document.getElementById('rd-subtitle').innerHTML = qa
-    ? 'Sesi <b>Listening and Understanding Partner</b> — ketik pertanyaan dealer, tampilkan di videotron, semua otomatis masuk rekap.'
+    ? '<b>Open Mic Partner: Curhat Bebas</b> — ketik pertanyaan / curhatan dealer, tampilkan di videotron, semua otomatis masuk rekap.'
     : 'Run down acara — tambah, ubah, dan centang sesi yang sudah selesai. Khusus Admin &amp; Editor.';
   if (document.getElementById('view-rundown')?.classList.contains('active')) {
     ['nav-rundown', 'nav-qa', 'mnav-rundown', 'mnav-qa'].forEach(id => document.getElementById(id)?.classList.remove('active'));
@@ -6826,7 +6829,7 @@ function setRdTab(t) {
 
 function qaDbError(e) {
   const m = String(e?.message || e);
-  return /does not exist|relation|schema cache/i.test(m) ? 'Tabel tanya jawab belum dibuat. Jalankan SQL "gathering_questions" di Supabase.' : 'Data tanya jawab tidak bisa dimuat: ' + m;
+  return /does not exist|relation|schema cache/i.test(m) ? 'Tabel Open Mic belum dibuat. Jalankan SQL "gathering_questions" di Supabase.' : 'Data Open Mic tidak bisa dimuat: ' + m;
 }
 
 async function loadQa() {
@@ -6869,8 +6872,8 @@ function renderQa() {
   const queue = qaItems.filter(x => x.status === 'baru' && x.id !== qaScreenId);
   live.classList.toggle('on', !!cur);
   const sc = sceneInfo(scrRow?.scene);
-  live.innerHTML = `${sc ? `<div class="qa-scene-note">🖥 Layar sedang menampilkan <b>${sc.icon} ${sc.label}</b> — pertanyaan tidak terlihat sampai layar dikembalikan ke Tanya Jawab.
-      <button class="gt-btn confirm" onclick="setScene(null)">🎤 Kembali ke Tanya Jawab</button></div>` : ''}
+  live.innerHTML = `${sc ? `<div class="qa-scene-note">🖥 Layar sedang menampilkan <b>${sc.icon} ${sc.label}</b> — pertanyaan tidak terlihat sampai layar dikembalikan ke Open Mic.
+      <button class="gt-btn confirm" onclick="setScene(null)">🎤 Kembali ke Open Mic</button></div>` : ''}
     <div class="qa-live-head"><span class="qa-dot${cur && !sc ? ' on' : ''}"></span>${cur ? (sc ? 'Pertanyaan terakhir (tersembunyi selama tampilan sesi)' : 'Sedang tampil di layar videotron') : 'Layar videotron kosong — menampilkan judul sesi'}</div>
     ${cur ? `<div class="qa-live-q">“${escHtml(cur.question)}”</div><div class="qa-live-who">#${no.get(cur.id)} · ${escHtml(qaWho(cur))}</div>
       <div class="qa-live-ans">
@@ -7038,8 +7041,8 @@ async function exportQa() {
       ...qaItems.map((x, i) => [i + 1, fmtGtTime(x.created_at), x.session || QA_SESSION, x.dealer || '', x.city || '', x.question, QA_STATUS[x.status] || x.status, x.answer || ''])];
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws['!cols'] = [{wch:5},{wch:18},{wch:32},{wch:24},{wch:14},{wch:70},{wch:13},{wch:50}];
-    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Tanya Jawab');
-    XLSX.writeFile(wb, `tanya-jawab-gathering-${todayWIB()}.xlsx`);
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Open Mic Partner');
+    XLSX.writeFile(wb, `open-mic-gathering-${todayWIB()}.xlsx`);
   } catch (e) { showToast('Gagal ekspor: ' + (e.message || e), 8000); }
 }
 
@@ -7047,7 +7050,7 @@ function printQa() {
   if (!qaItems?.length) { showToast('Belum ada pertanyaan untuk dicetak.'); return; }
   let el = document.getElementById('gt-print');
   if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
-  el.innerHTML = `<div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>REKAP TANYA JAWAB</h1><p>${QA_SESSION} · GATHERING CAI 2026 · ${qaItems.length} pertanyaan</p></div></div>
+  el.innerHTML = `<div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>REKAP OPEN MIC PARTNER</h1><p>${QA_NAME} · GATHERING CAI 2026 · ${qaItems.length} pertanyaan</p></div></div>
     <table class="gp-items rd-print"><colgroup><col style="width:5%"><col style="width:8%"><col style="width:18%"><col style="width:34%"><col style="width:35%"></colgroup>
     <thead><tr><th>No</th><th>Jam</th><th>Dealer</th><th>Pertanyaan</th><th>Jawaban</th></tr></thead><tbody>
     ${qaItems.map((x, i) => `<tr><td>${i + 1}</td><td>${qaTime(x.created_at)}</td><td>${escHtml(qaWho(x))}</td><td>${escHtml(x.question)}</td><td>${escHtml(x.answer || '')}</td></tr>`).join('')}
@@ -7057,7 +7060,7 @@ function printQa() {
 
 
 /* ── Layar videotron: tampilan per sesi (scene) ──
-   gathering_screen.scene = null → mode Tanya Jawab; selain itu salah satu kunci QS_SCENES.
+   gathering_screen.scene = null → mode Open Mic; selain itu salah satu kunci QS_SCENES.
    scene_text = teks tambahan opsional, scene_until = akhir hitung mundur (opsional). */
 const QS_SCENES = {
   opening: { label: 'Opening Speech', icon: '🎙', match: /opening/i },
@@ -7151,7 +7154,7 @@ const LUP_SCENES = ['qa', 'refresh', 'launch', 'funmkt', 'kickoff'];
 const SCR_CARDS = ['opening', 'lup', 'coffee', 'lunch'];
 let scrLupSel = 'qa';
 const SCR_DESC = {
-  qa: 'Pertanyaan dealer tampil di videotron. Ketik & atur antrian pertanyaan di tab Tanya Jawab Partner.',
+  qa: 'Pertanyaan dealer tampil di videotron. Pertanyaan, usul & curhatan dealer tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
   opening: 'Tampilkan susunan pembicara, lalu kartu tiap pembicara secara bergantian. Clicker / panah di komputer videotron juga bisa menggeser.',
   coffee: 'Layar rehat dengan hitung mundur (default 20 menit) dan info sesi berikutnya.',
   refresh: 'Judul sesi dengan strip logo brand berjalan.',
@@ -7177,14 +7180,14 @@ function renderScreenPanel(err) {
   if (err || !scrRow) { el.innerHTML = `<div class="scr-warn">Layar videotron belum siap: ${escHtml(err ? qaDbError(err) : 'jalankan SQL "gathering_screen".')}</div>`; return; }
   const sc = sceneInfo(scrRow.scene), air = scrOnAir();
   const sel = scrSel || air;
-  const info = sel === 'qa' ? { icon: '🎤', label: 'Tanya Jawab Partner' } : QS_SCENES[sel];
+  const info = sel === 'qa' ? { icon: '🎤', label: QA_NAME } : QS_SCENES[sel];
   const live = sel === air;
   const opts = (mins, ph) => `<div class="scr-opts${mins ? '' : ' one'}">
       <input class="gt-input" id="scr-text" maxlength="120" placeholder="${ph || 'Teks tambahan (opsional) — mengganti kalimat bawah di layar'}">
       ${mins ? `<input class="gt-input" id="scr-mins" type="number" min="1" max="180" placeholder="Hitung mundur (menit${QS_SCENES[sel]?.mins ? ', kosong = ' + QS_SCENES[sel].mins : ''})">` : ''}</div>`;
   const showBtn = (label) => `<button class="gt-btn confirm" onclick="setScene(${sel === 'qa' ? 'null' : `'${sel}'`})">${live && (sel === 'qa' || scrRow.scene === sel) ? '↻ ' : '📺 '}${label || 'Tampilkan di layar'}</button>`;
   let body = '';
-  if (sel === 'qa') body = `<div class="scr-actions">${showBtn('Tampilkan Tanya Jawab di layar')}<button class="gt-btn ghost" onclick="setRdTab('qa')">🎤 Buka menu Tanya Jawab</button></div>`;
+  if (sel === 'qa') body = `<div class="scr-actions">${showBtn('Tampilkan Open Mic di layar')}<button class="gt-btn ghost" onclick="setRdTab('qa')">🎤 Buka menu Open Mic</button></div>`;
   else if (sel === 'opening') body = `<div class="scr-actions">${showBtn('Tampilkan susunan pembicara')}</div>
     <div class="scr-sub-k">Pembicara</div>
     <div class="scr-fm-nav">${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1;
@@ -7219,16 +7222,16 @@ function renderScreenPanel(err) {
         <div class="scr-pks-pages">${Array.from({ length: n }, (_, i) => `<button class="scr-lv-btn${cur === i + 1 ? ' on' : ''}" onclick="setScene('kickoff:${i + 1}')">${i + 1}</button>`).join('')}</div>`}
     <div class="scr-actions"><label class="gt-btn ghost">⬆ ${pksMeta?.exists ? 'Ganti' : 'Unggah'} PDF PKS<input type="file" accept="application/pdf" hidden onchange="uploadPks(this)"></label></div>`; }
   else body = `${opts(sel === 'coffee' || sel === 'lunch')}<div class="scr-actions">${showBtn()}</div>`;
-  el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Tanya Jawab'}</b></span>
+  el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 ' + QA_SHORT}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
     ${sceneCols() ? '' : '<div class="scr-warn">Jalankan SQL kolom <b>scene</b> di Supabase agar tampilan per sesi bisa dipakai.</div>'}
     <div class="scr-sessions">${SCR_CARDS.map((k, i) => {
       const grp = k === 'lup', v = grp ? { icon: '🤝', label: 'Listening and Understanding Partner' } : QS_SCENES[k];
       const isSel = grp ? LUP_SCENES.includes(sel) : k === sel, isAir = grp ? LUP_SCENES.includes(air) : k === air;
       const t = grp ? LUP_SCENES.map(scrSessionTime).filter(Boolean).sort((a, b) => a.replace('± ', '').localeCompare(b.replace('± ', '')))[0] : scrSessionTime(k);
-      return `<button class="scr-btn${grp ? ' grp' : ''}${isSel ? ' sel' : ''}${isAir ? ' on' : ''}" onclick="scrSelect('${k}')">${isAir ? '<i class="scr-live">● LIVE</i>' : ''}<em>${i + 1}</em><span>${v.icon}</span>${v.label}${grp ? `<small>${LUP_SCENES.length} sesi${isAir ? ' · ' + (air === 'qa' ? 'Tanya Jawab' : QS_SCENES[air].label) : ''}</small>` : ''}${t && !grp ? `<small>${t}</small>` : ''}</button>`; }).join('')}</div>
+      return `<button class="scr-btn${grp ? ' grp' : ''}${isSel ? ' sel' : ''}${isAir ? ' on' : ''}" onclick="scrSelect('${k}')">${isAir ? '<i class="scr-live">● LIVE</i>' : ''}<em>${i + 1}</em><span>${v.icon}</span>${v.label}${grp ? `<small>${LUP_SCENES.length} sesi${isAir ? ' · ' + (air === 'qa' ? QA_SHORT : QS_SCENES[air].label) : ''}</small>` : ''}${t && !grp ? `<small>${t}</small>` : ''}</button>`; }).join('')}</div>
     <div class="scr-pane">
-      ${LUP_SCENES.includes(sel) ? `<div class="scr-lup-tabs"><span class="scr-lup-k">🤝 Listening and Understanding Partner</span>${LUP_SCENES.map(k => { const v = k === 'qa' ? { icon: '🎤', label: 'Tanya Jawab' } : QS_SCENES[k], tm = scrSessionTime(k);
+      ${LUP_SCENES.includes(sel) ? `<div class="scr-lup-tabs"><span class="scr-lup-k">🤝 Listening and Understanding Partner</span>${LUP_SCENES.map(k => { const v = k === 'qa' ? { icon: '🎤', label: QA_SHORT } : QS_SCENES[k], tm = scrSessionTime(k);
         return `<button class="filter-chip${k === sel ? ' active' : ''}" onclick="scrSelect('${k}')">${k === air ? '<i class="scr-live-dot"></i>' : ''}${v.icon} ${v.label}${tm ? ` <small>${tm}</small>` : ''}</button>`; }).join('')}</div>` : ''}
       <div class="scr-pane-head"><span class="scr-pane-ic">${info.icon}</span><div><b>${info.label}</b><p>${SCR_DESC[sel]}</p></div>${live ? '<span class="qa-badge onair">● Sedang tampil</span>' : ''}</div>
       ${body}
@@ -7314,7 +7317,7 @@ async function setScene(key) {
   if (error) { showToast('Gagal mengubah layar: ' + error.message, 9000); return; }
   scrRow = { ...scrRow, ...row };
   renderScreenPanel(); renderRundown(); if (rdTab === 'qa') renderQa();
-  if (!fmNum(key)) showToast(key ? `🖥 Layar: ${sceneInfo(key).label}${mins ? ` · hitung mundur ${mins} menit` : ''}` : '🖥 Layar kembali ke Tanya Jawab');
+  if (!fmNum(key)) showToast(key ? `🖥 Layar: ${sceneInfo(key).label}${mins ? ` · hitung mundur ${mins} menit` : ''}` : '🖥 Layar kembali ke Open Mic');
 }
 
 /* Desain tiap sesi di layar videotron */
@@ -7548,7 +7551,7 @@ function initQaScreen() {
   if (!QA_SCREEN_MODE) return;
   qsCheckBuild(); setInterval(qsCheckBuild, 60000);
   document.body.classList.add('screen-mode');
-  document.title = 'Layar Tanya Jawab — Gathering CAI 2026';
+  document.title = 'Layar Open Mic — Gathering CAI 2026';
   const el = document.getElementById('qa-screen');
   el.hidden = false;
   document.getElementById('qs-logo').src = LOGO_WHITE;
@@ -7566,7 +7569,7 @@ function qaScreenAuth() {
   if (!QA_SCREEN_MODE) return;
   if (isAdmin()) { closeAdmin(); startQaScreen(); return; }
   stopQaScreen();
-  qsSetStage('login', `<div class="qs-idle"><div class="qs-kicker">Layar Tanya Jawab</div><h1>Listening and Understanding <em>Partner</em></h1>
+  qsSetStage('login', `<div class="qs-idle"><div class="qs-kicker">Layar Open Mic Partner</div><h1>Listening and Understanding <em>Partner</em></h1>
     <p>Login sebagai Admin / Editor di browser ini untuk menampilkan pertanyaan.</p><button class="qs-login" onclick="openAdmin()">🔒 Login Admin</button></div>`);
 }
 function startQaScreen() {
@@ -7616,8 +7619,8 @@ function qsSetEventSub(base) {
 function renderQaScreen(q) {
   qsSetEventSub(null);
   if (!q) {
-    qsSetStage('idle', `<div class="qs-idle"><div class="qs-kicker">Sesi Tanya Jawab</div><h1>Listening and Understanding <em>Partner</em></h1>
-      <p>Sampaikan pertanyaan &amp; masukan Anda kepada tim Concerto Audio Indonesia</p></div>`);
+    qsSetStage('idle', `<div class="qs-idle"><div class="qs-kicker">Open Mic Partner</div><h1>Curhat <em>Bebas</em></h1>
+      <p>Sampaikan pertanyaan, usul &amp; unek-unek Anda kepada tim Concerto Audio Indonesia</p></div>`);
     return;
   }
   const len = q.question.length, ans = q.answer_shown && q.answer ? q.answer : '';
