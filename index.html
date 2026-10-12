@@ -2250,7 +2250,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T02:39:20Z';
+const LAST_UPDATE = '2026-10-12T02:50:36Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4789,6 +4789,17 @@ const STOCK_ALIASES = {
   plt28: 'ac-prot28', plw6cneo: 'ac-prow6c', plw6c: 'ac-prow6c', plm3c: 'ac-prom3c', plm3p: 'ac-prom3p', plm3pnextel: 'ac-prom3pnextel',
   hlm2mkii: 'ac-hlm2', hlt20mkii: 'ac-hlt20', hlt25vmkiinp: 'ac-hlt25', hlt25mkiinp: 'ac-hlt25',
   ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16',
+  // file STOCK DISTRIBUTOR (Merk · Unit · Stok Tersedia)
+  bls10: 'ac-bls10', blt26vmkii: 'ac-blt26', hlt25npmkii: 'ac-hlt25', iqc42bmwa: 'ac-iqc42bmwa', iqc42bmwb: 'ac-iqc42bmwb',
+  iqs8bmw2ohm: 'ac-iqs824bmw', iqs8bmw4ohm: 'ac-iqs824bmw', microfaser: 'ac-microfiber',
+  mfa5e2: 'zl-mfa52', verdie2: 'zl-verdi2', verdie4: 'zl-verdi4', a1802: 'zl-dualmono', hd54: 'zl-hd54',
+  s97a: 'st-hoodliner', s8isolator: 'st-s8d', s15a: 'st-s15',
+  anldios200a: 'dm-fuseanl', anldios100a: 'dm-fuseanl', anldios50a: 'dm-fuseanl', anldios10a: 'dm-fuseanl',
+  manldios100a: 'dm-fuseminianl', manldios50a: 'dm-fuseminianl', manldios10a: 'dm-fuseminianl',
+  dios1m: 'dm-rca', dios2m: 'dm-rca', dios3m: 'dm-rca', dios5m: 'dm-rca',
+  dios0a: 'dm-septuple0g', dios4a: 'dm-septuple4g', dios8a: 'dm-septuple8g', kquadm: 'dm-cable',
+  ogae1m: 'og-azure', ogae2m: 'og-azure', ogae3m: 'og-azure', ogae5m: 'og-azure',
+  ogrf1m: 'og-reference', ogrf2m: 'og-reference', ogrf3m: 'og-reference', ogrf5m: 'og-reference',
 };
 // Pilihan manual admin di pratinjau ('-' = abaikan), disimpan di browser ini
 const ALIAS_KEY = 'cai-stock-alias';
@@ -4803,7 +4814,7 @@ function setImportAlias(key, pid) {
 let importSrc = null;   // { sheets:[{name, rows}], idx, source, mode, qtyCol }
 
 function detectLayout(rows) {
-  const isHead = r => r.some(c => /kode|model|nama|produk|barang|no\s*inv|tipe/i.test(c)) && r.some(c => /qty|jumlah|stok|stock|baru|sisa/i.test(c));
+  const isHead = r => r.some(c => /kode|model|nama|produk|barang|no\s*inv|tipe|^\s*unit\s*$/i.test(c)) && r.some(c => /qty|jumlah|stok|stock|baru|sisa/i.test(c));
   const h = rows.slice(0, 8).findIndex(isHead);
   if (h < 0) return { h: 0, head: null, body: rows, col: { model: 0, name: -1, qty: 1, note: 2, status: -1, brand: -1 } };
   const head = rows[h].map(c => String(c).trim().toLowerCase());
@@ -4811,9 +4822,10 @@ function detectLayout(rows) {
   let model = find(/kode|model|tipe|type|no\s*inv/);
   const name = find(/nama|produk|product/);
   if (model < 0) model = name;
+  if (model < 0) model = find(/^unit$/);   // file STOCK DISTRIBUTOR: No · Merk · Unit · Stok Tersedia · Status
   let qty = find(/^baru$/);
   if (qty < 0) qty = find(/qty|jumlah|stok|stock|sisa/);
-  return { h, head: rows[h], body: rows.slice(h + 1), col: { model, name, qty, status: find(/status/), note: find(/catatan|note/), brand: find(/brand|merek/) } };
+  return { h, head: rows[h], body: rows.slice(h + 1), col: { model, name, qty, status: find(/status/), note: find(/catatan|note/), brand: find(/brand|merek|merk/) } };
 }
 // OTW only when the sheet name or the title rows ABOVE the header say so — never from data cells
 const OTW_RE = /\botw\b|blm\s*datang|belum\s*datang|perjalanan/i;
@@ -4854,7 +4866,7 @@ function renderImport() {
     const cell = k => col[k] >= 0 ? String(r[col[k]] ?? '').trim() : '';
     const raw = cell('model') || cell('name');
     if (!raw || /^total/i.test(raw)) return;
-    const qtyRaw = cell('qty'), stRaw = cell('status'), note = cell('note');
+    const qtyRaw = cell('qty').replace(/(\d)[.,](?=\d{3}(?!\d))/g, '$1'), stRaw = cell('status'), note = cell('note');
     const num = qtyRaw.match(/^\s*(\d+)/);
     let qty = num ? parseInt(num[1], 10) : null, status = '', incoming = '';
 
@@ -4871,11 +4883,15 @@ function renderImport() {
       if (status === 'habis' && otwFromNote(note)) status = 'indent';
     }
 
-    const k = normKey(raw), bk = normKey(cell('brand'));
+    const k = normKey(raw);
+    // Kolom Brand/Merk boleh berisi nama, id, atau singkatan brand (AC, ST, AS…); nilai lain (ACC, MONA…) diabaikan
+    let bk = normKey(cell('brand'));
+    const brandMatch = b => [b.name, b.id, b.abbr].some(v => normKey(v || '') === bk);
+    if (bk && !BRANDS.some(brandMatch)) bk = '';
     if (aliases[k] === '-') { ignored++; return; }
     let hit = byId[aliases[k] || STOCK_ALIASES[k]];
     if (!hit && aliases[k] !== '+') {
-      const hits = [...new Map(index.filter(x => x.keys.has(k) && (!bk || normKey(x.b.name) === bk || normKey(x.b.id) === bk)).map(h => [h.p.id, h])).values()];
+      const hits = [...new Map(index.filter(x => x.keys.has(k) && (!bk || brandMatch(x.b))).map(h => [h.p.id, h])).values()];
       if (hits.length === 1) hit = hits[0];
     }
     // Not in the catalog → kept as an extra product under its warehouse code
