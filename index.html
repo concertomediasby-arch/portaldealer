@@ -2239,7 +2239,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-11T12:43:59Z';
+const LAST_UPDATE = '2026-10-12T02:11:31Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4935,8 +4935,13 @@ async function callDealers(action, payload = {}) {
   if (error) {
     let msg = error.message || String(error);
     try { const b = await error.context?.json?.(); if (b?.error) msg = b.error; } catch (e) {}
-    if (/failed to send|not found|404|fetch/i.test(msg) && !/tidak ditemukan/i.test(msg))
-      msg = 'Fungsi server "manage-dealers" belum terpasang di Supabase (lihat panduan pemasangan).';
+    const status = error.context?.status;
+    if (status === 404 || (/not found|404/i.test(msg) && !/tidak ditemukan/i.test(msg)))
+      msg = 'Fungsi server "manage-dealers" belum terpasang di Supabase (Edge Functions → nama harus persis "manage-dealers").';
+    else if (/failed to send|fetch/i.test(msg))
+      msg = 'Tidak bisa menghubungi fungsi "manage-dealers" — fungsi belum ter-deploy, gagal berjalan (cek tab Logs di Supabase), atau koneksi internet terputus.';
+    else if (status === 401 && !/sesi/i.test(msg))
+      msg = 'Sesi ditolak server (401). Keluar lalu login ulang; jika tetap, cek pengaturan "Verify JWT" fungsi manage-dealers.';
     throw new Error(msg);
   }
   if (data?.error) throw new Error(data.error);
