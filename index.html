@@ -1603,10 +1603,12 @@ body {
   .scr-opts { display: grid; grid-template-columns: 1fr 190px; gap: 8px; margin-top: 10px; }
   .scr-opts .gt-input { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #fff; }
   .gt-btn.scr-on { border-color: #16a34a; color: #16a34a; }
-  .scr-lv { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
+  .scr-lv { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); }
   .scr-lv-k { font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #e9c46a; margin-right: 4px; }
   .scr-lv-btn { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf5; font: 600 12.5px var(--f-body); cursor: pointer; }
-  .scr-lv-btn img { height: 18px; width: auto; max-width: 70px; object-fit: contain; }
+  .scr-lv-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .scr-lv-brand { width: 110px; display: flex; align-items: center; font: 600 12.5px var(--f-body); }
+  .scr-lv-brand img { height: 20px; width: auto; max-width: 100px; object-fit: contain; }
   .scr-lv-btn:hover { border-color: #e9c46a; }
   .scr-lv-btn.on { border-color: #22c55e; background: rgba(34,197,94,.16); }
   .qa-scene-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(251,191,36,.12); color: #fde68a; font-size: 13px; }
@@ -1655,6 +1657,9 @@ body {
   .qs-video video { width: 100%; height: 100%; object-fit: contain; background: #000; }
   .qs-unmute { position: absolute; left: 50%; bottom: 5vh; transform: translateX(-50%); padding: 12px 22px; border-radius: 12px; border: 1px solid #e9c46a; background: rgba(0,0,0,.7); color: #e9c46a; font: 600 16px var(--f-body); cursor: pointer; }
   .qs-unmute[hidden] { display: none; }
+  .qs-vcap { position: absolute; left: 3vw; top: 3vh; padding: 8px 16px; border-radius: 10px; background: rgba(0,0,0,.55); color: #e9c46a; font: 600 max(13px, 2.2vh) var(--f-body); opacity: 0; pointer-events: none; }
+  .qs-vcap.show { animation: qsCap 4s ease both; }
+  @keyframes qsCap { 0%, 100% { opacity: 0; } 10%, 80% { opacity: 1; } }
   @keyframes qsFade { from { opacity: 0; } to { opacity: 1; } }
 
   /* ── Layar videotron (?layar=qa) ── */
@@ -2778,7 +2783,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T08:13:50Z';
+const LAST_UPDATE = '2026-10-12T08:42:31Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6981,16 +6986,20 @@ const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitm
 const sceneForTitle = t => Object.keys(QS_SCENES).find(k => QS_SCENES[k].match.test(t || ''));
 // Video Product Launch per brand — scene 'launch:<id brand>'. File MP4 (H.264) di assets/launch/.
 // Bila file belum ada / internet putus, operator di komputer videotron bisa memilih file video lokal.
-const LAUNCH_VIDEOS = [
-  { brand: 'audiocircle', src: 'assets/launch/audiocircle.mp4' },
-  { brand: 'steg', src: 'assets/launch/steg.mp4' },
-  { brand: 'audiosystem', src: 'assets/launch/audiosystem.mp4' },
-];
+// Banyak video per brand: scene 'launch:<brand>' = putar semua berurutan, 'launch:<brand>:<n>' = video ke-n saja.
+const LAUNCH_VIDEOS = {
+  audiocircle: [{ title: 'Audiocircle', src: 'assets/launch/audiocircle-1.mp4' }],
+  steg:        [{ title: 'STEG', src: 'assets/launch/steg-1.mp4' }],
+  audiosystem: [{ title: 'Audio System', src: 'assets/launch/audiosystem-1.mp4' }],
+};
 const sceneBase = k => String(k || '').split(':')[0];
+const launchParts = k => { const [, brand, n] = String(k || '').split(':'); return { brand, idx: n == null || n === '' ? null : +n }; };
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
-  const b = String(k).includes(':') ? BRANDS.find(x => x.id === k.split(':')[1]) : null;
-  return b ? { ...base, icon: '🎬', label: 'Launch ' + b.name, brand: b } : base;
+  const { brand, idx } = launchParts(k), b = brand ? BRANDS.find(x => x.id === brand) : null;
+  if (!b) return base;
+  const v = idx != null ? LAUNCH_VIDEOS[brand]?.[idx] : null;
+  return { ...base, icon: '🎬', label: 'Launch ' + b.name + (v ? ' · ' + v.title : ''), brand: b };
 };
 let scrRow = null;
 const sceneCols = () => !!scrRow && 'scene' in scrRow;
@@ -7014,9 +7023,12 @@ function renderScreenPanel(err) {
       <button class="scr-btn${!sc ? ' on' : ''}" onclick="setScene(null)"><span>🎤</span>Tanya Jawab</button>
       ${Object.entries(QS_SCENES).map(([k, v]) => `<button class="scr-btn${scrRow.scene === k ? ' on' : ''}" onclick="setScene('${k}')"><span>${v.icon}</span>${v.label}</button>`).join('')}
     </div>
-    <div class="scr-lv"><span class="scr-lv-k">🎬 Video Product Launch</span>
-      ${LAUNCH_VIDEOS.map(v => { const b = BRANDS.find(x => x.id === v.brand); const on = scrRow.scene === 'launch:' + v.brand;
-        return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('launch:${v.brand}')" title="${on ? 'Putar ulang' : 'Putar'} video ${escHtml(b?.name || v.brand)} di videotron">${b?.logo ? `<img src="${b.logo}" alt="">` : ''}<span>${on ? '↻ Putar ulang' : '▶ ' + escHtml(b?.name || v.brand)}</span></button>`; }).join('')}
+    <div class="scr-lv"><div class="scr-lv-k">🎬 Video Product Launch</div>
+      ${Object.entries(LAUNCH_VIDEOS).map(([id, vids]) => { const b = BRANDS.find(x => x.id === id); const all = 'launch:' + id;
+        return `<div class="scr-lv-row"><span class="scr-lv-brand">${b?.logo ? `<img src="${b.logo}" alt="${escHtml(b.name)}">` : escHtml(b?.name || id)}</span>
+          ${vids.length > 1 ? `<button class="scr-lv-btn${scrRow.scene === all ? ' on' : ''}" onclick="setScene('${all}')">${scrRow.scene === all ? '↻ Ulang semua' : `▶ Putar semua (${vids.length})`}</button>` : ''}
+          ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
+            return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}
     </div>
     <div class="scr-opts">
       <input class="gt-input" id="scr-text" maxlength="120" placeholder="Teks tambahan (opsional) — mis. nama produk yang diluncurkan">
@@ -7075,50 +7087,64 @@ function renderScene(s) {
 
 /* ── Video Product Launch di layar: intro logo brand → video layar penuh → penutup ── */
 let qsLvTimer = null;
-const qsLocalVideos = {};   // file video lokal yang dipilih operator (per brand, hanya selama tab terbuka)
+const qsLocalVideos = {};   // file video lokal pilihan operator, per brand (array object URL) — hanya selama tab terbuka
 function stopLaunchVideo() {
   clearTimeout(qsLvTimer); qsLvTimer = null;
   const ov = document.getElementById('qs-video');
   if (ov) { ov.querySelector('video')?.pause(); ov.remove(); }
 }
+function launchList(brand, idx) {
+  const local = qsLocalVideos[brand];
+  if (local?.length) return idx != null && local[idx] ? [local[idx]] : local;
+  const vids = LAUNCH_VIDEOS[brand] || [];
+  return idx != null ? vids.slice(idx, idx + 1) : vids;
+}
 function renderLaunchVideo(s) {
-  const id = s.scene.split(':')[1], b = BRANDS.find(x => x.id === id);
-  const t = s.scene_text ? escHtml(s.scene_text) : '';
-  qsSetStage(['launchv', id, s.scene_text, s.updated_at].join('|'), `<div class="qs-scene sc-launch sc-lv"><div class="sc-rays"></div>
+  const { brand, idx } = launchParts(s.scene), b = BRANDS.find(x => x.id === brand);
+  const one = idx != null ? LAUNCH_VIDEOS[brand]?.[idx] : null;
+  const t = s.scene_text ? escHtml(s.scene_text) : one && one.title !== b?.name ? escHtml(one.title) : '';
+  const changed = qsSetStage(['launchv', s.scene, s.scene_text, s.updated_at].join('|'), `<div class="qs-scene sc-launch sc-lv"><div class="sc-rays"></div>
     <div class="qs-kicker">Product Launch</div>
-    ${b?.logo ? `<img class="sc-lv-logo" src="${b.logo}" alt="${escHtml(b.name)}">` : `<h1 class="sc-title">${escHtml(b?.name || id)}</h1>`}
+    ${b?.logo ? `<img class="sc-lv-logo" src="${b.logo}" alt="${escHtml(b.name)}">` : `<h1 class="sc-title">${escHtml(b?.name || brand)}</h1>`}
     ${t ? `<div class="sc-launch-name">${t}</div>` : ''}
     <p class="sc-sub" id="sc-lv-msg">Concerto Audio Indonesia</p>
-    <div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video di komputer ini<input type="file" accept="video/*" hidden onchange="qsPickVideo('${id}', this)"></label></div></div>`);
-  qsLvTimer = setTimeout(() => playLaunchVideo(id), 3500);
+    <div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video di komputer ini (boleh lebih dari satu)<input type="file" accept="video/*" multiple hidden onchange="qsPickVideo('${brand}', ${idx == null ? 'null' : idx}, this)"></label></div></div>`);
+  if (changed) qsLvTimer = setTimeout(() => playLaunchVideo(brand, idx, 0), 3500);   // poll 4 dtk tidak memulai ulang video
 }
-function playLaunchVideo(id) {
-  const lv = LAUNCH_VIDEOS.find(v => v.brand === id);
-  const src = qsLocalVideos[id] || lv?.src;
+function playLaunchVideo(brand, idx, pos) {
+  const list = launchList(brand, idx), item = list[pos];
   const msg = document.getElementById('sc-lv-msg');
-  if (!src) { msg.textContent = 'Video belum diatur.'; document.getElementById('sc-lv-pick').hidden = false; return; }
-  stopLaunchVideo();
-  const ov = document.createElement('div');
-  ov.id = 'qs-video'; ov.className = 'qs-video';
-  ov.innerHTML = '<video id="qs-video-el" playsinline preload="auto"></video><button class="qs-unmute" hidden>🔊 Nyalakan suara</button>';
-  document.getElementById('qa-screen').appendChild(ov);
-  const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute');
-  v.src = src;
-  v.onended = () => { stopLaunchVideo(); if (msg) msg.textContent = 'Terima kasih — Concerto Audio Indonesia'; };
-  v.onerror = () => {
-    stopLaunchVideo();
-    if (msg) msg.textContent = 'Video tidak bisa diputar (file belum diunggah atau koneksi terputus).';
-    const pick = document.getElementById('sc-lv-pick'); if (pick) pick.hidden = false;
+  const fail = text => { stopLaunchVideo(); if (msg) msg.textContent = text; const pick = document.getElementById('sc-lv-pick'); if (pick) pick.hidden = false; };
+  if (!item) return fail('Video belum diatur.');
+  let ov = document.getElementById('qs-video');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'qs-video'; ov.className = 'qs-video';
+    ov.innerHTML = '<video id="qs-video-el" playsinline preload="auto"></video><div class="qs-vcap"></div><button class="qs-unmute" hidden>🔊 Nyalakan suara</button>';
+    document.getElementById('qa-screen').appendChild(ov);
+  }
+  const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute'), cap = ov.querySelector('.qs-vcap');
+  const wasMuted = v.muted;
+  v.src = item.src;
+  // keterangan kecil "2/3 · judul" di awal tiap video (hanya bila lebih dari satu)
+  cap.textContent = list.length > 1 ? `${pos + 1}/${list.length} · ${item.title}` : '';
+  cap.classList.remove('show'); void cap.offsetWidth; if (cap.textContent) cap.classList.add('show');
+  v.onended = () => {
+    if (pos + 1 < list.length) return playLaunchVideo(brand, idx, pos + 1);
+    stopLaunchVideo(); if (msg) msg.textContent = 'Terima kasih — Concerto Audio Indonesia';
   };
+  v.onerror = () => fail(`Video "${item.title}" tidak bisa diputar (file belum diunggah atau koneksi terputus).`);
   um.onclick = () => { v.muted = false; um.hidden = true; };
   // Browser bisa menolak autoplay bersuara bila tab belum pernah diklik → putar tanpa suara + tombol suara
+  v.muted = wasMuted;
   v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
 }
-function qsPickVideo(id, input) {
-  const f = input.files?.[0]; if (!f) return;
-  if (qsLocalVideos[id]) URL.revokeObjectURL(qsLocalVideos[id]);
-  qsLocalVideos[id] = URL.createObjectURL(f);
-  playLaunchVideo(id);
+function qsPickVideo(brand, idx, input) {
+  const files = [...(input.files || [])]; if (!files.length) return;
+  (qsLocalVideos[brand] || []).forEach(x => URL.revokeObjectURL(x.src));
+  qsLocalVideos[brand] = files.sort((a, b) => a.name.localeCompare(b.name, 'id', { numeric: true }))
+    .map(f => ({ title: f.name.replace(/\.[^.]+$/, ''), src: URL.createObjectURL(f) }));
+  playLaunchVideo(brand, files.length > 1 ? null : idx, 0);
 }
 
 // Hitung mundur di layar (Coffee Break dll.)
@@ -7190,10 +7216,11 @@ async function qsLoad() {
 }
 
 function qsSetStage(key, html) {
-  if (key === qsKey) return;
+  if (key === qsKey) return false;
   qsKey = key;
   stopLaunchVideo();
   document.getElementById('qs-stage').innerHTML = html;
+  return true;
 }
 
 function renderQaScreen(q) {
