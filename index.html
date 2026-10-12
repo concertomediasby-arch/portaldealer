@@ -1761,6 +1761,42 @@ body {
     background: repeating-conic-gradient(from 0deg, rgba(233,196,106,.10) 0deg 6deg, transparent 6deg 18deg); animation: scSpin 60s linear infinite;
     -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 55%); mask-image: radial-gradient(circle, #000 0%, transparent 55%); }
   @keyframes scSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* ── Product Launch: layar judul sinematik ── */
+  .lh { justify-content: center; width: 100%; height: 100%; }
+  .lh-bg { position: absolute; inset: -12vh -8vw; z-index: 0; overflow: hidden; pointer-events: none;
+    background: radial-gradient(ellipse 70% 60% at 50% 48%, rgba(233,196,106,.20), transparent 70%), radial-gradient(ellipse 120% 80% at 50% 120%, rgba(60,80,150,.35), transparent 70%); }
+  .lh-bg .sc-rays { opacity: .8; }
+  .lh-ring { position: absolute; left: 50%; top: 48%; border-radius: 50%; border: 1px solid rgba(233,196,106,.35); transform: translate(-50%, -50%); animation: lhPulse 6s ease-out infinite; }
+  .lh-ring.r1 { width: 46vh; height: 46vh; } .lh-ring.r2 { width: 46vh; height: 46vh; animation-delay: 2s; } .lh-ring.r3 { width: 46vh; height: 46vh; animation-delay: 4s; }
+  @keyframes lhPulse { 0% { width: 30vh; height: 30vh; opacity: .9; } 100% { width: 140vh; height: 140vh; opacity: 0; } }
+  .lh-year { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 900 min(46vw, 78vh)/1 var(--f-display); letter-spacing: .02em; color: transparent; white-space: nowrap;
+    -webkit-text-stroke: 1.5px rgba(233,196,106,.16); animation: lhYear 9s ease-in-out infinite; }
+  @keyframes lhYear { 0%, 100% { opacity: .55; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); } }
+  .lh-sparks em { position: absolute; border-radius: 50%; background: radial-gradient(circle, #fff3d6, #e9c46a 55%, transparent 70%); opacity: 0; animation: lhSpark 6s ease-in-out infinite; }
+  @keyframes lhSpark { 0% { opacity: 0; transform: translateY(2vh) scale(.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14vh) scale(1.2); } }
+  .lh-streak { position: absolute; height: 2px; width: 55vw; background: linear-gradient(90deg, transparent, rgba(255,243,214,.9), transparent); filter: blur(.5px); opacity: 0; }
+  .lh-streak.s1 { top: 30%; animation: lhStreak 7s ease-in-out infinite 1s; } .lh-streak.s2 { top: 72%; animation: lhStreak 7s ease-in-out infinite 4.5s; }
+  @keyframes lhStreak { 0% { left: -60vw; opacity: 0; } 12% { opacity: .9; } 40% { left: 110vw; opacity: 0; } 100% { left: 110vw; opacity: 0; } }
+  .lh-br { position: absolute; width: 6vh; height: 6vh; border: 2px solid rgba(233,196,106,.7); z-index: 1; animation: qsFade 1.4s ease both; }
+  .lh-br.tl { left: 4vw; top: 4vh; border-right: 0; border-bottom: 0; } .lh-br.tr { right: 4vw; top: 4vh; border-left: 0; border-bottom: 0; }
+  .lh-br.bl { left: 4vw; bottom: 4vh; border-right: 0; border-top: 0; } .lh-br.brr { right: 4vw; bottom: 4vh; border-left: 0; border-top: 0; }
+  .lh-kicker { display: flex; align-items: center; gap: 2vw; font: 700 max(13px, 2.3vh) var(--f-mono); letter-spacing: .6em; text-transform: uppercase; color: #e9c46a; animation: qsIn .9s ease both; }
+  .lh-kicker i { display: block; width: min(10vw, 16vh); height: 1px; background: linear-gradient(90deg, transparent, #e9c46a); } .lh-kicker i:last-child { transform: scaleX(-1); }
+  .lh-title { font: 800 min(7.2vw, 12.5vh)/1.05 var(--f-display); margin: 2vh 0 1vh; text-transform: uppercase; letter-spacing: .06em; color: #fff; position: relative; overflow: hidden; padding: 0 1vw; }
+  .lh-w { display: inline-block; animation: lhRise 1s cubic-bezier(.2,.8,.2,1) both; } .lh-w.g { animation-delay: .25s; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lh-title::after { content: ""; position: absolute; top: 0; bottom: 0; width: 16%; left: -30%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-18deg); animation: lhShine 5s ease-in-out 1.4s infinite; }
+  @keyframes lhShine { 0% { left: -30%; } 35%, 100% { left: 130%; } }
+  @keyframes lhRise { from { opacity: 0; transform: translateY(5vh) scale(.94); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+  .lh-name { margin: 1.5vh 0 0; max-width: 88vw; text-align: center; animation: lhRise 1.2s cubic-bezier(.2,.8,.2,1) .55s both; }
+  .lh-name span { display: inline-block; font: 900 min(10.5vw, 19vh)/1.02 var(--f-display); text-wrap: balance; letter-spacing: -.01em;
+    background: linear-gradient(100deg, #b98a3c 0%, #f6dfa0 25%, #fff6dc 40%, #e9c46a 55%, #b98a3c 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: lhShimmer 5s linear infinite; filter: drop-shadow(0 0 3.5vh rgba(233,196,106,.45)); }
+  @keyframes lhShimmer { to { background-position: -220% 0; } }
+  .lh-div { display: flex; align-items: center; gap: 1.4vw; margin: 3.5vh 0 2.2vh; animation: qsIn 1s ease 1s both; }
+  .lh-div i { display: block; width: min(14vw, 24vh); height: 1px; background: linear-gradient(90deg, transparent, #e9c46a); } .lh-div i:last-child { transform: scaleX(-1); }
+  .lh-div b { width: 1.3vh; height: 1.3vh; background: #e9c46a; transform: rotate(45deg); box-shadow: 0 0 2vh #e9c46a; }
+  .lh-sub { margin: 0; font: 500 max(14px, 2.6vh) var(--f-body); letter-spacing: .5em; text-transform: uppercase; color: #cfd6e6; animation: qsIn 1s ease 1.2s both; }
   .sc-launch .sc-title { font-size: min(6vw, 10vh); }
   .sc-launch-name { font: 800 min(9vw, 16vh)/1.05 var(--f-display); margin-bottom: 2vh; text-wrap: balance; }
   .sc-year { font: 800 min(16vw, 26vh)/1 var(--f-display); margin: .5vh 0 1vh; letter-spacing: .02em; background: linear-gradient(180deg, #fff3d6 0%, #e9c46a 45%, #9c7330 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 4vh rgba(233,196,106,.3)); }
@@ -2912,7 +2948,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T13:40:33Z';
+const LAST_UPDATE = '2026-10-12T14:04:50Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7398,8 +7434,13 @@ function renderScene(s) {
     refresh: `<div class="qs-scene sc-refresh"><div class="qs-kicker">Listening and Understanding Partner</div><h1 class="sc-title">Refreshment <em>Product</em></h1>
       <p class="sc-sub">${t || 'Mengenal kembali lini produk unggulan Concerto Audio Indonesia'}</p>
       <div class="sc-logos"><div class="sc-track">${logos}${logos}</div></div>${count}</div>`,
-    launch: `<div class="qs-scene sc-launch"><div class="sc-rays"></div><div class="qs-kicker">Introducing</div><h1 class="sc-title">Product <em>Launch</em></h1>
-      <div class="sc-launch-name">${t || 'Produk Terbaru 2027'}</div><p class="sc-sub">Concerto Audio Indonesia</p>${count}</div>`,
+    launch: `<div class="qs-scene sc-launch lh"><div class="lh-bg"><div class="sc-rays"></div><i class="lh-ring r1"></i><i class="lh-ring r2"></i><i class="lh-ring r3"></i><span class="lh-year">2027</span>${lhSparks()}<i class="lh-streak s1"></i><i class="lh-streak s2"></i></div>
+      <i class="lh-br tl"></i><i class="lh-br tr"></i><i class="lh-br bl"></i><i class="lh-br brr"></i>
+      <div class="lh-kicker"><i></i><span>Introducing</span><i></i></div>
+      <h1 class="lh-title"><span class="lh-w">Product</span> <span class="lh-w g">Launch</span></h1>
+      <div class="lh-name"><span>${t || 'Produk Terbaru 2027'}</span></div>
+      <div class="lh-div"><i></i><b></b><i></i></div>
+      <p class="lh-sub">Concerto Audio Indonesia</p>${count}</div>`,
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
     opening: `<div class="qs-scene sc-open"><div class="qs-kicker">Gathering CAI 2026</div><h1 class="sc-title">Opening <em>Speech</em></h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
@@ -7567,6 +7608,15 @@ function launchList(brand, idx) {
   }
   const vids = LAUNCH_VIDEOS[brand] || [];
   return idx != null ? vids.slice(idx, idx + 1) : vids;
+}
+// Percikan emas untuk layar Product Launch (posisi/waktu acak tetap per render)
+function lhSparks() {
+  let h = '';
+  for (let i = 0; i < 26; i++) {
+    const x = Math.round(Math.random() * 100), y = Math.round(20 + Math.random() * 75), d = (Math.random() * 6).toFixed(2), du = (4 + Math.random() * 5).toFixed(2), sz = (0.5 + Math.random() * 1.1).toFixed(2);
+    h += `<em style="left:${x}%;top:${y}%;animation-delay:${d}s;animation-duration:${du}s;width:${sz}vh;height:${sz}vh"></em>`;
+  }
+  return `<div class="lh-sparks">${h}</div>`;
 }
 function renderLaunchVideo(s) {
   const { brand, idx } = launchParts(s.scene), b = BRANDS.find(x => x.id === brand);
