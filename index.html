@@ -2981,7 +2981,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-13T11:49:24Z';
+const LAST_UPDATE = '2026-10-13T11:51:39Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7295,7 +7295,7 @@ const FREE_NAME = 'Free Time';
 const SCR_CARDS = ['opening', 'lup', 'free', 'newbrand'];
 // Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
 // logo = path logo versi terang (latar gelap), mis. 'assets/brands/<id>.webp' — kosong = nama brand sebagai teks emas.
-const NEW_BRAND = { name: 'New Brand', tagline: 'Resmi bergabung bersama Concerto Audio Indonesia', logo: '' };
+const NEW_BRAND = { name: 'Caelum', tagline: 'Power Amplifier', logo: '' };
 let scrLupSel = 'qa', scrFreeSel = 'coffee';
 const SCR_DESC = {
   qa: 'Pertanyaan dealer tampil di videotron. Pertanyaan, usul & curhatan dealer tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
@@ -7361,7 +7361,7 @@ function renderScreenPanel(err) {
         ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
           return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}</div>`;
   else if (sel === 'newbrand') { const nb = scrRow.scene === 'newbrand:now';
-    body = `${opts(false, 'Nama Brand | tagline (opsional) — kosong = ' + NEW_BRAND.name)}
+    body = `${opts(false, 'Nama Brand | tagline (opsional) — kosong = ' + NEW_BRAND.name + ' | ' + NEW_BRAND.tagline)}
     <div class="scr-actions">${showBtn('Tampilkan dengan hitung mundur 3-2-1')}<button class="gt-btn${nb ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:now')">${nb ? '↻ Tampilkan langsung' : '⚡ Tampilkan langsung (tanpa hitung mundur)'}</button></div>
     <div class="scr-note">Contoh: <b>Nama Brand | Sound beyond limits</b>. Nama yang sama dengan brand di katalog otomatis memakai logonya. Klik ulang = animasi diulang.</div>`; }
   else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
