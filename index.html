@@ -2959,7 +2959,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-13T09:52:02Z';
+const LAST_UPDATE = '2026-10-13T09:55:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7895,7 +7895,8 @@ function renderQaScreen(q) {
 const CAI_WHATSAPP = '6281325988588';
 const hasWa = () => /^\d{8,15}$/.test(CAI_WHATSAPP);
 // Tombol "Tanya CAI via WhatsApp" (class wa-only) hanya untuk akun DEALER yang login — tidak untuk pengunjung umum maupun staff
-function updateWaAccess() { document.body.classList.toggle('has-wa', hasWa() && !!authUser && !isAdmin()); }
+// Tombol WA: dealer yang login + Editor (agar Editor bisa mengecek tampilan dealer); admin staff tidak
+function updateWaAccess() { document.body.classList.toggle('has-wa', hasWa() && !!authUser && (!isAdmin() || isEditor())); }
 updateWaAccess();
 
 function waIntro() {
