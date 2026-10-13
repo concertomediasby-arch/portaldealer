@@ -1232,6 +1232,8 @@ body {
 }
 .res-card:hover { background: var(--surface); }
 .res-icon { font-size: 30px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.res-icon.res-logo { width: 72px; height: 72px; border-radius: 16px; display: grid; place-items: center; padding: 8px; box-sizing: border-box; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+.res-icon.res-logo img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
 .res-body { flex: 1; min-width: 0; }
 .res-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
 .res-cat {
@@ -1303,6 +1305,7 @@ body {
 @media (max-width: 560px) {
   .res-card { flex-direction: column; gap: 10px; padding: 18px 16px; }
   .res-icon { font-size: 24px; }
+  .res-icon.res-logo { width: 56px; height: 56px; padding: 6px; border-radius: 13px; }
   /* Tombol aksi lebih besar & mudah ditap */
   .res-btn { padding: 9px 16px; font-size: 13px; }
   .res-actions { gap: 10px; }
@@ -2978,7 +2981,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-13T10:17:42Z';
+const LAST_UPDATE = '2026-10-13T11:49:24Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4220,6 +4223,7 @@ function openDspSoftware() {
   if (el.children.length) return;
   const platColor = { 'Windows':'#6fd3e6', 'Mac':'#d8b26a', 'Android':'#52c38a', 'iOS':'#a78bfa' };
   el.innerHTML = DSP_SOFTWARE.map(s => {
+    const b = BRANDS.find(x => x.name.toLowerCase() === s.brand.toLowerCase());   // ikon = logo brand
     const plats = s.platform.map(p =>
       `<span class="res-cat" style="color:${platColor[p]||'var(--accent)'};border-color:${platColor[p]||'var(--accent)'}22;background:${platColor[p]||'var(--accent)'}11">${p}</span>`
     ).join('');
@@ -4236,7 +4240,7 @@ function openDspSoftware() {
       ].join('');
     }
     return `<div class="res-card">
-      <div class="res-icon">${s.icon}</div>
+      ${b?.logo ? `<div class="res-icon res-logo" style="background:${b.bg}"><img src="${b.logo}" alt="${s.brand}"></div>` : `<div class="res-icon">${s.icon}</div>`}
       <div class="res-body">
         <div class="res-meta">${plats}<span class="res-year">${s.brand}${s.version ? ' · v'+s.version : ''}</span></div>
         <div class="res-title">${s.title}</div>
