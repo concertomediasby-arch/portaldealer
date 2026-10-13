@@ -1798,6 +1798,25 @@ body {
   .lh-div b { width: 1.3vh; height: 1.3vh; background: #e9c46a; transform: rotate(45deg); box-shadow: 0 0 2vh #e9c46a; }
   .lh-sub { margin: 0; font: 500 max(14px, 2.6vh) var(--f-body); letter-spacing: .5em; text-transform: uppercase; color: #cfd6e6; animation: qsIn 1s ease 1.2s both; }
   .sc-launch .sc-title { font-size: min(6vw, 10vh); }
+  /* ── Launching Brand Baru: hitung mundur → kilatan → reveal ── */
+  .nb-reveal { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  .nb.cd:not(.go) .nb-reveal { visibility: hidden; }
+  .nb.cd:not(.go) .nb-reveal *, .nb.cd:not(.go) .nb-reveal *::after { animation-play-state: paused !important; }
+  .nb-count { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; pointer-events: none; }
+  .nb-count b { grid-area: 1 / 1; font: 900 min(40vw, 62vh)/1 var(--f-display); color: transparent; opacity: 0;
+    background: linear-gradient(180deg, #fff6dc, #e9c46a 50%, #9c7330); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 6vh rgba(233,196,106,.6));
+    animation: nbNum 1.25s cubic-bezier(.2,.8,.2,1) both; }
+  .nb-count b:nth-child(2) { animation-delay: 1.25s; } .nb-count b:nth-child(3) { animation-delay: 2.5s; }
+  @keyframes nbNum { 0% { opacity: 0; transform: scale(1.9); filter: blur(10px); } 25% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 6vh rgba(233,196,106,.6)); } 75% { opacity: 1; transform: scale(.92); } 100% { opacity: 0; transform: scale(.6); } }
+  .nb-flash { position: absolute; inset: -10vh -10vw; z-index: 4; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 50%, #fff 0%, #fff3d6 30%, rgba(233,196,106,.6) 60%, transparent 85%); animation: nbFlash 1.3s ease-out 3.75s both; }
+  @keyframes nbFlash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+  .nb-name { margin-top: 5vh; }
+  .nb-name span { font-size: min(10vw, 19vh); }
+  .nb-logo { display: block; width: min(48vw, 860px); height: 24vh; object-fit: contain; filter: drop-shadow(0 0 4vh rgba(233,196,106,.45)); }
+  .nb-tag { margin: 3vh 0 0; font: 500 italic min(2.6vw, 4.2vh) var(--f-display); color: #f3e3bd; letter-spacing: .02em; text-align: center; max-width: 80vw; animation: qsIn 1s ease 1.1s both; }
+  .nb-burst { position: absolute; left: 50%; top: 55%; width: 0; height: 0; z-index: 1; pointer-events: none; }
+  .nb-burst em { position: absolute; width: 1.1vh; height: 1.1vh; margin: -.55vh; border-radius: 50%; background: radial-gradient(circle, #fff, #e9c46a 60%, transparent 72%); opacity: 0; animation: nbBurst 1.8s cubic-bezier(.1,.7,.3,1) both; }
+  @keyframes nbBurst { 0% { opacity: 1; transform: translate(0, 0) scale(1.4); } 100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(.3); } }
   .sc-launch-name { font: 800 min(9vw, 16vh)/1.05 var(--f-display); margin-bottom: 2vh; text-wrap: balance; }
   .sc-year { font: 800 min(16vw, 26vh)/1 var(--f-display); margin: .5vh 0 1vh; letter-spacing: .02em; background: linear-gradient(180deg, #fff3d6 0%, #e9c46a 45%, #9c7330 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 4vh rgba(233,196,106,.3)); }
   .sc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; margin-top: 3vh; width: min(86vw, 1500px); text-align: left; }
@@ -2959,7 +2978,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-13T09:55:55Z';
+const LAST_UPDATE = '2026-10-13T10:17:42Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7164,6 +7183,7 @@ const QS_SCENES = {
   opening: { label: 'Opening Speech', icon: '🎙', match: /opening/i },
   coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Refreshment Product', match: /coff?ee|break|rehat/i },
   refresh: { label: 'Refreshment Product', icon: '🔊', match: /refresh|referes/i },
+  newbrand: { label: 'Launching Brand Baru', icon: '✨', match: /brand baru|new brand|launching brand/i },
   launch:  { label: 'Product Launch', icon: '🚀', match: /launch|peluncuran/i },
   lunch:   { label: 'Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan|lunch/i },
   funmkt:  { label: 'Fun Marketing', icon: '🎯', match: /fun ?marketing/i },
@@ -7268,7 +7288,10 @@ const BACKDROP_SEC = 12;   // detik per foto saat bergantian (backdrop video: di
 let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
 const FREE_NAME = 'Free Time';
-const SCR_CARDS = ['opening', 'lup', 'free'];
+const SCR_CARDS = ['opening', 'lup', 'free', 'newbrand'];
+// Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
+// logo = path logo versi terang (latar gelap), mis. 'assets/brands/<id>.webp' — kosong = nama brand sebagai teks emas.
+const NEW_BRAND = { name: 'New Brand', tagline: 'Resmi bergabung bersama Concerto Audio Indonesia', logo: '' };
 let scrLupSel = 'qa', scrFreeSel = 'coffee';
 const SCR_DESC = {
   qa: 'Pertanyaan dealer tampil di videotron. Pertanyaan, usul & curhatan dealer tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
@@ -7276,6 +7299,7 @@ const SCR_DESC = {
   coffee: 'Layar rehat dengan hitung mundur (default 20 menit) dan info sesi berikutnya.',
   refresh: 'Judul sesi dengan strip logo brand berjalan.',
   launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
+  newbrand: 'Peluncuran brand baru: hitung mundur 3-2-1, kilatan cahaya, lalu nama/logo brand muncul besar. Isi teks tambahan "Nama Brand | tagline".',
   lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
   backdrop: 'Backdrop acara tampil layar penuh (Reset Button = video berulang) — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
@@ -7332,6 +7356,10 @@ function renderScreenPanel(err) {
         ${vids.length > 1 ? `<button class="scr-lv-btn${scrRow.scene === all ? ' on' : ''}" onclick="setScene('${all}')">${scrRow.scene === all ? '↻ Ulang semua' : `▶ Putar semua (${vids.length})`}</button>` : ''}
         ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
           return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}</div>`;
+  else if (sel === 'newbrand') { const nb = scrRow.scene === 'newbrand:now';
+    body = `${opts(false, 'Nama Brand | tagline (opsional) — kosong = ' + NEW_BRAND.name)}
+    <div class="scr-actions">${showBtn('Tampilkan dengan hitung mundur 3-2-1')}<button class="gt-btn${nb ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:now')">${nb ? '↻ Tampilkan langsung' : '⚡ Tampilkan langsung (tanpa hitung mundur)'}</button></div>
+    <div class="scr-note">Contoh: <b>Nama Brand | Sound beyond limits</b>. Nama yang sama dengan brand di katalog otomatis memakai logonya. Klik ulang = animasi diulang.</div>`; }
   else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
     const pv = scrRow.scene === 'kickoff:v';
     body = `${opts(false)}<div class="scr-actions">${showBtn('Tampilkan judul Kick Off 2027')}<button class="gt-btn${pv ? ' confirm' : ' ghost'}" onclick="setScene('kickoff:v')">${pv ? '↻ Putar ulang video perkenalan' : '🎬 Putar Video Perkenalan Portal'}</button></div>
@@ -7476,6 +7504,7 @@ function renderScene(s) {
       <div class="lh-name"><span>${t || 'New Product 2027'}</span></div>
       <div class="lh-div"><i></i><b></b><i></i></div>
       <p class="lh-sub">Concerto Audio Indonesia</p>${count}</div>`,
+    newbrand: renderNewBrand(s),
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
     opening: `<div class="qs-scene sc-open"><div class="qs-kicker">Gathering CAI 2026</div><h1 class="sc-title">Opening <em>Speech</em></h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
@@ -7491,8 +7520,9 @@ function renderScene(s) {
       </div>${count}</div>`,
   }[sceneBase(s.scene)];
   const kv = s.scene === 'kickoff:v';   // video perkenalan portal: diputar di atas kartu Kick Off, selesai → kartu Kick Off tetap tampil
-  const changed = qsSetStage(['scene', s.scene, s.scene_text, s.scene_until, kv ? s.updated_at : ''].join('|'), html);
+  const changed = qsSetStage(['scene', s.scene, s.scene_text, s.scene_until, kv || sceneBase(s.scene) === 'newbrand' ? s.updated_at : ''].join('|'), html);
   if (kv && changed) setTimeout(playPortalVideo, 500);
+  if (changed && sceneBase(s.scene) === 'newbrand') nbBurst();
   qsTick();
 }
 
@@ -7681,6 +7711,37 @@ function launchList(brand, idx) {
   return idx != null ? vids.slice(idx, idx + 1) : vids;
 }
 // Percikan emas untuk layar Product Launch (posisi/waktu acak tetap per render)
+// Launching Brand Baru: hitung mundur 3-2-1 → kilatan → reveal nama/logo brand (CSS, sekali putar per tampil)
+function renderNewBrand(s) {
+  const [n0, t0] = String(s.scene_text || '').split('|').map(x => x.trim());
+  const name = n0 || NEW_BRAND.name, tag = t0 || (n0 ? '' : NEW_BRAND.tagline);
+  const b = BRANDS.find(x => x.name.toLowerCase() === name.toLowerCase());
+  const logo = b?.logo || (!n0 || name === NEW_BRAND.name ? NEW_BRAND.logo : '');
+  const cd = s.scene !== 'newbrand:now';
+  return `<div class="qs-scene sc-launch lh nb${cd ? ' cd' : ''}">
+    <div class="lh-bg"><div class="sc-rays"></div><i class="lh-ring r1"></i><i class="lh-ring r2"></i><i class="lh-ring r3"></i>${lhSparks()}<i class="lh-streak s1"></i><i class="lh-streak s2"></i></div>
+    ${cd ? '<div class="nb-count"><b>3</b><b>2</b><b>1</b></div><i class="nb-flash"></i>' : ''}
+    <div class="nb-reveal">
+      <i class="lh-br tl"></i><i class="lh-br tr"></i><i class="lh-br bl"></i><i class="lh-br brr"></i>
+      <div class="lh-kicker"><i></i><span>Welcome to the Family</span><i></i></div>
+      <h1 class="lh-title"><span class="lh-w">New</span> <span class="lh-w g">Brand</span></h1>
+      <div class="nb-burst"></div>
+      <div class="lh-name nb-name">${logo ? `<img class="nb-logo" src="${logo}" alt="${escHtml(name)}">` : `<span>${escHtml(name)}</span>`}</div>
+      ${tag ? `<p class="nb-tag">${escHtml(tag)}</p>` : ''}
+      <div class="lh-div"><i></i><b></b><i></i></div>
+      <p class="lh-sub">Concerto Audio Indonesia · Brand Resmi</p>
+    </div></div>`;
+}
+// Percikan emas memancar dari tengah saat nama brand muncul (mode hitung mundur: reveal dimulai setelah 3,9 dtk)
+let nbTimer = null;
+function nbBurst() {
+  const el = document.querySelector('#qs-stage .nb-burst'); if (!el) return;
+  const nb = el.closest('.nb');
+  if (nb.classList.contains('cd') && !nb.classList.contains('go')) { clearTimeout(nbTimer); nbTimer = setTimeout(() => { nb.classList.add('go'); nbBurst(); }, 3900); return; }
+  const delay = 0.5;
+  el.innerHTML = Array.from({ length: 36 }, (_, i) => { const a = i / 36 * Math.PI * 2 + Math.random() * .2, r = 28 + Math.random() * 30;
+    return `<em style="--x:${(Math.cos(a) * r).toFixed(1)}vw;--y:${(Math.sin(a) * r * .6).toFixed(1)}vh;animation-delay:${(delay + Math.random() * .15).toFixed(2)}s"></em>`; }).join('');
+}
 function lhSparks() {
   let h = '';
   for (let i = 0; i < 26; i++) {
