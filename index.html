@@ -1820,17 +1820,15 @@ body {
   .qs-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .45s ease; }
   .qs-slide img.in { opacity: 1; }
   .qs-slide.qs-bd { background: #05070d; }
-  .bd-s { position: absolute; inset: 0; opacity: 0; }
-  .bd-s.in { opacity: 1; animation: qsFade .9s ease both; }
-  .bd-s.alt { animation: bdAlt var(--dur) ease-in-out infinite; }
-  @keyframes bdAlt { 0% { opacity: 0; } 4% { opacity: 1; } 46% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 0; } }   /* untuk 2 foto (siklus = 2 × BACKDROP_SEC) */
-  .qs-slide.qs-bd .bd-s img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 1; transition: none; }
+  .bd-s { position: absolute; inset: 0; opacity: 0; transition: opacity .9s ease; }
+  .bd-s.in { opacity: 1; }
+  .qs-slide.qs-bd .bd-s img, .qs-slide.qs-bd .bd-s video { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 1; transition: none; }
   .bd-s .bd-bg { object-fit: cover; filter: blur(34px) brightness(.55); transform: scale(1.12); }
   .bd-s .bd-fg { object-fit: contain; filter: drop-shadow(0 0 4vh rgba(0,0,0,.5)); }
   .scr-bd { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 14px; margin: 4px 0 12px; }
   .scr-bd-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #e8ecf5; cursor: pointer; text-align: left; font: inherit; }
   .scr-bd-card img { width: 100%; aspect-ratio: 5/4; object-fit: cover; border-radius: 9px; }
-  .scr-bd-card b { font-size: 13px; } .scr-bd-card span { font-size: 11.5px; color: #e9c46a; }
+  .scr-bd-card b { font-size: 13px; } .scr-bd-vid { font-style: normal; font-size: 11px; color: #e9c46a; margin-left: 4px; } .scr-bd-card span { font-size: 11.5px; color: #e9c46a; }
   .scr-bd-card.on { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; background: rgba(233,196,106,.1); }
   .qs-slide.qs-pks { background: radial-gradient(ellipse at 50% 0%, #1b2440, #05070d 70%); }
   .qs-slide canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 96vw; max-height: 96vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 2vh 6vh rgba(0,0,0,.6); opacity: 0; transition: opacity .45s ease; background: #fff; }
@@ -2961,7 +2959,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-12T16:45:16Z';
+const LAST_UPDATE = '2026-10-13T03:06:18Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7258,10 +7256,11 @@ const LUP_SCENES = ['qa', 'refresh', 'launch', 'funmkt', 'kickoff'];
 const FREE_SCENES = ['coffee', 'lunch', 'backdrop'];
 // Backdrop (Free Time): 2 foto layar penuh. 'backdrop:1' / 'backdrop:2' = satu foto, 'backdrop' = bergantian otomatis
 const BACKDROPS = [
-  { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp', th: 'assets/backdrop/reset-button-thumb.webp' },
+  { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp', th: 'assets/backdrop/reset-button-thumb.webp', video: 'assets/backdrop/reset-button.mp4' },   // video 24 dtk (gambar = cadangan bila video gagal)
   { t: '5th Annual Gathering · Dinner', src: 'assets/backdrop/gathering-dinner.webp', th: 'assets/backdrop/gathering-dinner-thumb.webp' },
 ];
-const BACKDROP_SEC = 12;   // detik per foto saat bergantian
+const BACKDROP_SEC = 12;   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
+let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
 const FREE_NAME = 'Free Time';
 const SCR_CARDS = ['opening', 'lup', 'free'];
@@ -7273,7 +7272,7 @@ const SCR_DESC = {
   refresh: 'Judul sesi dengan strip logo brand berjalan.',
   launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
   lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
-  backdrop: 'Dua foto backdrop acara tampil layar penuh — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
+  backdrop: 'Backdrop acara tampil layar penuh (Reset Button = video berulang) — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
   kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), video perkenalan portal, lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
 };
@@ -7305,8 +7304,8 @@ function renderScreenPanel(err) {
   let body = '';
   if (sel === 'qa') body = `<div class="scr-actions">${showBtn('Tampilkan Open Mic di layar')}<button class="gt-btn ghost" onclick="setRdTab('qa')">🎤 Buka menu Open Mic</button></div>`;
   else if (sel === 'backdrop') { const cur = bdNum(scrRow.scene), alt = scrRow.scene === 'backdrop';
-    body = `<div class="scr-bd">${BACKDROPS.map((b, i) => `<button class="scr-bd-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('backdrop:${i + 1}')"><img src="${b.th}" alt="${escHtml(b.t)}"><b>${i + 1}. ${escHtml(b.t)}</b><span>${cur === i + 1 ? '● Tampil · klik untuk ulang' : '▶ Tampilkan'}</span></button>`).join('')}</div>
-    <div class="scr-actions"><button class="gt-btn${alt ? ' confirm' : ' ghost'}" onclick="setScene('backdrop')">${alt ? '↻ Bergantian otomatis (aktif)' : `🔁 Tampilkan bergantian (${BACKDROP_SEC} dtk)`}</button></div>`; }
+    body = `<div class="scr-bd">${BACKDROPS.map((b, i) => `<button class="scr-bd-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('backdrop:${i + 1}')"><img src="${b.th}" alt="${escHtml(b.t)}"><b>${i + 1}. ${escHtml(b.t)}${b.video ? ' <em class="scr-bd-vid">🎬 video</em>' : ''}</b><span>${cur === i + 1 ? '● Tampil · klik untuk ulang' : '▶ Tampilkan'}</span></button>`).join('')}</div>
+    <div class="scr-actions"><button class="gt-btn${alt ? ' confirm' : ' ghost'}" onclick="setScene('backdrop')">${alt ? '↻ Bergantian otomatis (aktif)' : '🔁 Tampilkan bergantian'}</button></div>`; }
   else if (sel === 'opening') body = `<div class="scr-actions">${showBtn('Tampilkan susunan pembicara')}</div>
     <div class="scr-sub-k">Pembicara</div>
     <div class="scr-fm-nav">${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1 && !opVid(scrRow.scene);
@@ -7827,21 +7826,37 @@ async function qsLoad() {
 function qsSetStage(key, html) {
   if (key === qsKey) return false;
   qsKey = key;
-  stopLaunchVideo();
+  stopLaunchVideo(); clearTimeout(qsBdTimer);
   if (!/^(fmslide|pks|bd)\|/.test(String(key))) document.getElementById('qs-slide')?.remove();
   document.getElementById('qs-stage').innerHTML = html;
   return true;
 }
 
-// Backdrop: foto layar penuh (blur sebagai latar), satu foto atau bergantian crossfade
+// Backdrop: foto/video layar penuh (latar blur). Satu backdrop = foto diam / video berulang; bergantian = foto 12 dtk, video sampai selesai.
 function renderBackdrop(s) {
   const n = bdNum(s.scene), list = n ? [BACKDROPS[n - 1]] : BACKDROPS;
   if (!qsSetStage(['bd', s.scene, n ? '' : s.updated_at].join('|'), '<div class="qs-idle"><p>Backdrop</p></div>')) return;
+  clearTimeout(qsBdTimer);
   document.getElementById('qs-slide')?.remove();
   const ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide qs-bd';
-  const dur = BACKDROP_SEC * list.length;
-  ov.innerHTML = list.map((b, i) => `<div class="bd-s${list.length > 1 ? ' alt' : ' in'}" style="--n:${list.length};--dur:${dur}s;animation-delay:${i * BACKDROP_SEC}s"><img class="bd-bg" src="${b.src}" alt=""><img class="bd-fg" src="${b.src}" alt="${escHtml(b.t)}"></div>`).join('');
+  ov.innerHTML = list.map((b, i) => `<div class="bd-s" data-i="${i}"><img class="bd-bg" src="${b.src}" alt="">${b.video
+    ? `<video class="bd-fg" src="${b.video}" poster="${b.src}" muted playsinline preload="auto"${list.length === 1 ? ' loop' : ''}></video>`
+    : `<img class="bd-fg" src="${b.src}" alt="${escHtml(b.t)}">`}</div>`).join('');
   document.getElementById('qa-screen').appendChild(ov);
+  ov.querySelectorAll('video.bd-fg').forEach(v => v.addEventListener('error', () => {   // video gagal → pakai gambar diamnya
+    const img = document.createElement('img'); img.className = 'bd-fg'; img.src = v.poster; v.replaceWith(img);
+  }));
+  const show = i => {
+    if (!document.body.contains(ov)) return;
+    const slides = [...ov.children];
+    slides.forEach((el, k) => el.classList.toggle('in', k === i));
+    const v = slides[i].querySelector('video');
+    const next = () => { if (list.length > 1) show((i + 1) % list.length); };
+    if (v) { v.currentTime = 0; v.play().catch(() => {}); if (list.length > 1) { v.onended = next; qsBdTimer = setTimeout(next, 120000); } }   // batas aman 2 menit
+    else if (list.length > 1) qsBdTimer = setTimeout(next, BACKDROP_SEC * 1000);
+    slides.forEach((el, k) => { if (k !== i) el.querySelector('video')?.pause(); });
+  };
+  show(0);
 }
 function qsSetEventSub(base) {
   const el = document.getElementById('qs-event-sub'); if (!el) return;
