@@ -1815,7 +1815,7 @@ body {
   @keyframes nbFlash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
   .nb-name { margin-top: 5vh; }
   .nb-name span { font-size: min(10vw, 19vh); }
-  .nb-logo { display: block; width: min(48vw, 860px); height: 24vh; object-fit: contain; filter: drop-shadow(0 0 4vh rgba(233,196,106,.45)); }
+  .nb-logo { display: block; width: min(60vw, 1100px); height: 32vh; object-fit: contain; filter: drop-shadow(0 0 4vh rgba(233,196,106,.45)); }
   .nb-tag { margin: 3vh 0 0; font: 500 italic min(2.6vw, 4.2vh) var(--f-display); color: #f3e3bd; letter-spacing: .02em; text-align: center; max-width: 80vw; animation: qsIn 1s ease 1.1s both; }
   .nb-burst { position: absolute; left: 50%; top: 55%; width: 0; height: 0; z-index: 1; pointer-events: none; }
   .nb-burst em { position: absolute; width: 1.1vh; height: 1.1vh; margin: -.55vh; border-radius: 50%; background: radial-gradient(circle, #fff, #e9c46a 60%, transparent 72%); opacity: 0; animation: nbBurst 1.8s cubic-bezier(.1,.7,.3,1) both; }
@@ -2981,7 +2981,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-13T11:51:39Z';
+const LAST_UPDATE = '2026-10-13T12:32:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7257,6 +7257,7 @@ const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
   if (sceneBase(k) === 'backdrop') return { ...base, label: bdNum(k) ? `Backdrop · ${BACKDROPS[bdNum(k) - 1]?.t}` : 'Backdrop · bergantian' };
+  if (k === 'newbrand:full' || k === 'newbrand:v') return { ...base, icon: '🎬', label: `Launching ${NEW_BRAND.name} · ${k === 'newbrand:v' ? 'video' : 'hitung mundur + video'}` };
   if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
   if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
@@ -7295,7 +7296,8 @@ const FREE_NAME = 'Free Time';
 const SCR_CARDS = ['opening', 'lup', 'free', 'newbrand'];
 // Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
 // logo = path logo versi terang (latar gelap), mis. 'assets/brands/<id>.webp' — kosong = nama brand sebagai teks emas.
-const NEW_BRAND = { name: 'Caelum', tagline: 'Power Amplifier', logo: '' };
+const NEW_BRAND = { name: 'Caelum', tagline: 'Power Amplifier', logo: 'assets/brands/caelum.webp', video: 'assets/newbrand/caelum.mp4' };
+const NB_REVEAL_SEC = 6;   // mode 'newbrand:full': lama reveal nama brand sebelum video diputar
 let scrLupSel = 'qa', scrFreeSel = 'coffee';
 const SCR_DESC = {
   qa: 'Pertanyaan dealer tampil di videotron. Pertanyaan, usul & curhatan dealer tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
@@ -7360,9 +7362,11 @@ function renderScreenPanel(err) {
         ${vids.length > 1 ? `<button class="scr-lv-btn${scrRow.scene === all ? ' on' : ''}" onclick="setScene('${all}')">${scrRow.scene === all ? '↻ Ulang semua' : `▶ Putar semua (${vids.length})`}</button>` : ''}
         ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
           return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}</div>`;
-  else if (sel === 'newbrand') { const nb = scrRow.scene === 'newbrand:now';
+  else if (sel === 'newbrand') { const nb = scrRow.scene === 'newbrand:now', nf = scrRow.scene === 'newbrand:full', nv = scrRow.scene === 'newbrand:v';
     body = `${opts(false, 'Nama Brand | tagline (opsional) — kosong = ' + NEW_BRAND.name + ' | ' + NEW_BRAND.tagline)}
-    <div class="scr-actions">${showBtn('Tampilkan dengan hitung mundur 3-2-1')}<button class="gt-btn${nb ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:now')">${nb ? '↻ Tampilkan langsung' : '⚡ Tampilkan langsung (tanpa hitung mundur)'}</button></div>
+    ${NEW_BRAND.video ? `<div class="scr-actions"><button class="gt-btn confirm" onclick="setScene('newbrand:full')">${nf ? '↻' : '🚀'} Hitung mundur → ${escHtml(NEW_BRAND.name)} → putar video</button><button class="gt-btn${nv ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:v')">${nv ? '↻' : '🎬'} Putar video ${escHtml(NEW_BRAND.name)} saja</button></div>
+    <div class="scr-note">Alur lengkap: 3-2-1 → nama ${escHtml(NEW_BRAND.name)} tampil ${NB_REVEAL_SEC} dtk → video layar penuh → selesai kembali ke layar nama. Spasi di komputer videotron = jeda/lanjut.</div>` : ''}
+    <div class="scr-actions">${showBtn('Hitung mundur 3-2-1 (tanpa video)')}<button class="gt-btn${nb ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:now')">${nb ? '↻ Tampilkan langsung' : '⚡ Tampilkan langsung (tanpa hitung mundur)'}</button></div>
     <div class="scr-note">Contoh: <b>Nama Brand | Sound beyond limits</b>. Nama yang sama dengan brand di katalog otomatis memakai logonya. Klik ulang = animasi diulang.</div>`; }
   else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
     const pv = scrRow.scene === 'kickoff:v';
@@ -7526,7 +7530,11 @@ function renderScene(s) {
   const kv = s.scene === 'kickoff:v';   // video perkenalan portal: diputar di atas kartu Kick Off, selesai → kartu Kick Off tetap tampil
   const changed = qsSetStage(['scene', s.scene, s.scene_text, s.scene_until, kv || sceneBase(s.scene) === 'newbrand' ? s.updated_at : ''].join('|'), html);
   if (kv && changed) setTimeout(playPortalVideo, 500);
-  if (changed && sceneBase(s.scene) === 'newbrand') nbBurst();
+  if (changed && sceneBase(s.scene) === 'newbrand') {
+    nbBurst();
+    if (s.scene === 'newbrand:v') nbVidTimer = setTimeout(playNewBrandVideo, 500);
+    if (s.scene === 'newbrand:full') nbVidTimer = setTimeout(playNewBrandVideo, 3900 + NB_REVEAL_SEC * 1000);
+  }
   qsTick();
 }
 
@@ -7590,8 +7598,18 @@ function playSpeakerVideo(n) {
 }
 // Video perkenalan portal (Kick Off 2027): overlay layar penuh; file gagal → pilih file lokal
 let qsLocalPortal = null;
-function playPortalVideo() {
-  const src = qsLocalPortal || PORTAL_INTRO_VIDEO;
+function playPortalVideo() { playOverlayVideo(qsLocalPortal || PORTAL_INTRO_VIDEO, '.sc-kickoff', 'qsPickPortalVideo'); }
+// Video peluncuran brand baru (Caelum): diputar di atas layar reveal; selesai → reveal tetap tampil
+let qsLocalNb = null;
+function playNewBrandVideo() { playOverlayVideo(qsLocalNb || NEW_BRAND.video, '.nb', 'qsPickNbVideo'); }
+function qsPickNbVideo(input) {
+  const f = input.files?.[0]; if (!f) return;
+  if (qsLocalNb) URL.revokeObjectURL(qsLocalNb);
+  qsLocalNb = URL.createObjectURL(f);
+  document.querySelector('.op-pick')?.remove();
+  playNewBrandVideo();
+}
+function playOverlayVideo(src, host, pickFn) {
   document.getElementById('qs-video')?.remove();
   const ov = document.createElement('div');
   ov.id = 'qs-video'; ov.className = 'qs-video';
@@ -7602,7 +7620,7 @@ function playPortalVideo() {
   v.onended = () => { ov.style.transition = 'opacity .8s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 850); };
   v.onerror = () => {
     ov.remove();
-    document.querySelector('.sc-kickoff')?.insertAdjacentHTML('beforeend', '<label class="op-pick">📁 Video belum termuat — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="qsPickPortalVideo(this)"></label>');
+    document.querySelector(host)?.insertAdjacentHTML('beforeend', `<label class="op-pick">📁 Video belum termuat — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="${pickFn}(this)"></label>`);
   };
   um.onclick = () => { v.muted = false; um.hidden = true; };
   v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
@@ -7721,7 +7739,7 @@ function renderNewBrand(s) {
   const name = n0 || NEW_BRAND.name, tag = t0 || (n0 ? '' : NEW_BRAND.tagline);
   const b = BRANDS.find(x => x.name.toLowerCase() === name.toLowerCase());
   const logo = b?.logo || (!n0 || name === NEW_BRAND.name ? NEW_BRAND.logo : '');
-  const cd = s.scene !== 'newbrand:now';
+  const cd = s.scene === 'newbrand' || s.scene === 'newbrand:full';   // :now & :v tanpa hitung mundur
   return `<div class="qs-scene sc-launch lh nb${cd ? ' cd' : ''}">
     <div class="lh-bg"><div class="sc-rays"></div><i class="lh-ring r1"></i><i class="lh-ring r2"></i><i class="lh-ring r3"></i>${lhSparks()}<i class="lh-streak s1"></i><i class="lh-streak s2"></i></div>
     ${cd ? '<div class="nb-count"><b>3</b><b>2</b><b>1</b></div><i class="nb-flash"></i>' : ''}
@@ -7737,7 +7755,7 @@ function renderNewBrand(s) {
     </div></div>`;
 }
 // Percikan emas memancar dari tengah saat nama brand muncul (mode hitung mundur: reveal dimulai setelah 3,9 dtk)
-let nbTimer = null;
+let nbTimer = null, nbVidTimer = null;
 function nbBurst() {
   const el = document.querySelector('#qs-stage .nb-burst'); if (!el) return;
   const nb = el.closest('.nb');
@@ -7896,7 +7914,7 @@ async function qsLoad() {
 function qsSetStage(key, html) {
   if (key === qsKey) return false;
   qsKey = key;
-  stopLaunchVideo(); clearTimeout(qsBdTimer);
+  stopLaunchVideo(); clearTimeout(qsBdTimer); clearTimeout(nbTimer); clearTimeout(nbVidTimer);
   if (!/^(fmslide|pks|bd)\|/.test(String(key))) document.getElementById('qs-slide')?.remove();
   document.getElementById('qs-stage').innerHTML = html;
   return true;
