@@ -3050,6 +3050,7 @@ const DSP_SOFTWARE = [
 ];
 
 const RECENT_UPDATES = [
+  { date:'2026-10-13', type:'data',  brandId:'steg',        productId:'st-sst50',    note:'SST50 diganti menjadi SST50II' },
   { date:'2026-10-11', type:'data',  brandId:'steg',        productId:'st-ssdsp16v1', note:'Produk baru SS-DSP16 (DSP) ditambahkan' },
   { date:'2026-10-10', type:'photo', brandId:'diosdela',     productId:'dm-septuple8g', note:'Foto Septuple Cable 8G ditambahkan' },
   { date:'2026-10-10', type:'video', brandId:'audiosystem',  productId:'as-as10',     note:'Video AS10 diperbarui' },
@@ -3445,7 +3446,7 @@ const BRANDS = [
           photos:['assets/st-sst90-3.webp','assets/st-sst90-4.webp','assets/st-sst90-1.webp','assets/st-sst90-2.webp','assets/st-sst90-5.webp'],
           desc:'3.5" AMT Ultra Air Motion Tweeter — Advanced Air Motion Transformer, CNC aluminium panel, Neo magnet.',
           specs:{'DCR Impedance':'3.2 Ω','Nominal Impedance':'4 Ω','Sensitivity':'92 dB','Fs':'2.5 kHz','Freq. Up To':'35 kHz','Freq. Cut':'≥ 2.7 kHz','External Diameter':'90 mm','Installation Diameter':'68 mm','Installation Depth':'29.5 mm','Diaphragm':'Aluminum Foil','Panel':'CNC Aluminum'} },
-        { id:'st-sst50', price:4200000, priceUnit:'set', name:'SST50', model:'SST50', category:'Tweeter', emoji:'🎺', hasVideo:false,
+        { id:'st-sst50', price:4200000, priceUnit:'set', name:'SST50II', model:'SST50II', category:'Tweeter', emoji:'🎺', hasVideo:false,
           photos:['assets/st-sst50-4.webp','assets/st-sst50-1.webp','assets/st-sst50-2.webp','assets/st-sst50-3.webp'],
           desc:'2.2" AMT Ultra Air Motion Tweeter — Advanced Air Motion Transformer, CNC aluminium panel, Neo magnet.',
           specs:{'DCR Impedance':'3.2 Ω','Nominal Impedance':'4 Ω','Sensitivity':'89 dB','Fs':'3.3 kHz','Freq. Up To':'50 kHz','Freq. Cut':'≥ 4.5 kHz','External Diameter':'55 mm','Installation Diameter':'42 mm','Installation Depth':'21.5 mm','Diaphragm':'Aluminum Foil','Panel':'CNC Aluminum'} },
@@ -5636,7 +5637,7 @@ function parseImportText() {
 const STOCK_ALIASES = {
   plt28: 'ac-prot28', plw6cneo: 'ac-prow6c', plw6c: 'ac-prow6c', plm3c: 'ac-prom3c', plm3p: 'ac-prom3p', plm3pnextel: 'ac-prom3pnextel',
   hlm2mkii: 'ac-hlm2', hlt20mkii: 'ac-hlt20', hlt25vmkiinp: 'ac-hlt25', hlt25mkiinp: 'ac-hlt25',
-  ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16',
+  ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16', sst50: 'st-sst50',
   // file STOCK DISTRIBUTOR (Merk · Unit · Stok Tersedia)
   bls10: 'ac-bls10', blt26vmkii: 'ac-blt26', hlt25npmkii: 'ac-hlt25', iqc42bmwa: 'ac-iqc42bmwa', iqc42bmwb: 'ac-iqc42bmwb',
   iqs8bmw2ohm: 'ac-iqs824bmw', iqs8bmw4ohm: 'ac-iqs824bmw', microfaser: 'ac-microfiber',
