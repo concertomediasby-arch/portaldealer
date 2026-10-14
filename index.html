@@ -1858,6 +1858,13 @@ body {
   .scr-bd-card img { width: 100%; aspect-ratio: 5/4; object-fit: cover; border-radius: 9px; }
   .scr-bd-card b { font-size: 13px; } .scr-bd-vid { font-style: normal; font-size: 11px; color: #e9c46a; margin-left: 4px; } .scr-bd-card span { font-size: 11.5px; color: #e9c46a; }
   .scr-bd-card.on { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; background: rgba(233,196,106,.1); }
+  .paket-staff { display: none; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  body.is-staff .paket-staff { display: flex; }
+  .paket-staff b { font-size: 13px; color: var(--fg); margin-right: auto; }
+  .paket-staff span.pk-now { font: 600 11.5px var(--f-mono); color: var(--accent); }
+  .res-btn-screen { display: none; background: #0f1628; border-color: #e9c46a; color: #e9c46a; }
+  body.is-staff .res-btn-screen { display: inline-flex; }
+  .res-btn-screen.on { background: #e9c46a; color: #1a1305; }
   .qs-slide.qs-pks { background: radial-gradient(ellipse at 50% 0%, #1b2440, #05070d 70%); }
   .qs-slide canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 96vw; max-height: 96vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 2vh 6vh rgba(0,0,0,.6); opacity: 0; transition: opacity .45s ease; background: #fff; }
   .qs-slide canvas.in { opacity: 1; }
@@ -2639,6 +2646,10 @@ body {
       <div class="page-header">
         <div class="page-title">Paket Audio</div>
         <div class="page-subtitle">Rekomendasi paket sistem audio lengkap dari Concerto Audio Indonesia untuk berbagai kebutuhan dan segmen.</div>
+        <div class="paket-staff" id="paket-staff"><b>📺 Tayangan layar videotron (Admin &amp; Editor)</b><span class="pk-now" id="pk-now"></span>
+          <button class="gt-btn ghost" onclick="paketStep(-1)">◀ Sebelumnya</button><button class="gt-btn ghost" onclick="paketStep(1)">Berikutnya ▶</button>
+          <button class="gt-btn ghost" onclick="paketOnScreen('')">☰ Daftar paket</button><button class="gt-btn ghost" onclick="paketOffScreen()">⏹ Tutup tayangan</button>
+          <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
       </div>
       <div id="paket-list" style="padding:0 0 48px"></div>
     </div>
@@ -3001,7 +3012,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-14T07:31:23Z';
+const LAST_UPDATE = '2026-10-14T07:39:39Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4294,7 +4305,7 @@ function openPaketAudio() {
         <div class="res-title">${p.title}</div>
         <div class="res-desc">${p.desc}</div>
         <div class="res-desc" style="opacity:.6;font-size:.8em;margin-top:4px">Komponen: ${p.products.join(', ')}</div>
-        <div class="res-actions">${btn}<button class="res-btn res-btn-wa wa-only" onclick="contactPaket('${p.id}')"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>Tanya paket ini</button></div>
+        <div class="res-actions">${btn}${p.available ? `<button class="res-btn res-btn-screen" id="pk-btn-${p.id}" onclick="paketOnScreen('${p.id}')">📺 Tayangkan di Layar</button>` : ''}<button class="res-btn res-btn-wa wa-only" onclick="contactPaket('${p.id}')"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>Tanya paket ini</button></div>
       </div>
     </div>`;
   }).join('');
@@ -7243,6 +7254,7 @@ const QS_SCENES = {
   funmkt:  { label: 'Fun Marketing', icon: '🎯', match: /fun ?marketing/i },
   kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
   backdrop: { label: 'Backdrop', icon: '🖼', match: /backdrop/i },
+  paket: { label: 'Paket Audio', icon: '📦', match: /paket/i },
 };
 const PORTAL_POINTS = ['Katalog produk & harga SRP resmi', 'Stok produk real-time', 'Panduan Dealer & Concerto Academy', 'Paket Audio & Shopping Gathering'];
 const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitmen kerja sama', 'Program & dukungan untuk dealer'];
@@ -7308,6 +7320,7 @@ const sceneInfo = k => {
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
   if (sceneBase(k) === 'backdrop') return { ...base, label: bdNum(k) ? `Backdrop · ${BACKDROPS[bdNum(k) - 1]?.t}` : 'Backdrop · bergantian' };
   if (k === 'newbrand:full' || k === 'newbrand:v') return { ...base, icon: '🎬', label: `Launching ${NEW_BRAND.name} · ${k === 'newbrand:v' ? 'video' : 'hitung mundur + video'}` };
+  if (sceneBase(k) === 'paket') { const pk = paketParse(k); return { ...base, label: pk.pkg ? `Paket Audio · ${pk.pkg.title.split(' — ')[0]}${pk.pages ? ` (hal. ${pk.page}/${pk.pages})` : ` (hal. ${pk.page})`}` : 'Paket Audio · daftar' }; }
   if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
   if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
@@ -7542,6 +7555,7 @@ function renderScene(s) {
   if (String(s.scene).startsWith('launch:')) return renderLaunchVideo(s);
   if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
   if (sceneBase(s.scene) === 'backdrop') return renderBackdrop(s);
+  if (sceneBase(s.scene) === 'paket') return renderPaket(s);
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene), opVid(s.scene), s.updated_at);
   if (pksNum(s.scene)) return renderPksPage(pksNum(s.scene));
   const sc = QS_SCENES[sceneBase(s.scene)], t = s.scene_text ? escHtml(s.scene_text) : '';
@@ -7693,6 +7707,88 @@ function qsPickSpeakerVideo(n, input) {
 
 /* ── Halaman PKS di layar: dirender pdf.js ke canvas setinggi layar (A4 tegak di tengah) ── */
 let qsPksPages = 0;
+/* ── Paket Audio di layar (sementara, untuk acara Gathering): PDF paket dirender pdf.js layar penuh ──
+   scene 'paket' = daftar paket, 'paket:<i>' / 'paket:<i>:<p>' = paket ke-i (1..n), halaman p. */
+const paketParse = k => {
+  const m = /^paket(?::(\d+)(?::(\d+))?)?$/.exec(k || '') || [];
+  const list = PAKET_AUDIO.filter(x => x.available), i = +m[1] || 0;
+  return { idx: i, page: +m[2] || 1, pkg: i ? list[i - 1] : null, pages: paketPages[list[i - 1]?.file] || 0, list };
+};
+const paketPages = {}, paketDocs = {};
+function getPaketDoc(file) {
+  if (!paketDocs[file]) {
+    paketDocs[file] = loadPdfJs().then(lib => lib.getDocument(file).promise).then(d => { paketPages[file] = d.numPages; return d; });
+    paketDocs[file].catch(() => { delete paketDocs[file]; });
+  }
+  return paketDocs[file];
+}
+async function renderPaket(s) {
+  const pk = paketParse(s.scene);
+  if (!pk.pkg) {   // daftar paket
+    qsSetStage('paketlist|' + s.scene, `<div class="qs-scene sc-open"><div class="qs-kicker">Concerto Audio Indonesia</div><h1 class="sc-title">Paket <em>Audio</em></h1>
+      <div class="sc-op-list">${pk.list.map((p, i) => `<div class="sc-op-item"><span>${i + 1}</span><b>${escHtml(p.title)}</b></div>`).join('')}</div></div>`);
+    return;
+  }
+  const key = 'pks|paket' + pk.idx + '-' + pk.page;
+  if (!qsSetStage(key, '<div class="qs-idle"><p>Memuat paket…</p></div>')) return;
+  let ov = document.getElementById('qs-slide');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide qs-pks'; document.getElementById('qa-screen').appendChild(ov); }
+  ov.classList.add('qs-pks');
+  try {
+    const doc = await getPaketDoc(pk.pkg.file);
+    if (qsKey !== key) return;
+    const page = await doc.getPage(Math.min(pk.page, doc.numPages));
+    const base = page.getViewport({ scale: 1 });
+    const scale = Math.min(window.innerHeight * 0.96 / base.height, window.innerWidth * 0.96 / base.width) * (window.devicePixelRatio || 1);
+    const vp = page.getViewport({ scale });
+    const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    if (qsKey !== key) return;
+    ov.appendChild(cv); requestAnimationFrame(() => cv.classList.add('in'));
+    setTimeout(() => [...ov.children].slice(0, -1).forEach(x => x.remove()), 600);
+  } catch (e) {
+    ov.remove(); qsKey = null;
+    document.getElementById('qs-stage').innerHTML = `<div class="qs-idle"><p>Paket belum bisa dimuat (${escHtml(e.message || e)}).</p></div>`;
+  }
+}
+// Pindah halaman / paket: daftar → paket 1 hal.1 → … → paket terakhir. local = dipanggil di komputer videotron (render langsung)
+async function paketStep(d, local) {
+  const { data: s } = await supabase.from(QA_SCREEN).select('scene').eq('id', 1).maybeSingle();
+  const pk = paketParse(s?.scene);
+  if (sceneBase(s?.scene) !== 'paket') { if (!local) showToast('Tayangkan salah satu paket dulu.'); return; }
+  let idx = pk.idx, page = pk.page;
+  if (idx) {
+    const n = pk.pages || (await getPaketDoc(pk.pkg.file).then(x => x.numPages).catch(() => 0));
+    if (d > 0) { if (n && page < n) page++; else if (idx < pk.list.length) { idx++; page = 1; } else return; }
+    else { if (page > 1) page--; else if (idx > 1) { idx--; const f = pk.list[idx - 1].file; page = paketPages[f] || await getPaketDoc(f).then(x => x.numPages).catch(() => 1); } else { idx = 0; page = 1; } }
+  } else if (d > 0 && pk.list.length) { idx = 1; page = 1; } else return;
+  await paketSetScene(idx ? `paket:${idx}:${page}` : 'paket', local);
+}
+async function paketSetScene(scene, local) {
+  const now = new Date().toISOString();
+  if (local) renderScene({ scene, updated_at: now });
+  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: now });
+  if (error) { showToast('Gagal mengubah layar: ' + error.message + ' (jalankan SQL kolom scene di Supabase)', 9000); return; }
+  if (!local) paketMarkOnScreen(scene);
+}
+// Menu Paket Audio (Admin/Editor): tayangkan paket di layar videotron
+async function paketOnScreen(id) {
+  if (!supabase || !isAdmin()) return;
+  const pk = PAKET_AUDIO.filter(x => x.available), i = id ? pk.findIndex(x => x.id === id) + 1 : 0;
+  await paketSetScene(i ? `paket:${i}:1` : 'paket', false);
+  if (i) showToast('📺 Tayang di layar videotron: ' + pk[i - 1].title.split(' — ')[0]);
+}
+async function paketOffScreen() {
+  if (!supabase || !isAdmin()) return;
+  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, scene: null, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
+  if (error) { showToast('Gagal: ' + error.message, 8000); return; }
+  paketMarkOnScreen(null); showToast('Layar videotron kembali ke Open Mic');
+}
+function paketMarkOnScreen(scene) {
+  const pk = paketParse(scene);
+  document.querySelectorAll('.res-btn-screen').forEach(b => { const on = pk.pkg && b.id === 'pk-btn-' + pk.pkg.id; b.classList.toggle('on', !!on); b.textContent = on ? '● Tayang di layar' : '📺 Tayangkan di Layar'; });
+  const el = document.getElementById('pk-now'); if (el) el.textContent = sceneBase(scene) === 'paket' ? (pk.pkg ? `${pk.pkg.title.split(' — ')[0]} · hal. ${pk.page}${pk.pages ? '/' + pk.pages : ''}` : 'daftar paket') : '';
+}
 async function renderPksPage(n) {
   if (!qsSetStage('pks|' + n, '<div class="qs-idle"><p>Memuat materi PKS…</p></div>')) return;
   let ov = document.getElementById('qs-slide');
@@ -7749,6 +7845,7 @@ async function qsFmKey(d) {
     await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
     return;
   }
+  if (sceneBase(s?.scene) === 'paket') return paketStep(d, true);
   if (sceneBase(s?.scene) === 'backdrop') {   // Backdrop: panah = ganti foto
     const cur = bdNum(s.scene) || 0, next = cur === 0 ? (d > 0 ? 1 : 2) : Math.min(BACKDROPS.length, Math.max(1, cur + d));
     if (next === cur) return;
