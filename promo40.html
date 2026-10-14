@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Portal Dealer Concerto — Motion 40 detik</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Sora:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --gold:#e9c46a; --gold-hi:#f6dfa0; --gold-lo:#a9823a; --f-d:'Sora','Inter',system-ui,sans-serif; --f-b:'Inter',system-ui,sans-serif; --f-m:'JetBrains Mono',ui-monospace,monospace; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:#000; overflow:hidden; color:#fff; font-family:var(--f-b); }
+  #stage { position:absolute; left:50%; top:50%; width:1920px; height:1080px; transform-origin:0 0; overflow:hidden;
+    background:radial-gradient(ellipse 80% 70% at 50% 52%, #14213f 0%, #0a1226 46%, #04060c 100%); }
+  .abs { position:absolute; }
+  .scene { position:absolute; inset:0; opacity:0; }
+  .gold { background:linear-gradient(100deg,#b98a3c,var(--gold-hi) 30%,#fff6dc 45%,var(--gold) 60%,#b98a3c); background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .mono { font-family:var(--f-m); letter-spacing:.5em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+
+  /* latar */
+  #rays { left:50%; top:52%; width:2600px; height:2600px; margin:-1300px 0 0 -1300px; opacity:.6;
+    background:repeating-conic-gradient(from 0deg, rgba(233,196,106,.08) 0deg 5deg, transparent 5deg 15deg);
+    -webkit-mask-image:radial-gradient(circle,#000 0%,transparent 52%); mask-image:radial-gradient(circle,#000 0%,transparent 52%); }
+  #glow { inset:0; background:radial-gradient(ellipse 45% 45% at 50% 52%, rgba(233,196,106,.16), transparent 70%); }
+  .spark { position:absolute; border-radius:50%; background:radial-gradient(circle,#fff3d6,#e9c46a 55%,transparent 70%); opacity:0; }
+  #vig { inset:0; background:radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%); pointer-events:none; z-index:50; }
+  #flash { inset:0; background:radial-gradient(circle at 50% 50%, #fff 0%, #fff3d6 30%, rgba(233,196,106,.5) 60%, transparent 85%); opacity:0; z-index:60; }
+
+  /* S1 logo */
+  #logo1 { left:50%; top:300px; width:420px; margin-left:-210px; opacity:0; filter:drop-shadow(0 0 50px rgba(233,196,106,.35)); }
+  .ring { left:50%; top:420px; width:300px; height:300px; margin:-150px 0 0 -150px; border-radius:50%; border:2px solid rgba(233,196,106,.6); opacity:0; }
+  #k1 { left:0; right:0; top:610px; text-align:center; font-size:26px; opacity:0; }
+  #t1 { left:0; right:0; top:660px; text-align:center; font:800 150px/1 var(--f-d); letter-spacing:-.02em; opacity:0; }
+  #s1 { left:0; right:0; top:850px; text-align:center; font:500 36px var(--f-b); color:#c3cbdc; letter-spacing:.05em; opacity:0; }
+
+  /* S2 kinetic */
+  .kl { left:0; right:0; text-align:center; font:800 150px/1.05 var(--f-d); letter-spacing:-.025em; }
+  .kl span { display:inline-block; opacity:0; margin:0 .13em; }
+  #kc { left:0; right:0; top:760px; display:flex; justify-content:center; gap:26px; }
+  .chip { padding:16px 30px; border-radius:999px; border:1.5px solid rgba(233,196,106,.7); background:rgba(233,196,106,.1); font:600 30px var(--f-b); color:var(--gold-hi); opacity:0; }
+
+  /* S3 devices */
+  #laptop { left:640px; top:215px; width:1010px; opacity:0; transform-origin:50% 60%; }
+  .lid { position:relative; width:100%; aspect-ratio:16/10; background:#0c0f18; border-radius:22px 22px 8px 8px; padding:16px 16px 20px; box-shadow:0 0 0 2px #2a3042, 0 40px 90px rgba(0,0,0,.65), 0 0 120px rgba(233,196,106,.14); }
+  .scr { position:relative; width:100%; height:100%; overflow:hidden; border-radius:6px; background:#fff; }
+  .base { height:22px; width:118%; margin-left:-9%; background:linear-gradient(#cfd5e2,#8d95a8 60%,#5d6477); border-radius:0 0 28px 28px; box-shadow:0 30px 60px rgba(0,0,0,.6); }
+  #phone { left:1500px; top:380px; width:320px; opacity:0; }
+  .pb { position:relative; width:100%; aspect-ratio:390/844; background:#0b0d14; border-radius:50px; padding:12px; box-shadow:0 0 0 3px #2c3244, 0 40px 90px rgba(0,0,0,.65), 0 0 90px rgba(233,196,106,.16); }
+  .pb::before { content:""; position:absolute; top:22px; left:50%; width:88px; height:24px; margin-left:-44px; background:#05060a; border-radius:14px; z-index:5; }
+  .ps { position:relative; width:100%; height:100%; overflow:hidden; border-radius:39px; background:#fff; }
+  .shot { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top; opacity:0; }
+  .cap { left:90px; width:520px; opacity:0; }
+  .cap .n { font:700 22px var(--f-m); color:var(--gold); letter-spacing:.3em; }
+  .cap h3 { font:800 66px/1.06 var(--f-d); margin-top:12px; letter-spacing:-.015em; }
+  .cap p { font:500 28px/1.4 var(--f-b); color:#c3cbdc; margin-top:16px; }
+  .cap .bar { width:90px; height:5px; border-radius:3px; background:var(--gold); margin-top:22px; }
+
+  /* S4 kartu fitur */
+  #h4 { left:0; right:0; top:70px; text-align:center; font:800 84px var(--f-d); letter-spacing:-.02em; opacity:0; }
+  .fc { width:540px; height:330px; border-radius:26px; overflow:hidden; border:1.5px solid rgba(233,196,106,.4); background:#0d1426; box-shadow:0 30px 70px rgba(0,0,0,.55); opacity:0; }
+  .fc img { width:100%; height:100%; object-fit:cover; object-position:top; opacity:.85; }
+  .fc .lab { position:absolute; left:0; right:0; bottom:0; padding:60px 26px 22px; background:linear-gradient(transparent, rgba(4,6,12,.95)); font:700 34px var(--f-d); }
+  .fc .lab small { display:block; font:500 21px var(--f-b); color:var(--gold-hi); margin-top:4px; }
+  .fc .live { position:absolute; right:18px; top:18px; padding:8px 16px; border-radius:999px; background:rgba(22,163,74,.9); font:700 20px var(--f-m); display:flex; gap:10px; align-items:center; }
+  .fc .live i { width:12px; height:12px; border-radius:50%; background:#d9ffe6; display:block; }
+
+  /* S5 brand */
+  #h5 { left:0; right:0; top:90px; text-align:center; opacity:0; }
+  #h5 .mono { font-size:26px; display:block; }
+  #h5 b { display:block; font:800 120px/1.05 var(--f-d); margin-top:16px; letter-spacing:-.02em; }
+  #brands { left:130px; right:130px; top:430px; display:flex; justify-content:space-between; align-items:center; }
+  .bl { width:250px; height:190px; border-radius:26px; display:grid; place-items:center; padding:26px; border:1.5px solid rgba(233,196,106,.35); background:rgba(255,255,255,.05); opacity:0; }
+  .bl img { max-width:100%; max-height:100%; object-fit:contain; }
+  #stats { left:0; right:0; top:760px; display:flex; justify-content:center; gap:140px; opacity:0; }
+  .st { text-align:center; } .st b { display:block; font:800 120px/1 var(--f-d); } .st span { font:600 24px var(--f-m); letter-spacing:.3em; color:#aab4c8; text-transform:uppercase; }
+
+  /* S6 unlock */
+  #h6 { left:0; right:0; top:80px; text-align:center; font:800 92px/1.05 var(--f-d); letter-spacing:-.02em; opacity:0; }
+  #lock { overflow:visible; left:50%; top:330px; width:240px; height:300px; margin-left:-120px; opacity:0; }
+  #codebox { left:50%; top:680px; width:640px; height:100px; margin-left:-320px; border-radius:22px; border:2px solid rgba(233,196,106,.7); background:rgba(255,255,255,.06); display:flex; align-items:center; justify-content:center; gap:26px; opacity:0; }
+  #codebox i { width:24px; height:24px; border-radius:50%; background:var(--gold); display:block; opacity:0; }
+  #codebox em { position:absolute; left:26px; top:-18px; padding:0 12px; background:#0a1226; font:700 20px var(--f-m); letter-spacing:.3em; color:var(--gold); font-style:normal; }
+  #unl { left:0; right:0; top:830px; display:flex; justify-content:center; gap:34px; }
+  .uc { padding:22px 36px; border-radius:20px; background:rgba(22,163,74,.16); border:1.5px solid rgba(74,222,128,.7); font:700 34px var(--f-d); display:flex; align-items:center; gap:16px; opacity:0; }
+
+  /* S7 outro */
+  #logo7 { left:200px; top:200px; width:480px; opacity:0; filter:drop-shadow(0 0 50px rgba(233,196,106,.35)); }
+  #t7 { left:200px; top:450px; font:800 84px/1.06 var(--f-d); letter-spacing:-.025em; opacity:0; }
+  #u7 { left:200px; top:740px; font:700 62px var(--f-d); opacity:0; }
+  #q7 { left:1230px; top:250px; width:470px; height:470px; padding:34px; border-radius:36px; background:#fff; box-shadow:0 0 120px rgba(233,196,106,.45); opacity:0; }
+  #q7 img { width:100%; height:100%; }
+  #qt { left:1230px; top:745px; width:470px; text-align:center; font:600 26px var(--f-m); letter-spacing:.25em; color:var(--gold); opacity:0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="abs" id="glow"></div><div class="abs" id="rays"></div>
+  <div id="sparks"></div>
+
+  <!-- S1 -->
+  <div class="scene" id="S1">
+    <div class="abs ring"></div><div class="abs ring"></div><div class="abs ring"></div>
+    <img class="abs" id="logo1" src="assets/intro/logo-white.png" alt="">
+    <div class="abs mono" id="k1">Portal Dealer</div>
+    <div class="abs gold" id="t1">CONCERTO</div>
+    <div class="abs" id="s1">Know Your Products. Build With Confidence.</div>
+  </div>
+
+  <!-- S2 -->
+  <div class="scene" id="S2">
+    <div class="abs kl" id="l1" style="top:230px"><span>Satu</span><span>portal.</span></div>
+    <div class="abs kl" id="l2" style="top:400px"><span>Semua</span><span>yang</span><span>dealer</span></div>
+    <div class="abs kl" id="l3" style="top:570px"><span class="gold">butuhkan.</span></div>
+    <div class="abs" id="kc"><div class="chip">📚 Katalog</div><div class="chip">📦 Stok</div><div class="chip">🎁 Paket</div><div class="chip">🎓 Academy</div></div>
+  </div>
+
+  <!-- S3 -->
+  <div class="scene" id="S3">
+    <div class="abs cap" id="c1" style="top:330px"><div class="n">01 / KATALOG</div><h3>Katalog <span class="gold">lengkap</span></h3><p>6 brand resmi, 120 produk — foto, spesifikasi, dan video.</p><div class="bar"></div></div>
+    <div class="abs cap" id="c2" style="top:330px"><div class="n">02 / PRODUK</div><h3>Detail <span class="gold">siap jual</span></h3><p>Spesifikasi, foto, video, dan harga SRP dalam satu halaman.</p><div class="bar"></div></div>
+    <div class="abs cap" id="c3" style="top:330px"><div class="n">03 / SPEC SHEET</div><h3>PDF <span class="gold">sekali klik</span></h3><p>Spec sheet profesional untuk dikirim ke pelanggan.</p><div class="bar"></div></div>
+    <div class="abs" id="laptop"><div class="lid"><div class="scr" id="lscr"></div></div><div class="base"></div></div>
+    <div class="abs" id="phone"><div class="pb"><div class="ps" id="pscr"></div></div></div>
+  </div>
+
+  <!-- S4 -->
+  <div class="scene" id="S4">
+    <div class="abs" id="h4">Semua dalam <span class="gold">satu tempat</span></div>
+    <div class="abs fc" id="f1" style="left:120px;top:230px"><img src="assets/intro/d-5-stock.webp" alt=""><div class="live"><i></i>READY · <span id="qty">12</span></div><div class="lab">Stok Real-time<small>Ketersediaan terkini dari gudang</small></div></div>
+    <div class="abs fc" id="f2" style="left:690px;top:230px"><img src="assets/intro/d-6-paket.webp" alt=""><div class="lab">Paket Audio<small>Rekomendasi sistem lengkap</small></div></div>
+    <div class="abs fc" id="f3" style="left:1260px;top:230px"><img src="assets/intro/d-7-academy.webp" alt=""><div class="lab">Concerto Academy<small>Belajar product knowledge</small></div></div>
+    <div class="abs fc" id="f4" style="left:120px;top:620px"><img src="assets/intro/d-9-dsp.webp" alt=""><div class="lab">DSP Software<small>Unduh tool tuning</small></div></div>
+    <div class="abs fc" id="f5" style="left:690px;top:620px"><img src="assets/intro/d-10-updates.webp" alt=""><div class="lab">Update Terbaru<small>Produk &amp; info baru</small></div></div>
+    <div class="abs fc" id="f6" style="left:1260px;top:620px"><img src="assets/intro/d-8-brandresmi.webp" alt=""><div class="lab">Brand Resmi<small>Distribusi resmi CAI</small></div></div>
+  </div>
+
+  <!-- S5 -->
+  <div class="scene" id="S5">
+    <div class="abs" id="h5"><span class="mono">Brand yang kami naungi</span><b>6 Brand <span class="gold">Resmi</span></b></div>
+    <div class="abs" id="brands">
+      <div class="bl" style="background:linear-gradient(135deg,#140403,#3a0d0a)"><img src="assets/brands/audiocircle.webp" alt=""></div>
+      <div class="bl" style="background:linear-gradient(135deg,#02140a,#063d1f)"><img src="assets/brands/steg.webp" alt=""></div>
+      <div class="bl" style="background:linear-gradient(135deg,#17120a,#3d2f12)"><img src="assets/brands/zelos.webp" alt=""></div>
+      <div class="bl" style="background:linear-gradient(135deg,#120f05,#2e2408)"><img src="assets/brands/dios.webp" alt=""></div>
+      <div class="bl" style="background:linear-gradient(135deg,#04101c,#0c2f4e)"><img src="assets/brands/og.webp" alt=""></div>
+      <div class="bl" style="background:linear-gradient(135deg,#1a0000,#3d0000)"><img src="assets/brands/audio-system.webp" alt=""></div>
+    </div>
+    <div class="abs" id="stats">
+      <div class="st"><b class="gold" id="n1">0</b><span>Brand</span></div>
+      <div class="st"><b class="gold" id="n2">0</b><span>Seri produk</span></div>
+      <div class="st"><b class="gold" id="n3">0</b><span>Produk</span></div>
+    </div>
+  </div>
+
+  <!-- S6 -->
+  <div class="scene" id="S6">
+    <div class="abs" id="h6">Buka menu <span class="gold">bergembok</span></div>
+    <svg class="abs" id="lock" viewBox="0 0 240 300">
+      <g id="shackle" style="transform-origin:60px 130px"><path d="M60 130 V92 a60 60 0 0 1 120 0 V130" fill="none" stroke="#e9c46a" stroke-width="22" stroke-linecap="round"/></g>
+      <rect x="20" y="124" width="200" height="160" rx="30" fill="url(#lg)"/>
+      <defs><linearGradient id="lg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6dfa0"/><stop offset=".5" stop-color="#e9c46a"/><stop offset="1" stop-color="#a9823a"/></linearGradient></defs>
+      <circle cx="120" cy="194" r="20" fill="#3a2a0a"/><rect x="112" y="200" width="16" height="44" rx="8" fill="#3a2a0a"/>
+    </svg>
+    <div class="abs" id="codebox"><em>KODE AKSES DEALER</em><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="abs" id="unl"><div class="uc">🔓 Stok Produk</div><div class="uc">🔓 Panduan Dealer</div><div class="uc">🔓 Shopping Gathering</div></div>
+  </div>
+
+  <!-- S7 -->
+  <div class="scene" id="S7">
+    <img class="abs" id="logo7" src="assets/intro/logo-white.png" alt="">
+    <div class="abs" id="t7">Know Your Products.<br><span class="gold">Build With Confidence.</span></div>
+    <div class="abs gold" id="u7">dealer.concerto.id</div>
+    <div class="abs" id="q7"><img src="assets/qr-portal.svg" alt=""></div>
+    <div class="abs" id="qt">SCAN &amp; MASUK</div>
+  </div>
+
+  <div class="abs" id="flash"></div><div class="abs" id="vig"></div>
+</div>
+<script>
+const W = 1920, H = 1080, DUR = 40;
+const st = document.getElementById('stage');
+function fit() { const s = Math.min(innerWidth / W, innerHeight / H); st.style.transform = `translate(${-W*s/2 + innerWidth/2}px, ${-H*s/2 + innerHeight/2}px) scale(${s})`; st.style.left = '0'; st.style.top = '0'; }
+fit(); addEventListener('resize', fit);
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const ms = s => s * 1000;
+const EO = 'cubic-bezier(.16,1,.3,1)', EB = 'cubic-bezier(.34,1.56,.64,1)', EI = 'cubic-bezier(.7,0,.84,0)', EIO = 'cubic-bezier(.65,0,.35,1)';
+// A(el, keyframes, startSec, durSec, easing)  — semua animasi memakai delay absolut agar bisa di-seek per frame
+function A(el, kf, t0, d, easing = EO) { return (typeof el === 'string' ? $(el) : el).animate(kf, { delay: ms(t0), duration: ms(d), easing, fill: 'both' }); }
+// scene container: tampil [a, b], fade masuk/keluar
+function scene(id, a, b, fin = .4, fout = .5) { const d = b - a; return A(id, [{ opacity: 0, offset: 0 }, { opacity: 1, offset: fin / d }, { opacity: 1, offset: 1 - fout / d }, { opacity: 0, offset: 1 }], a, d, 'linear'); }
+
+// ── Latar: sinar berputar + percikan ──
+$('#rays').animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 90000, iterations: Infinity });
+(function () { let r = 11; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  const host = $('#sparks');
+  for (let i = 0; i < 46; i++) { const e = document.createElement('i'); e.className = 'spark'; const sz = 6 + rnd() * 14;
+    e.style.cssText = `left:${rnd() * 1920}px;top:${300 + rnd() * 760}px;width:${sz}px;height:${sz}px`; host.appendChild(e);
+    e.animate([{ opacity: 0, transform: 'translateY(30px) scale(.4)' }, { opacity: .9, offset: .3 }, { opacity: 0, transform: `translateY(${-160 - rnd() * 200}px) scale(1.2)` }], { duration: 5000 + rnd() * 4000, delay: -rnd() * 9000, iterations: Infinity, easing: 'ease-in-out' }); } })();
+$('#glow').animate([{ opacity: .7 }, { opacity: 1 }, { opacity: .7 }], { duration: 4000, iterations: Infinity, easing: 'ease-in-out' });
+
+/* ═══ S1 · 0 – 4.2 : logo + judul ═══ */
+scene('#S1', 0, 4.2, .15, .55);
+A('#logo1', [{ opacity: 0, transform: 'translateY(40px) scale(.7)', filter: 'blur(14px) drop-shadow(0 0 50px rgba(233,196,106,.35))' }, { opacity: 1, transform: 'none', filter: 'blur(0) drop-shadow(0 0 50px rgba(233,196,106,.35))' }], .25, 1.1, EB);
+$$('#S1 .ring').forEach((r, i) => A(r, [{ opacity: .9, transform: 'scale(.4)' }, { opacity: 0, transform: 'scale(5.5)' }], .3 + i * .28, 1.8, 'ease-out'));
+A('#k1', [{ opacity: 0, letterSpacing: '1.2em' }, { opacity: 1, letterSpacing: '.5em' }], 1.1, .9);
+A('#t1', [{ opacity: 0, transform: 'scale(1.5)', filter: 'blur(22px)' }, { opacity: 1, transform: 'scale(1)', filter: 'blur(0)' }], 1.55, .9, EO);
+$('#t1').animate([{ backgroundPosition: '0% 0' }, { backgroundPosition: '-220% 0' }], { duration: 4500, iterations: Infinity });
+A('#s1', [{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }], 2.5, .8);
+A('#S1', [{ transform: 'scale(1)', filter: 'blur(0)' }, { transform: 'scale(1.18)', filter: 'blur(14px)' }], 3.6, .6, EI);
+
+/* ═══ S2 · 3.9 – 8.2 : tipografi kinetik ═══ */
+scene('#S2', 3.9, 8.3, .1, .5);
+const slam = (sel, t0) => $$(sel + ' span').forEach((s, i) => A(s, [{ opacity: 0, transform: 'translateY(110px) scale(1.5) rotate(-4deg)', filter: 'blur(14px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], t0 + i * .18, .6, EB));
+slam('#l1', 4.1); slam('#l2', 4.9); slam('#l3', 5.65);
+$('#l3 span').animate([{ backgroundPosition: '0% 0' }, { backgroundPosition: '-220% 0' }], { duration: 3000, iterations: Infinity });
+$$('#kc .chip').forEach((c, i) => A(c, [{ opacity: 0, transform: 'translateY(40px) scale(.7)' }, { opacity: 1, transform: 'none' }], 6.5 + i * .22, .55, EB));
+A('#S2', [{ transform: 'translateX(0)' }, { transform: 'translateX(-220px)', filter: 'blur(10px)' }], 7.7, .6, EI);
+
+/* ═══ S3 · 8.0 – 16.0 : perangkat + tangkapan layar ═══ */
+scene('#S3', 8.0, 16.1, .2, .55);
+A('#laptop', [{ opacity: 0, transform: 'translateX(260px) rotateY(-16deg) scale(.86)' }, { opacity: 1, transform: 'none' }], 8.1, 1.3, EO);
+A('#phone', [{ opacity: 0, transform: 'translateX(300px) translateY(50px) rotate(8deg) scale(.88)' }, { opacity: 1, transform: 'rotate(-3deg)' }], 8.6, 1.2, EO);
+$('#laptop').animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-10px)' }, { transform: 'translateY(0)' }], { duration: 5000, iterations: Infinity, easing: 'ease-in-out', composite: 'add' });
+const SHOTS = [['d-1-landing', 'm-1-landing', 8.7], ['d-2-dashboard', 'm-2-dashboard', 10.2], ['d-3-catalog', 'm-3-catalog', 11.6], ['d-4-product', 'm-4-product', 13.0], ['d-12-specsheet', 'm-12-specsheet', 14.4]];
+SHOTS.forEach(([d, m, t0], i) => {
+  const end = i < SHOTS.length - 1 ? SHOTS[i + 1][2] : 16.1;
+  [['#lscr', d], ['#pscr', m]].forEach(([host, f]) => { const im = document.createElement('img'); im.className = 'shot'; im.src = `assets/intro/${f}.webp`; $(host).appendChild(im);
+    const L = end - t0 + .35;
+    A(im, [{ opacity: 0, transform: 'scale(1.06)', offset: 0 }, { opacity: 1, transform: 'scale(1.02)', offset: .12 }, { opacity: 1, transform: 'scale(1)', offset: .85 }, { opacity: i < SHOTS.length - 1 ? 0 : 1, transform: 'scale(1)', offset: 1 }], t0, L, 'linear'); });
+});
+// caption bergantian
+[['#c1', 8.9, 11.5], ['#c2', 11.7, 14.2], ['#c3', 14.4, 16.0]].forEach(([c, a, b]) => {
+  const d = b - a; A(c, [{ opacity: 0, transform: 'translateX(-70px)', offset: 0 }, { opacity: 1, transform: 'none', offset: .16 }, { opacity: 1, transform: 'none', offset: 1 - .14 }, { opacity: 0, transform: 'translateX(40px)', offset: 1 }], a, d, EO); });
+A('#S3', [{ transform: 'translateX(0)' }, { transform: 'translateX(-160px) scale(.96)', filter: 'blur(8px)' }], 15.5, .6, EI);
+
+/* ═══ S4 · 15.9 – 24.0 : kartu fitur ═══ */
+scene('#S4', 15.9, 24.1, .25, .5);
+A('#h4', [{ opacity: 0, transform: 'translateY(-40px) scale(.9)' }, { opacity: 1, transform: 'none' }], 16.1, .8, EO);
+$$('.fc').forEach((c, i) => {
+  const t0 = 16.7 + i * .45;
+  A(c, [{ opacity: 0, transform: 'translateY(110px) scale(.7) rotate(' + (i % 2 ? 5 : -5) + 'deg)' }, { opacity: 1, transform: 'none' }], t0, .7, EB);
+  c.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-8px)' }, { transform: 'translateY(0)' }], { duration: 3800 + i * 300, iterations: Infinity, easing: 'ease-in-out', delay: -i * 600, composite: 'add' });
+});
+A('#f1 .live', [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], 19.6, .5, 'ease-in-out').updatePlaybackRate?.(1);
+A('#S4', [{ transform: 'scale(1)' }, { transform: 'scale(1.12)', filter: 'blur(12px)' }], 23.4, .6, EI);
+
+/* ═══ S5 · 23.9 – 30.4 : brand ═══ */
+scene('#S5', 23.9, 30.5, .25, .5);
+A('#h5', [{ opacity: 0, transform: 'translateY(-50px)' }, { opacity: 1, transform: 'none' }], 24.1, .9, EO);
+$$('.bl').forEach((b, i) => A(b, [{ opacity: 0, transform: 'translateY(90px) scale(.6)' }, { opacity: 1, transform: 'none' }], 24.7 + i * .28, .7, EB));
+A('#stats', [{ opacity: 0, transform: 'translateY(40px)' }, { opacity: 1, transform: 'none' }], 26.7, .8, EO);
+// penghitung angka (dihitung per frame dari waktu animasi)
+const counters = [['#n1', 6, 26.9], ['#n2', 37, 27.2], ['#n3', 120, 27.5]];
+function updateCounters(t) {
+  counters.forEach(([sel, to, t0]) => { const p = Math.min(1, Math.max(0, (t - t0) / 1.6)), e = 1 - Math.pow(1 - p, 3); $(sel).textContent = Math.round(to * e); });
+  const q = Math.min(1, Math.max(0, (t - 17.3) / 3)); $('#qty').textContent = Math.round(3 + 9 * q + (t > 20.5 ? Math.floor((t - 20.5) * 2) % 3 : 0));
+}
+A('#S5', [{ transform: 'scale(1)' }, { transform: 'scale(.9) translateY(60px)', filter: 'blur(10px)' }], 29.9, .6, EI);
+
+/* ═══ S6 · 30.2 – 36.2 : buka kunci ═══ */
+scene('#S6', 30.2, 36.3, .3, .35);
+A('#h6', [{ opacity: 0, transform: 'translateY(-40px)' }, { opacity: 1, transform: 'none' }], 30.4, .8, EO);
+A('#lock', [{ opacity: 0, transform: 'scale(.4) rotate(-12deg)' }, { opacity: 1, transform: 'none' }], 30.6, .7, EB);
+A('#codebox', [{ opacity: 0, transform: 'translateY(40px)' }, { opacity: 1, transform: 'none' }], 31.1, .6, EO);
+$$('#codebox i').forEach((d, i) => A(d, [{ opacity: 0, transform: 'scale(0)' }, { opacity: 1, transform: 'scale(1)' }], 31.8 + i * .17, .25, EB));
+A('#shackle', [{ transform: 'translateY(0) rotate(0deg)' }, { transform: 'translateY(-34px) rotate(0deg)', offset: .35 }, { transform: 'translateY(-34px) rotate(-38deg)' }], 33.0, .6, EB);
+A('#lock', [{ filter: 'drop-shadow(0 0 0 rgba(74,222,128,0))' }, { filter: 'drop-shadow(0 0 60px rgba(74,222,128,.9))' }], 33.0, .6, 'ease-out');
+$$('.uc').forEach((c, i) => A(c, [{ opacity: 0, transform: 'translateY(60px) scale(.8)' }, { opacity: 1, transform: 'none' }], 33.7 + i * .38, .6, EB));
+A('#S6', [{ transform: 'scale(1)' }, { transform: 'scale(1.1)', filter: 'blur(10px)' }], 35.8, .45, EI);
+
+/* ═══ S7 · 36.0 – 40 : penutup ═══ */
+scene('#S7', 36.0, 40.01, .1, 0.01);
+A('#flash', [{ opacity: 0 }, { opacity: .95, offset: .12 }, { opacity: 0 }], 35.95, 1.0, 'ease-out');
+A('#logo7', [{ opacity: 0, transform: 'translateY(40px) scale(.8)' }, { opacity: 1, transform: 'none' }], 36.2, .8, EB);
+A('#t7', [{ opacity: 0, transform: 'translateY(40px)', filter: 'blur(12px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], 36.55, .8, EO);
+$('#t7 .gold').animate([{ backgroundPosition: '0% 0' }, { backgroundPosition: '-220% 0' }], { duration: 3500, iterations: Infinity });
+A('#u7', [{ opacity: 0, transform: 'translateX(-60px)' }, { opacity: 1, transform: 'none' }], 37.2, .7, EO);
+A('#q7', [{ opacity: 0, transform: 'scale(.5) rotate(-8deg)' }, { opacity: 1, transform: 'none' }], 36.8, .8, EB);
+A('#qt', [{ opacity: 0 }, { opacity: 1 }], 37.6, .6);
+A('#S7', [{ opacity: 1 }, { opacity: 0 }], 39.55, .45, 'linear');   // pudar keluar di akhir
+
+/* ── kendali waktu ── */
+window.seek = async t => {
+  document.getAnimations().forEach(a => { a.pause(); if (a.effect.getTiming().iterations === Infinity) a.currentTime = ms(t) + (a.effect.getTiming().delay < 0 ? 0 : 0); else a.currentTime = ms(t); });
+  updateCounters(t);
+};
+window.DUR = DUR;
+if (!location.search.includes('seek')) {   // pemutaran biasa (pratinjau)
+  const t0 = performance.now(); (function loop() { const t = (performance.now() - t0) / 1000 % (DUR + 1.5); if (t <= DUR) { document.getAnimations().forEach(a => { a.currentTime = ms(t); }); updateCounters(t); } requestAnimationFrame(loop); })();
+}
+</script>
+</body>
+</html>
