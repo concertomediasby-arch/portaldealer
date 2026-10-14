@@ -1937,12 +1937,21 @@ body {
   .gt-bar.empty .gt-btn.wa { opacity: .55; }
   @media (max-width: 760px) {
     .gt-head { display: none; }
-    .gt-row { grid-template-columns: 1fr 1fr 1fr; gap: 6px 10px; }
+    .gt-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; padding: 11px 12px; }
     .gt-name { grid-column: 1 / -1; }
-    .gt-p { text-align: left; }
+    .gt-p { text-align: left; font-size: 12px; }
+    .gt-q { grid-column: 1; }
+    .gt-row > .gt-line { grid-column: 2 / -1; text-align: right; align-self: end; font-size: 13.5px; }
+    .gt-qty { width: 100%; max-width: 96px; }
     .gt-p::before { content: attr(data-l); display: block; font: 600 9.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); text-decoration: none; }
     .gt-q { text-align: left; }
-    .gt-info { grid-template-columns: 1fr 1fr; padding: 12px; gap: 8px; }
+    .gt-info { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; gap: 10px 8px; }
+    .gt-info label { min-width: 0; }
+    .gt-info .gt-dealer-field { grid-column: 1 / -1; }
+    .gt-input { width: 100%; min-width: 0; box-sizing: border-box; font-size: 16px; }   /* 16px: iOS Safari tidak zoom otomatis saat input difokus */
+    .gt-qty { font-size: 16px; }
+    .gt-terms { font-size: 11.5px; }
+    #gt-form, #gt-top, #gt-rekap { padding: 0 16px; }   /* sejajar dengan judul halaman */
     .gt-bar { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); flex-wrap: nowrap; padding: 8px 10px; gap: 8px; margin: 10px 0 0; }
     .gt-total span { font-size: 10px; }
     .gt-total b { font-size: 16px; }
@@ -2992,7 +3001,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-14T03:48:26Z';
+const LAST_UPDATE = '2026-10-14T07:31:23Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
