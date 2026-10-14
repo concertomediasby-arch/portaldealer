@@ -2025,6 +2025,11 @@ body {
   .gt-editing[hidden] { display: none; }
   .gt-del:hover { color: #e5484d; border-color: #e5484d; }
   .gt-rk-head { margin-bottom: 8px; }
+  .gt-store-table { margin-bottom: 22px; }
+  .gt-store-items { display: block; margin-top: 3px; font: 500 11.5px/1.45 var(--f-body); color: var(--fg-dim, #8a8f98); white-space: normal; }
+  .gt-rank { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-right: 8px; padding: 0 5px; border-radius: 6px; font: 700 11px var(--f-mono); color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .gt-store-sum { font-weight: 700; border-top: 1px solid var(--accent); }
+  .gt-store-sum .gt-name { color: var(--accent); text-transform: uppercase; font-size: 12px; letter-spacing: .08em; }
   .gt-prod-table .gt-row { grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.2fr) 80px 90px minmax(0, 1.2fr); }
   @media (max-width: 760px) {
     .gt-prod-table .gt-row { grid-template-columns: 1fr 1fr; }
@@ -2987,7 +2992,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-13T14:52:30Z';
+const LAST_UPDATE = '2026-10-14T03:48:26Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6496,15 +6501,35 @@ const fmtGtTime = d => new Date(d).toLocaleString('id-ID', { day: 'numeric', mon
 const gtActive = () => (gtOrders || []).filter(o => o.status !== 'batal');
 
 // Total per produk dari semua pesanan yang tidak batal
+// Nama toko untuk rekap (store = nama dealer; kota dipisah). Kunci dinormalisasi agar penulisan beda huruf tetap satu toko.
+const gtStoreName = o => (o.store || o.dealer || 'Tanpa nama').trim();
 function gtProductTotals() {
   const m = new Map();
   gtActive().forEach(o => (o.items || []).forEach(it => {
     const k = it.group + '|' + it.name;
-    const x = m.get(k) || { group: it.group, name: it.name, qty: 0, total: 0, orders: 0 };
+    const x = m.get(k) || { group: it.group, name: it.name, qty: 0, total: 0, orders: 0, stores: new Map() };
     x.qty += it.qty; x.total += it.total; x.orders++;
+    const sk = normKey(gtStoreName(o)), st = x.stores.get(sk) || { name: gtStoreName(o), city: o.city || '', qty: 0, total: 0 };
+    st.qty += it.qty; st.total += it.total; x.stores.set(sk, st);
     m.set(k, x);
   }));
-  return [...m.values()].sort((a, b) => b.total - a.total);
+  return [...m.values()].map(x => ({ ...x, stores: [...x.stores.values()].sort((a, b) => b.total - a.total) })).sort((a, b) => b.total - a.total);
+}
+// Rekap per toko: total pembelian tiap toko (tanpa pesanan batal) + rincian barangnya
+function gtStoreTotals() {
+  const m = new Map();
+  gtActive().forEach(o => {
+    const k = normKey(gtStoreName(o));
+    const x = m.get(k) || { name: gtStoreName(o), city: o.city || '', orders: 0, qty: 0, total: 0, items: new Map() };
+    x.orders++; x.city = x.city || o.city || '';
+    (o.items || []).forEach(it => {
+      x.qty += it.qty; x.total += it.total;
+      const ik = it.group + '|' + it.name, y = x.items.get(ik) || { name: it.name, group: it.group, qty: 0, total: 0 };
+      y.qty += it.qty; y.total += it.total; x.items.set(ik, y);
+    });
+    m.set(k, x);
+  });
+  return [...m.values()].map(x => ({ ...x, items: [...x.items.values()].sort((a, b) => b.total - a.total) })).sort((a, b) => b.total - a.total);
 }
 
 function setGtOrderFilter(f) { gtOrderFilter = f; renderGtRekap(); }
@@ -6519,7 +6544,7 @@ function renderGtRekap() {
   const q = normKey(document.getElementById('gt-rk-search')?.value || '');
   const list = gtOrders.filter(o => (gtOrderFilter === 'all' || o.status === gtOrderFilter) &&
     (!q || normKey([o.invoice, o.store, o.city, o.dealer, o.pic, o.phone].join(' ')).includes(q)));
-  const prods = gtProductTotals();
+  const prods = gtProductTotals(), stores = gtStoreTotals();
   const count = st => gtOrders.filter(o => o.status === st).length;
   el.innerHTML = `
     <div class="stock-summary">
@@ -6565,9 +6590,14 @@ function renderGtRekap() {
           </div></div>` : ''}
         <span class="gt-badge st-${o.status}">${GT_STATUS[o.status] || o.status}</span>
       </div>`).join('') : `<div class="stock-empty">${gtOrders.length ? 'Tidak ada pesanan yang cocok.' : 'Belum ada pesanan. Pesanan muncul di sini saat dealer menekan "Kirim ke Sales".'}</div>`}</div>
+    ${stores.length ? `<div class="line-header gt-rk-head"><span class="line-name">Rekap per toko</span><span class="line-count">${stores.length}</span><span class="gt-sub">tanpa pesanan batal</span></div>
+    <div class="gt-table gt-prod-table gt-store-table"><div class="gt-row gt-head"><span>Toko</span><span>Kota</span><span>Pesanan</span><span>Total Qty</span><span>Total Pembelian</span></div>
+      ${stores.map((t, i) => `<div class="gt-row"><span class="gt-name"><b class="gt-rank">${i + 1}</b>${escHtml(t.name)}<small class="gt-store-items">${t.items.map(it => `${escHtml(it.name)} ×${it.qty}`).join(' · ')}</small></span><span class="gt-p" data-l="Kota">${escHtml(t.city || '—')}</span><span class="gt-p" data-l="Pesanan">${t.orders}</span><span class="gt-p gt-sp" data-l="Total Qty">${t.qty}</span><span class="gt-p gt-line" data-l="Total Pembelian">${fmtRp(t.total)}</span></div>`).join('')}
+      <div class="gt-row gt-store-sum"><span class="gt-name">Total semua toko</span><span class="gt-p"></span><span class="gt-p" data-l="Pesanan">${stores.reduce((a, t) => a + t.orders, 0)}</span><span class="gt-p gt-sp" data-l="Total Qty">${stores.reduce((a, t) => a + t.qty, 0)}</span><span class="gt-p gt-line" data-l="Total Pembelian">${fmtRp(stores.reduce((a, t) => a + t.total, 0))}</span></div>
+    </div>` : ''}
     ${prods.length ? `<div class="line-header gt-rk-head"><span class="line-name">Rekap per produk</span><span class="line-count">${prods.length}</span><span class="gt-sub">tanpa pesanan batal</span></div>
     <div class="gt-table gt-prod-table"><div class="gt-row gt-head"><span>Produk</span><span>Grup</span><span>Pesanan</span><span>Total Qty</span><span>Total Nilai</span></div>
-      ${prods.map(p => `<div class="gt-row"><span class="gt-name">${escHtml(p.name)}</span><span class="gt-p" data-l="Grup">${escHtml(p.group)}</span><span class="gt-p" data-l="Pesanan">${p.orders}</span><span class="gt-p gt-sp" data-l="Total Qty">${p.qty}</span><span class="gt-p gt-line" data-l="Total Nilai">${fmtRp(p.total)}</span></div>`).join('')}
+      ${prods.map(p => `<div class="gt-row"><span class="gt-name">${escHtml(p.name)}<small class="gt-store-items">${p.stores.map(t => `${escHtml(t.name)} ×${t.qty}`).join(' · ')}</small></span><span class="gt-p" data-l="Grup">${escHtml(p.group)}</span><span class="gt-p" data-l="Pesanan">${p.orders}</span><span class="gt-p gt-sp" data-l="Total Qty">${p.qty}</span><span class="gt-p gt-line" data-l="Total Nilai">${fmtRp(p.total)}</span></div>`).join('')}
     </div>` : ''}`;
 }
 
@@ -6734,11 +6764,16 @@ async function exportGtOrders() {
     const rows = [['No. Invoice', 'Waktu', 'Status', 'Nama Toko', 'Kota', 'Nama Dealer', 'No. HP', 'Sales PIC', 'Grup', 'Produk', 'Qty', 'Harga', 'Subtotal', 'Total Pesanan']];
     gtOrders.forEach(o => (o.items || []).forEach((it, n) => rows.push([o.invoice || '', fmtGtTime(o.created_at), GT_STATUS[o.status] || o.status, o.store, o.city, o.dealer, o.phone, o.pic,
       it.group, it.name, it.qty, it.price, it.total, n === 0 ? Number(o.total || 0) : ''])));
-    const prod = [['Produk', 'Grup', 'Jumlah Pesanan', 'Total Qty', 'Total Nilai'], ...gtProductTotals().map(p => [p.name, p.group, p.orders, p.qty, p.total])];
+    const prod = [['Produk', 'Grup', 'Jumlah Pesanan', 'Total Qty', 'Total Nilai', 'Dibeli oleh (toko × qty)'], ...gtProductTotals().map(p => [p.name, p.group, p.orders, p.qty, p.total, p.stores.map(t => `${t.name} ×${t.qty}`).join(', ')])];
+    const st = gtStoreTotals();
+    const toko = [['No', 'Nama Toko', 'Kota', 'Jumlah Pesanan', 'Total Qty', 'Total Pembelian', 'Barang (qty)'], ...st.map((t, i) => [i + 1, t.name, t.city, t.orders, t.qty, t.total, t.items.map(it => `${it.name} ×${it.qty}`).join(', ')]),
+      ['', 'TOTAL', '', st.reduce((a, t) => a + t.orders, 0), st.reduce((a, t) => a + t.qty, 0), st.reduce((a, t) => a + t.total, 0), '']];
     const wb = XLSX.utils.book_new();
     const ws1 = XLSX.utils.aoa_to_sheet(rows); ws1['!cols'] = [{wch:12},{wch:18},{wch:9},{wch:22},{wch:14},{wch:18},{wch:15},{wch:14},{wch:14},{wch:32},{wch:6},{wch:13},{wch:14},{wch:15}];
-    const ws2 = XLSX.utils.aoa_to_sheet(prod); ws2['!cols'] = [{wch:34},{wch:16},{wch:15},{wch:10},{wch:15}];
+    const ws2 = XLSX.utils.aoa_to_sheet(prod); ws2['!cols'] = [{wch:34},{wch:16},{wch:15},{wch:10},{wch:15},{wch:60}];
+    const ws3 = XLSX.utils.aoa_to_sheet(toko); ws3['!cols'] = [{wch:5},{wch:28},{wch:16},{wch:15},{wch:10},{wch:16},{wch:70}];
     XLSX.utils.book_append_sheet(wb, ws1, 'Pesanan');
+    XLSX.utils.book_append_sheet(wb, ws3, 'Rekap Toko');
     XLSX.utils.book_append_sheet(wb, ws2, 'Rekap Produk');
     XLSX.writeFile(wb, `rekap-gathering-${new Date().toISOString().slice(0, 10)}.xlsx`);
   } catch (e) { showToast('Gagal ekspor: ' + (e.message || e), 8000); }
