@@ -3012,7 +3012,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-14T14:27:16Z';
+const LAST_UPDATE = '2026-10-15T03:09:46Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7316,7 +7316,7 @@ const pksNum = k => { const m = /^kickoff:(\d+)$/.exec(k || ''); return m ? +m[1
 let pksMeta = null;   // { exists, pages } — di panel admin
 const opNum = k => { const m = /^opening:(\d+)(:v)?$/.exec(k || ''); return m ? +m[1] : 0; };
 const opVid = k => /^opening:\d+:v$/.test(k || '');
-const PORTAL_INTRO_VIDEO = 'assets/intro/portal-dealer-intro.mp4';   // video perkenalan portal (scene 'kickoff:v')
+const PORTAL_INTRO_VIDEO = 'assets/intro/portal-dealer-explainer-40s.mp4';   // video perkenalan portal (scene 'kickoff:v')
 const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
@@ -7437,7 +7437,7 @@ function renderScreenPanel(err) {
   else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
     const pv = scrRow.scene === 'kickoff:v';
     body = `${opts(false)}<div class="scr-actions">${showBtn('Tampilkan judul Kick Off 2027')}<button class="gt-btn${pv ? ' confirm' : ' ghost'}" onclick="setScene('kickoff:v')">${pv ? '↻ Putar ulang video perkenalan' : '🎬 Putar Video Perkenalan Portal'}</button></div>
-    <div class="scr-note">Video perkenalan portal (±74 dtk, laptop + HP) diputar layar penuh di videotron; selesai → kembali ke kartu Kick Off. Spasi = jeda/lanjut.</div>
+    <div class="scr-note">Video motion Portal Dealer (40 dtk, dengan musik & efek suara) diputar layar penuh di videotron; selesai → kembali ke kartu Kick Off. Spasi = jeda/lanjut.</div>
     <div class="scr-sub-k">Materi PKS Dealer 2027 <span class="scr-priv">🔒 file privat — tidak ikut situs publik</span></div>
     ${pksMeta === null ? '<div class="scr-note">Memeriksa file PKS…</div>' : !pksMeta.exists
       ? `<div class="scr-note">Belum ada file PKS. Unggah PDF <b>PKS Dealer 2027</b> sekali saja — tersimpan di penyimpanan privat portal.</div>`
