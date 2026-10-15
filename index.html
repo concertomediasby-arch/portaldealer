@@ -3012,7 +3012,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-15T03:09:46Z';
+const LAST_UPDATE = '2026-10-15T05:34:03Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6466,13 +6466,14 @@ function setGtTab(t) {
    Postgres `gathering_top_spenders(lim)` (SECURITY DEFINER) yang hanya mengembalikan agregat per toko. */
 const GT_TOP_HIGHLIGHT = 5;   // 5 besar ditonjolkan; toko lain tetap tampil di daftar bawahnya
 const GT_TOP_FETCH = 1000;
+const GT_TOP_FACTOR = 1.11;   // nilai di papan = subtotal pembelian × 111% (subtotal + PPN 11%); fungsi SQL tetap mengembalikan subtotal
 let gtTop = null, gtTopErr = '';
 async function loadGtTop() {
   if (!supabase || !authUser) return;
   try {
     const { data, error } = await supabase.rpc('gathering_top_spenders', { lim: GT_TOP_FETCH });
     if (error) throw error;
-    gtTop = data || []; gtTopErr = '';
+    gtTop = (data || []).map(r => ({ ...r, total: Math.round(Number(r.total || 0) * GT_TOP_FACTOR) })); gtTopErr = '';
   } catch (e) {
     const m = String(e.message || e);
     gtTop = [];
@@ -6484,7 +6485,7 @@ function renderGtTop() {
   const el = document.getElementById('gt-top');
   if (!el || gtTab !== 'top') return;
   const head = `<div class="gt-top-head"><div class="gt-top-title">🏆 Top Spender Gathering 2026</div>
-    <div class="gt-top-sub">Total belanja semua dealer selama Gathering CAI 2026 · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · dihitung dari pembelian yang sudah dikonfirmasi admin</div>
+    <div class="gt-top-sub">Total belanja semua dealer selama Gathering CAI 2026 (termasuk PPN 11%) · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · dihitung dari pembelian yang sudah dikonfirmasi admin</div>
     <button class="gt-btn ghost" onclick="loadGtTop()">↻ Muat ulang</button></div>`;
   if (gtTop === null) { el.innerHTML = head + '<div class="stock-empty">Memuat peringkat…</div>'; return; }
   if (gtTopErr) { el.innerHTML = head + `<div class="stock-empty">${escHtml(gtTopErr)}</div>`; return; }
