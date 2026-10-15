@@ -3012,7 +3012,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-15T05:49:40Z';
+const LAST_UPDATE = '2026-10-15T05:57:35Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6171,7 +6171,9 @@ function gtDealerChanged() {
 let gtItems = null, gtError = '', gtQty = {}, gtFilter = 'all';
 const gtKey = r => `${r.section}|${r.brand}|${r.name}`;
 // Harga yang dipakai menghitung total: spesial gathering, atau (clearance) harga clearance − cashback
-const gtNet = r => r.special_price == null ? null : r.section === 'clearance' ? r.special_price - (r.cashback || 0) : r.special_price;
+// Harga yang dipakai untuk pesanan: harga spesial (clearance: − cashback). Produk tanpa harga spesial tapi punya Harga Baru → dibeli di Harga Baru (tanpa promo). Tanpa keduanya → "Hubungi sales".
+const gtNoPromo = r => r.section !== 'clearance' && r.special_price == null && r.new_price != null;
+const gtNet = r => gtNoPromo(r) ? r.new_price : r.special_price == null ? null : r.section === 'clearance' ? r.special_price - (r.cashback || 0) : r.special_price;
 const gtRp = n => n == null ? '—' : fmtRp(n);
 const gtGroup = r => r.section === 'clearance' ? 'Clearance Sale' : r.brand;
 
@@ -6248,7 +6250,7 @@ function renderGathering() {
              <span class="gt-p gt-sp" data-l="Harga Bersih">${gtRp(net)}</span>`
           : `<span class="gt-p gt-old" data-l="Harga Lama">${r.old_price == null ? '—' : `<s>${fmtRp(r.old_price)}</s>`}</span>
              <span class="gt-p" data-l="Harga Baru">${gtRp(r.new_price)}</span>
-             <span class="gt-p gt-sp" data-l="Harga Spesial">${gtRp(net)}</span>`;
+             <span class="gt-p gt-sp" data-l="Harga Spesial">${gtRp(net)}${gtNoPromo(r) ? '<small>tanpa promo</small>' : ''}</span>`;
         return `<div class="gt-row${qty ? ' has-qty' : ''}" data-k="${escHtml(k)}">
           <span class="gt-name">${escHtml(r.name)}${sub}</span>${cols}
           <span class="gt-q">${net == null ? '<span class="gt-na">Hubungi sales</span>'
