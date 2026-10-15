@@ -3012,7 +3012,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-15T05:43:35Z';
+const LAST_UPDATE = '2026-10-15T05:49:40Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6703,7 +6703,7 @@ function downloadGtInvoice(id) {
   };
   thead();
   const rows = items.map((it, n) => [n + 1, it.brand || it.group || '', it.name + (it.section === 'clearance' ? ' (Clearance)' : ''), it.qty, rp(it.price), rp(it.total)]);
-  const minRows = Math.max(rows.length, rows.length <= 20 ? 20 : rows.length);
+  const minRows = Math.max(rows.length, rows.length <= 17 ? 17 : rows.length);
   for (let n = 0; n < minRows; n++) {
     if (y + rowH > 250) { footer(); doc.addPage(); header(); y = 44; thead(); }
     if (n % 2) { doc.setFillColor(...ZEBRA); doc.rect(L, y, W, rowH, 'F'); }
@@ -6714,9 +6714,17 @@ function downloadGtInvoice(id) {
     x = L; cols.forEach((c, k) => { cell(c, x, r[k]); x += c.w; });
     y += rowH;
   }
-  // grand total
-  if (y + 8 > 255) { footer(); doc.addPage(); header(); y = 44; }
+  // DPP → PPN 11% → grand total (harga gathering sudah termasuk PPN: DPP = total ÷ 1,11)
+  if (y + 24 > 255) { footer(); doc.addPage(); header(); y = 44; }
   const wLabel = cols[0].w + cols[1].w + cols[2].w;
+  const gTotal = Math.round(Number(o.total || 0)), dpp = Math.round(gTotal / 1.11), ppn = gTotal - dpp;
+  [['DPP (Total ÷ 1,11)', dpp], ['PPN 11% (DPP × 11%)', ppn]].forEach(([lab, val]) => {
+    doc.setDrawColor(...GRID); doc.setLineWidth(0.15); doc.rect(L, y, W, 7); doc.line(L + wLabel, y, L + wLabel, y + 7);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(40, 40, 55);
+    doc.text(lab, L + wLabel - 3, y + 4.8, { align: 'right' });
+    doc.setFont('helvetica', 'normal'); doc.text(rp(val), R - 2, y + 4.8, { align: 'right' });
+    y += 7;
+  });
   doc.setFillColor(...GOLD); doc.rect(L, y, wLabel, 8, 'F');
   doc.setFillColor(248, 241, 222); doc.rect(L + wLabel, y, W - wLabel, 8, 'F');
   doc.setDrawColor(...GRID); doc.rect(L, y, W, 8); doc.line(L + wLabel, y, L + wLabel, y + 8);
@@ -6725,7 +6733,7 @@ function downloadGtInvoice(id) {
   doc.text('GRAND TOTAL', L + wLabel - 3, y + 5.5, { align: 'right' });
   doc.setFontSize(9.5);
   doc.text(String(o.total_qty || items.reduce((a, it) => a + it.qty, 0)), L + wLabel + cols[3].w / 2, y + 5.5, { align: 'center' });
-  doc.text(rp(Number(o.total || 0)), R - 2, y + 5.5, { align: 'right' });
+  doc.text(rp(gTotal), R - 2, y + 5.5, { align: 'right' });
   y += 14;
 
   // terbilang & catatan
