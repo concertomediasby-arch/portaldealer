@@ -3012,7 +3012,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-15T05:34:03Z';
+const LAST_UPDATE = '2026-10-15T05:43:35Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6466,7 +6466,7 @@ function setGtTab(t) {
    Postgres `gathering_top_spenders(lim)` (SECURITY DEFINER) yang hanya mengembalikan agregat per toko. */
 const GT_TOP_HIGHLIGHT = 5;   // 5 besar ditonjolkan; toko lain tetap tampil di daftar bawahnya
 const GT_TOP_FETCH = 1000;
-const GT_TOP_FACTOR = 1.11;   // nilai di papan = subtotal pembelian × 111% (subtotal + PPN 11%); fungsi SQL tetap mengembalikan subtotal
+const GT_TOP_FACTOR = 1 / 1.11;   // nilai di papan = subtotal pembelian ÷ 111% (subtotal dikurangi PPN 11%); fungsi SQL tetap mengembalikan subtotal
 let gtTop = null, gtTopErr = '';
 async function loadGtTop() {
   if (!supabase || !authUser) return;
