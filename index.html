@@ -3012,7 +3012,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-15T05:57:35Z';
+const LAST_UPDATE = '2026-10-16T03:59:58Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6525,6 +6525,9 @@ async function loadGtOrders() {
 
 const fmtGtTime = d => new Date(d).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
 const gtActive = () => (gtOrders || []).filter(o => o.status !== 'batal');
+// Produk brand ini boleh dipesan & masuk invoice, tapi TIDAK masuk akumulasi penjualan (rekap toko/total) maupun Top Spender
+const gtNoAccum = it => /^audio\s*system$/i.test(String(it.brand || it.group || '').trim());
+const gtAccumTotal = o => Array.isArray(o.items) && o.items.length ? o.items.reduce((a, it) => a + (gtNoAccum(it) ? 0 : Number(it.total || 0)), 0) : Number(o.total || 0);
 
 // Total per produk dari semua pesanan yang tidak batal
 // Nama toko untuk rekap (store = nama dealer; kota dipisah). Kunci dinormalisasi agar penulisan beda huruf tetap satu toko.
@@ -6549,7 +6552,7 @@ function gtStoreTotals() {
     const x = m.get(k) || { name: gtStoreName(o), city: o.city || '', orders: 0, qty: 0, total: 0, items: new Map() };
     x.orders++; x.city = x.city || o.city || '';
     (o.items || []).forEach(it => {
-      x.qty += it.qty; x.total += it.total;
+      if (!gtNoAccum(it)) { x.qty += it.qty; x.total += it.total; }
       const ik = it.group + '|' + it.name, y = x.items.get(ik) || { name: it.name, group: it.group, qty: 0, total: 0 };
       y.qty += it.qty; y.total += it.total; x.items.set(ik, y);
     });
@@ -6577,7 +6580,7 @@ function renderGtRekap() {
       <div class="stock-sum"><b>${count('baru')}</b><span>Menunggu konfirmasi</span></div>
       <div class="stock-sum"><b>${gtOrders.filter(gtConfirmed).length}</b><span>Dikonfirmasi</span></div>
       <div class="stock-sum"><b>${act.reduce((a, o) => a + (o.total_qty || 0), 0)}</b><span>Total item (tanpa batal)</span></div>
-      <div class="stock-sum gt-sum-val"><b>${fmtRp(gtOrders.filter(gtConfirmed).reduce((a, o) => a + Number(o.total || 0), 0))}</b><span>Nilai dikonfirmasi</span></div>
+      <div class="stock-sum gt-sum-val"><b>${fmtRp(gtOrders.filter(gtConfirmed).reduce((a, o) => a + gtAccumTotal(o), 0))}</b><span>Nilai dikonfirmasi (tanpa Audio System)</span></div>
     </div>
     <div class="gt-rk-tools">
       <input id="gt-rk-search" class="catalog-search gt-rk-search" placeholder="Cari invoice, toko, kota, dealer, sales…" value="${escHtml(document.getElementById('gt-rk-search')?.value || '')}" oninput="renderGtRekap(); this.focus(); this.setSelectionRange(this.value.length, this.value.length)">
