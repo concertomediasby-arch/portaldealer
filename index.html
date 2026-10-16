@@ -1933,6 +1933,19 @@ body {
   .gt-q { text-align: right; }
   .gt-qty { width: 72px; padding: 6px 8px; text-align: right; border-radius: 8px; border: 1px solid var(--border); background: var(--bg, transparent); color: var(--fg); font: 600 13px var(--f-mono); outline: none; }
   .gt-na { font-size: 11px; color: var(--fg-muted); font-style: italic; }
+  /* Clearance Sale: tampilan berbeda (aksen merah, banner, label −50%, chip stok) */
+  .gt-group.clear { --clr: #e5484d; }
+  .gt-clear-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; padding: 12px 16px; border-radius: 12px;
+    background: linear-gradient(100deg, color-mix(in srgb, var(--clr) 24%, transparent), color-mix(in srgb, var(--clr) 6%, transparent)); border: 1px solid color-mix(in srgb, var(--clr) 45%, transparent); }
+  .gt-clear-banner b { display: block; font: 800 17px var(--f-display); letter-spacing: .02em; color: var(--clr); }
+  .gt-clear-banner div > span { display: block; margin-top: 2px; font: 500 12px var(--f-body); color: var(--fg-muted); }
+  .gt-group.clear .gt-sub { color: var(--clr); }
+  .gt-table.clear { border-color: color-mix(in srgb, var(--clr) 40%, var(--border)); border-left: 4px solid var(--clr); }
+  .gt-table.clear .gt-head { background: color-mix(in srgb, var(--clr) 10%, var(--surface2)); color: var(--clr); }
+  .gt-table.clear .gt-row.has-qty { background: color-mix(in srgb, var(--clr) 9%, transparent); }
+  .gt-table.clear .gt-sp { color: var(--clr); font-size: 14px; }
+  .gt-off { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 99px; background: var(--clr); color: #fff; font: 700 10.5px var(--f-mono); vertical-align: 2px; }
+  .gt-stock { display: inline-block; padding: 1px 8px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--clr) 50%, transparent); color: var(--clr); font: 600 10.5px var(--f-mono); }
   .gt-bar { position: sticky; bottom: 0; z-index: 5; margin: 10px -4px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
     padding: 12px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--glass-bar, var(--surface)); backdrop-filter: blur(14px); box-shadow: 0 -6px 24px rgba(0,0,0,.18); }
   .gt-total { display: flex; flex-direction: column; }
@@ -3012,7 +3025,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-16T03:59:58Z';
+const LAST_UPDATE = '2026-10-16T04:28:41Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6236,13 +6249,14 @@ function renderGathering() {
     const head = clear
       ? '<span>Produk</span><span>Harga Normal</span><span>Clearance 50%</span><span>Harga Bersih</span><span>Qty</span><span>Subtotal</span>'
       : '<span>Produk</span><span>Harga Lama</span><span>Harga Baru</span><span>Harga Spesial</span><span>Qty</span><span>Subtotal</span>';
-    return `<div class="gt-group">
-      <div class="line-header"><span class="line-name">${escHtml(g)}</span><span class="line-count">${items.length}</span><span class="gt-sub" data-group="${escHtml(g)}"></span></div>
+    return `<div class="gt-group${clear ? ' clear' : ''}">
+      ${clear ? `<div class="gt-clear-banner"><div><b>🔥 ${escHtml(g)}</b><span>Diskon 50% + cashback · stok terbatas, siapa cepat dia dapat</span></div><span class="gt-sub" data-group="${escHtml(g)}"></span></div>`
+        : `<div class="line-header"><span class="line-name">${escHtml(g)}</span><span class="line-count">${items.length}</span><span class="gt-sub" data-group="${escHtml(g)}"></span></div>`}
       <div class="gt-table${clear ? ' clear' : ''}"><div class="gt-row gt-head">${head}</div>
       ${items.map(r => {
         const k = gtKey(r), net = gtNet(r), qty = gtQty[k] || 0;
         const sub = clear
-          ? `${r.stock ? `<div class="gt-note">Stok ${escHtml(r.stock)}</div>` : ''}`
+          ? `${r.stock ? `<div class="gt-note"><span class="gt-stock">Stok ${escHtml(r.stock)}</span></div>` : ''}`
           : (r.note ? `<div class="gt-note">${escHtml(r.note)}</div>` : '');
         const cols = clear
           ? `<span class="gt-p" data-l="Harga Normal">${gtRp(r.old_price)}</span>
@@ -6252,7 +6266,7 @@ function renderGathering() {
              <span class="gt-p" data-l="Harga Baru">${gtRp(r.new_price)}</span>
              <span class="gt-p gt-sp" data-l="Harga Spesial">${gtRp(net)}${gtNoPromo(r) ? '<small>tanpa promo</small>' : ''}</span>`;
         return `<div class="gt-row${qty ? ' has-qty' : ''}" data-k="${escHtml(k)}">
-          <span class="gt-name">${escHtml(r.name)}${sub}</span>${cols}
+          <span class="gt-name">${escHtml(r.name)}${clear && r.special_price != null ? '<b class="gt-off">−50%</b>' : ''}${sub}</span>${cols}
           <span class="gt-q">${net == null ? '<span class="gt-na">Hubungi sales</span>'
             : `<input class="gt-qty" type="number" min="0" step="1" inputmode="numeric" value="${qty || ''}" placeholder="0" aria-label="Qty ${escHtml(r.name)}" oninput="gtSetQty(this)">`}</span>
           <span class="gt-p gt-line" data-l="Subtotal">${qty && net != null ? fmtRp(qty * net) : '—'}</span>
