@@ -1904,6 +1904,17 @@ body {
   .qs-idle p { font-size: max(15px, 3vh); color: #aab4c8; margin: 0; }
   .qs-login { margin-top: 4vh; padding: 12px 22px; border-radius: 12px; border: 1px solid #e9c46a; background: transparent; color: #e9c46a; font: 600 16px var(--f-body); cursor: pointer; }
   .qs-foot { padding: 0 4vw 2.5vh; font: 500 max(11px, 1.7vh) var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.35); }
+  .qs-bgm { position: absolute; right: 150px; bottom: 16px; padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(233,196,106,.55); background: rgba(233,196,106,.14); color: #f3d899; font: 600 13px var(--f-body); cursor: pointer; z-index: 8; animation: qsFade .6s ease both; }
+  .scr-bgm { margin: 12px 0; padding: 12px 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(255,255,255,.03); }
+  .scr-bgm-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+  .scr-bgm-row b { color: #e9c46a; } .scr-bgm-row label { display: inline-flex; align-items: center; gap: 8px; color: #dfe5f2; font-size: 13px; }
+  .scr-bgm-row input[type=range] { width: 150px; accent-color: #e9c46a; } .scr-bgm-row label span { min-width: 38px; font-family: var(--f-mono); color: #e9c46a; }
+  .scr-bgm-k { margin: 10px 0 6px; font-size: 12px; color: #aab3c5; }
+  .scr-bgm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .scr-bgm-chip { padding: 5px 10px; border-radius: 99px; border: 1px solid rgba(255,255,255,.18); background: transparent; color: #aab3c5; font: 500 12px var(--f-body); cursor: pointer; }
+  .scr-bgm-chip i { font-style: normal; font-size: 10.5px; margin-left: 4px; opacity: .8; }
+  .scr-bgm-chip.on { border-color: rgba(233,196,106,.7); background: rgba(233,196,106,.14); color: #f3d899; }
+  .scr-bgm-chip:disabled, .scr-bgm .gt-btn:disabled { opacity: .45; cursor: not-allowed; }
   .qs-fs { position: absolute; right: 18px; bottom: 16px; padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #dfe5f2; font: 600 13px var(--f-body); cursor: pointer; }
   .qa-screen.is-fs .qs-fs { display: none; }
 
@@ -2913,6 +2924,7 @@ body {
   <header class="qs-top"><img class="qs-logo" id="qs-logo" alt="CAI"><div class="qs-event"><b>GATHERING CAI 2026</b><span id="qs-event-sub">Listening and Understanding Partner</span></div><span class="qs-status" id="qs-status" title="Status koneksi"></span></header>
   <main class="qs-stage" id="qs-stage"></main>
   <footer class="qs-foot">Concerto Audio Indonesia</footer>
+  <button class="qs-bgm" id="qs-bgm" onclick="bgmResume()" hidden>🎵 Aktifkan musik latar</button>
   <button class="qs-fs" id="qs-fs" onclick="qsFullscreen()">⛶ Layar penuh</button>
 </div>
 
@@ -3030,7 +3042,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-16T06:51:39Z';
+const LAST_UPDATE = '2026-10-16T08:12:11Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7510,6 +7522,7 @@ function renderScreenPanel(err) {
   el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 ' + QA_SHORT}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
     ${sceneCols() ? '' : '<div class="scr-warn">Jalankan SQL kolom <b>scene</b> di Supabase agar tampilan per sesi bisa dipakai.</div>'}
+    ${bgmPanelHtml()}
     <div class="scr-sessions">${SCR_CARDS.map((k, i) => {
       const G = k === 'lup' ? { scenes: LUP_SCENES, icon: '🤝', label: 'Listening and Understanding Partner' } : k === 'free' ? { scenes: FREE_SCENES, icon: '☕', label: FREE_NAME } : null;
       const grp = !!G, v = grp ? G : QS_SCENES[k];
@@ -8115,11 +8128,67 @@ function stopQaScreen() {
   if (qsChannel) { supabase.removeChannel(qsChannel); qsChannel = null; }
 }
 
+/* ── Musik latar layar videotron ──
+   Satu AudioBuffer berulang (gapless) lewat Web Audio, di luar #qs-stage → tidak terputus saat sesi berganti.
+   Volume di-fade otomatis: senyap pada sesi di daftar "senyap" (bgm_off), saat video (#qs-video) diputar, atau bila dimatikan.
+   Pengaturan dibaca dari baris gathering_screen (kolom bgm_on / bgm_vol / bgm_off — opsional; tanpa kolom = default di bawah).
+   Browser menahan audio sebelum ada interaksi → tombol "Aktifkan musik latar" muncul sampai layar diklik / tombol ditekan. */
+const BGM_SRC = 'assets/audio/backsound.mp3?v=1';
+const BGM_KEYS = [['qa', '🎤', 'Open Mic'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
+  ['newbrand', '✨', 'Launching Brand Baru'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
+const BGM_OFF_DEFAULT = ['qa', 'opening', 'funmkt', 'kickoff', 'testimoni', 'paket'];   // ada yang berbicara / punya suara sendiri
+const bgmOffList = r => r && r.bgm_off != null ? String(r.bgm_off).split(',').map(x => x.trim()).filter(Boolean) : BGM_OFF_DEFAULT;
+const bgm = { ctx: null, gain: null, started: false, cfg: { on: true, vol: 40, off: BGM_OFF_DEFAULT, scene: 'qa' } };
+function bgmApply(s) {
+  bgm.cfg = { on: s?.bgm_on !== false, vol: Math.min(100, Math.max(0, +(s?.bgm_vol ?? 40))), off: bgmOffList(s), scene: s?.scene ? sceneBase(s.scene) : 'qa' };
+  if (!bgm.ctx) bgmInit();
+}
+function bgmInit() {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  bgm.ctx = new AC(); bgm.gain = bgm.ctx.createGain(); bgm.gain.gain.value = 0; bgm.gain.connect(bgm.ctx.destination);
+  const unlock = () => bgmResume();
+  ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, unlock));
+  fetch(BGM_SRC).then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => bgm.ctx.decodeAudioData(b, ok, no))).then(buf => {
+    const src = bgm.ctx.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(bgm.gain); src.start(); bgm.started = true;
+  }).catch(e => console.warn('Musik latar tidak termuat:', e));
+  setInterval(bgmTick, 400); bgmTick();
+}
+function bgmResume() { bgm.ctx?.resume().then(bgmTick).catch(() => {}); }
+function bgmTick() {
+  if (!bgm.ctx) return;
+  const c = bgm.cfg, quiet = !c.on || c.off.includes(c.scene) || !!document.getElementById('qs-video');
+  const target = quiet ? 0 : Math.pow(c.vol / 100, 1.6) * 0.9;
+  bgm.gain.gain.setTargetAtTime(target, bgm.ctx.currentTime, 0.7);
+  const btn = document.getElementById('qs-bgm'); if (btn) btn.hidden = bgm.ctx.state === 'running' || !c.on;
+}
+function bgmPanelHtml() {
+  const has = !!scrRow && 'bgm_on' in scrRow, on = scrRow?.bgm_on !== false, vol = scrRow?.bgm_vol ?? 40, off = bgmOffList(scrRow);
+  return `<div class="scr-bgm"><div class="scr-bgm-row"><b>🎵 Musik latar videotron</b>
+      <button class="gt-btn ${on ? 'confirm' : 'ghost'}" onclick="bgmSave({ bgm_on: ${!on} })" ${has ? '' : 'disabled'}>${on ? '● Menyala' : '○ Mati'}</button>
+      <label>Volume <input type="range" min="0" max="100" value="${vol}" onchange="bgmSave({ bgm_vol: +this.value })" ${has ? '' : 'disabled'}><span>${vol}%</span></label></div>
+    <div class="scr-bgm-k">Musik tetap jalan saat layar berganti, berhenti otomatis ketika video diputar. Klik sesi untuk mengganti musik / senyap:</div>
+    <div class="scr-bgm-chips">${BGM_KEYS.map(([k, ic, l]) => { const m = !off.includes(k);
+      return `<button class="scr-bgm-chip${m ? ' on' : ''}" onclick="bgmToggleSession('${k}')" ${has ? '' : 'disabled'}>${ic} ${l}<i>${m ? 'musik' : 'senyap'}</i></button>`; }).join('')}</div>
+    ${has ? '' : '<div class="scr-warn">Musik sudah jalan dengan pengaturan bawaan. Untuk mengatur dari sini, jalankan SQL kolom musik (bgm_on, bgm_vol, bgm_off) di Supabase.</div>'}</div>`;
+}
+async function bgmSave(patch) {
+  if (!supabase) return;
+  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, ...patch });
+  if (error) { showToast('Gagal menyimpan musik latar: ' + error.message, 8000); return; }
+  scrRow = { ...scrRow, ...patch }; renderScreenPanel();
+}
+function bgmToggleSession(k) {
+  const off = bgmOffList(scrRow), i = off.indexOf(k);
+  if (i < 0) off.push(k); else off.splice(i, 1);
+  bgmSave({ bgm_off: off.join(',') });
+}
+
 async function qsLoad() {
   const st = document.getElementById('qs-status');
   try {
     const { data: s, error } = await supabase.from(QA_SCREEN).select('*').eq('id', 1).maybeSingle();
     if (error) throw error;
+    bgmApply(s);
     if (s?.scene && sceneInfo(s.scene)) { st.classList.remove('off'); renderScene(s); return; }
     let q = null;
     if (s?.question_id) {
