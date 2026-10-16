@@ -1975,6 +1975,7 @@ body {
     .gt-qty { font-size: 16px; }
     .gt-terms { font-size: 11.5px; }
     #gt-form, #gt-top, #gt-rekap { padding: 0 16px; }   /* sejajar dengan judul halaman */
+    .gt-bar.typing { display: none; }   /* keyboard HP terbuka: bar total disembunyikan agar tidak menimpa baris produk */
     .gt-bar { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); flex-wrap: nowrap; padding: 8px 10px; gap: 8px; margin: 10px 0 0; }
     .gt-total span { font-size: 10px; }
     .gt-total b { font-size: 16px; }
@@ -3028,7 +3029,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-16T04:39:25Z';
+const LAST_UPDATE = '2026-10-16T04:59:49Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6278,6 +6279,9 @@ function renderGathering() {
   gtUpdateBar();
 }
 
+// HP: saat mengetik Qty (keyboard terbuka) sembunyikan bar total melayang; muncul lagi setelah selesai mengetik
+document.addEventListener('focusin', e => { if (e.target.classList?.contains('gt-qty')) document.getElementById('gt-bar')?.classList.add('typing'); });
+document.addEventListener('focusout', e => { if (e.target.classList?.contains('gt-qty')) setTimeout(() => { if (!document.activeElement?.classList?.contains('gt-qty')) document.getElementById('gt-bar')?.classList.remove('typing'); }, 150); });
 function gtSetQty(input) {
   const row = input.closest('.gt-row'), k = row.dataset.k;
   const r = gtItems.find(x => gtKey(x) === k);
