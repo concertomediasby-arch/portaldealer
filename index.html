@@ -3030,7 +3030,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-16T06:36:07Z';
+const LAST_UPDATE = '2026-10-16T06:38:16Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7325,6 +7325,14 @@ const LAUNCH_VIDEOS = {
     { title: 'DSP AS6', src: 'assets/launch/as-dsp-as6.mp4' },
   ],
 };
+// Testimoni Partner CAI (Free Time): video testimoni dari dealer. Scene 'testimoni' = layar judul,
+// 'testimoni:all' = putar semua berurutan, 'testimoni:<n>' = video ke-n saja (n mulai 0).
+// File di assets/testimoni/<slug>.mp4 (H.264 1080p, faststart; batas file GitHub 100 MB). title = nama dealer/partner.
+// Sebelum file ada di repo, operator bisa memilih file video dari komputer videotron (tombol 📁 muncul di layar).
+const TESTIMONI_VIDEOS = [
+  // { title: 'Nama Dealer — Kota', src: 'assets/testimoni/nama-dealer.mp4' },
+];
+const tmParts = k => { const m = /^testimoni:(all|\d+)$/.exec(k || ''); return m ? { idx: m[1] === 'all' ? null : +m[1] } : null; };
 const sceneBase = k => String(k || '').split(':')[0];
 const launchParts = k => { const [, brand, n] = String(k || '').split(':'); return { brand, idx: n == null || n === '' ? null : +n }; };
 // Materi presentasi Fun Marketing (PDF pemilik → gambar 1920×1080). Scene 'funmkt' = judul, 'funmkt:<n>' = slide ke-n.
@@ -7363,6 +7371,7 @@ const sceneInfo = k => {
   if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
   if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
+  const tm = tmParts(k); if (tm) return { ...base, icon: '🎬', label: 'Testimoni Partner CAI · ' + (tm.idx == null ? 'semua video' : (TESTIMONI_VIDEOS[tm.idx]?.title || 'video ' + (tm.idx + 1))) };
   const { brand, idx } = launchParts(k), b = brand ? BRANDS.find(x => x.id === brand) : null;
   if (!b) return base;
   const v = idx != null ? LAUNCH_VIDEOS[brand]?.[idx] : null;
@@ -7409,7 +7418,7 @@ const SCR_DESC = {
   launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
   newbrand: 'Peluncuran brand baru: hitung mundur 3-2-1, kilatan cahaya, lalu nama/logo brand muncul besar. Isi teks tambahan "Nama Brand | tagline".',
   lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
-  testimoni: 'Layar judul sesi Testimoni Partner CAI. Isi teks tambahan dengan nama partner yang sedang berbagi (opsional).',
+  testimoni: 'Judul sesi Testimoni Partner CAI, lalu putar video testimoni dari dealer (satu per satu atau semua berurutan). Teks tambahan = nama partner (opsional).',
   backdrop: 'Backdrop acara tampil layar penuh (Reset Button = video berulang) — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
   kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), video perkenalan portal, lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
@@ -7457,6 +7466,11 @@ function renderScreenPanel(err) {
       <button class="scr-lv-btn${fmNum(scrRow.scene) ? '' : ' on'}" onclick="fmStep(1)" ${fmNum(scrRow.scene) < FM_SLIDES ? '' : 'disabled'}>${fmNum(scrRow.scene) ? 'Berikutnya ▶' : '▶ Mulai dari slide 1'}</button>
     </div>
     <div class="scr-fm-thumbs">${Array.from({ length: FM_SLIDES }, (_, i) => `<button class="scr-fm-th${fmNum(scrRow.scene) === i + 1 ? ' on' : ''}" onclick="setScene('funmkt:${i + 1}')" title="Slide ${i + 1}">${FM_TITLE_SLIDES.includes(i + 1) ? '<b>FUN<br>MARKETING</b>' : `<img src="${fmSlide(i + 1, true)}" alt="" loading="lazy">`}<span>${i + 1}</span></button>`).join('')}</div>`;
+  else if (sel === 'testimoni') { const tv = TESTIMONI_VIDEOS, tmI = tmParts(scrRow.scene);
+    body = `${opts(false, 'Nama partner (opsional) — tampil di bawah judul')}
+    <div class="scr-actions">${showBtn('Tampilkan judul Testimoni')}${tv.length ? `<button class="gt-btn${tmI && tmI.idx == null ? ' confirm' : ' ghost'}" onclick="setScene('testimoni:all')">${tmI && tmI.idx == null ? '↻' : '▶'} Putar semua (${tv.length})</button>` : `<button class="gt-btn ghost" onclick="setScene('testimoni:all')">🎬 Mulai (pilih file di komputer videotron)</button>`}</div>
+    ${tv.length ? `<div class="scr-sub-k">Video testimoni</div><div class="scr-lv"><div class="scr-lv-row">${tv.map((v, i) => `<button class="scr-lv-btn${tmI && tmI.idx === i ? ' on' : ''}" onclick="setScene('testimoni:${i}')">${tmI && tmI.idx === i ? '↻' : '▶'} ${i + 1}. ${escHtml(v.title)}</button>`).join('')}</div></div>`
+      : '<div class="scr-note">Belum ada video di portal. Kirim video testimoni dealer (link Google Drive), nanti dipasang di daftar ini. Sementara itu, tekan <b>Mulai</b> lalu pilih file video langsung di komputer videotron.</div>'}`; }
   else if (sel === 'launch') body = `${opts(false, 'Nama produk yang diluncurkan (opsional) — tampil besar di layar')}
     <div class="scr-actions">${showBtn('Tampilkan judul Product Launch')}</div>
     <div class="scr-sub-k">Video per brand</div>
@@ -7594,6 +7608,7 @@ const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><
 function renderScene(s) {
   qsSetEventSub(sceneBase(s.scene));
   if (String(s.scene).startsWith('launch:')) return renderLaunchVideo(s);
+  if (tmParts(s.scene)) return renderTestimoniVideo(s);
   if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
   if (sceneBase(s.scene) === 'backdrop') return renderBackdrop(s);
   if (sceneBase(s.scene) === 'paket') return renderPaket(s);
@@ -7916,10 +7931,10 @@ function stopLaunchVideo() {
 function launchList(brand, idx) {
   const local = qsLocalVideos[brand];
   if (local?.length) {
-    if (idx != null) { const t = LAUNCH_VIDEOS[brand]?.[idx]?.title, hit = local.find(x => x.title === t); if (hit) return [hit]; }
+    if (idx != null) { const t = (brand === 'testimoni' ? TESTIMONI_VIDEOS : LAUNCH_VIDEOS[brand])?.[idx]?.title, hit = local.find(x => x.title === t); if (hit) return [hit]; }
     return local;
   }
-  const vids = LAUNCH_VIDEOS[brand] || [];
+  const vids = (brand === 'testimoni' ? TESTIMONI_VIDEOS : LAUNCH_VIDEOS[brand]) || [];
   return idx != null ? vids.slice(idx, idx + 1) : vids;
 }
 // Percikan emas untuk layar Product Launch (posisi/waktu acak tetap per render)
@@ -7974,6 +7989,16 @@ function renderLaunchVideo(s) {
     <div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video di komputer ini (boleh lebih dari satu)<input type="file" accept="video/*" multiple hidden onchange="qsPickVideo('${brand}', ${idx == null ? 'null' : idx}, this)"></label></div></div>`);
   if (changed) qsLvTimer = setTimeout(() => playLaunchVideo(brand, idx, 0), 3500);   // poll 4 dtk tidak memulai ulang video
 }
+function renderTestimoniVideo(s) {
+  const { idx } = tmParts(s.scene), one = idx != null ? TESTIMONI_VIDEOS[idx] : null;
+  const t = s.scene_text ? escHtml(s.scene_text) : one ? escHtml(one.title) : '';
+  const changed = qsSetStage(['testi', s.scene, s.scene_text, s.updated_at].join('|'), `<div class="qs-scene sc-launch sc-lv sc-testi"><div class="sc-rays"></div>${SC_QUOTE}
+    <div class="qs-kicker">Free Time</div><h1 class="sc-title">Testimoni <em>Partner CAI</em></h1>
+    ${t ? `<div class="sc-launch-name">${t}</div>` : ''}
+    <p class="sc-sub" id="sc-lv-msg">Concerto Audio Indonesia</p>
+    <div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video testimoni di komputer ini (boleh lebih dari satu)<input type="file" accept="video/*" multiple hidden onchange="qsPickVideo('testimoni', ${idx == null ? 'null' : idx}, this)"></label></div></div>`);
+  if (changed) qsLvTimer = setTimeout(() => playLaunchVideo('testimoni', idx, 0), 3000);
+}
 function playLaunchVideo(brand, idx, pos) {
   const list = launchList(brand, idx), item = list[pos];
   const msg = document.getElementById('sc-lv-msg');
@@ -8012,7 +8037,7 @@ function qsPickVideo(brand, idx, input) {
   const take = v => { const keys = [v.title, ...(v.alt || [])].map(vidKey);
     const i = left.findIndex(f => keys.some(k => vidKey(f.name).endsWith(k))); return i < 0 ? null : left.splice(i, 1)[0]; };
   const toItem = (f, title) => ({ title: title || f.name.replace(/\.[^.]+$/, ''), src: URL.createObjectURL(f) });
-  const matched = (LAUNCH_VIDEOS[brand] || []).map(v => { const f = take(v); return f ? toItem(f, v.title) : null; });
+  const matched = ((brand === 'testimoni' ? TESTIMONI_VIDEOS : LAUNCH_VIDEOS[brand]) || []).map(v => { const f = take(v); return f ? toItem(f, v.title) : null; });
   const list = matched.filter(Boolean).concat(left.map(f => toItem(f)));
   qsLocalVideos[brand] = list;
   // satu video dipilih & cocok dengan tombol yang diklik → putar itu saja; selain itu putar semua
