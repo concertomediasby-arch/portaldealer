@@ -1807,6 +1807,7 @@ body {
   .lh-div b { width: 1.3vh; height: 1.3vh; background: #e9c46a; transform: rotate(45deg); box-shadow: 0 0 2vh #e9c46a; }
   .lh-sub { margin: 0; font: 500 max(14px, 2.6vh) var(--f-body); letter-spacing: .5em; text-transform: uppercase; color: #cfd6e6; animation: qsIn 1s ease 1.2s both; }
   .sc-launch .sc-title { font-size: min(6vw, 10vh); }
+  .sc-testi .sc-title { font-size: min(6.4vw, 11vh); white-space: nowrap; }
   /* ── Launching Brand Baru: hitung mundur → kilatan → reveal ── */
   .nb-reveal { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
   .nb.cd:not(.go) .nb-reveal { visibility: hidden; }
@@ -3029,7 +3030,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-16T05:29:21Z';
+const LAST_UPDATE = '2026-10-16T06:36:07Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7290,6 +7291,7 @@ const QS_SCENES = {
   lunch:   { label: 'Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan|lunch/i },
   funmkt:  { label: 'Fun Marketing', icon: '🎯', match: /fun ?marketing/i },
   kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
+  testimoni: { label: 'Testimoni Partner CAI', icon: '💬', match: /testimoni/i },
   backdrop: { label: 'Backdrop', icon: '🖼', match: /backdrop/i },
   paket: { label: 'Paket Audio', icon: '📦', match: /paket/i },
 };
@@ -7383,7 +7385,7 @@ const SCR_SESSIONS = ['opening', 'qa', 'coffee', 'refresh', 'launch', 'lunch', '
 // Sesi yang masuk kelompok "Listening and Understanding Partner" (satu kartu di panel, tab di dalamnya)
 const LUP_SCENES = ['qa', 'refresh', 'launch', 'funmkt', 'kickoff'];
 // Sesi "Free Time" (kelompok kedua): Coffee Break + Makan Siang — satu kartu di panel, tab di dalamnya
-const FREE_SCENES = ['coffee', 'lunch', 'backdrop'];
+const FREE_SCENES = ['coffee', 'lunch', 'testimoni', 'backdrop'];
 // Backdrop (Free Time): 2 foto layar penuh. 'backdrop:1' / 'backdrop:2' = satu foto, 'backdrop' = bergantian otomatis
 const BACKDROPS = [
   { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp', th: 'assets/backdrop/reset-button-thumb.webp', video: 'assets/backdrop/reset-button.mp4' },   // video 24 dtk (gambar = cadangan bila video gagal)
@@ -7407,6 +7409,7 @@ const SCR_DESC = {
   launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
   newbrand: 'Peluncuran brand baru: hitung mundur 3-2-1, kilatan cahaya, lalu nama/logo brand muncul besar. Isi teks tambahan "Nama Brand | tagline".',
   lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
+  testimoni: 'Layar judul sesi Testimoni Partner CAI. Isi teks tambahan dengan nama partner yang sedang berbagi (opsional).',
   backdrop: 'Backdrop acara tampil layar penuh (Reset Button = video berulang) — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
   kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), video perkenalan portal, lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
@@ -7585,6 +7588,7 @@ async function setScene(key) {
 /* Desain tiap sesi di layar videotron */
 const SC_CUP = '<svg class="sc-svg" viewBox="0 0 120 120" aria-hidden="true"><g class="sc-steam" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linecap="round"><path d="M44 40c-6-8 6-12 0-20"/><path d="M60 40c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g><path d="M26 50h66v20a30 30 0 0 1-30 30h-6a30 30 0 0 1-30-30z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M92 56h5a12 12 0 0 1 0 24h-7" fill="none" stroke="#fff" stroke-width="5"/><line x1="18" y1="110" x2="102" y2="110" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"/></svg>';
 const SC_MEGA = '<svg class="sc-svg sc-mega" viewBox="0 0 140 120" aria-hidden="true"><path d="M22 50h18l46-26v72L40 70H22a6 6 0 0 1-6-6V56a6 6 0 0 1 6-6z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M34 70l8 26h12l-6-24" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><g class="sc-waves" fill="none" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"><path d="M100 46a20 20 0 0 1 0 28"/><path d="M110 36a34 34 0 0 1 0 48"/><path d="M120 26a48 48 0 0 1 0 68"/></g></svg>';
+const SC_QUOTE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><path d="M18 26h66a8 8 0 0 1 8 8v36a8 8 0 0 1-8 8H48l-16 14V78h-14a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M62 56h60a8 8 0 0 1 8 8v30a8 8 0 0 1-8 8h-10v12l-14-12H62a8 8 0 0 1-8-8V64a8 8 0 0 1 8-8z" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linejoin="round"/><circle cx="74" cy="80" r="3.5" fill="#e9c46a"/><circle cx="90" cy="80" r="3.5" fill="#e9c46a"/><circle cx="106" cy="80" r="3.5" fill="#e9c46a"/></svg>';
 const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><circle cx="70" cy="62" r="36" fill="rgba(233,196,106,.10)" stroke="#fff" stroke-width="5"/><circle cx="70" cy="62" r="22" fill="none" stroke="#e9c46a" stroke-width="3"/><path d="M16 28v22a7 7 0 0 0 14 0V28M23 28v74" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M122 28c-9 6-9 28 0 34v40" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function renderScene(s) {
@@ -7616,6 +7620,8 @@ function renderScene(s) {
     newbrand: renderNewBrand(s),
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
+    testimoni: `<div class="qs-scene sc-testi">${SC_QUOTE}<div class="qs-kicker">Free Time</div><h1 class="sc-title">Testimoni <em>Partner CAI</em></h1>
+      <p class="sc-sub">${t || 'Cerita &amp; pengalaman partner bersama Concerto Audio Indonesia'}</p></div>`,
     opening: `<div class="qs-scene sc-open"><div class="qs-kicker">Gathering CAI 2026</div><h1 class="sc-title">Opening <em>Speech</em></h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
       <div class="sc-op-list">${OPENING_SPEAKERS.map((sp, i) => `<div class="sc-op-item" style="--ac:${sp.ac}"><span>${i + 1}</span>${opBrandMark(sp, true)}<b>${escHtml(sp.name)}</b></div>`).join('')}</div></div>`,
     funmkt: `<div class="sc-bubbles">${'<i></i>'.repeat(14)}</div><div class="qs-scene sc-fun">${SC_MEGA}<div class="qs-kicker">Presentasi</div>
