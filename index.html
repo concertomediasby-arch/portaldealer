@@ -3148,7 +3148,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T06:21:24Z';
+const LAST_UPDATE = '2026-10-17T06:24:28Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7889,7 +7889,7 @@ function renderAwarding(key, stamp) {
         ${(one ? (d.title ? d.note : d.note) : d.note) ? `<div class="aw2-note">${escHtml(d.note)}</div>` : ''}
         <div class="awt-rule"><i></i><b></b></div>
         <p class="awt-sub">${one ? 'In recognition of outstanding performance, dedication &amp; remarkable achievement throughout 2026' : C.sub}</p>
-        <div class="aw2-foot">${prog}<span>${nxTxt ? `Berikutnya · <b>${nxTxt}</b>` : ''}</span></div>
+        <div class="aw2-foot">${prog}<span>${nxTxt && !one ? `Berikutnya · <b>${nxTxt}</b>` : ''}</span></div>
       </div></div>`;
   }
   qsSetStage(['aw', key, stamp || ''].join('|'), html);
