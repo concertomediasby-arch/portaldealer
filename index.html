@@ -3164,7 +3164,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T07:27:56Z';
+const LAST_UPDATE = '2026-10-17T07:30:24Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7925,8 +7925,40 @@ function renderAwarding(key, stamp) {
       <div class="aw2-cdring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54"/><circle class="p" cx="60" cy="60" r="54"/></svg>
         ${Array.from({ length: cd }, (_, i) => `<b style="animation-delay:${i}s">${cd - i}</b>`).join('')}</div></div></div>`;
   if (!qsSetStage(sk, cdHtml)) return;
+  awSfx(a === 1, cd);
   clearTimeout(awCdTimer);
   awCdTimer = setTimeout(() => { if (qsKey === sk) document.getElementById('qs-stage').innerHTML = html; }, cd * 1000);
+}
+// SFX dramatis hitung mundur — disintesis langsung lewat Web Audio (tanpa file / sampel pihak lain):
+// detak bass tiap detik (nada naik), riser noise; Juara: drumroll makin rapat + crescendo; saat reveal: hantaman bass + crash + kilau akor.
+// Musik latar diturunkan sementara (bgm.duckUntil). Butuh layar videotron yang sudah diklik sekali (aturan autoplay browser).
+const AW_SFX_VOL = 0.9;
+function awSfx(champ, cd) {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    const ctx = bgm.ctx || (awSfx.ctx = awSfx.ctx || new AC());
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    bgm.duckUntil = Date.now() + (cd + 2.5) * 1000;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 8; comp.attack.value = 0.003; comp.release.value = 0.25; comp.connect(ctx.destination);
+    const out = ctx.createGain(); out.gain.value = AW_SFX_VOL * 0.32; out.connect(comp);
+    const t0 = ctx.currentTime + 0.05;
+    const noiseBuf = len => { const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * len), ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; };
+    const env = (g, t, a, peak, dec) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); };
+    const boom = (t, f0, f1, peak, dec) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dec); env(g, t, 0.005, peak, dec); o.connect(g).connect(out); o.start(t); o.stop(t + dec + 0.1); };
+    const noise = (t, dur, type, freq, peak, dec, q = 1) => { const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); src.buffer = noiseBuf(dur); f.type = type; f.frequency.value = freq; f.Q.value = q; env(g, t, 0.003, peak, dec); src.connect(f).connect(g).connect(out); src.start(t); src.stop(t + dur); };
+    // detak tiap detik: bass + klik, makin tinggi menjelang akhir
+    for (let i = 0; i < cd; i++) { const t = t0 + i; boom(t, 95 + i * 12, 42, 0.9, 0.55); noise(t, 0.08, 'highpass', 3500, 0.25, 0.06); }
+    // riser: noise bandpass menyapu naik sepanjang hitung mundur
+    { const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); src.buffer = noiseBuf(cd + 0.2); f.type = 'bandpass'; f.Q.value = 6;
+      f.frequency.setValueAtTime(250, t0); f.frequency.exponentialRampToValueAtTime(4200, t0 + cd); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(champ ? 0.22 : 0.16, t0 + cd - 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t0 + cd + 0.05);
+      src.connect(f).connect(g).connect(out); src.start(t0); src.stop(t0 + cd + 0.2); }
+    // Juara: drumroll snare makin rapat & keras
+    if (champ) { let t = t0, step = 0.11; while (t < t0 + cd - 0.05) { const k = (t - t0) / cd; noise(t, 0.09, 'bandpass', 1900, 0.08 + k * 0.32, 0.07, 0.8); t += step; step = Math.max(0.045, step * 0.985); } }
+    // reveal: hantaman + crash + kilau akor (C–E–G–C)
+    const tr = t0 + cd;
+    boom(tr, 120, 38, 1, 1.6); noise(tr, 2.6, 'highpass', 4500, champ ? 0.5 : 0.32, champ ? 2.4 : 1.4);
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = f; env(g, tr + i * 0.04, 0.02, champ ? 0.12 : 0.07, champ ? 2.6 : 1.6); o.connect(g).connect(out); o.start(tr); o.stop(tr + 3); });
+  } catch (e) { /* audio gagal → tetap tampil tanpa suara */ }
 }
 const AW_CD_TOP = 3, AW_CD_CHAMP = 5;   // detik hitung mundur sebelum kartu Top / Juara
 let awCdTimer = null;
@@ -8523,7 +8555,7 @@ function bgmTick() {
     try { y.p.setVolume(Math.round(bgm.ytVol)); } catch (e) {}
     running = st === 1 || st === 3 || quiet;   // quiet = tidak butuh diputar
   } else if (bgm.ctx) {
-    const target = quiet ? 0 : Math.pow(c.vol / 100, 1.3) * (duck ? 0.3 : 1);
+    const target = quiet ? 0 : Math.pow(c.vol / 100, 1.3) * (duck ? 0.3 : 1) * (Date.now() < (bgm.duckUntil || 0) ? 0.2 : 1);
     bgm.gain.gain.setTargetAtTime(target, bgm.ctx.currentTime, 0.7);
     running = bgm.ctx.state === 'running';
   } else return;
