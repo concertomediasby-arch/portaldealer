@@ -1927,15 +1927,12 @@ body {
   .qs-yt.on { opacity: .95; transform: none; }
   .qs-yt iframe { width: 200px; height: 200px; border: 0; }
   .qs-prep { position: absolute; left: 18px; bottom: 44px; font: 500 11px var(--f-mono); color: rgba(233,196,106,.8); letter-spacing: .04em; }
-  .qs-bgm { position: absolute; right: 150px; bottom: 16px; padding: 10px 18px; border-radius: 10px; border: 1px solid rgba(233,196,106,.55); background: rgba(233,196,106,.14); color: #f3d899; font: 600 13px var(--f-body); cursor: pointer; z-index: 8; animation: qsFade .6s ease both; }
-  .qs-bgm.bad { border-color: rgba(255,120,120,.7); background: rgba(255,90,90,.16); color: #ffb3b3; }
-  .qs-bgm-note { position: absolute; right: 18px; bottom: 62px; padding: 5px 12px; border-radius: 99px; background: rgba(0,0,0,.45); color: #cfd6e6; font: 500 12px var(--f-body); opacity: 0; pointer-events: none; }
-  .qs-bgm-note.show { animation: bgmNote 6s ease both; }
-  @keyframes bgmNote { 0%, 85% { opacity: .9; } 100% { opacity: 0; } }
   .scr-bgm { margin: 12px 0; padding: 12px 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(255,255,255,.03); }
   .scr-bgm-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; }
   .scr-bgm-row b { color: #e9c46a; } .scr-bgm-row label { display: inline-flex; align-items: center; gap: 8px; color: #dfe5f2; font-size: 13px; }
   .scr-bgm-row input[type=range] { width: 150px; accent-color: #e9c46a; } .scr-bgm-row label span { min-width: 38px; font-family: var(--f-mono); color: #e9c46a; }
+  .scr-bgm-status { margin: 10px 0 2px; padding: 7px 12px; border-radius: 8px; font: 500 13px var(--f-body); border: 1px solid rgba(255,255,255,.14); color: #cfd6e6; background: rgba(255,255,255,.04); }
+  .scr-bgm-status.ok { border-color: rgba(60,200,120,.5); color: #9be8bd; } .scr-bgm-status.bad { border-color: rgba(255,110,110,.6); color: #ffb3b3; }
   .scr-bgm-k { margin: 10px 0 6px; font-size: 12px; color: #aab3c5; }
   .scr-bgm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .scr-bgm-chip { padding: 5px 10px; border-radius: 99px; border: 1px solid rgba(255,255,255,.18); background: transparent; color: #aab3c5; font: 500 12px var(--f-body); cursor: pointer; }
@@ -2953,8 +2950,6 @@ body {
   <footer class="qs-foot">Concerto Audio Indonesia</footer>
   <div class="qs-yt" id="qs-yt"><div id="qs-yt-p"></div></div>
   <span class="qs-prep" id="qs-prep" hidden></span>
-  <span class="qs-bgm-note" id="qs-bgm-note"></span>
-  <button class="qs-bgm" id="qs-bgm" onclick="bgmResume()" hidden>🎵 Aktifkan musik latar</button>
   <button class="qs-fs" id="qs-fs" onclick="qsFullscreen()">⛶ Layar penuh</button>
 </div>
 
@@ -3072,7 +3067,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T03:02:35Z';
+const LAST_UPDATE = '2026-10-17T03:09:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8270,22 +8265,46 @@ function bgmTick() {
     bgm.gain.gain.setTargetAtTime(target, bgm.ctx.currentTime, 0.7);
     running = bgm.ctx.state === 'running';
   } else return;
-  // keterangan kecil di layar tiap status musik berubah (hilang sendiri setelah 6 dtk)
-  const why = !running ? 'menunggu klik' : !c.on ? 'mati' : vid ? 'video diputar' : sceneOff ? 'senyap · ' + label : 'menyala';
-  if (why !== bgm.why) { bgm.why = why; const n = document.getElementById('qs-bgm-note'); if (n && why !== 'menunggu klik') { n.textContent = (why === 'menyala' ? '🎵 Musik latar menyala' : '🔇 Musik latar ' + why); n.classList.remove('show'); void n.offsetWidth; n.classList.add('show'); } }
-  const btn = document.getElementById('qs-bgm');
-  if (btn) {   // tombol musik di layar: selalu tampil bila musik diminta tapi belum terdengar (butuh klik / masih memuat / gagal)
-    const needClick = !running, bad = bgm.mode === 'file' && bgm.loadErr, wait = bgm.mode === 'file' && bgm.loading;
-    btn.hidden = !c.on || (!needClick && !bad && !wait);
-    btn.classList.toggle('bad', !!bad);
-    btn.textContent = bad ? '⚠ Musik gagal dimuat (' + bgm.loadErr + ') — klik untuk coba lagi' : wait ? '⏳ Memuat musik…' : '🔊 Klik di sini untuk menyalakan musik';
-  }
+  // status dilaporkan ke panel Editor (tidak ada tombol / tulisan musik di layar videotron)
+  const bad = bgm.mode === 'file' && bgm.loadErr, wait = bgm.mode === 'file' && bgm.loading;
+  const kind = !c.on ? 'mati' : bad ? 'gagal' : wait ? 'memuat' : !running ? 'klik' : vid ? 'video' : sceneOff ? 'senyap' : 'bunyi';
+  bgmReport({ kind, scene: label, err: bgm.loadErr || '', mode: bgm.mode });
+}
+// Laporan status musik: layar videotron → panel Editor lewat Supabase Realtime broadcast (tanpa tabel / kolom baru)
+let bgmCh = null, bgmLastSent = '', bgmLastAt = 0, bgmRemote = null, bgmWatch = null;
+function bgmReport(st) {
+  if (!supabase) return;
+  const key = JSON.stringify(st), now = Date.now();
+  if (key === bgmLastSent && now - bgmLastAt < 4000) return;
+  try {
+    if (!bgmCh) { bgmCh = supabase.channel('bgm-status'); bgmCh.subscribe(); }
+    bgmCh.send({ type: 'broadcast', event: 'status', payload: st }); bgmLastSent = key; bgmLastAt = now;
+  } catch (e) { /* abaikan */ }
+}
+function bgmWatchStart() {   // dipanggil di panel Editor: dengarkan laporan dari layar videotron
+  if (bgmWatch || !supabase) return;
+  try {
+    bgmWatch = supabase.channel('bgm-status').on('broadcast', { event: 'status' }, m => { bgmRemote = { ...(m.payload || {}), at: Date.now() }; bgmShowStatus(); }).subscribe();
+    setInterval(bgmShowStatus, 3000);
+  } catch (e) { bgmWatch = null; }
+}
+function bgmShowStatus() {
+  const el = document.getElementById('bgm-status'); if (!el) return;
+  const r = bgmRemote, fresh = r && Date.now() - r.at < 12000;
+  const T = { bunyi: ['ok', '🟢 Musik berbunyi di layar videotron'], video: ['ok', '🟢 Musik diam sementara — video sedang diputar'], senyap: ['warn', '🔇 Musik senyap di sesi ini' + (r?.scene ? ' (' + r.scene + ')' : '')],
+    mati: ['warn', '⚪ Musik dimatikan'], memuat: ['warn', '⏳ Layar videotron sedang memuat file musik…'],
+    klik: ['warn', '🟠 Layar videotron menunggu satu klik: klik di mana saja pada layar videotron (atau tekan tombol apa saja) agar browser mengizinkan suara'],
+    gagal: ['bad', '🔴 File musik gagal dimuat di layar videotron' + (r?.err ? ' (' + r.err + ')' : '') + ' — muat ulang tab layar videotron'] };
+  const [cls, txt] = fresh ? (T[r.kind] || ['warn', r.kind]) : ['warn', '⚪ Layar videotron tidak terdeteksi — buka lewat tombol 🖥 Buka Layar Videotron'];
+  el.className = 'scr-bgm-status ' + cls; el.textContent = txt;
 }
 function bgmPanelHtml() {
   const has = !!scrRow && 'bgm_on' in scrRow && isEditor(), on = scrRow?.bgm_on !== false, vol = scrRow?.bgm_vol ?? 70, off = bgmOffList(scrRow);
+  if (isEditor()) setTimeout(() => { bgmWatchStart(); bgmShowStatus(); }, 0);
   return `<div class="scr-bgm"><div class="scr-bgm-row"><b>🎵 Musik latar videotron</b>
       <button class="gt-btn ${on ? 'confirm' : 'ghost'}" onclick="bgmSave({ bgm_on: ${!on} })" ${has ? '' : 'disabled'}>${on ? '● Menyala' : '○ Mati'}</button>
       <label>Volume <input type="range" min="0" max="100" value="${vol}" onchange="bgmSave({ bgm_vol: +this.value })" ${has ? '' : 'disabled'}><span>${vol}%</span></label></div>
+    <div class="scr-bgm-status warn" id="bgm-status">…</div>
     <div class="scr-bgm-k">Musik tetap jalan saat layar berganti, berhenti otomatis ketika video diputar. Klik sesi untuk mengganti musik / senyap:</div>
     <div class="scr-bgm-chips">${BGM_KEYS.map(([k, ic, l]) => { const m = !off.includes(k);
       return `<button class="scr-bgm-chip${m ? ' on' : ''}" onclick="bgmToggleSession('${k}')" ${has ? '' : 'disabled'}>${ic} ${l}<i>${m ? 'musik' : 'senyap'}</i></button>`; }).join('')}</div>
