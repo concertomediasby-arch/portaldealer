@@ -1707,7 +1707,8 @@ body {
   .aw-logo { width: min(40vw, 62vh); margin: 2.4vh 0 2.6vh; filter: drop-shadow(0 0 3vh rgba(255,255,255,.15)); animation: awName 1.2s cubic-bezier(.2,.8,.2,1) both 1.7s; }
   .aw-one .aw-sub { animation-delay: 2.3s; }
   .aw-champ-row { display: flex; flex-direction: column; align-items: center; gap: 1vh; margin: 3vh 0 3vh; } .aw-champ-row img { height: min(9vh, 7vw); }
-  .aw-champ-row b { font: 800 min(5vw, 8vh) var(--f-display); color: #e9c46a; } .aw-champ-row span { font: 600 max(12px, 1.9vh) var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: #e9c46a; }
+  .aw-champ-row b { font: 800 min(5vw, 8vh) var(--f-display); color: #e9c46a; text-transform: uppercase; } .aw-champ-row small { font: 700 max(12px, 2vh) var(--f-mono); letter-spacing: .3em; color: #fff; text-transform: uppercase; }
+  .aw-board.few { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(64vw, 110vh); } .aw-board b small { display: block; font: 500 max(11px, 1.7vh) var(--f-body); text-transform: none; color: #c3cbdc; letter-spacing: 0; } .aw-champ-row span { font: 600 max(12px, 1.9vh) var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: #e9c46a; }
   .aw-board { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6vh 1.6vw; width: min(84vw, 150vh); }
   .aw-board li { display: flex; align-items: center; gap: 1.2vw; padding: 1.6vh 1.4vw; border: 1px solid rgba(233,196,106,.35); border-radius: 1.4vh; background: rgba(233,196,106,.06); text-align: left; animation: awName .8s ease both calc(.4s + var(--i) * .12s); }
   .aw-board em { font: 800 max(18px, 4vh) var(--f-display); font-style: normal; color: #e9c46a; min-width: 1.5em; }
@@ -3116,7 +3117,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T06:06:22Z';
+const LAST_UPDATE = '2026-10-17T06:11:04Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7472,8 +7473,20 @@ const AWARD_DEALERS = [
   { rank: 5, name: 'Mega Audio Jakarta' }, { rank: 6, name: 'Blitz Audioworkshop' }, { rank: 7, name: 'Sterindo Autosound' },
   { rank: 8, name: 'The Peak Garage' }, { rank: 9, name: 'Dream Sound' }, { rank: 10, name: 'Project Audio' },
 ];
-const AWARD_SEQ = ['awarding', ...[...AWARD_DEALERS].sort((a, b) => b.rank - a.rank).map(d => 'awarding:' + d.rank), 'awarding:list'];
-const awPart = k => { const m = /^awarding:(\d+|list)$/.exec(k || ''); return m ? (m[1] === 'list' ? 'list' : +m[1]) : null; };
+// Best Distributor 2026 (tabel pemilik, SINYO dikecualikan atas permintaan pemilik → peringkat diurutkan ulang). Nilai penjualan TIDAK dimasukkan (index.html publik).
+const AWARD_DIST = [
+  { rank: 1, name: 'SGU', note: 'incl. Garuda Barat & Gerardo' }, { rank: 2, name: 'THV' }, { rank: 3, name: 'H2R Ronny' },
+  { rank: 4, name: 'CT Malang' }, { rank: 5, name: 'VIN Audioworks' },
+];
+// Kategori awarding: kunci scene 'awarding:<rank>' / 'awarding:list' = Best Dealer, 'awarding:d<rank>' / 'awarding:dlist' = Best Distributor
+const AW_CATS = {
+  dist: { p: 'd', list: AWARD_DIST, label: 'Best Distributor 2026', short: 'Best Distributor', sub: 'Concerto Audio Indonesia Performance Distributor 2026' },
+  dealer: { p: '', list: AWARD_DEALERS, label: 'Best Dealer 2026', short: 'Best Dealer', sub: 'Concerto Audio Indonesia Performance Dealer 2026' },
+};
+const awKeys = c => [...AW_CATS[c].list].sort((a, b) => b.rank - a.rank).map(d => 'awarding:' + AW_CATS[c].p + d.rank).concat('awarding:' + AW_CATS[c].p + 'list');
+// Urutan acara: judul → Best Distributor (Top 5 … Juara → papan) → Best Dealer (Top 10 … Juara → papan)
+const AWARD_SEQ = ['awarding', ...awKeys('dist'), ...awKeys('dealer')];
+const awPart = k => { const m = /^awarding:(d?)(\d+|list)$/.exec(k || ''); return m ? { cat: m[1] ? 'dist' : 'dealer', r: m[2] === 'list' ? 'list' : +m[2] } : null; };
 const OPENING_SEQ = ['opening', ...OPENING_SPEAKERS.flatMap((sp, i) => [`opening:${i + 1}`, ...(sp.video ? [`opening:${i + 1}:v`] : [])])];
 // Materi PKS Dealer 2027 (isi diskon/target → TIDAK di repo publik): PDF di Storage privat GUIDES_BUCKET, diunggah admin dari panel.
 // Scene 'kickoff' = judul Kick Off, 'kickoff:<n>' = halaman PKS ke-n (dirender pdf.js).
@@ -7492,7 +7505,7 @@ const sceneInfo = k => {
   if (sceneBase(k) === 'paket') { const pk = paketParse(k); return { ...base, label: pk.pkg ? `Paket Audio · ${pk.pkg.title.split(' — ')[0]}${pk.pages ? ` (hal. ${pk.page}/${pk.pages})` : ` (hal. ${pk.page})`}` : 'Paket Audio · daftar' }; }
   if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
   if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
-  { const a = awPart(k); if (a) return { ...base, label: a === 'list' ? 'Awarding · Papan peringkat Best Dealer' : `Awarding · Top ${a} — ${AWARD_DEALERS.find(d => d.rank === a)?.name || ''}` }; }
+  { const a = awPart(k); if (a) { const C = AW_CATS[a.cat]; return { ...base, label: a.r === 'list' ? `Awarding · Papan peringkat ${C.short}` : `Awarding · ${C.short} ${a.r === 1 ? 'Juara' : 'Top ' + a.r} — ${C.list.find(d => d.rank === a.r)?.name || ''}` }; } }
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
   const tm = tmParts(k); if (tm) return { ...base, icon: '🎬', label: 'Testimoni Partner CAI · ' + (tm.idx == null ? 'semua video' : (TESTIMONI_VIDEOS[tm.idx]?.title || 'video ' + (tm.idx + 1))) };
   const { brand, idx } = launchParts(k), b = brand ? BRANDS.find(x => x.id === brand) : null;
@@ -7580,14 +7593,14 @@ function renderScreenPanel(err) {
       return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('opening:${i + 1}')" title="${escHtml(sp.brand)}">${i + 1}. ${escHtml(sp.name)} <small class="scr-op-brand">${(sp.logo || b?.logo) ? `<img src="${sp.logo || b.logo}" alt="">` : escHtml(sp.brand)}</small></button>`
         + (sp.video ? `<button class="scr-lv-btn${opNum(scrRow.scene) === i + 1 && opVid(scrRow.scene) ? ' on' : ''}" onclick="setScene('opening:${i + 1}:v')" title="Putar video sambutan ${escHtml(sp.name)}">🎬 Video</button>` : ''); }).join('')}</div>`;
   else if (sel === 'awarding') { const cur = scrRow.scene, ai = AWARD_SEQ.indexOf(cur);
+    const row = c => `<div class="scr-sub-k">${AW_CATS[c].label} · Top ${AW_CATS[c].list.length} → Juara</div><div class="scr-lv"><div class="scr-lv-row">${awKeys(c).map(k => { const a = awPart(k), d = AW_CATS[c].list.find(x => x.rank === a.r);
+      return `<button class="scr-lv-btn${cur === k ? ' on' : ''}" onclick="setScene('${k}')">${a.r === 'list' ? '🏆 Papan peringkat' : a.r === 1 ? `👑 Juara · ${escHtml(d.name)}` : `${a.r}. ${escHtml(d.name)}`}</button>`; }).join('')}</div></div>`;
     body = `${opts(false, 'Teks bawah judul (opsional)')}<div class="scr-actions">${showBtn('Tampilkan judul Awarding')}</div>
-    <div class="scr-sub-k">Best Dealer 2026 · reveal Top 10 → Juara</div>
     <div class="scr-fm-nav"><button class="scr-lv-btn" onclick="awStep(-1)" ${ai > 0 ? '' : 'disabled'}>◀ Sebelumnya</button>
       <span class="scr-fm-now">${ai > 0 ? escHtml(sceneInfo(cur).label.replace('Awarding · ', '')) : 'Belum mulai'}</span>
-      <button class="scr-lv-btn${ai > 0 ? '' : ' on'}" onclick="awStep(1)" ${ai < AWARD_SEQ.length - 1 ? '' : 'disabled'}>${ai > 0 ? 'Berikutnya ▶' : '▶ Mulai dari Top 10'}</button></div>
-    <div class="scr-lv"><div class="scr-lv-row">${AWARD_SEQ.slice(1).map(k => { const a = awPart(k), d = AWARD_DEALERS.find(x => x.rank === a);
-      return `<button class="scr-lv-btn${cur === k ? ' on' : ''}" onclick="setScene('${k}')">${a === 'list' ? '🏆 Papan peringkat' : a === 1 ? `👑 Juara · ${escHtml(d.name)}` : `${a}. ${escHtml(d.name)}`}</button>`; }).join('')}</div></div>
-    <div class="scr-note">Clicker / panah di komputer videotron juga bisa melangkah. Best Distributor menyusul setelah datanya dikirim.</div>`; }
+      <button class="scr-lv-btn${ai > 0 ? '' : ' on'}" onclick="awStep(1)" ${ai < AWARD_SEQ.length - 1 ? '' : 'disabled'}>${ai > 0 ? 'Berikutnya ▶' : '▶ Mulai (Best Distributor Top 5)'}</button></div>
+    ${row('dist')}${row('dealer')}
+    <div class="scr-note">Urutan ▶: Best Distributor (Top 5 → Juara → papan) lalu Best Dealer (Top 10 → Juara → papan). Clicker / panah di komputer videotron juga bisa melangkah.</div>`; }
   else if (sel === 'funmkt') body = `<div class="scr-actions">${showBtn('Tampilkan judul presentasi')}</div>
     <div class="scr-sub-k">Slide materi</div>
     <div class="scr-fm-nav">
@@ -7740,7 +7753,7 @@ function renderScene(s) {
   if (sceneBase(s.scene) === 'backdrop') return renderBackdrop(s);
   if (sceneBase(s.scene) === 'paket') return renderPaket(s);
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene), opVid(s.scene), s.updated_at);
-  if (awPart(s.scene)) return renderAwarding(awPart(s.scene), s.updated_at);
+  if (awPart(s.scene)) return renderAwarding(s.scene, s.updated_at);
   if (pksNum(s.scene)) return renderPksPage(pksNum(s.scene));
   const sc = QS_SCENES[sceneBase(s.scene)], t = s.scene_text ? escHtml(s.scene_text) : '';
   const count = s.scene_until ? `<div class="sc-count"><span class="qs-count" data-until="${escHtml(s.scene_until)}">--:--</span><small>sisa waktu</small></div>` : '';
@@ -7807,32 +7820,35 @@ function opEqBars(count) {
   let r = 7; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
   return Array.from({ length: count }, () => `<i style="--h:${(0.35 + rnd() * 0.65).toFixed(2)};--t:${(0.9 + rnd() * 1.4).toFixed(2)}s;--d:-${(rnd() * 2.4).toFixed(2)}s"></i>`).join('');
 }
-function renderAwarding(a, stamp) {
+function renderAwarding(key, stamp) {
+  const { cat, r: a } = awPart(key), C = AW_CATS[cat];
   const bg = `<div class="lh-bg"><div class="sc-rays"></div><i class="lh-ring r1"></i><i class="lh-ring r2"></i><i class="lh-ring r3"></i>${lhSparks()}</div>`;
-  const ranks = [...AWARD_DEALERS].sort((x, y) => x.rank - y.rank), champ = ranks[0];
+  const ranks = [...C.list].sort((x, y) => x.rank - y.rank), champ = ranks[0];
+  const champMark = d => d.logo ? `<img src="${d.logo}" alt="${escHtml(d.name)}">` : `<b>${escHtml(d.name)}</b>`;
   let html;
   if (a === 'list') {
-    html = `<div class="qs-scene aw aw-list">${bg}<div class="aw-k"><i></i><span>Best Dealer 2026</span><i></i></div>
-      <div class="aw-champ-row">${champ.logo ? `<img src="${champ.logo}" alt="${escHtml(champ.name)}">` : `<b>${escHtml(champ.name)}</b>`}<span>${escHtml(champ.title || 'Best Dealer')}${champ.note ? ' · ' + escHtml(champ.note) : ''}</span></div>
-      <ol class="aw-board">${ranks.slice(1).map((d, i) => `<li style="--i:${i}"><em>${d.rank}</em><b>${escHtml(d.name)}</b></li>`).join('')}</ol></div>`;
+    html = `<div class="qs-scene aw aw-list">${bg}<div class="aw-k"><i></i><span>${C.label}</span><i></i></div>
+      <div class="aw-champ-row"><small>👑 Juara</small>${champMark(champ)}<span>${escHtml(champ.title || C.short)}${champ.note ? ' · ' + escHtml(champ.note) : ''}</span></div>
+      <ol class="aw-board${ranks.length - 1 < 6 ? ' few' : ''}">${ranks.slice(1).map((d, i) => `<li style="--i:${i}"><em>${d.rank}</em><b>${escHtml(d.name)}${d.note ? `<small>${escHtml(d.note)}</small>` : ''}</b></li>`).join('')}</ol></div>`;
   } else {
-    const d = AWARD_DEALERS.find(x => x.rank === a); if (!d) return;
-    const pos = AWARD_SEQ.indexOf('awarding:' + a), nx = AWARD_SEQ[pos + 1], nxD = AWARD_DEALERS.find(x => x.rank === awPart(nx));
-    const dots = `<div class="aw-dots">${[...AWARD_DEALERS].sort((x, y) => y.rank - x.rank).map(x => `<i class="${x.rank === a ? 'on' : x.rank > a ? 'done' : ''}"></i>`).join('')}</div>`;
+    const d = C.list.find(x => x.rank === a); if (!d) return;
+    const pos = AWARD_SEQ.indexOf(key), nx = awPart(AWARD_SEQ[pos + 1]);
+    const nxTxt = !nx ? '' : nx.cat !== cat ? AW_CATS[nx.cat].short : nx.r === 'list' ? 'Papan peringkat' : nx.r === 1 ? 'Juara' : 'Top ' + nx.r;
+    const dots = `<div class="aw-dots">${[...C.list].sort((x, y) => y.rank - x.rank).map(x => `<i class="${x.rank === a ? 'on' : x.rank > a ? 'done' : ''}"></i>`).join('')}</div>`;
     html = d.rank === 1
-      ? `<div class="qs-scene aw aw-one">${bg}<div class="aw-hex"></div><div class="aw-k"><i></i><span>${escHtml(d.title || 'Best Dealer 2026')}</span><i></i></div>
-          ${d.note ? `<div class="aw-note">${escHtml(d.note)}</div>` : ''}<div class="aw-stars"><i>★</i><i>★</i><i>★</i></div>
+      ? `<div class="qs-scene aw aw-one">${bg}<div class="aw-hex"></div><div class="aw-k"><i></i><span>${escHtml(d.title || C.label)}</span><i></i></div>
+          ${d.title ? `<div class="aw-note">${escHtml(d.note || '')}</div>` : ''}<div class="aw-stars"><i>★</i><i>★</i><i>★</i></div>
           <div class="aw-presented">Presented to</div>
-          ${d.logo ? `<img class="aw-logo" src="${d.logo}" alt="${escHtml(d.name)}">` : `<h1 class="aw-name">${escHtml(d.name)}</h1>`}
-          <p class="aw-sub">In recognition of outstanding performance, dedication &amp; remarkable achievement throughout 2026</p>${dots}</div>`
+          ${d.logo ? `<img class="aw-logo" src="${d.logo}" alt="${escHtml(d.name)}">` : `<h1 class="aw-name">${escHtml(d.name)}</h1>${!d.title && d.note ? `<div class="aw-note">${escHtml(d.note)}</div>` : ''}`}
+          <p class="aw-sub">In recognition of outstanding performance, dedication &amp; remarkable achievement throughout 2026</p>${dots}<div class="aw-next">${nxTxt ? `Berikutnya · <b>${nxTxt}</b>` : ''}</div></div>`
       : `<div class="qs-scene aw">${bg}<div class="aw-hex"></div><span class="aw-bignum">${d.rank}</span>
-          <div class="aw-k"><i></i><span>Best Dealer 2026</span><i></i></div>
+          <div class="aw-k"><i></i><span>${C.label}</span><i></i></div>
           <div class="aw-top">Top <b>${d.rank}</b></div>
-          <h1 class="aw-name">${escHtml(d.name)}</h1>
-          <p class="aw-sub">Concerto Audio Indonesia Performance Dealer 2026</p>
-          ${dots}<div class="aw-next">${nxD ? `Berikutnya · <b>Top ${nxD.rank}</b>` : ''}</div></div>`;
+          <h1 class="aw-name">${escHtml(d.name)}</h1>${d.note ? `<div class="aw-note">${escHtml(d.note)}</div>` : ''}
+          <p class="aw-sub">${C.sub}</p>
+          ${dots}<div class="aw-next">${nxTxt ? `Berikutnya · <b>${nxTxt}</b>` : ''}</div></div>`;
   }
-  qsSetStage(['aw', a, stamp || ''].join('|'), html);
+  qsSetStage(['aw', key, stamp || ''].join('|'), html);
 }
 function awStep(d) {
   const i = Math.max(0, AWARD_SEQ.indexOf(scrRow?.scene)), n = Math.min(AWARD_SEQ.length - 1, Math.max(0, i + d));
