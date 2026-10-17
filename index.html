@@ -3205,7 +3205,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T07:41:27Z';
+const LAST_UPDATE = '2026-10-17T07:50:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8561,7 +8561,8 @@ function stopQaScreen() {
    Volume di-fade otomatis: senyap pada sesi di daftar "senyap" (bgm_off), saat video (#qs-video) diputar, atau bila dimatikan.
    Pengaturan dibaca dari baris gathering_screen (kolom bgm_on / bgm_vol / bgm_off — opsional; tanpa kolom = default di bawah).
    Browser menahan audio sebelum ada interaksi → tombol "Aktifkan musik latar" muncul sampai layar diklik / tombol ditekan. */
-const BGM_SRC = 'assets/audio/backsound.mp3?v=2';   // cadangan bila YouTube tak bisa dimuat (offline)
+const BGM_SRC = 'assets/audio/backsound.mp3?v=2';
+const BGM_AWARD_SRC = 'assets/audio/awarding.mp3?v=1';   // musik khusus sesi Awarding (menggantikan musik latar selama scene awarding*, mulai dari awal tiap masuk sesi)   // cadangan bila YouTube tak bisa dimuat (offline)
 const BGM_YT_ID = '';   // musik latar dari YouTube (pemutar resmi YouTube IFrame; tidak diunduh / disalin ke repo). Kosongkan untuk memakai file di atas saja.
 const BGM_KEYS = [['qa', '🎤', 'Meeting Dealer'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
   ['newbrand', '✨', 'Launching - CAELUM'], ['cailaunch', '🚀', 'Launching - CAI'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
@@ -8602,7 +8603,17 @@ function bgmInitFile() {   // musik file lokal lewat Web Audio (gapless)
   bgm.mode = 'file';
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   bgm.ctx = new AC(); bgm.gain = bgm.ctx.createGain(); bgm.gain.gain.value = 0; bgm.gain.connect(bgm.ctx.destination);
+  bgm.gainAw = bgm.ctx.createGain(); bgm.gainAw.gain.value = 0; bgm.gainAw.connect(bgm.ctx.destination);
   bgmLoadFile();
+  fetch(BGM_AWARD_SRC).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+    .then(b => new Promise((ok, no) => bgm.ctx.decodeAudioData(b, ok, no))).then(buf => { bgm.awBuf = buf; bgmTick(); })
+    .catch(e => console.warn('Musik Awarding tidak termuat:', e));
+}
+// Sesi Awarding: musik Awarding diputar dari awal saat masuk sesi (crossfade dengan musik latar), berhenti pelan saat keluar
+function bgmAwardSwitch(aw) {
+  const ctx = bgm.ctx; if (!ctx || !bgm.awBuf || aw === !!bgm.awSrc) return;
+  if (aw) { const src = ctx.createBufferSource(); src.buffer = bgm.awBuf; src.loop = true; src.connect(bgm.gainAw); src.start(); bgm.awSrc = src; }
+  else { try { bgm.awSrc.stop(ctx.currentTime + 3); } catch (e) {} bgm.awSrc = null; }
 }
 function bgmLoadFile() {
   if (bgm.loading || bgm.started) return;
@@ -8652,7 +8663,10 @@ function bgmTick() {
     running = st === 1 || st === 3 || quiet;   // quiet = tidak butuh diputar
   } else if (bgm.ctx) {
     const target = quiet ? 0 : Math.pow(c.vol / 100, 1.3) * (duck ? 0.3 : 1) * (Date.now() < (bgm.duckUntil || 0) ? 0.2 : 1);
-    bgm.gain.gain.setTargetAtTime(target, bgm.ctx.currentTime, 0.7);
+    const aw = c.scene === 'awarding' && !!bgm.awBuf;
+    bgmAwardSwitch(aw && c.on);
+    bgm.gain.gain.setTargetAtTime(aw ? 0 : target, bgm.ctx.currentTime, 0.7);
+    bgm.gainAw?.gain.setTargetAtTime(aw ? target : 0, bgm.ctx.currentTime, 0.7);
     running = bgm.ctx.state === 'running';
   } else return;
   // status dilaporkan ke panel Editor (tidak ada tombol / tulisan musik di layar videotron)
