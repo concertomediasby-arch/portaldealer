@@ -3067,7 +3067,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T03:37:22Z';
+const LAST_UPDATE = '2026-10-17T03:43:14Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8262,13 +8262,13 @@ function bgmResume() {
   bgm.ctx?.resume().then(bgmTick).catch(() => {});
 }
 function bgmTick() {
-  const c = bgm.cfg, vid = !!document.getElementById('qs-video'), sceneOff = false, quiet = !c.on || sceneOff || vid;
+  const c = bgm.cfg, vid = !!document.getElementById('qs-video'), sceneOff = false, duck = vid && c.scene === 'testimoni', quiet = !c.on || sceneOff || (vid && !duck);   // video testimoni: musik tetap jalan, volume dikecilkan agar suara dealer terdengar
   const label = BGM_KEYS.find(k => k[0] === c.scene)?.[2] || c.scene;
   let running = false;
   if (bgm.mode === 'yt') {
     const y = bgm.yt; if (!y?.ready) return;
     let st = -1; try { st = y.p.getPlayerState(); } catch (e) { return; }
-    const tile = document.getElementById('qs-yt'), target = quiet ? 0 : c.vol;
+    const tile = document.getElementById('qs-yt'), target = quiet ? 0 : c.vol * (duck ? 0.3 : 1);
     if (!quiet) {
       tile?.classList.add('on');
       if (st !== 1) { try { y.p.playVideo(); } catch (e) {} }
@@ -8281,13 +8281,13 @@ function bgmTick() {
     try { y.p.setVolume(Math.round(bgm.ytVol)); } catch (e) {}
     running = st === 1 || st === 3 || quiet;   // quiet = tidak butuh diputar
   } else if (bgm.ctx) {
-    const target = quiet ? 0 : Math.pow(c.vol / 100, 1.3);
+    const target = quiet ? 0 : Math.pow(c.vol / 100, 1.3) * (duck ? 0.3 : 1);
     bgm.gain.gain.setTargetAtTime(target, bgm.ctx.currentTime, 0.7);
     running = bgm.ctx.state === 'running';
   } else return;
   // status dilaporkan ke panel Editor (tidak ada tombol / tulisan musik di layar videotron)
   const bad = bgm.mode === 'file' && bgm.loadErr, wait = bgm.mode === 'file' && bgm.loading;
-  const kind = !c.on ? 'mati' : bad ? 'gagal' : wait ? 'memuat' : !running ? 'klik' : vid ? 'video' : sceneOff ? 'senyap' : 'bunyi';
+  const kind = !c.on ? 'mati' : bad ? 'gagal' : wait ? 'memuat' : !running ? 'klik' : (vid && !duck) ? 'video' : sceneOff ? 'senyap' : 'bunyi';
   bgmReport({ kind, scene: label, err: bgm.loadErr || '', mode: bgm.mode, cfg: { on: c.on, vol: c.vol, off: c.off } });
 }
 // Laporan status musik: layar videotron → panel Editor lewat Supabase Realtime broadcast (tanpa tabel / kolom baru)
