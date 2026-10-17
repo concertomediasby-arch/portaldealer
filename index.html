@@ -1904,6 +1904,8 @@ body {
   .qs-idle p { font-size: max(15px, 3vh); color: #aab4c8; margin: 0; }
   .qs-login { margin-top: 4vh; padding: 12px 22px; border-radius: 12px; border: 1px solid #e9c46a; background: transparent; color: #e9c46a; font: 600 16px var(--f-body); cursor: pointer; }
   .qs-foot { padding: 0 4vw 2.5vh; font: 500 max(11px, 1.7vh) var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.35); }
+  .qa-screen:has(#qs-video:not(.ending)) .qs-stage { visibility: hidden; }   /* video penuh layar menutup layar → hentikan render animasi di belakangnya (lebih ringan, video tidak patah) */
+  .qs-prep { position: absolute; left: 18px; bottom: 44px; font: 500 11px var(--f-mono); color: rgba(233,196,106,.8); letter-spacing: .04em; }
   .qs-bgm { position: absolute; right: 150px; bottom: 16px; padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(233,196,106,.55); background: rgba(233,196,106,.14); color: #f3d899; font: 600 13px var(--f-body); cursor: pointer; z-index: 8; animation: qsFade .6s ease both; }
   .qs-bgm-note { position: absolute; right: 18px; bottom: 62px; padding: 5px 12px; border-radius: 99px; background: rgba(0,0,0,.45); color: #cfd6e6; font: 500 12px var(--f-body); opacity: 0; pointer-events: none; }
   .qs-bgm-note.show { animation: bgmNote 6s ease both; }
@@ -2927,6 +2929,7 @@ body {
   <header class="qs-top"><img class="qs-logo" id="qs-logo" alt="CAI"><div class="qs-event"><b>GATHERING CAI 2026</b><span id="qs-event-sub">Listening and Understanding Partner</span></div><span class="qs-status" id="qs-status" title="Status koneksi"></span></header>
   <main class="qs-stage" id="qs-stage"></main>
   <footer class="qs-foot">Concerto Audio Indonesia</footer>
+  <span class="qs-prep" id="qs-prep" hidden></span>
   <span class="qs-bgm-note" id="qs-bgm-note"></span>
   <button class="qs-bgm" id="qs-bgm" onclick="bgmResume()" hidden>🎵 Aktifkan musik latar</button>
   <button class="qs-fs" id="qs-fs" onclick="qsFullscreen()">⛶ Layar penuh</button>
@@ -3046,7 +3049,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-16T08:36:21Z';
+const LAST_UPDATE = '2026-10-17T02:19:48Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7762,7 +7765,7 @@ function playOverlayVideo(src, host, pickFn) {
   document.getElementById('qa-screen').appendChild(ov);
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute');
   v.src = src;
-  v.onended = () => { ov.style.transition = 'opacity .8s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 850); };
+  v.onended = () => { ov.classList.add('ending'); ov.style.transition = 'opacity .8s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 850); };
   v.onerror = () => {
     ov.remove();
     document.querySelector(host)?.insertAdjacentHTML('beforeend', `<label class="op-pick">📁 Video belum termuat — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="${pickFn}(this)"></label>`);
@@ -8020,7 +8023,21 @@ function renderTestimoniVideo(s) {
     ${t ? `<div class="sc-launch-name">${t}</div>` : ''}
     <p class="sc-sub" id="sc-lv-msg">Concerto Audio Indonesia</p>
     <div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video testimoni di komputer ini (boleh lebih dari satu)<input type="file" accept="video/*" multiple hidden onchange="qsPickVideo('testimoni', ${idx == null ? 'null' : idx}, this)"></label></div></div>`);
+  qsPrefetchVideos(TESTIMONI_VIDEOS, 'testimoni');
   if (changed) qsLvTimer = setTimeout(() => playLaunchVideo('testimoni', idx, 0), 3000);
+}
+// Video testimoni diunduh ke memori (blob) sebelum diputar → tidak bergantung kecepatan internet saat tayang (patah-patah/buffering)
+const qsVidCache = {}; let qsPrefetching = false;
+async function qsPrefetchVideos(list, label) {
+  if (qsPrefetching) return; qsPrefetching = true;
+  const el = document.getElementById('qs-prep');
+  try {
+    for (let i = 0; i < list.length; i++) {
+      const src = list[i].src; if (qsVidCache[src]) continue;
+      if (el) { el.textContent = `⬇ Menyiapkan video ${label} ${i + 1}/${list.length}…`; el.hidden = false; }
+      try { const r = await fetch(src); if (!r.ok) throw new Error(r.status); qsVidCache[src] = URL.createObjectURL(await r.blob()); } catch (e) { /* gagal → tetap streaming dari server */ }
+    }
+  } finally { qsPrefetching = false; if (el) el.hidden = true; }
 }
 function playLaunchVideo(brand, idx, pos) {
   const list = launchList(brand, idx), item = list[pos];
@@ -8036,7 +8053,7 @@ function playLaunchVideo(brand, idx, pos) {
   }
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute'), cap = ov.querySelector('.qs-vcap');
   const wasMuted = v.muted;
-  v.src = item.src;
+  v.src = qsVidCache[item.src] || item.src;
   // keterangan kecil "2/3 · judul" di awal tiap video (hanya bila lebih dari satu)
   cap.textContent = list.length > 1 ? `${pos + 1}/${list.length} · ${item.title}` : '';
   cap.classList.remove('show'); void cap.offsetWidth; if (cap.textContent) cap.classList.add('show');
@@ -8120,6 +8137,7 @@ function qaScreenAuth() {
 }
 function startQaScreen() {
   if (qsTimer) return;
+  setTimeout(() => qsPrefetchVideos(TESTIMONI_VIDEOS, 'testimoni'), 8000);   // siapkan video testimoni di latar saat layar menganggur
   qsLoad();
   qsTimer = setInterval(qsLoad, 4000);
   qsChannel = supabase.channel('qa-screen')
