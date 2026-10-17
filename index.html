@@ -1673,6 +1673,10 @@ body {
   @keyframes scSteam { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
   .sc-title { font: 700 min(8vw, 14vh)/1.05 var(--f-display); margin: 1.5vh 0 2vh; color: #fff; letter-spacing: -.01em; }
   .sc-title em, .sc-launch-name { font-style: normal; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lh-topics { position: relative; z-index: 2; margin-top: 3vh; display: grid; gap: 1.2vh; text-align: center; max-width: 82vw; }
+  .lh-topics div { display: flex; gap: 1.4vw; align-items: baseline; justify-content: center; flex-wrap: wrap; }
+  .lh-topics b { font: 700 max(14px, 2.5vh) var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: #e9c46a; }
+  .lh-topics span { font-size: max(13px, 2.2vh); color: #c3cbdc; }
   .sc-sub { font-size: max(15px, 3.2vh); color: #c3cbdc; margin: 0; max-width: 70vw; }
   .sc-count { margin-top: 4vh; display: flex; flex-direction: column; align-items: center; padding: 1.6vh 4vw; border-radius: 2vh; border: 1px solid rgba(233,196,106,.4); background: rgba(233,196,106,.07); }
   .qs-count { font: 700 min(9vw, 15vh)/1 var(--f-mono); color: #fff; letter-spacing: .04em; }
@@ -3067,7 +3071,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T04:26:09Z';
+const LAST_UPDATE = '2026-10-17T05:26:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7000,9 +7004,9 @@ const RD_TEMPLATE_LUP = [
   { title: 'Opening Speech', start_time: '08:00', end_time: '09:00', flexible: true, notes: 'Mr. Marc (Audiocircle) → Mr. Kelvin (STEG) → Mr. David (Zelos) → Juliar Candra (Harrison Lab) → Arif (Amo Plus) → Yusak (Sound Addict).' },
   { title: QA_NAME, start_time: '09:00', end_time: '12:00', notes: 'Pertanyaan, usul & unek-unek dealer diketik admin & tampil di videotron — menu Open Mic Partner.' },
   { title: 'Coffee Break', start_time: '12:00', end_time: '12:20', notes: '20 menit' },
-  { title: 'Refreshment Product', start_time: '12:20', flexible: true },
-  { title: 'Product Launch', start_time: '13:00', flexible: true },
-  { title: 'Makan Siang', start_time: '13:45', flexible: true },
+  { title: 'Refreshment Product', start_time: '12:20', flexible: true, notes: 'Membahas produk yang ada di katalog CAI.' },
+  { title: 'Product Launch', start_time: '13:00', flexible: true, notes: 'Audiocircle: Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line. STEG: SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12. Audio System: AY65 · AY65C · AS10 · AS500.1 · DSP AS6.' },
+  { title: 'Makan Siang', start_time: '13:45', end_time: '14:45', flexible: true, notes: 'Break makan siang 1 jam' },
   { title: 'Presentasi Fun Marketing', start_time: '14:45', flexible: true },
   { title: 'Kick Off 2027', start_time: '15:30', flexible: true, notes: 'Membahas situs Portal Dealer CAI (dealer.concerto.id) & PKS Dealer (Perjanjian Kerja Sama) 2027.' },
 ];
@@ -7455,12 +7459,14 @@ const SCR_CARDS = ['opening', 'lup', 'free', 'newbrand'];
 const NEW_BRAND = { name: 'Caelum', tagline: 'Power Amplifier', logo: 'assets/brands/caelum.webp', video: 'assets/newbrand/caelum.mp4' };
 const NB_REVEAL_SEC = 6;   // mode 'newbrand:full': lama reveal nama brand sebelum video diputar
 let scrLupSel = 'qa', scrFreeSel = 'coffee';
+const LAUNCH_TOPICS = [['Audiocircle', 'Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line'],
+  ['STEG', 'SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12'], ['Audio System', 'AY65 · AY65C · AS10 · AS500.1 · DSP AS6']];
 const SCR_DESC = {
   qa: 'Pertanyaan dealer tampil di videotron. Pertanyaan, usul & curhatan dealer tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
   opening: 'Tampilkan susunan pembicara, lalu kartu tiap pembicara secara bergantian. Clicker / panah di komputer videotron juga bisa menggeser.',
   coffee: 'Layar rehat dengan hitung mundur (default 20 menit) dan info sesi berikutnya.',
-  refresh: 'Judul sesi dengan strip logo brand berjalan.',
-  launch: 'Judul Product Launch (isi nama produk di teks tambahan) atau putar video per brand.',
+  refresh: 'Judul sesi (membahas produk yang ada di katalog CAI) dengan strip logo brand berjalan.',
+  launch: 'Judul Product Launch beserta daftar produk per brand (Audiocircle, STEG, Audio System); isi nama produk di teks tambahan, atau putar video per brand.',
   newbrand: 'Peluncuran brand baru: hitung mundur 3-2-1, kilatan cahaya, lalu nama/logo brand muncul besar. Isi teks tambahan "Nama Brand | tagline".',
   lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
   testimoni: 'Judul sesi Testimoni Partner CAI, lalu putar video testimoni dari dealer (satu per satu atau semua berurutan). Teks tambahan = nama partner (opsional).',
@@ -7669,7 +7675,7 @@ function renderScene(s) {
     coffee: `<div class="qs-scene sc-coffee">${SC_CUP}<div class="qs-kicker">Rehat Sejenak</div><h1 class="sc-title">Coffee <em>Break</em></h1>
       <p class="sc-sub">${t || 'Silakan menikmati kopi &amp; snack yang telah disediakan'}</p>${count}${next}</div>`,
     refresh: `<div class="qs-scene sc-refresh"><div class="qs-kicker">Listening and Understanding Partner</div><h1 class="sc-title">Refreshment <em>Product</em></h1>
-      <p class="sc-sub">${t || 'Mengenal kembali lini produk unggulan Concerto Audio Indonesia'}</p>
+      <p class="sc-sub">${t || 'Membahas produk yang ada di katalog Concerto Audio Indonesia'}</p>
       <div class="sc-logos"><div class="sc-track">${logos}${logos}</div></div>${count}</div>`,
     launch: `<div class="qs-scene sc-launch lh"><div class="lh-bg"><div class="sc-rays"></div><i class="lh-ring r1"></i><i class="lh-ring r2"></i><i class="lh-ring r3"></i><span class="lh-year">2027</span>${lhSparks()}<i class="lh-streak s1"></i><i class="lh-streak s2"></i></div>
       <i class="lh-br tl"></i><i class="lh-br tr"></i><i class="lh-br bl"></i><i class="lh-br brr"></i>
@@ -7677,10 +7683,11 @@ function renderScene(s) {
       <h1 class="lh-title"><span class="lh-w">Product</span> <span class="lh-w g">Launch</span></h1>
       <div class="lh-name"><span>${t || 'New Product 2027'}</span></div>
       <div class="lh-div"><i></i><b></b><i></i></div>
-      <p class="lh-sub">Concerto Audio Indonesia</p>${count}</div>`,
+      <p class="lh-sub">Concerto Audio Indonesia</p>
+      <div class="lh-topics">${LAUNCH_TOPICS.map(([b, l]) => `<div><b>${b}</b><span>${l}</span></div>`).join('')}</div>${count}</div>`,
     newbrand: renderNewBrand(s),
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
-      <p class="sc-sub">${t || 'Selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
+      <p class="sc-sub">${t || 'Break makan siang 1 jam · selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
     testimoni: tmScene({ who: t }),
     opening: `<div class="qs-scene sc-open"><div class="qs-kicker">Gathering CAI 2026</div><h1 class="sc-title">Opening <em>Speech</em></h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
       <div class="sc-op-list">${OPENING_SPEAKERS.map((sp, i) => `<div class="sc-op-item" style="--ac:${sp.ac}"><span>${i + 1}</span>${opBrandMark(sp, true)}<b>${escHtml(sp.name)}</b></div>`).join('')}</div></div>`,
