@@ -3164,7 +3164,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T07:20:42Z';
+const LAST_UPDATE = '2026-10-17T07:24:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7915,7 +7915,7 @@ function renderAwarding(key, stamp) {
         ${(one ? (d.title ? d.note : d.note) : d.note) ? `<div class="aw2-note">${escHtml(d.note)}</div>` : ''}
         <div class="awt-rule"><i></i><b></b></div>
         <p class="awt-sub">${one ? 'In recognition of outstanding performance, dedication &amp; remarkable achievement throughout 2026' : C.sub}</p>
-        <div class="aw2-foot">${prog}<span>${nxTxt && !one ? `Berikutnya · <b>${nxTxt}</b>` : ''}</span></div>
+        <div class="aw2-foot">${prog}<span>${nxTxt && !one && cat !== 'dist' ? `Berikutnya · <b>${nxTxt}</b>` : ''}</span></div>
       </div></div>`;
   }
   // Hitung mundur dramatis sebelum kartu Top (AW_CD_TOP dtk) / Juara (AW_CD_CHAMP dtk); papan peringkat tanpa hitung mundur
