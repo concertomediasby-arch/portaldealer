@@ -1734,6 +1734,8 @@ body {
   .aw2-pre { margin-top: 3vh; font: 600 max(11px, 1.8vh) var(--f-mono); letter-spacing: .26em; text-transform: uppercase; color: #8f99ae; animation: qsFade .9s ease both .5s; }
   .aw2-name { margin: 1.4vh 0 0; font: 800 min(5.4vw, 10vh)/1.02 var(--f-display); letter-spacing: -.01em; color: #fff; animation: awName 1s cubic-bezier(.2,.8,.2,1) both .7s; }
   .aw2-logo { display: block; width: min(32vw, 54vh); margin: 2.4vh 0 .6vh; animation: awName 1.1s cubic-bezier(.2,.8,.2,1) both .7s; }
+  .aw2-person { margin-top: 1.4vh; font: 500 max(14px, 2.9vh) var(--f-body); color: #dfe4ee; letter-spacing: .01em; animation: qsFade 1s ease both .9s; }
+  .aw2-person::before { content: ''; display: inline-block; width: 2.2vw; height: 1px; margin-right: .9vw; vertical-align: middle; background: rgba(233,196,106,.7); }
   .aw2-note { margin-top: 1.2vh; font: 500 max(13px, 2.3vh) var(--f-body); color: #e9c46a; animation: qsFade 1s ease both .9s; }
   .aw2-foot { display: flex; align-items: center; gap: 2vw; margin-top: 4vh; padding-top: 2.4vh; border-top: 1px solid rgba(255,255,255,.1); font: 500 max(11px, 1.7vh) var(--f-mono); letter-spacing: .14em; color: #8f99ae; }
   .aw2-foot b { color: #e9c46a; } .aw2-foot span { white-space: nowrap; }
@@ -3162,7 +3164,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T06:33:55Z';
+const LAST_UPDATE = '2026-10-17T07:20:42Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7521,8 +7523,9 @@ const AWARD_DEALERS = [
 ];
 // Best Distributor 2026 (tabel pemilik, SINYO dikecualikan atas permintaan pemilik → peringkat diurutkan ulang). Nilai penjualan TIDAK dimasukkan (index.html publik).
 const AWARD_DIST = [
-  { rank: 1, name: 'SGU', note: 'incl. Garuda Barat & Gerardo' }, { rank: 2, name: 'THV' }, { rank: 3, name: 'H2R Ronny' },
-  { rank: 4, name: 'CT Malang' }, { rank: 5, name: 'VIN Audioworks' },
+  // person = nama pemilik/PIC (tampil di bawah nama distributor); kosong = tidak ditampilkan
+  { rank: 1, name: 'Senada Gema Utama', note: 'SGU · incl. Garuda Barat & Gerardo' }, { rank: 2, name: 'Harvest Variasi', person: 'Agustinus' },
+  { rank: 3, name: 'H2R Madiun', person: 'Ronny Koesharyono' }, { rank: 4, name: 'Concerto Malang' }, { rank: 5, name: 'VIN Audioworks', person: 'Kevin Klise' },
 ];
 // Kategori awarding: kunci scene 'awarding:<rank>' / 'awarding:list' = Best Dealer, 'awarding:d<rank>' / 'awarding:dlist' = Best Distributor
 const AW_CATS = {
@@ -7895,8 +7898,8 @@ function renderAwarding(key, stamp) {
   if (a === 'list') {
     html = `<div class="qs-scene awt aw2-list">${bg}
       <div class="aw2-lhead"><div class="awt-meta"><span>Awarding</span><i></i><span>Papan Peringkat</span></div><h1 class="aw2-ltitle">${C.short}<span>2026</span></h1></div>
-      <div class="aw2-champ"><em>01</em>${mark(champ, 'aw2c')}<div class="aw2-ctxt"><b>${escHtml(champ.title || 'Juara ' + C.short)}</b><span>${escHtml(champ.note || C.sub)}</span></div></div>
-      <ol class="aw2-board${ranks.length - 1 < 6 ? ' few' : ''}">${ranks.slice(1).map((d, i) => `<li style="--i:${i}"><em>${String(d.rank).padStart(2, '0')}</em><b>${escHtml(d.name)}${d.note ? `<small>${escHtml(d.note)}</small>` : ''}</b></li>`).join('')}</ol></div>`;
+      <div class="aw2-champ"><em>01</em>${mark(champ, 'aw2c')}<div class="aw2-ctxt"><b>${escHtml(champ.title || 'Juara ' + C.short)}${champ.person ? ' · ' + escHtml(champ.person) : ''}</b><span>${escHtml(champ.note || C.sub)}</span></div></div>
+      <ol class="aw2-board${ranks.length - 1 < 6 ? ' few' : ''}">${ranks.slice(1).map((d, i) => `<li style="--i:${i}"><em>${String(d.rank).padStart(2, '0')}</em><b>${escHtml(d.name)}${d.person || d.note ? `<small>${escHtml(d.person || d.note)}</small>` : ''}</b></li>`).join('')}</ol></div>`;
   } else {
     const d = C.list.find(x => x.rank === a); if (!d) return;
     const pos = AWARD_SEQ.indexOf(key), nx = awPart(AWARD_SEQ[pos + 1]);
@@ -7908,6 +7911,7 @@ function renderAwarding(key, stamp) {
         <div class="awt-meta"><span>${C.label}</span><i></i><span>${one ? escHtml(d.title || 'Juara') : 'Peringkat ' + d.rank}</span></div>
         <div class="aw2-pre">${one ? 'Presented to' : 'Selamat kepada'}</div>
         ${one && d.logo ? `<img class="aw2-logo" src="${d.logo}" alt="${escHtml(d.name)}">` : `<h1 class="aw2-name">${escHtml(d.name)}</h1>`}
+        ${d.person ? `<div class="aw2-person">${escHtml(d.person)}</div>` : ''}
         ${(one ? (d.title ? d.note : d.note) : d.note) ? `<div class="aw2-note">${escHtml(d.note)}</div>` : ''}
         <div class="awt-rule"><i></i><b></b></div>
         <p class="awt-sub">${one ? 'In recognition of outstanding performance, dedication &amp; remarkable achievement throughout 2026' : C.sub}</p>
