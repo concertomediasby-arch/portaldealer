@@ -1684,6 +1684,26 @@ body {
   .lh-topics div { display: flex; gap: 1.4vw; align-items: baseline; justify-content: center; flex-wrap: wrap; }
   .lh-topics b { font: 700 max(14px, 2.5vh) var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: #e9c46a; }
   .lh-topics span { font-size: max(13px, 2.2vh); color: #c3cbdc; }
+  /* Indonesia Raya — layar judul pembuka acara pagi (merah, senada dengan videonya) */
+  .ir { position: absolute; inset: 0; justify-content: center; text-align: center; background: radial-gradient(ellipse 70% 60% at 50% 40%, #b3121f 0%, #6e0a12 55%, #2a0307 100%); }
+  .qa-screen:has(.ir) .qs-top, .qa-screen:has(.ir) .qs-foot { display: none; }
+  .qs-stage > .ir { animation: qsFade 1s ease both; }
+  .ir-bg i { position: absolute; inset: -20%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.08), transparent 40%); animation: irOrb 14s ease-in-out infinite alternate; }
+  @keyframes irOrb { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(5vw, -3vh) scale(1.1); } 100% { transform: translate(-4vw, 4vh) scale(.95); } }
+  .ir-bg i + i { background: radial-gradient(circle at 70% 70%, rgba(255,210,210,.07), transparent 45%); animation-duration: 18s; animation-direction: alternate-reverse; }
+  .ir-flag { position: relative; z-index: 1; display: grid; width: min(14vw, 22vh); aspect-ratio: 3 / 2; margin-bottom: 4vh; border-radius: .4vh; overflow: hidden; box-shadow: 0 2vh 6vh rgba(0,0,0,.45);
+    animation: irWave 3.2s ease-in-out infinite; transform-origin: 0 50%; }
+  .ir-flag b { display: block; } .ir-flag b:first-child { background: #e11d2a; } .ir-flag b:last-child { background: #fff; }
+  .ir-flag::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(0,0,0,.18) 35%, rgba(255,255,255,.22) 50%, rgba(0,0,0,.15) 65%, transparent 80%); background-size: 220% 100%; animation: irShade 3.2s linear infinite; }
+  @keyframes irWave { 0%, 100% { transform: perspective(60vh) rotateY(0) skewY(0); } 50% { transform: perspective(60vh) rotateY(-10deg) skewY(-1.5deg); } }
+  @keyframes irShade { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+  .ir-kick { position: relative; z-index: 1; display: flex; align-items: center; gap: 1.6vw; font: 500 max(12px, 2.1vh) var(--f-mono); letter-spacing: .42em; text-transform: uppercase; color: #ffe1e1; }
+  .ir-kick i { width: 6vw; height: 1px; background: linear-gradient(90deg, transparent, #fff); } .ir-kick i:last-child { background: linear-gradient(270deg, transparent, #fff); }
+  .ir-title { position: relative; z-index: 1; margin: 2vh 0 0; font: 800 min(10vw, 17vh)/1 var(--f-display); letter-spacing: .02em; color: #fff; text-shadow: 0 1vh 4vh rgba(0,0,0,.35); }
+  .ir-title em { font-style: normal; font-weight: 300; }
+  .ir-sub { position: relative; z-index: 1; margin: 2vh 0 0; font: 500 max(13px, 2.2vh) var(--f-mono); letter-spacing: .3em; text-transform: uppercase; color: rgba(255,235,235,.75); }
+  .ir-stand { position: relative; z-index: 1; margin-top: 6vh; padding: 1.4vh 3vw; border: 1px solid rgba(255,255,255,.5); border-radius: 5vh; font: 600 max(15px, 3vh) var(--f-display); letter-spacing: .08em; color: #fff; background: rgba(255,255,255,.08); animation: irPulse 2.4s ease-in-out infinite; }
+  @keyframes irPulse { 50% { background: rgba(255,255,255,.18); box-shadow: 0 0 4vh rgba(255,255,255,.25); } }
   /* ── Awarding — motion graphic "award show TV" (megah, modern futuristik). Semua gerak memakai timeline: animation-delay = detik sejak scene mulai.
         Scene ditahan class .wait sampai SFX dijadwalkan di jam audio, lalu dilepas bersamaan → gerak & suara sinkron. Layar penuh (header disembunyikan). ── */
   .qa-screen:has(.ax) .qs-top, .qa-screen:has(.ax) .qs-foot { display: none; }
@@ -2353,8 +2373,8 @@ body {
     #gt-print .gp-items th { background: #1d2a4d; color: #fff; }
     #gt-print .gp-items td:nth-child(n+3) { text-align: right; }
     #gt-print .rd-print { table-layout: fixed; } #gt-print .gp-seg td { background: #f3ead2; font-weight: 700; } #gt-print .rd-print td:nth-child(n+3) { text-align: left; }
-    #gt-print .rd-wrap { page: rd; font-size: 12px; }
-    #gt-print .rd-print th, #gt-print .rd-print td { padding: 5px 8px; vertical-align: top; }
+    #gt-print .rd-wrap { page: rd; font-size: 11.5px; }
+    #gt-print .rd-print th, #gt-print .rd-print td { padding: 4px 8px; vertical-align: top; }
     #gt-print .rd-print thead { display: table-header-group; } #gt-print .rd-print tr { break-inside: avoid; }
     #gt-print .rd-print .rd-t { font-weight: 700; white-space: nowrap; } #gt-print .rd-print .rd-t small { display: block; font-weight: 400; color: #666; font-size: 10px; }
     #gt-print .rd-print .rd-n { font-weight: 600; }
@@ -3303,7 +3323,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T09:18:31Z';
+const LAST_UPDATE = '2026-10-17T09:41:59Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7236,7 +7256,8 @@ const QA_NAME = 'Open Mic Partner: Curhat Bebas', QA_SHORT = 'Open Mic Partner';
 // Jam bertanda flexible = estimasi (tampil ± dan "menyesuaikan"). Acara malam selain Opening Speech: jam perkiraan, ubah di form.
 const SEG_PAGI = 'Acara Pagi', SEG_MALAM = 'Acara Malam';
 const RD_TEMPLATE = [
-  { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '09:00', end_time: '12:00', segment: SEG_PAGI, flexible: true, notes: 'Estimasi sampai 12:00. Pertanyaan dealer diketik admin/editor & tampil di videotron (sistem situs CAI).' },
+  { title: 'Menyanyikan Lagu Kebangsaan Indonesia Raya', start_time: '09:00', end_time: '09:05', segment: SEG_PAGI, notes: 'Pembuka acara pagi — hadirin berdiri, video Indonesia Raya diputar di videotron.' },
+  { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '09:05', end_time: '12:00', segment: SEG_PAGI, flexible: true, notes: 'Estimasi sampai 12:00. Pertanyaan dealer diketik admin/editor & tampil di videotron (sistem situs CAI).' },
   { title: 'Coffee Break', start_time: '12:00', end_time: '12:20', segment: SEG_PAGI, notes: '20 menit' },
   { title: 'Refreshment Product', start_time: '12:20', segment: SEG_PAGI, flexible: true, notes: 'Mengulas kembali produk-produk dari katalog CAI.' },
   { title: 'Product Launch', start_time: '13:00', segment: SEG_PAGI, flexible: true, notes: 'Brand Audiocircle, STEG & Audio System. Audiocircle: Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line. STEG: SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12. Audio System: AY65 · AY65C · AS10 · AS500.1 · DSP AS6.' },
@@ -7582,6 +7603,7 @@ const QS_SCENES = {
   dinner:  { label: 'Makan Malam', icon: '🍷', next: 'Healthy Drink', match: /makan malam|dinner/i },
   healthy: { label: 'Healthy Drink', icon: '🥤', match: /health[yi]|healty/i },
   funmkt:  { label: 'Fun Marketing', icon: '🎯', match: /fun ?marketing/i },
+  anthem: { label: 'Indonesia Raya', icon: '🇮🇩', match: /indonesia raya|lagu kebangsaan/i },
   kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
   testimoni: { label: 'Testimoni Partner CAI', icon: '💬', match: /testimoni/i },
   backdrop: { label: 'Backdrop', icon: '🖼', match: /backdrop/i },
@@ -7685,6 +7707,7 @@ const pksNum = k => { const m = /^kickoff:(\d+)$/.exec(k || ''); return m ? +m[1
 let pksMeta = null;   // { exists, pages } — di panel admin
 const opNum = k => { const m = /^opening:(\d+)(:v)?$/.exec(k || ''); return m ? +m[1] : 0; };
 const opVid = k => /^opening:\d+:v$/.test(k || '');
+const ANTHEM_VIDEO = 'assets/opening/indonesia-raya.mp4';   // video lagu kebangsaan Indonesia Raya (scene 'anthem:v'), pembuka acara pagi — dari Drive pemilik
 const PORTAL_INTRO_VIDEO = 'assets/intro/portal-dealer-explainer-40s.mp4';   // video perkenalan portal (scene 'kickoff:v')
 const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const sceneInfo = k => {
@@ -7693,6 +7716,7 @@ const sceneInfo = k => {
   if (sceneBase(k) === 'backdrop') return { ...base, label: bdNum(k) ? `Backdrop · ${BACKDROPS[bdNum(k) - 1]?.t}` : 'Backdrop · bergantian' };
   if (k === 'newbrand:full' || k === 'newbrand:v') return { ...base, icon: '🎬', label: `Launching ${NEW_BRAND.name} · ${k === 'newbrand:v' ? 'video' : 'hitung mundur + video'}` };
   if (sceneBase(k) === 'paket') { const pk = paketParse(k); return { ...base, label: pk.pkg ? `Paket Audio · ${pk.pkg.title.split(' — ')[0]}${pk.pages ? ` (hal. ${pk.page}/${pk.pages})` : ` (hal. ${pk.page})`}` : 'Paket Audio · daftar' }; }
+  if (k === 'anthem:v') return { ...base, icon: '🎬', label: 'Indonesia Raya · Video lagu kebangsaan' };
   if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
   if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
   { const a = awPart(k); if (a) { const C = AW_CATS[a.cat]; return { ...base, label: a.r === 'intro' ? `Awarding · Pembuka ${C.short}` : a.r === 'list' ? `Awarding · Papan peringkat ${C.short}` : `Awarding · ${C.short} ${a.r === 1 ? 'Juara' : 'Top ' + a.r} — ${C.list.find(d => d.rank === a.r)?.name || ''}` }; } }
@@ -7726,7 +7750,7 @@ let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
 const FREE_NAME = 'Free Time';
 // Panel Editor disusun mengikuti urutan acara: pagi (09:00–16:00), malam (18:00), lalu layar tambahan.
-const SCR_PAGI = ['qa', 'coffee', 'refresh', 'launch', 'lunch', 'kickoff'];
+const SCR_PAGI = ['anthem', 'qa', 'coffee', 'refresh', 'launch', 'lunch', 'kickoff'];
 const SCR_MALAM = ['opening', 'awarding', 'dinner', 'healthy'];
 const SCR_EXTRA = ['testimoni', 'funmkt', 'backdrop', 'newbrand', 'cailaunch'];
 const SCR_GROUPS = [['☀️ Acara Pagi · 09:00 – 16:00', SCR_PAGI], ['🌙 Acara Malam · mulai 18:00', SCR_MALAM], ['✨ Layar tambahan', SCR_EXTRA]];
@@ -7752,6 +7776,7 @@ const SCR_DESC = {
   testimoni: 'Judul sesi Testimoni Partner CAI, lalu putar video testimoni dari dealer (satu per satu atau semua berurutan). Teks tambahan = nama partner (opsional).',
   backdrop: 'Backdrop acara tampil layar penuh (Reset Button = video berulang) — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
+  anthem: 'Pembuka acara pagi: layar "Menyanyikan Lagu Kebangsaan Indonesia Raya — hadirin dimohon berdiri", lalu video Indonesia Raya layar penuh (±1 menit 48 dtk). Musik latar otomatis senyap selama sesi ini.',
   kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), video perkenalan portal, lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
 };
 let scrSel = null;
@@ -7823,6 +7848,9 @@ function renderScreenPanel(err) {
     <div class="scr-note">Alur lengkap: 3-2-1 → nama ${escHtml(NEW_BRAND.name)} tampil ${NB_REVEAL_SEC} dtk → video layar penuh → selesai kembali ke layar nama. Spasi di komputer videotron = jeda/lanjut.</div>` : ''}
     <div class="scr-actions">${showBtn('Hitung mundur 3-2-1 (tanpa video)')}<button class="gt-btn${nb ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:now')">${nb ? '↻ Tampilkan langsung' : '⚡ Tampilkan langsung (tanpa hitung mundur)'}</button></div>
     <div class="scr-note">Contoh: <b>Nama Brand | Sound beyond limits</b>. Nama yang sama dengan brand di katalog otomatis memakai logonya. Klik ulang = animasi diulang.</div>`; }
+  else if (sel === 'anthem') { const av = scrRow.scene === 'anthem:v';
+    body = `<div class="scr-actions">${showBtn('Tampilkan layar Indonesia Raya')}<button class="gt-btn${av ? ' confirm' : ' ghost'}" onclick="setScene('anthem:v')">${av ? '↻ Putar ulang video' : '🎬 Putar Video Indonesia Raya'}</button></div>
+    <div class="scr-note">Urutan: tampilkan layar judul (MC mempersilakan hadirin berdiri) → <b>Putar Video</b> → video layar penuh; selesai kembali ke layar judul. Musik latar senyap selama sesi Indonesia Raya. Spasi = jeda/lanjut.</div>`; }
   else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
     const pv = scrRow.scene === 'kickoff:v';
     body = `${opts(false)}<div class="scr-actions">${showBtn('Tampilkan judul Kick Off 2027')}<button class="gt-btn${pv ? ' confirm' : ' ghost'}" onclick="setScene('kickoff:v')">${pv ? '↻ Putar ulang video perkenalan' : '🎬 Putar Video Perkenalan Portal'}</button></div>
@@ -7982,6 +8010,12 @@ function renderScene(s) {
       <div class="sc-op-list">${OPENING_SPEAKERS.map((sp, i) => `<div class="sc-op-item" style="--ac:${sp.ac}"><span>${i + 1}</span>${opBrandMark(sp, true)}<b>${escHtml(sp.name)}</b></div>`).join('')}</div></div>`,
     funmkt: `<div class="sc-bubbles">${'<i></i>'.repeat(14)}</div><div class="qs-scene sc-fun">${SC_MEGA}<div class="qs-kicker">Presentasi</div>
       <h1 class="sc-title">Fun <em>Marketing</em></h1><p class="sc-sub">${t || 'Ide pemasaran yang seru, kreatif &amp; mudah dipraktikkan di toko Anda'}</p>${count}</div>`,
+    anthem: `<div class="qs-scene ir"><div class="ir-bg"><i></i><i></i></div>
+      <div class="ir-flag" aria-hidden="true"><b></b><b></b></div>
+      <div class="ir-kick"><i></i><span>Lagu Kebangsaan</span><i></i></div>
+      <h1 class="ir-title">Indonesia <em>Raya</em></h1>
+      <p class="ir-sub">${t || 'W.R. Supratman · 1928'}</p>
+      <div class="ir-stand">Hadirin dimohon berdiri</div></div>`,
     kickoff: `<div class="qs-scene sc-kickoff"><div class="qs-kicker">Kick Off</div><h1 class="sc-year">2027</h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
       <div class="sc-cards">
         <div class="sc-card"><div class="sc-card-k">01 · Portal Dealer CAI</div><div class="sc-card-t">dealer.concerto.id</div>
@@ -7990,9 +8024,9 @@ function renderScene(s) {
           <div class="sc-card-body"><div class="sc-pks">PKS</div><ul>${li(PKS_POINTS)}</ul></div></div>
       </div>${count}</div>`,
   }[sceneBase(s.scene)];
-  const kv = s.scene === 'kickoff:v';   // video perkenalan portal: diputar di atas kartu Kick Off, selesai → kartu Kick Off tetap tampil
+  const kv = s.scene === 'kickoff:v' || s.scene === 'anthem:v';   // video perkenalan portal: diputar di atas kartu Kick Off, selesai → kartu Kick Off tetap tampil
   const changed = qsSetStage(['scene', s.scene, s.scene_text, s.scene_until, kv || ['newbrand', 'cailaunch'].includes(sceneBase(s.scene)) ? s.updated_at : ''].join('|'), html);
-  if (kv && changed) setTimeout(playPortalVideo, 500);
+  if (kv && changed) setTimeout(s.scene === 'anthem:v' ? playAnthemVideo : playPortalVideo, 500);
   if (changed && sceneBase(s.scene) === 'cailaunch') nbBurst();
   if (changed && sceneBase(s.scene) === 'newbrand') {
     nbBurst();
@@ -8303,6 +8337,16 @@ function playSpeakerVideo(n) {
 // Video perkenalan portal (Kick Off 2027): overlay layar penuh; file gagal → pilih file lokal
 let qsLocalPortal = null;
 function playPortalVideo() { playOverlayVideo(qsLocalPortal || PORTAL_INTRO_VIDEO, '.sc-kickoff', 'qsPickPortalVideo'); }
+// Video Indonesia Raya (pembuka acara pagi): overlay layar penuh di atas layar judul; file gagal → pilih file lokal
+let qsLocalAnthem = null;
+function playAnthemVideo() { playOverlayVideo(qsLocalAnthem || ANTHEM_VIDEO, '.ir', 'qsPickAnthemVideo'); }
+function qsPickAnthemVideo(input) {
+  const f = input.files?.[0]; if (!f) return;
+  if (qsLocalAnthem) URL.revokeObjectURL(qsLocalAnthem);
+  qsLocalAnthem = URL.createObjectURL(f);
+  document.querySelector('.op-pick')?.remove();
+  playAnthemVideo();
+}
 // Video peluncuran brand baru (Caelum): diputar di atas layar reveal; selesai → reveal tetap tampil
 let qsLocalNb = null;
 function playNewBrandVideo() { playOverlayVideo(qsLocalNb || NEW_BRAND.video, '.nb', 'qsPickNbVideo'); }
@@ -8763,7 +8807,7 @@ const BGM_TRACKS = [
 ];
 const bgmTrackOk = id => BGM_TRACKS.some(t => t.id === id) ? id : BGM_TRACKS[0].id;
 const BGM_YT_ID = '';   // musik latar dari YouTube (pemutar resmi YouTube IFrame; tidak diunduh / disalin ke repo). Kosongkan untuk memakai file di atas saja.
-const BGM_KEYS = [['qa', '🎤', 'Meeting Dealer'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
+const BGM_KEYS = [['anthem', '🇮🇩', 'Indonesia Raya'], ['qa', '🎤', 'Meeting Dealer'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
   ['newbrand', '✨', 'Launching - CAELUM'], ['cailaunch', '🚀', 'Launching - CAI'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
 const BGM_OFF_DEFAULT = [];   // bawaan: musik menyala di semua sesi (Editor bisa membuat sesi tertentu senyap lewat panel); video penuh layar selalu menurunkan musik otomatis
 const bgmOffList = r => r && r.bgm_off != null ? String(r.bgm_off).split(',').map(x => x.trim()).filter(Boolean) : BGM_OFF_DEFAULT;
@@ -8844,7 +8888,7 @@ function bgmResume() {
   bgm.ctx?.resume().then(bgmTick).catch(() => {});
 }
 function bgmTick() {
-  const c = bgm.cfg, vid = !!document.getElementById('qs-video'), sceneOff = false, duck = vid && c.scene === 'testimoni', quiet = !c.on || sceneOff || (vid && !duck);   // video testimoni: musik tetap jalan, volume dikecilkan agar suara dealer terdengar
+  const c = bgm.cfg, vid = !!document.getElementById('qs-video'), sceneOff = false, duck = vid && c.scene === 'testimoni', quiet = !c.on || sceneOff || c.scene === 'anthem' || (vid && !duck);   // video testimoni: musik tetap jalan, volume dikecilkan agar suara dealer terdengar
   const label = BGM_KEYS.find(k => k[0] === c.scene)?.[2] || c.scene;
   let running = false;
   if (bgm.mode === 'yt') {
