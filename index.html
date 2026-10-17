@@ -1606,6 +1606,11 @@ body {
   .scr-warn { margin-top: 8px; font-size: 12.5px; color: #fbbf24; }
   .scr-grp-k { margin-top: 14px; font: 700 11px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: #e9c46a; }
   .scr-grp-k + .scr-sessions { margin-top: 6px; }
+  .scr-bgm-tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin: 6px 0 10px; }
+  .scr-bgm-track { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; text-align: left; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #e6e9f0; cursor: pointer; font: inherit; }
+  .scr-bgm-track b { font-size: 13px; } .scr-bgm-track span { font-size: 11px; color: #9aa5bd; }
+  .scr-bgm-track.on { border-color: #e9c46a; background: rgba(233,196,106,.12); } .scr-bgm-track.on b { color: #e9c46a; }
+  .scr-bgm-track:disabled { opacity: .55; cursor: default; }
   .scr-sessions { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 12px; }
   .scr-sessions .scr-btn { position: relative; padding-top: 16px; }
   .scr-btn em { position: absolute; left: 8px; top: 6px; font: 700 10px var(--f-mono); font-style: normal; color: #8b95ab; }
@@ -3205,7 +3210,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T07:50:10Z';
+const LAST_UPDATE = '2026-10-17T08:07:04Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8562,22 +8567,29 @@ function stopQaScreen() {
    Pengaturan dibaca dari baris gathering_screen (kolom bgm_on / bgm_vol / bgm_off — opsional; tanpa kolom = default di bawah).
    Browser menahan audio sebelum ada interaksi → tombol "Aktifkan musik latar" muncul sampai layar diklik / tombol ditekan. */
 const BGM_SRC = 'assets/audio/backsound.mp3?v=2';
-const BGM_AWARD_SRC = 'assets/audio/awarding.mp3?v=1';   // musik khusus sesi Awarding (menggantikan musik latar selama scene awarding*, mulai dari awal tiap masuk sesi)   // cadangan bila YouTube tak bisa dimuat (offline)
+const BGM_AWARD_SRC = 'assets/audio/awarding.mp3?v=1';
+// Daftar backsound — dipilih Editor dari panel (menu Backsound). Tambah lagu: file di assets/audio/ + satu baris di sini.
+const BGM_TRACKS = [
+  { id: 'main', name: 'Upward Trend', sub: 'Corporate · musik latar umum', src: BGM_SRC },
+  { id: 'awarding', name: 'Champions Anthem', sub: 'Awards Ceremony · cocok untuk Awarding', src: BGM_AWARD_SRC },
+];
+const bgmTrackOk = id => BGM_TRACKS.some(t => t.id === id) ? id : BGM_TRACKS[0].id;
 const BGM_YT_ID = '';   // musik latar dari YouTube (pemutar resmi YouTube IFrame; tidak diunduh / disalin ke repo). Kosongkan untuk memakai file di atas saja.
 const BGM_KEYS = [['qa', '🎤', 'Meeting Dealer'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
   ['newbrand', '✨', 'Launching - CAELUM'], ['cailaunch', '🚀', 'Launching - CAI'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
 const BGM_OFF_DEFAULT = [];   // bawaan: musik menyala di semua sesi (Editor bisa membuat sesi tertentu senyap lewat panel); video penuh layar selalu menurunkan musik otomatis
 const bgmOffList = r => r && r.bgm_off != null ? String(r.bgm_off).split(',').map(x => x.trim()).filter(Boolean) : BGM_OFF_DEFAULT;
 const bgmClamp = v => Math.min(100, Math.max(0, +v || 0));
-const bgmDefault = () => ({ on: false, vol: 70, off: BGM_OFF_DEFAULT.slice() });   // bawaan: MATI sampai Editor menyalakan
+const bgmDefault = () => ({ on: false, vol: 70, off: BGM_OFF_DEFAULT.slice(), track: BGM_TRACKS[0].id });   // bawaan: MATI sampai Editor menyalakan
 function bgmLocal() {   // pengaturan terakhir dari Editor, tersimpan di browser layar videotron (tak perlu kolom Supabase)
-  try { const o = JSON.parse(localStorage.getItem('cai-bgm') || 'null'); if (o && typeof o.on === 'boolean') return { on: o.on, vol: bgmClamp(o.vol ?? 70), off: Array.isArray(o.off) ? o.off : [] }; } catch (e) {}
+  try { const o = JSON.parse(localStorage.getItem('cai-bgm') || 'null'); if (o && typeof o.on === 'boolean') return { on: o.on, vol: bgmClamp(o.vol ?? 70), off: Array.isArray(o.off) ? o.off : [], track: bgmTrackOk(o.track) }; } catch (e) {}
   return null;
 }
-function bgmLocalSave(c) { try { localStorage.setItem('cai-bgm', JSON.stringify({ on: c.on, vol: c.vol, off: c.off })); } catch (e) {} }
+function bgmLocalSave(c) { try { localStorage.setItem('cai-bgm', JSON.stringify({ on: c.on, vol: c.vol, off: c.off, track: c.track })); } catch (e) {} }
 const bgm = { ctx: null, gain: null, started: false, why: '', cfg: { ...bgmDefault(), scene: 'qa' } };
 function bgmApply(s) {
-  const base = s && s.bgm_on != null ? { on: s.bgm_on !== false, vol: bgmClamp(s.bgm_vol ?? 70), off: [] } : { ...(bgmLocal() || bgmDefault()), off: [] };
+  const loc = bgmLocal();
+  const base = s && s.bgm_on != null ? { on: s.bgm_on !== false, vol: bgmClamp(s.bgm_vol ?? 70), off: [], track: bgmTrackOk(s.bgm_track || loc?.track) } : { ...(loc || bgmDefault()), off: [] };
   bgm.cfg = { ...base, scene: s?.scene ? sceneBase(s.scene) : 'qa' };
   if (!bgm.inited) { bgm.inited = true; bgmInit(); }
 }
@@ -8587,7 +8599,7 @@ function bgmCmdListen() {
   try {
     bgm.cmdCh = supabase.channel('bgm-cmd').on('broadcast', { event: 'cmd' }, m => {
       const p = m.payload || {}; if (typeof p.on !== 'boolean') return;
-      const c = { on: p.on, vol: bgmClamp(p.vol ?? 70), off: Array.isArray(p.off) ? p.off : [] };
+      const c = { on: p.on, vol: bgmClamp(p.vol ?? 70), off: Array.isArray(p.off) ? p.off : [], track: bgmTrackOk(p.track) };
       bgmLocalSave(c); bgm.cfg = { ...bgm.cfg, ...c }; bgmTick();
     }).subscribe();
   } catch (e) { bgm.cmdCh = null; }
@@ -8599,30 +8611,31 @@ function bgmInit() {
   setInterval(bgmTick, 400);
   if (BGM_YT_ID) bgmInitYt(); else bgmInitFile();
 }
-function bgmInitFile() {   // musik file lokal lewat Web Audio (gapless)
+function bgmInitFile() {   // musik file lokal lewat Web Audio (gapless); tiap backsound punya gain sendiri → crossfade saat Editor mengganti lagu
   bgm.mode = 'file';
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-  bgm.ctx = new AC(); bgm.gain = bgm.ctx.createGain(); bgm.gain.gain.value = 0; bgm.gain.connect(bgm.ctx.destination);
-  bgm.gainAw = bgm.ctx.createGain(); bgm.gainAw.gain.value = 0; bgm.gainAw.connect(bgm.ctx.destination);
-  bgmLoadFile();
-  fetch(BGM_AWARD_SRC).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
-    .then(b => new Promise((ok, no) => bgm.ctx.decodeAudioData(b, ok, no))).then(buf => { bgm.awBuf = buf; bgmTick(); })
-    .catch(e => console.warn('Musik Awarding tidak termuat:', e));
+  bgm.ctx = new AC(); bgm.trk = {};
+  BGM_TRACKS.forEach(t => { const g = bgm.ctx.createGain(); g.gain.value = 0; g.connect(bgm.ctx.destination); bgm.trk[t.id] = { g, buf: null, src: null, loading: false, err: '' }; });
+  bgm.gain = bgm.trk[BGM_TRACKS[0].id].g;
+  bgmTrackLoad(bgm.cfg.track);
+  setTimeout(() => BGM_TRACKS.forEach(t => bgmTrackLoad(t.id)), 15000);   // pramuat backsound lain agar ganti lagu instan
 }
-// Sesi Awarding: musik Awarding diputar dari awal saat masuk sesi (crossfade dengan musik latar), berhenti pelan saat keluar
-function bgmAwardSwitch(aw) {
-  const ctx = bgm.ctx; if (!ctx || !bgm.awBuf || aw === !!bgm.awSrc) return;
-  if (aw) { const src = ctx.createBufferSource(); src.buffer = bgm.awBuf; src.loop = true; src.connect(bgm.gainAw); src.start(); bgm.awSrc = src; }
-  else { try { bgm.awSrc.stop(ctx.currentTime + 3); } catch (e) {} bgm.awSrc = null; }
+function bgmTrackLoad(id) {
+  const T = bgm.trk?.[id], def = BGM_TRACKS.find(t => t.id === id); if (!T || !def || T.buf || T.loading) return;
+  T.loading = true; T.err = '';
+  fetch(def.src).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+    .then(b => new Promise((ok, no) => bgm.ctx.decodeAudioData(b, ok, no))).then(buf => { T.buf = buf; })
+    .catch(e => { T.err = String(e?.message || e || 'gagal'); console.warn('Backsound tidak termuat:', def.name, e); })
+    .finally(() => { T.loading = false; bgmTick(); });
 }
-function bgmLoadFile() {
-  if (bgm.loading || bgm.started) return;
-  bgm.loading = true; bgm.loadErr = '';
-  fetch(BGM_SRC).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
-    .then(b => new Promise((ok, no) => bgm.ctx.decodeAudioData(b, ok, no)))
-    .then(buf => { const src = bgm.ctx.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(bgm.gain); src.start(); bgm.started = true; })
-    .catch(e => { bgm.loadErr = String(e?.message || e || 'gagal'); console.warn('Musik latar tidak termuat:', e); })
-    .finally(() => { bgm.loading = false; bgmTick(); });
+// Lagu aktif diputar dari awal saat dipilih (berulang); lagu lain di-fade out lalu dihentikan
+function bgmTrackSync(active, playing) {
+  const ctx = bgm.ctx; if (!ctx || !bgm.trk) return;
+  Object.entries(bgm.trk).forEach(([id, T]) => {
+    const want = playing && id === active && T.buf;
+    if (want && !T.src) { const src = ctx.createBufferSource(); src.buffer = T.buf; src.loop = true; src.connect(T.g); src.start(); T.src = src; }
+    if (!want && T.src) { try { T.src.stop(ctx.currentTime + 3); } catch (e) {} T.src = null; }
+  });
 }
 function bgmInitYt() {   // musik dari YouTube lewat IFrame Player API (pemutar tampil kecil di pojok layar saat musik menyala)
   bgm.mode = 'yt'; bgm.ytVol = 0;
@@ -8639,7 +8652,7 @@ function bgmInitYt() {   // musik dari YouTube lewat IFrame Player API (pemutar 
 }
 function bgmResume() {
   if (bgm.mode === 'yt') { try { bgm.yt?.ready && bgm.yt.p.playVideo(); } catch (e) {} bgmTick(); return; }
-  if (bgm.loadErr) bgmLoadFile();
+  const T = bgm.trk?.[bgm.cfg.track]; if (T?.err) { T.err = ''; bgmTrackLoad(bgm.cfg.track); }
   bgm.ctx?.resume().then(bgmTick).catch(() => {});
 }
 function bgmTick() {
@@ -8663,16 +8676,17 @@ function bgmTick() {
     running = st === 1 || st === 3 || quiet;   // quiet = tidak butuh diputar
   } else if (bgm.ctx) {
     const target = quiet ? 0 : Math.pow(c.vol / 100, 1.3) * (duck ? 0.3 : 1) * (Date.now() < (bgm.duckUntil || 0) ? 0.2 : 1);
-    const aw = c.scene === 'awarding' && !!bgm.awBuf;
-    bgmAwardSwitch(aw && c.on);
-    bgm.gain.gain.setTargetAtTime(aw ? 0 : target, bgm.ctx.currentTime, 0.7);
-    bgm.gainAw?.gain.setTargetAtTime(aw ? target : 0, bgm.ctx.currentTime, 0.7);
+    const act = bgmTrackOk(c.track), T = bgm.trk[act];
+    if (!T.buf && !T.loading && !T.err) bgmTrackLoad(act);
+    bgm.loading = T.loading; bgm.loadErr = T.err;
+    bgmTrackSync(act, c.on);
+    Object.entries(bgm.trk).forEach(([id, X]) => X.g.gain.setTargetAtTime(id === act ? target : 0, bgm.ctx.currentTime, 0.7));
     running = bgm.ctx.state === 'running';
   } else return;
   // status dilaporkan ke panel Editor (tidak ada tombol / tulisan musik di layar videotron)
   const bad = bgm.mode === 'file' && bgm.loadErr, wait = bgm.mode === 'file' && bgm.loading;
   const kind = !c.on ? 'mati' : bad ? 'gagal' : wait ? 'memuat' : !running ? 'klik' : (vid && !duck) ? 'video' : sceneOff ? 'senyap' : 'bunyi';
-  bgmReport({ kind, scene: label, err: bgm.loadErr || '', mode: bgm.mode, cfg: { on: c.on, vol: c.vol, off: c.off } });
+  bgmReport({ kind, scene: label, err: bgm.loadErr || '', mode: bgm.mode, cfg: { on: c.on, vol: c.vol, off: c.off, track: c.track } });
 }
 // Laporan status musik: layar videotron → panel Editor lewat Supabase Realtime broadcast (tanpa tabel / kolom baru)
 let bgmCh = null, bgmLastSent = '', bgmLastAt = 0, bgmRemote = null, bgmWatch = null;
@@ -8709,18 +8723,20 @@ function bgmPanelHtml() {
       <button class="gt-btn ${on ? 'confirm' : 'ghost'}" onclick="bgmSave({ bgm_on: ${!on} })" ${has ? '' : 'disabled'}>${on ? '● Menyala' : '○ Mati'}</button>
       <label>Volume <input type="range" min="0" max="100" value="${vol}" onchange="bgmSave({ bgm_vol: +this.value })" ${has ? '' : 'disabled'}><span>${vol}%</span></label></div>
     <div class="scr-bgm-status warn" id="bgm-status">…</div>
-    <div class="scr-bgm-k">Musik menyala di <b>semua sesi</b> dan tetap jalan saat layar berganti; berhenti sementara hanya saat video layar penuh diputar.</div>
+    <div class="scr-bgm-k">🎼 <b>Backsound</b> — pilih lagu yang diputar (berganti dengan crossfade, mulai dari awal lagu):</div>
+    <div class="scr-bgm-tracks">${BGM_TRACKS.map(t => `<button class="scr-bgm-track${cfg.track === t.id ? ' on' : ''}" onclick="bgmSave({ bgm_track: '${t.id}' })" ${has ? '' : 'disabled'}><b>${cfg.track === t.id ? '▶ ' : ''}${escHtml(t.name)}</b><span>${escHtml(t.sub)}</span></button>`).join('')}</div>
+    <div class="scr-bgm-k">Musik tetap jalan saat layar berganti sesi; berhenti sementara hanya saat video layar penuh diputar.</div>
     ${isEditor() ? `<div class="scr-actions" style="margin-top:10px"><button class="gt-btn ghost" id="bgm-test-btn" onclick="bgmTestHere()">🔊 Tes musik di komputer ini</button><span class="scr-bgm-k" id="bgm-test-msg" style="margin:0"></span></div>` : ''}
     ${!isEditor() ? '<div class="scr-note">Hanya <b>Editor</b> yang bisa menyalakan / mematikan dan mengatur musik latar.</div>' : `<div class="scr-note">Musik <b>mati</b> sampai Editor menekan Menyala; setelah menyala, musik berbunyi di <b>semua sesi</b>. Pengaturan dikirim langsung ke layar videotron &amp; diingat di komputer itu. Opsional agar permanen lintas komputer: <button class="gt-btn ghost" onclick="bgmCopySql()">📋 Salin SQL</button></div>`}</div>`;
 }
-const BGM_SQL = "alter table public.gathering_screen\n  add column if not exists bgm_on boolean default false,\n  add column if not exists bgm_vol integer default 70,\n  add column if not exists bgm_off text;\nupdate public.gathering_screen set bgm_on = coalesce(bgm_on, false) where id = 1;";
+const BGM_SQL = "alter table public.gathering_screen\n  add column if not exists bgm_on boolean default false,\n  add column if not exists bgm_vol integer default 70,\n  add column if not exists bgm_off text,\n  add column if not exists bgm_track text;\nupdate public.gathering_screen set bgm_on = coalesce(bgm_on, false) where id = 1;";
 function bgmCopySql() { (navigator.clipboard?.writeText(BGM_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => { prompt('Salin SQL ini:', BGM_SQL); }); }
 // Tes musik di komputer ini (Editor): memastikan file musik termuat & terdengar di browser yang dipakai
 let bgmTestAudio = null;
 function bgmTestHere() {
   const msg = document.getElementById('bgm-test-msg'), btn = document.getElementById('bgm-test-btn');
   if (bgmTestAudio) { bgmTestAudio.pause(); bgmTestAudio = null; if (btn) btn.textContent = '🔊 Tes musik di komputer ini'; if (msg) msg.textContent = ''; return; }
-  const a = new Audio(BGM_SRC); a.volume = 0.6; bgmTestAudio = a;
+  const a = new Audio((BGM_TRACKS.find(t => t.id === bgmDisplayCfg().track) || BGM_TRACKS[0]).src); a.volume = 0.6; bgmTestAudio = a;
   a.onended = () => { bgmTestAudio = null; if (btn) btn.textContent = '🔊 Tes musik di komputer ini'; };
   a.onerror = () => { bgmTestAudio = null; if (btn) btn.textContent = '🔊 Tes musik di komputer ini'; if (msg) msg.textContent = '⚠ File musik tidak bisa dimuat (' + (a.error?.message || 'format/jaringan') + ').'; };
   a.play().then(() => { if (btn) btn.textContent = '⏹ Hentikan tes'; if (msg) msg.textContent = 'Terdengar? Berarti file musik & suara komputer ini baik.'; setTimeout(() => { if (bgmTestAudio === a) bgmTestHere(); }, 20000); })
@@ -8728,8 +8744,8 @@ function bgmTestHere() {
 }
 function bgmDisplayCfg() {   // yang ditampilkan di panel Editor: laporan layar (segar) → baris DB → cadangan lokal → bawaan
   const r = bgmRemote;
-  if (r && r.cfg && Date.now() - r.at < 12000) return { on: !!r.cfg.on, vol: bgmClamp(r.cfg.vol), off: r.cfg.off || [] };
-  if (scrRow && scrRow.bgm_on != null) return { on: scrRow.bgm_on !== false, vol: bgmClamp(scrRow.bgm_vol ?? 70), off: bgmOffList(scrRow) };
+  if (r && r.cfg && Date.now() - r.at < 12000) return { on: !!r.cfg.on, vol: bgmClamp(r.cfg.vol), off: r.cfg.off || [], track: bgmTrackOk(r.cfg.track) };
+  if (scrRow && scrRow.bgm_on != null) return { on: scrRow.bgm_on !== false, vol: bgmClamp(scrRow.bgm_vol ?? 70), off: bgmOffList(scrRow), track: bgmTrackOk(scrRow.bgm_track || bgmLocal()?.track) };
   return bgmLocal() || bgmDefault();
 }
 function bgmRefreshBox() {
@@ -8738,10 +8754,11 @@ function bgmRefreshBox() {
 }
 async function bgmSave(patch) {
   if (!supabase || !isEditor()) { showToast('Hanya Editor yang bisa mengatur musik latar.'); return; }
-  const cur = bgmDisplayCfg(), c = { on: patch.bgm_on ?? cur.on, vol: bgmClamp(patch.bgm_vol ?? cur.vol), off: [] };
+  const cur = bgmDisplayCfg(), c = { on: patch.bgm_on ?? cur.on, vol: bgmClamp(patch.bgm_vol ?? cur.vol), off: [], track: bgmTrackOk(patch.bgm_track ?? cur.track) };
   bgmLocalSave(c);
   bgmRemote = { ...(bgmRemote || {}), cfg: c, at: bgmRemote?.at || 0, local: true };
   try { const r = await supabase.from(QA_SCREEN).upsert({ id: 1, bgm_on: c.on, bgm_vol: c.vol, bgm_off: '' }); if (!r.error) scrRow = { ...scrRow, bgm_on: c.on, bgm_vol: c.vol, bgm_off: '' }; } catch (e) {}
+  try { const r = await supabase.from(QA_SCREEN).upsert({ id: 1, bgm_track: c.track }); if (!r.error) scrRow = { ...scrRow, bgm_track: c.track }; } catch (e) {}   // kolom opsional bgm_track
   try {
     if (!bgm.sendCh) { bgm.sendCh = supabase.channel('bgm-cmd'); await new Promise(ok => { bgm.sendCh.subscribe(st => { if (st === 'SUBSCRIBED') ok(); }); setTimeout(ok, 3000); }); }
     await bgm.sendCh.send({ type: 'broadcast', event: 'cmd', payload: c });
