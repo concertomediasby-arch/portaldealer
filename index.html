@@ -3083,7 +3083,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T05:54:45Z';
+const LAST_UPDATE = '2026-10-17T05:59:09Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8463,7 +8463,7 @@ function renderBackdrop(s) {
 }
 function qsSetEventSub(base) {
   const el = document.getElementById('qs-event-sub'); if (!el) return;
-  el.textContent = !base || base === 'qa' ? 'Meeting Dealer · Tanya Jawab Partner CAI' : (SCR_MALAM.includes(base) ? 'Acara Malam · ' : SCR_PAGI.includes(base) ? 'Acara Pagi · ' : '') + (QS_SCENES[base]?.label || '');
+  el.textContent = !base || base === 'qa' ? 'Meeting Dealer · Tanya Jawab Partner CAI' : (QS_SCENES[base]?.label || '');
 }
 function renderQaScreen(q) {
   qsSetEventSub(null);
