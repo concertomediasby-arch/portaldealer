@@ -1807,7 +1807,25 @@ body {
   .lh-div b { width: 1.3vh; height: 1.3vh; background: #e9c46a; transform: rotate(45deg); box-shadow: 0 0 2vh #e9c46a; }
   .lh-sub { margin: 0; font: 500 max(14px, 2.6vh) var(--f-body); letter-spacing: .5em; text-transform: uppercase; color: #cfd6e6; animation: qsIn 1s ease 1.2s both; }
   .sc-launch .sc-title { font-size: min(6vw, 10vh); }
-  .sc-testi .sc-title { font-size: min(6.4vw, 11vh); white-space: nowrap; }
+  /* Testimoni Partner CAI */
+  .sc-testi .sc-svg { width: min(8vw, 13vh); margin-bottom: 1.2vh; }
+  .tm-kicker { display: flex; align-items: center; gap: 1.4vw; font: 700 max(12px, 2.1vh) var(--f-mono); letter-spacing: .34em; color: #e9c46a; text-transform: uppercase; }
+  .tm-kicker i { width: 6vw; height: 1px; background: linear-gradient(90deg, transparent, #e9c46a); } .tm-kicker i:last-child { transform: scaleX(-1); }
+  .tm-title { font: 700 min(4.4vw, 7.6vh)/1.05 var(--f-display); margin: 1.6vh 0 3.4vh; color: #fff; white-space: nowrap; letter-spacing: -.01em; }
+  .tm-title em, .tm-who b { font-style: normal; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tm-who { display: flex; flex-direction: column; align-items: center; gap: 1.8vh; animation: qsIn .9s ease both; }
+  .tm-who b { font: 800 min(7vw, 12vh)/1.05 var(--f-display); text-wrap: balance; max-width: 90vw; }
+  .tm-city, .tm-chips span { padding: .8vh 1.8vw; border: 1px solid rgba(233,196,106,.5); border-radius: 99px; background: rgba(233,196,106,.1); color: #f3d899; font: 600 max(14px, 2.6vh) var(--f-body); letter-spacing: .06em; }
+  .tm-chips { display: flex; flex-wrap: wrap; gap: 1.2vh .9vw; justify-content: center; max-width: 82vw; animation: qsIn .9s ease both; }
+  .tm-chips span { border-color: rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: #c3cbdc; font-size: max(13px, 2.3vh); }
+  .tm-dots { display: flex; gap: .9vw; margin: 3.6vh 0 1.8vh; }
+  .tm-dots i { width: 1.2vh; height: 1.2vh; min-width: 8px; min-height: 8px; border-radius: 50%; background: rgba(255,255,255,.2); transition: all .4s; }
+  .tm-dots i.done { background: rgba(233,196,106,.55); } .tm-dots i.on { background: #e9c46a; box-shadow: 0 0 1.6vh #e9c46a; transform: scale(1.4); }
+  .sc-testi .sc-sub { font-size: max(12px, 2.1vh); letter-spacing: .18em; text-transform: uppercase; color: #8f99ae; margin-top: .6vh; }
+  .qs-vcap.tm-lt { left: 0; top: auto; bottom: 8vh; padding: 1.6vh 3vw 1.6vh 2.4vw; border-radius: 0 14px 14px 0; border-left: .8vh solid #e9c46a; background: linear-gradient(90deg, rgba(0,0,0,.82), rgba(0,0,0,.5)); display: flex; flex-direction: column; gap: .5vh; text-align: left; }
+  .tm-lt b { font: 700 max(20px, 4.2vh) var(--f-display); color: #fff; } .tm-lt span { font: 500 max(14px, 2.4vh) var(--f-body); color: #e9c46a; letter-spacing: .06em; }
+  .qs-vcap.tm-lt.show { animation: qsCapLT 6s ease both; }
+  @keyframes qsCapLT { 0% { opacity: 0; transform: translateX(-4vw); } 8%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateX(-2vw); } }
   /* ── Launching Brand Baru: hitung mundur → kilatan → reveal ── */
   .nb-reveal { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
   .nb.cd:not(.go) .nb-reveal { visibility: hidden; }
@@ -3049,7 +3067,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T02:19:48Z';
+const LAST_UPDATE = '2026-10-17T02:26:53Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7661,8 +7679,7 @@ function renderScene(s) {
     newbrand: renderNewBrand(s),
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
-    testimoni: `<div class="qs-scene sc-testi">${SC_QUOTE}<div class="qs-kicker">Free Time</div><h1 class="sc-title">Testimoni <em>Partner CAI</em></h1>
-      <p class="sc-sub">${t || 'Cerita &amp; pengalaman partner bersama Concerto Audio Indonesia'}</p></div>`,
+    testimoni: tmScene({ who: t }),
     opening: `<div class="qs-scene sc-open"><div class="qs-kicker">Gathering CAI 2026</div><h1 class="sc-title">Opening <em>Speech</em></h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
       <div class="sc-op-list">${OPENING_SPEAKERS.map((sp, i) => `<div class="sc-op-item" style="--ac:${sp.ac}"><span>${i + 1}</span>${opBrandMark(sp, true)}<b>${escHtml(sp.name)}</b></div>`).join('')}</div></div>`,
     funmkt: `<div class="sc-bubbles">${'<i></i>'.repeat(14)}</div><div class="qs-scene sc-fun">${SC_MEGA}<div class="qs-kicker">Presentasi</div>
@@ -8015,14 +8032,23 @@ function renderLaunchVideo(s) {
     <div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video di komputer ini (boleh lebih dari satu)<input type="file" accept="video/*" multiple hidden onchange="qsPickVideo('${brand}', ${idx == null ? 'null' : idx}, this)"></label></div></div>`);
   if (changed) qsLvTimer = setTimeout(() => playLaunchVideo(brand, idx, 0), 3500);   // poll 4 dtk tidak memulai ulang video
 }
+// Layar Testimoni Partner CAI: judul + (nama dealer / daftar partner) + titik progres video
+const tmSplit = t => { const [n, ...c] = String(t || '').split(/\s+[—–-]\s+/); return { name: (n || '').trim(), city: c.join(' — ').trim() }; };
+function tmScene({ who = '', city = '', idx = null, extra = '' } = {}) {
+  const n = TESTIMONI_VIDEOS.length;
+  const dots = n ? `<div class="tm-dots">${TESTIMONI_VIDEOS.map((v, i) => `<i${idx === i ? ' class="on"' : ''}></i>`).join('')}</div>` : '';
+  const chips = !who && n ? `<div class="tm-chips">${TESTIMONI_VIDEOS.map(v => `<span>${escHtml(((x) => x.name + (x.city ? ' · ' + x.city : ''))(tmSplit(v.title)))}</span>`).join('')}</div>` : '';
+  return `<div class="qs-scene sc-testi"><div class="sc-rays"></div>${SC_QUOTE}
+    <div class="tm-kicker"><i></i><span>Free Time</span><i></i></div>
+    <h1 class="tm-title">Testimoni <em>Partner CAI</em></h1>
+    ${who ? `<div class="tm-who"><b>${who}</b>${city ? `<span class="tm-city">${city}</span>` : ''}</div>` : ''}${chips}${dots}
+    <p class="sc-sub" id="sc-lv-msg">Concerto Audio Indonesia</p>${extra}</div>`;
+}
 function renderTestimoniVideo(s) {
-  const { idx } = tmParts(s.scene), one = idx != null ? TESTIMONI_VIDEOS[idx] : null;
-  const t = s.scene_text ? escHtml(s.scene_text) : one ? escHtml(one.title) : '';
-  const changed = qsSetStage(['testi', s.scene, s.scene_text, s.updated_at].join('|'), `<div class="qs-scene sc-launch sc-lv sc-testi"><div class="sc-rays"></div>${SC_QUOTE}
-    <div class="qs-kicker">Free Time</div><h1 class="sc-title">Testimoni <em>Partner CAI</em></h1>
-    ${t ? `<div class="sc-launch-name">${t}</div>` : ''}
-    <p class="sc-sub" id="sc-lv-msg">Concerto Audio Indonesia</p>
-    <div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video testimoni di komputer ini (boleh lebih dari satu)<input type="file" accept="video/*" multiple hidden onchange="qsPickVideo('testimoni', ${idx == null ? 'null' : idx}, this)"></label></div></div>`);
+  const { idx } = tmParts(s.scene), one = idx != null ? TESTIMONI_VIDEOS[idx] : null, sp = tmSplit(one?.title);
+  const who = s.scene_text ? escHtml(s.scene_text) : escHtml(sp.name), city = s.scene_text ? '' : escHtml(sp.city);
+  const pick = `<div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video testimoni di komputer ini (boleh lebih dari satu)<input type="file" accept="video/*" multiple hidden onchange="qsPickVideo('testimoni', ${idx == null ? 'null' : idx}, this)"></label></div>`;
+  const changed = qsSetStage(['testi', s.scene, s.scene_text, s.updated_at].join('|'), tmScene({ who, city, idx, extra: pick }));
   qsPrefetchVideos(TESTIMONI_VIDEOS, 'testimoni');
   if (changed) qsLvTimer = setTimeout(() => playLaunchVideo('testimoni', idx, 0), 3000);
 }
@@ -8055,11 +8081,21 @@ function playLaunchVideo(brand, idx, pos) {
   const wasMuted = v.muted;
   v.src = qsVidCache[item.src] || item.src;
   // keterangan kecil "2/3 · judul" di awal tiap video (hanya bila lebih dari satu)
-  cap.textContent = list.length > 1 ? `${pos + 1}/${list.length} · ${item.title}` : '';
-  cap.classList.remove('show'); void cap.offsetWidth; if (cap.textContent) cap.classList.add('show');
+  const tm = brand === 'testimoni', real = tm && idx != null ? idx : pos;
+  cap.className = 'qs-vcap' + (tm ? ' tm-lt' : '');
+  if (tm) { const sp = tmSplit(item.title); cap.innerHTML = `<b>${escHtml(sp.name)}</b>${sp.city ? `<span>${escHtml(sp.city)}</span>` : ''}`;
+    document.querySelectorAll('.sc-testi .tm-dots i').forEach((d, i) => { d.classList.toggle('done', i < real); d.classList.toggle('on', i === real); }); }
+  else cap.textContent = list.length > 1 ? `${pos + 1}/${list.length} · ${item.title}` : '';
+  void cap.offsetWidth; if (cap.textContent) cap.classList.add('show');
   v.onended = () => {
     if (pos + 1 < list.length) return playLaunchVideo(brand, idx, pos + 1);
-    stopLaunchVideo(); if (msg) msg.textContent = 'Terima kasih — Concerto Audio Indonesia';
+    stopLaunchVideo(); if (msg) msg.textContent = tm ? 'Concerto Audio Indonesia' : 'Terima kasih — Concerto Audio Indonesia';
+    if (tm) {   // selesai: ganti nama dealer dengan ucapan terima kasih
+      const sc = document.querySelector('.sc-testi'); if (!sc) return;
+      sc.querySelectorAll('.tm-who, .tm-chips').forEach(x => x.remove());
+      sc.querySelector('.tm-title')?.insertAdjacentHTML('afterend', '<div class="tm-who"><b>Terima kasih</b><span class="tm-city">atas cerita & kepercayaan para partner</span></div>');
+      sc.querySelectorAll('.tm-dots i').forEach(d => { d.className = 'done'; });
+    }
   };
   v.onerror = () => fail(`Video "${item.title}" tidak bisa diputar (file belum diunggah atau koneksi terputus).`);
   um.onclick = () => { v.muted = false; um.hidden = true; };
