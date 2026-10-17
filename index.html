@@ -3148,7 +3148,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T06:30:52Z';
+const LAST_UPDATE = '2026-10-17T06:32:22Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7420,6 +7420,7 @@ const QS_SCENES = {
   coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Refreshment Product', match: /coff?ee|rehat/i },
   refresh: { label: 'Refreshment Product', icon: '🔊', match: /refresh|referes/i },
   newbrand: { label: 'Launching - CAELUM', icon: '✨', match: /brand baru|new brand|launching brand|caelum/i },
+  cailaunch: { label: 'Launching - CAI', icon: '🚀', match: /launching\s*-\s*cai\b/i },
   launch:  { label: 'Product Launch', icon: '🚀', match: /launch|peluncuran/i },
   lunch:   { label: 'Istirahat Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan siang|lunch/i },
   awarding: { label: 'Awarding', icon: '🏆', match: /award/i },
@@ -7569,7 +7570,7 @@ const FREE_NAME = 'Free Time';
 // Panel Editor disusun mengikuti urutan acara: pagi (09:00–16:00), malam (18:00), lalu layar tambahan.
 const SCR_PAGI = ['qa', 'coffee', 'refresh', 'launch', 'lunch', 'kickoff'];
 const SCR_MALAM = ['opening', 'awarding', 'dinner', 'healthy'];
-const SCR_EXTRA = ['testimoni', 'funmkt', 'backdrop', 'newbrand'];
+const SCR_EXTRA = ['testimoni', 'funmkt', 'backdrop', 'newbrand', 'cailaunch'];
 const SCR_GROUPS = [['☀️ Acara Pagi · 09:00 – 16:00', SCR_PAGI], ['🌙 Acara Malam · mulai 18:00', SCR_MALAM], ['✨ Layar tambahan', SCR_EXTRA]];
 const SCR_LABEL = { qa: { icon: '🎤', label: 'Meeting Dealer', sub: 'Tanya Jawab Partner CAI' } };
 // Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
@@ -7584,6 +7585,7 @@ const SCR_DESC = {
   coffee: 'Layar rehat dengan hitung mundur (default 20 menit) dan info sesi berikutnya.',
   refresh: 'Judul sesi (membahas produk yang ada di katalog CAI) dengan strip logo brand berjalan.',
   launch: 'Judul Product Launch beserta daftar produk per brand (Audiocircle, STEG, Audio System); isi nama produk di teks tambahan, atau putar video per brand.',
+  cailaunch: 'Peluncuran oleh Concerto Audio Indonesia: hitung mundur 3-2-1, kilatan cahaya, lalu logo CAI muncul besar. Isi teks tambahan = yang diluncurkan (mis. nama produk / program), opsional.',
   newbrand: 'Peluncuran brand baru: hitung mundur 3-2-1, kilatan cahaya, lalu nama/logo brand muncul besar. Isi teks tambahan "Nama Brand | tagline".',
   lunch: 'Layar istirahat makan siang (1 jam) — isi hitung mundur bila perlu.',
   awarding: 'Puncak acara malam: layar judul Awarding — Best Distributor & Best Dealer (peringkat 10 besar). Daftar pemenang menyusul setelah data peringkat dikirim.',
@@ -7653,6 +7655,10 @@ function renderScreenPanel(err) {
         ${vids.length > 1 ? `<button class="scr-lv-btn${scrRow.scene === all ? ' on' : ''}" onclick="setScene('${all}')">${scrRow.scene === all ? '↻ Ulang semua' : `▶ Putar semua (${vids.length})`}</button>` : ''}
         ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
           return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}</div>`;
+  else if (sel === 'cailaunch') { const cn = scrRow.scene === 'cailaunch:now';
+    body = `${opts(false, 'Yang diluncurkan (opsional) — tampil di bawah logo CAI')}
+    <div class="scr-actions">${showBtn('Hitung mundur 3-2-1 → logo CAI')}<button class="gt-btn${cn ? ' confirm' : ' ghost'}" onclick="setScene('cailaunch:now')">${cn ? '↻ Tampilkan langsung' : '⚡ Tampilkan langsung (tanpa hitung mundur)'}</button></div>
+    <div class="scr-note">Klik ulang = animasi diulang.</div>`; }
   else if (sel === 'newbrand') { const nb = scrRow.scene === 'newbrand:now', nf = scrRow.scene === 'newbrand:full', nv = scrRow.scene === 'newbrand:v';
     body = `${opts(false, 'Nama Brand | tagline (opsional) — kosong = ' + NEW_BRAND.name + ' | ' + NEW_BRAND.tagline)}
     ${NEW_BRAND.video ? `<div class="scr-actions"><button class="gt-btn confirm" onclick="setScene('newbrand:full')">${nf ? '↻' : '🚀'} Hitung mundur → ${escHtml(NEW_BRAND.name)} → putar video</button><button class="gt-btn${nv ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:v')">${nv ? '↻' : '🎬'} Putar video ${escHtml(NEW_BRAND.name)} saja</button></div>
@@ -7805,6 +7811,7 @@ function renderScene(s) {
       <p class="lh-sub">Concerto Audio Indonesia</p>
       <div class="lh-topics">${LAUNCH_TOPICS.map(([b, l]) => `<div><b>${b}</b><span>${l}</span></div>`).join('')}</div>${count}</div>`,
     newbrand: renderNewBrand(s),
+    cailaunch: renderCaiLaunch(s),
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Break makan siang 1 jam · selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
     awarding: `<div class="qs-scene awt"><div class="awt-grid"></div><div class="awt-orbs"><i></i><i></i></div>
@@ -7839,8 +7846,9 @@ function renderScene(s) {
       </div>${count}</div>`,
   }[sceneBase(s.scene)];
   const kv = s.scene === 'kickoff:v';   // video perkenalan portal: diputar di atas kartu Kick Off, selesai → kartu Kick Off tetap tampil
-  const changed = qsSetStage(['scene', s.scene, s.scene_text, s.scene_until, kv || sceneBase(s.scene) === 'newbrand' ? s.updated_at : ''].join('|'), html);
+  const changed = qsSetStage(['scene', s.scene, s.scene_text, s.scene_until, kv || ['newbrand', 'cailaunch'].includes(sceneBase(s.scene)) ? s.updated_at : ''].join('|'), html);
   if (kv && changed) setTimeout(playPortalVideo, 500);
+  if (changed && sceneBase(s.scene) === 'cailaunch') nbBurst();
   if (changed && sceneBase(s.scene) === 'newbrand') {
     nbBurst();
     if (s.scene === 'newbrand:v') nbVidTimer = setTimeout(playNewBrandVideo, 500);
@@ -8192,6 +8200,22 @@ function renderNewBrand(s) {
       <p class="lh-sub">Concerto Audio Indonesia · Brand Resmi</p>
     </div></div>`;
 }
+// Launching - CAI: hitung mundur 3-2-1 → kilatan → logo CAI (memakai animasi & CSS .nb-* yang sama dengan Launching - CAELUM)
+function renderCaiLaunch(s) {
+  const what = String(s.scene_text || '').trim(), cd = s.scene === 'cailaunch';
+  return `<div class="qs-scene sc-launch lh nb${cd ? ' cd' : ''}">
+    <div class="lh-bg"><div class="sc-rays"></div><i class="lh-ring r1"></i><i class="lh-ring r2"></i><i class="lh-ring r3"></i>${lhSparks()}<i class="lh-streak s1"></i><i class="lh-streak s2"></i></div>
+    ${cd ? '<div class="nb-count"><b>3</b><b>2</b><b>1</b></div><i class="nb-flash"></i>' : ''}
+    <div class="nb-reveal">
+      <i class="lh-br tl"></i><i class="lh-br tr"></i><i class="lh-br bl"></i><i class="lh-br brr"></i>
+      <div class="lh-kicker"><i></i><span>Official Launching</span><i></i></div>
+      <div class="nb-burst"></div>
+      <div class="lh-name nb-name"><img class="nb-logo nb-cai" src="${LOGO_WHITE}" alt="Concerto Audio Indonesia"></div>
+      ${what ? `<p class="nb-tag">${escHtml(what)}</p>` : ''}
+      <div class="lh-div"><i></i><b></b><i></i></div>
+      <p class="lh-sub">Concerto Audio Indonesia · Gathering CAI 2026</p>
+    </div></div>`;
+}
 // Percikan emas memancar dari tengah saat nama brand muncul (mode hitung mundur: reveal dimulai setelah 3,9 dtk)
 let nbTimer = null, nbVidTimer = null;
 function nbBurst() {
@@ -8384,7 +8408,7 @@ function stopQaScreen() {
 const BGM_SRC = 'assets/audio/backsound.mp3?v=2';   // cadangan bila YouTube tak bisa dimuat (offline)
 const BGM_YT_ID = '';   // musik latar dari YouTube (pemutar resmi YouTube IFrame; tidak diunduh / disalin ke repo). Kosongkan untuk memakai file di atas saja.
 const BGM_KEYS = [['qa', '🎤', 'Meeting Dealer'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
-  ['newbrand', '✨', 'Launching - CAELUM'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
+  ['newbrand', '✨', 'Launching - CAELUM'], ['cailaunch', '🚀', 'Launching - CAI'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
 const BGM_OFF_DEFAULT = [];   // bawaan: musik menyala di semua sesi (Editor bisa membuat sesi tertentu senyap lewat panel); video penuh layar selalu menurunkan musik otomatis
 const bgmOffList = r => r && r.bgm_off != null ? String(r.bgm_off).split(',').map(x => x.trim()).filter(Boolean) : BGM_OFF_DEFAULT;
 const bgmClamp = v => Math.min(100, Math.max(0, +v || 0));
