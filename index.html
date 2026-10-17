@@ -3323,7 +3323,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T09:41:59Z';
+const LAST_UPDATE = '2026-10-17T09:43:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7256,13 +7256,12 @@ const QA_NAME = 'Open Mic Partner: Curhat Bebas', QA_SHORT = 'Open Mic Partner';
 // Jam bertanda flexible = estimasi (tampil ± dan "menyesuaikan"). Acara malam selain Opening Speech: jam perkiraan, ubah di form.
 const SEG_PAGI = 'Acara Pagi', SEG_MALAM = 'Acara Malam';
 const RD_TEMPLATE = [
-  { title: 'Menyanyikan Lagu Kebangsaan Indonesia Raya', start_time: '09:00', end_time: '09:05', segment: SEG_PAGI, notes: 'Pembuka acara pagi — hadirin berdiri, video Indonesia Raya diputar di videotron.' },
-  { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '09:05', end_time: '12:00', segment: SEG_PAGI, flexible: true, notes: 'Estimasi sampai 12:00. Pertanyaan dealer diketik admin/editor & tampil di videotron (sistem situs CAI).' },
-  { title: 'Coffee Break', start_time: '12:00', end_time: '12:20', segment: SEG_PAGI, notes: '20 menit' },
-  { title: 'Refreshment Product', start_time: '12:20', segment: SEG_PAGI, flexible: true, notes: 'Mengulas kembali produk-produk dari katalog CAI.' },
-  { title: 'Product Launch', start_time: '13:00', segment: SEG_PAGI, flexible: true, notes: 'Brand Audiocircle, STEG & Audio System. Audiocircle: Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line. STEG: SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12. Audio System: AY65 · AY65C · AS10 · AS500.1 · DSP AS6.' },
-  { title: 'Istirahat Makan Siang', start_time: '13:45', end_time: '14:45', segment: SEG_PAGI, flexible: true, notes: 'Break 1 jam' },
-  { title: 'Kick Off 2027', start_time: '14:45', end_time: '16:00', segment: SEG_PAGI, flexible: true, notes: 'Membahas Portal Dealer CAI (dealer.concerto.id) & PKS Dealer 2027. Penutup acara pagi, selesai 16:00.' },
+  { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '09:00', end_time: '11:30', segment: SEG_PAGI, notes: 'Dibuka dengan menyanyikan Lagu Kebangsaan Indonesia Raya (video di videotron). Pertanyaan dealer diketik admin/editor & tampil di videotron.' },
+  { title: 'Coffee Break', start_time: '11:30', end_time: '12:00', segment: SEG_PAGI, notes: '30 menit' },
+  { title: 'Refreshment Product', start_time: '12:00', end_time: '12:30', segment: SEG_PAGI, notes: 'Mengulas kembali produk-produk dari katalog CAI.' },
+  { title: 'Product Launch', start_time: '12:30', end_time: '13:00', segment: SEG_PAGI, notes: 'Brand Audiocircle, STEG & Audio System. Audiocircle: Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line. STEG: SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12. Audio System: AY65 · AY65C · AS10 · AS500.1 · DSP AS6.' },
+  { title: 'ISHOMA (Istirahat, Sholat, Makan Siang)', start_time: '13:00', end_time: '14:00', segment: SEG_PAGI, notes: '1 jam' },
+  { title: 'Kick Off 2027 & PKS', start_time: '14:00', end_time: '16:00', segment: SEG_PAGI, notes: 'Membahas Portal Dealer CAI (dealer.concerto.id) & PKS Dealer 2027. Penutup acara pagi, selesai 16:00.' },
   { title: 'Opening Speech', start_time: '18:00', end_time: '19:00', segment: SEG_MALAM, flexible: true, notes: 'Brand partner: Audiocircle → STEG → Zelos → Harrison Lab → Amo Plus → Sound Addict.' },
   { title: 'Awarding', start_time: '19:00', segment: SEG_MALAM, flexible: true, notes: 'Puncak acara: Best Distributor & Best Dealer (peringkat 10 besar).' },
   { title: 'Makan Malam (Dinner)', start_time: '20:00', segment: SEG_MALAM, flexible: true },
@@ -8000,7 +7999,7 @@ function renderScene(s) {
     newbrand: renderNewBrand(s),
     cailaunch: renderCaiLaunch(s),
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
-      <p class="sc-sub">${t || 'Break makan siang 1 jam · selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
+      <p class="sc-sub">${t || 'ISHOMA · istirahat, sholat &amp; makan siang · 1 jam'}</p>${count}${next}</div>`,
     dinner: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Gathering Dinner</div><h1 class="sc-title">Makan <em>Malam</em></h1>
       <p class="sc-sub">${t || 'Selamat menikmati hidangan makan malam'}</p>${count}${next}</div>`,
     healthy: `<div class="qs-scene sc-coffee">${SC_CUP}<div class="qs-kicker">Penutup Acara</div><h1 class="sc-title">Healthy <em>Drink</em></h1>
