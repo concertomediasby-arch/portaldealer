@@ -3148,7 +3148,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T06:25:11Z';
+const LAST_UPDATE = '2026-10-17T06:30:52Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7419,7 +7419,7 @@ const QS_SCENES = {
   opening: { label: 'Opening Speech', icon: '🎙', match: /opening/i },
   coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Refreshment Product', match: /coff?ee|rehat/i },
   refresh: { label: 'Refreshment Product', icon: '🔊', match: /refresh|referes/i },
-  newbrand: { label: 'Launching Brand Baru', icon: '✨', match: /brand baru|new brand|launching brand/i },
+  newbrand: { label: 'Launching - CAELUM', icon: '✨', match: /brand baru|new brand|launching brand|caelum/i },
   launch:  { label: 'Product Launch', icon: '🚀', match: /launch|peluncuran/i },
   lunch:   { label: 'Istirahat Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan siang|lunch/i },
   awarding: { label: 'Awarding', icon: '🏆', match: /award/i },
@@ -8384,7 +8384,7 @@ function stopQaScreen() {
 const BGM_SRC = 'assets/audio/backsound.mp3?v=2';   // cadangan bila YouTube tak bisa dimuat (offline)
 const BGM_YT_ID = '';   // musik latar dari YouTube (pemutar resmi YouTube IFrame; tidak diunduh / disalin ke repo). Kosongkan untuk memakai file di atas saja.
 const BGM_KEYS = [['qa', '🎤', 'Meeting Dealer'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
-  ['newbrand', '✨', 'Launching Brand Baru'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
+  ['newbrand', '✨', 'Launching - CAELUM'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
 const BGM_OFF_DEFAULT = [];   // bawaan: musik menyala di semua sesi (Editor bisa membuat sesi tertentu senyap lewat panel); video penuh layar selalu menurunkan musik otomatis
 const bgmOffList = r => r && r.bgm_off != null ? String(r.bgm_off).split(',').map(x => x.trim()).filter(Boolean) : BGM_OFF_DEFAULT;
 const bgmClamp = v => Math.min(100, Math.max(0, +v || 0));
