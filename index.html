@@ -3148,7 +3148,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T06:24:28Z';
+const LAST_UPDATE = '2026-10-17T06:25:11Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7225,8 +7225,8 @@ function renderQa() {
   const queue = qaItems.filter(x => x.status === 'baru' && x.id !== qaScreenId);
   live.classList.toggle('on', !!cur);
   const sc = sceneInfo(scrRow?.scene);
-  live.innerHTML = `${sc ? `<div class="qa-scene-note">🖥 Layar sedang menampilkan <b>${sc.icon} ${sc.label}</b> — pertanyaan tidak terlihat sampai layar dikembalikan ke Open Mic.
-      <button class="gt-btn confirm" onclick="setScene(null)">🎤 Kembali ke Open Mic</button></div>` : ''}
+  live.innerHTML = `${sc ? `<div class="qa-scene-note">🖥 Layar sedang menampilkan <b>${sc.icon} ${sc.label}</b> — pertanyaan tidak terlihat sampai layar dikembalikan ke Meeting Dealer.
+      <button class="gt-btn confirm" onclick="setScene(null)">🎤 Kembali ke Meeting Dealer</button></div>` : ''}
     <div class="qa-live-head"><span class="qa-dot${cur && !sc ? ' on' : ''}"></span>${cur ? (sc ? 'Pertanyaan terakhir (tersembunyi selama tampilan sesi)' : 'Sedang tampil di layar videotron') : 'Layar videotron kosong — menampilkan judul sesi'}</div>
     ${cur ? `<div class="qa-live-q">“${escHtml(cur.question)}”</div><div class="qa-live-who">#${no.get(cur.id)} · ${escHtml(qaWho(cur))}</div>
       <div class="qa-live-ans">
@@ -7614,7 +7614,7 @@ function renderScreenPanel(err) {
       ${mins ? `<input class="gt-input" id="scr-mins" type="number" min="1" max="180" placeholder="Hitung mundur (menit${QS_SCENES[sel]?.mins ? ', kosong = ' + QS_SCENES[sel].mins : ''})">` : ''}</div>`;
   const showBtn = (label) => `<button class="gt-btn confirm" onclick="setScene(${sel === 'qa' ? 'null' : `'${sel}'`})">${live && (sel === 'qa' || scrRow.scene === sel) ? '↻ ' : '📺 '}${label || 'Tampilkan di layar'}</button>`;
   let body = '';
-  if (sel === 'qa') body = `<div class="scr-actions">${showBtn('Tampilkan Open Mic di layar')}<button class="gt-btn ghost" onclick="setRdTab('qa')">🎤 Buka menu Open Mic</button></div>`;
+  if (sel === 'qa') body = `<div class="scr-actions">${showBtn('Tampilkan Meeting Dealer di layar')}<button class="gt-btn ghost" onclick="setRdTab('qa')">🎤 Buka menu Open Mic</button></div>`;
   else if (sel === 'backdrop') { const cur = bdNum(scrRow.scene), alt = scrRow.scene === 'backdrop';
     body = `<div class="scr-bd">${BACKDROPS.map((b, i) => `<button class="scr-bd-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('backdrop:${i + 1}')"><img src="${b.th}" alt="${escHtml(b.t)}"><b>${i + 1}. ${escHtml(b.t)}${b.video ? ' <em class="scr-bd-vid">🎬 video</em>' : ''}</b><span>${cur === i + 1 ? '● Tampil · klik untuk ulang' : '▶ Tampilkan'}</span></button>`).join('')}</div>
     <div class="scr-actions"><button class="gt-btn${alt ? ' confirm' : ' ghost'}" onclick="setScene('backdrop')">${alt ? '↻ Bergantian otomatis (aktif)' : '🔁 Tampilkan bergantian'}</button></div>`; }
@@ -7675,7 +7675,7 @@ function renderScreenPanel(err) {
         <div class="scr-pks-pages">${Array.from({ length: n }, (_, i) => `<button class="scr-lv-btn${cur === i + 1 ? ' on' : ''}" onclick="setScene('kickoff:${i + 1}')">${i + 1}</button>`).join('')}</div>`}
     <div class="scr-actions"><label class="gt-btn ghost">⬆ ${pksMeta?.exists ? 'Ganti' : 'Unggah'} PDF PKS<input type="file" accept="application/pdf" hidden onchange="uploadPks(this)"></label></div>`; }
   else body = `${opts(sel === 'coffee' || sel === 'lunch' || sel === 'dinner' || sel === 'healthy')}<div class="scr-actions">${showBtn()}</div>`;
-  el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 ' + QA_SHORT}</b></span>
+  el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Meeting Dealer'}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
     ${sceneCols() ? '' : '<div class="scr-warn">Jalankan SQL kolom <b>scene</b> di Supabase agar tampilan per sesi bisa dipakai.</div>'}
     ${bgmPanelHtml()}
@@ -7766,7 +7766,7 @@ async function setScene(key) {
   if (error) { showToast('Gagal mengubah layar: ' + error.message, 9000); return; }
   scrRow = { ...scrRow, ...row };
   renderScreenPanel(); renderRundown(); if (rdTab === 'qa') renderQa();
-  if (!fmNum(key)) showToast(key ? `🖥 Layar: ${sceneInfo(key).label}${mins ? ` · hitung mundur ${mins} menit` : ''}` : '🖥 Layar kembali ke Open Mic');
+  if (!fmNum(key)) showToast(key ? `🖥 Layar: ${sceneInfo(key).label}${mins ? ` · hitung mundur ${mins} menit` : ''}` : '🖥 Layar kembali ke Meeting Dealer');
 }
 
 /* Desain tiap sesi di layar videotron */
@@ -8065,7 +8065,7 @@ async function paketOffScreen() {
   if (!supabase || !isAdmin()) return;
   const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, scene: null, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
   if (error) { showToast('Gagal: ' + error.message, 8000); return; }
-  paketMarkOnScreen(null); showToast('Layar videotron kembali ke Open Mic');
+  paketMarkOnScreen(null); showToast('Layar videotron kembali ke Meeting Dealer');
 }
 function paketMarkOnScreen(scene) {
   const pk = paketParse(scene);
@@ -8340,7 +8340,7 @@ function initQaScreen() {
   if (!QA_SCREEN_MODE) return;
   qsCheckBuild(); setInterval(qsCheckBuild, 60000);
   document.body.classList.add('screen-mode');
-  document.title = 'Layar Open Mic — Gathering CAI 2026';
+  document.title = 'Layar Videotron — Gathering CAI 2026';
   const el = document.getElementById('qa-screen');
   el.hidden = false;
   document.getElementById('qs-logo').src = LOGO_WHITE;
@@ -8358,7 +8358,7 @@ function qaScreenAuth() {
   if (!QA_SCREEN_MODE) return;
   if (isAdmin()) { closeAdmin(); startQaScreen(); return; }
   stopQaScreen();
-  qsSetStage('login', `<div class="qs-idle"><div class="qs-kicker">Layar Open Mic Partner</div><h1>Listening and Understanding <em>Partner</em></h1>
+  qsSetStage('login', `<div class="qs-idle"><div class="qs-kicker">Layar Videotron · Gathering CAI 2026</div><h1>Meeting <em>Dealer</em></h1>
     <p>Login sebagai Admin / Editor di browser ini untuk menampilkan pertanyaan.</p><button class="qs-login" onclick="openAdmin()">🔒 Login Admin</button></div>`);
 }
 function startQaScreen() {
@@ -8383,7 +8383,7 @@ function stopQaScreen() {
    Browser menahan audio sebelum ada interaksi → tombol "Aktifkan musik latar" muncul sampai layar diklik / tombol ditekan. */
 const BGM_SRC = 'assets/audio/backsound.mp3?v=2';   // cadangan bila YouTube tak bisa dimuat (offline)
 const BGM_YT_ID = '';   // musik latar dari YouTube (pemutar resmi YouTube IFrame; tidak diunduh / disalin ke repo). Kosongkan untuk memakai file di atas saja.
-const BGM_KEYS = [['qa', '🎤', 'Open Mic'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
+const BGM_KEYS = [['qa', '🎤', 'Meeting Dealer'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
   ['newbrand', '✨', 'Launching Brand Baru'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
 const BGM_OFF_DEFAULT = [];   // bawaan: musik menyala di semua sesi (Editor bisa membuat sesi tertentu senyap lewat panel); video penuh layar selalu menurunkan musik otomatis
 const bgmOffList = r => r && r.bgm_off != null ? String(r.bgm_off).split(',').map(x => x.trim()).filter(Boolean) : BGM_OFF_DEFAULT;
@@ -8621,7 +8621,7 @@ function qsSetEventSub(base) {
 function renderQaScreen(q) {
   qsSetEventSub(null);
   if (!q) {
-    qsSetStage('idle', `<div class="qs-idle"><div class="qs-kicker">Open Mic Partner</div><h1>Curhat <em>Bebas</em></h1>
+    qsSetStage('idle', `<div class="qs-idle"><div class="qs-kicker">Tanya Jawab Partner CAI</div><h1>Meeting <em>Dealer</em></h1>
       <p>Sampaikan pertanyaan, usul &amp; unek-unek Anda kepada tim Concerto Audio Indonesia</p></div>`);
     return;
   }
@@ -8632,7 +8632,7 @@ function renderQaScreen(q) {
     : (len <= 80 ? 'min(3.4vw, 6vh)' : len <= 180 ? 'min(2.8vw, 5vh)' : 'min(2.2vw, 4vh)');
   const alen = ans.length;
   const asize = alen <= 120 ? 'min(3.3vw, 5.8vh)' : alen <= 260 ? 'min(2.7vw, 4.8vh)' : alen <= 450 ? 'min(2.2vw, 3.9vh)' : 'min(1.8vw, 3.2vh)';
-  qsSetStage(['q', q.id, q.question, q.dealer, q.city, ans].join('|'), `<div class="qs-q${ans ? ' has-ans' : ''}"><div class="qs-kicker">Curhat dari</div>
+  qsSetStage(['q', q.id, q.question, q.dealer, q.city, ans].join('|'), `<div class="qs-q${ans ? ' has-ans' : ''}"><div class="qs-kicker">Pertanyaan dari</div>
     <div class="qs-who">${escHtml(q.dealer || 'Dealer')}${q.city ? `<small>${escHtml(q.city)}</small>` : ''}</div>
     <p class="qs-quote" style="font-size:${size}">${escHtml(q.question)}</p>
     ${ans ? `<div class="qs-ans"><div class="qs-kicker">Jawaban CAI</div><p style="font-size:${asize}">${escHtml(ans)}</p></div>` : ''}</div>`);
