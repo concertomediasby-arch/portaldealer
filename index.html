@@ -1679,6 +1679,41 @@ body {
   .lh-topics div { display: flex; gap: 1.4vw; align-items: baseline; justify-content: center; flex-wrap: wrap; }
   .lh-topics b { font: 700 max(14px, 2.5vh) var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: #e9c46a; }
   .lh-topics span { font-size: max(13px, 2.2vh); color: #c3cbdc; }
+  /* Layar judul Awarding — glassmorphism korporat: grid tipis, orb redup navy/emas, heksagon garis (bentuk logo CAI), panel kaca rata kiri */
+  .awt { position: absolute; inset: 0; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; padding: 0 0 0 8vw; text-align: left; }
+  .awt-grid { position: absolute; inset: 0; z-index: 0; opacity: .5; pointer-events: none;
+    background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 8vh 8vh;
+    -webkit-mask-image: radial-gradient(ellipse at 40% 50%, #000 30%, transparent 75%); mask-image: radial-gradient(ellipse at 40% 50%, #000 30%, transparent 75%); }
+  .awt-orbs i { position: absolute; border-radius: 50%; filter: blur(10vh); z-index: 0; pointer-events: none; animation: awOrb 22s ease-in-out infinite alternate; }
+  .awt-orbs i:nth-child(1) { width: 60vh; height: 60vh; left: 6%; top: 8%; background: #c9a24b; opacity: .32; }
+  .awt-orbs i:nth-child(2) { width: 72vh; height: 72vh; right: 2%; bottom: -10%; background: #2c4a8f; opacity: .45; animation-delay: -8s; }
+  .awt-hex { position: absolute; right: 5vw; top: 52%; height: 70vh; transform: translateY(-50%); z-index: 1; fill: none; pointer-events: none; animation: awtHex 1.6s ease both; }
+  .awt-hex polygon { stroke: rgba(233,196,106,.35); stroke-width: .35; } .awt-hex polygon + polygon { stroke: rgba(255,255,255,.12); stroke-dasharray: 2 1.5; animation: awtDash 40s linear infinite; }
+  @keyframes awtHex { from { opacity: 0; transform: translateY(-50%) scale(.92); } to { opacity: 1; transform: translateY(-50%); } }
+  @keyframes awtDash { to { stroke-dashoffset: -60; } }
+  .awt-badge { position: absolute; z-index: 1; right: calc(5vw + 30.3vh); top: 52%; transform: translate(50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center; animation: qsFade 1.4s ease both .8s; }
+  .awt-badge b { font: 200 min(11vw, 20vh)/1 var(--f-display); color: #e9c46a; letter-spacing: -.02em; } .awt-badge sup { font-size: .32em; font-weight: 400; vertical-align: top; position: relative; top: .5em; margin-left: .1em; }
+  .awt-badge span { margin-top: 1vh; font: 700 max(13px, 2.6vh) var(--f-display); letter-spacing: .18em; text-transform: uppercase; color: #fff; }
+  .awt-badge i { width: 5vh; height: 1px; margin: 2vh 0 1.6vh; background: rgba(233,196,106,.7); }
+  .awt-badge em { font: 500 max(10px, 1.5vh) var(--f-mono); font-style: normal; letter-spacing: .2em; text-transform: uppercase; color: #8f99ae; }
+  .awt-panel { position: relative; z-index: 2; width: min(54vw, 100vh); padding: 5vh 3.8vw 4.4vh; border-radius: 3vh;
+    background: linear-gradient(150deg, rgba(255,255,255,.12), rgba(255,255,255,.03) 60%), rgba(12,17,32,.55);
+    -webkit-backdrop-filter: blur(26px) saturate(150%); backdrop-filter: blur(26px) saturate(150%);
+    border: 1px solid rgba(255,255,255,.18); box-shadow: 0 5vh 12vh rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.3); animation: awGlass 1.1s cubic-bezier(.2,.8,.2,1) both; }
+  .awt-panel::before { content: ''; position: absolute; left: 0; top: 6vh; bottom: 6vh; width: 3px; border-radius: 3px; background: linear-gradient(#e9c46a, rgba(233,196,106,0)); }
+  .awt-meta { display: flex; align-items: center; gap: 1.2vw; font: 600 max(11px, 1.8vh) var(--f-mono); letter-spacing: .28em; text-transform: uppercase; color: #aab3c7; animation: qsFade .9s ease both .3s; }
+  .awt-meta i { width: 4vw; height: 1px; background: rgba(233,196,106,.6); }
+  .awt-title { margin: 2.2vh 0 0; font: 800 min(6vw, 10.5vh)/.95 var(--f-display); letter-spacing: -.015em; color: #fff; animation: awName 1s cubic-bezier(.2,.8,.2,1) both .45s; }
+  .awt-title span { display: block; color: #e9c46a; font-weight: 300; letter-spacing: .02em; }
+  .awt-rule { display: flex; align-items: center; gap: .8vw; margin: 2.6vh 0 2vh; animation: qsFade 1s ease both .8s; }
+  .awt-rule i { width: 7vw; height: 2px; background: #e9c46a; } .awt-rule b { width: 1vh; height: 1vh; transform: rotate(45deg); border: 1px solid #e9c46a; }
+  .awt-sub { margin: 0; max-width: 42vw; font-size: max(14px, 2.5vh); line-height: 1.45; color: #c6cddd; animation: qsFade 1s ease both .95s; }
+  .awt-cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2vw; margin-top: 3.6vh; }
+  .awt-cats div { position: relative; padding: 2.2vh 1.3vw 2vh; border-radius: 1.8vh; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); animation: awName .8s ease both; }
+  .awt-cats div:nth-child(1) { animation-delay: 1.1s; } .awt-cats div:nth-child(2) { animation-delay: 1.25s; } .awt-cats div:nth-child(3) { animation-delay: 1.4s; }
+  .awt-cats em { display: block; font: 600 max(10px, 1.6vh) var(--f-mono); font-style: normal; color: #e9c46a; letter-spacing: .15em; }
+  .awt-cats b { display: block; margin-top: 1.2vh; font: 700 max(13px, 2.4vh) var(--f-display); color: #fff; }
+  .awt-cats span { display: block; margin-top: .5vh; font: 500 max(11px, 1.8vh) var(--f-body); color: #9aa5bd; }
   .aw { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
   .aw > :not(.lh-bg):not(.aw-orbs) { position: relative; z-index: 2; }
   /* Glassmorphism: orb warna buram di belakang + panel kaca (blur, transparan, tepi terang) */
@@ -1727,8 +1762,6 @@ body {
   .aw-board li { display: flex; align-items: center; gap: 1.2vw; padding: 1.8vh 1.6vw; border: 1px solid rgba(255,255,255,.22); border-radius: 2vh; background: linear-gradient(140deg, rgba(255,255,255,.13), rgba(255,255,255,.03)), rgba(12,16,30,.5); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%); box-shadow: 0 1.5vh 4vh rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.35); text-align: left; animation: awName .8s ease both calc(.4s + var(--i) * .12s); }
   .aw-board em { font: 800 max(18px, 4vh) var(--f-display); font-style: normal; color: #e9c46a; min-width: 1.5em; }
   .aw-board b { font: 700 max(14px, 2.7vh) var(--f-display); color: #fff; text-transform: uppercase; letter-spacing: .03em; }
-  .sc-pills { display: flex; gap: 1.6vw; margin-top: 3.5vh; flex-wrap: wrap; justify-content: center; }
-  .sc-pills span { padding: 1.2vh 2.2vw; border: 1px solid rgba(233,196,106,.55); border-radius: 99px; background: rgba(233,196,106,.1); color: #f3d899; font: 700 max(14px, 2.8vh) var(--f-display); letter-spacing: .08em; text-transform: uppercase; }
   .sc-sub { font-size: max(15px, 3.2vh); color: #c3cbdc; margin: 0; max-width: 70vw; }
   .sc-count { margin-top: 4vh; display: flex; flex-direction: column; align-items: center; padding: 1.6vh 4vw; border-radius: 2vh; border: 1px solid rgba(233,196,106,.4); background: rgba(233,196,106,.07); }
   .qs-count { font: 700 min(9vw, 15vh)/1 var(--f-mono); color: #fff; letter-spacing: .04em; }
@@ -3131,7 +3164,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T06:14:03Z';
+const LAST_UPDATE = '2026-10-17T06:18:31Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7754,7 +7787,6 @@ async function setScene(key) {
 
 /* Desain tiap sesi di layar videotron */
 const SC_CUP = '<svg class="sc-svg" viewBox="0 0 120 120" aria-hidden="true"><g class="sc-steam" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linecap="round"><path d="M44 40c-6-8 6-12 0-20"/><path d="M60 40c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g><path d="M26 50h66v20a30 30 0 0 1-30 30h-6a30 30 0 0 1-30-30z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M92 56h5a12 12 0 0 1 0 24h-7" fill="none" stroke="#fff" stroke-width="5"/><line x1="18" y1="110" x2="102" y2="110" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"/></svg>';
-const SC_TROPHY = '<svg class="sc-svg" viewBox="0 0 120 120" aria-hidden="true"><path d="M38 20h44v26c0 14-10 24-22 24S38 60 38 46z" fill="#e9c46a"/><path d="M38 28H22c0 16 6 26 18 28M82 28h16c0 16-6 26-18 28" fill="none" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"/><rect x="54" y="70" width="12" height="16" fill="#c9a24b"/><rect x="40" y="86" width="40" height="10" rx="3" fill="#e9c46a"/><path d="M60 28l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z" fill="#1d2a4d"/></svg>';
 const SC_MEGA = '<svg class="sc-svg sc-mega" viewBox="0 0 140 120" aria-hidden="true"><path d="M22 50h18l46-26v72L40 70H22a6 6 0 0 1-6-6V56a6 6 0 0 1 6-6z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M34 70l8 26h12l-6-24" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><g class="sc-waves" fill="none" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"><path d="M100 46a20 20 0 0 1 0 28"/><path d="M110 36a34 34 0 0 1 0 48"/><path d="M120 26a48 48 0 0 1 0 68"/></g></svg>';
 const SC_QUOTE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><path d="M18 26h66a8 8 0 0 1 8 8v36a8 8 0 0 1-8 8H48l-16 14V78h-14a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M62 56h60a8 8 0 0 1 8 8v30a8 8 0 0 1-8 8h-10v12l-14-12H62a8 8 0 0 1-8-8V64a8 8 0 0 1 8-8z" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linejoin="round"/><circle cx="74" cy="80" r="3.5" fill="#e9c46a"/><circle cx="90" cy="80" r="3.5" fill="#e9c46a"/><circle cx="106" cy="80" r="3.5" fill="#e9c46a"/></svg>';
 const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><circle cx="70" cy="62" r="36" fill="rgba(233,196,106,.10)" stroke="#fff" stroke-width="5"/><circle cx="70" cy="62" r="22" fill="none" stroke="#e9c46a" stroke-width="3"/><path d="M16 28v22a7 7 0 0 0 14 0V28M23 28v74" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M122 28c-9 6-9 28 0 34v40" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -7791,8 +7823,20 @@ function renderScene(s) {
     newbrand: renderNewBrand(s),
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Break makan siang 1 jam · selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
-    awarding: `<div class="qs-scene sc-awd">${SC_TROPHY}<div class="qs-kicker">Puncak Acara</div><h1 class="sc-title">Awarding <em>Night</em></h1>
-      <p class="sc-sub">${t || 'Penghargaan untuk partner terbaik Concerto Audio Indonesia'}</p><div class="sc-pills"><span>Best Distributor</span><span>Best Dealer · 10 Besar</span></div></div>`,
+    awarding: `<div class="qs-scene awt"><div class="awt-grid"></div><div class="awt-orbs"><i></i><i></i></div>
+      <svg class="awt-hex" viewBox="0 0 100 115.47" aria-hidden="true"><polygon points="50,1 99,29 99,86.5 50,114.5 1,86.5 1,29"/><polygon points="50,14 88,36 88,79.5 50,101.5 12,79.5 12,36"/></svg>
+      <div class="awt-badge"><b>5<sup>th</sup></b><span>Annual Gathering</span><i></i><em>Concerto Audio Indonesia · 2026</em></div>
+      <div class="awt-panel">
+        <div class="awt-meta"><span>Puncak Acara</span><i></i><span>Malam Penghargaan</span></div>
+        <h1 class="awt-title">Awarding<span>Night</span></h1>
+        <div class="awt-rule"><i></i><b></b></div>
+        <p class="awt-sub">${t || 'Apresiasi bagi distributor &amp; dealer dengan performa terbaik sepanjang 2026'}</p>
+        <div class="awt-cats">
+          <div><em>01</em><b>Best Distributor</b><span>Top ${AWARD_DIST.length}</span></div>
+          <div><em>02</em><b>Best Dealer</b><span>Top ${AWARD_DEALERS.length}</span></div>
+          <div><em>03</em><b>Defending Champion</b><span>Dealer of the Year</span></div>
+        </div>
+      </div></div>`,
     dinner: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Gathering Dinner</div><h1 class="sc-title">Makan <em>Malam</em></h1>
       <p class="sc-sub">${t || 'Selamat menikmati hidangan makan malam'}</p>${count}${next}</div>`,
     healthy: `<div class="qs-scene sc-coffee">${SC_CUP}<div class="qs-kicker">Penutup Acara</div><h1 class="sc-title">Healthy <em>Drink</em></h1>
