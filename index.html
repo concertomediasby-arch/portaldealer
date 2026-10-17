@@ -1715,6 +1715,7 @@ body {
   .awt-cats b { display: block; margin-top: 1.2vh; font: 700 max(13px, 2.4vh) var(--f-display); color: #fff; }
   .awt-cats span { display: block; margin-top: .5vh; font: 500 max(11px, 1.8vh) var(--f-body); color: #9aa5bd; }
   /* hitung mundur sebelum kartu Awarding */
+  .aw2-cd.wait, .aw2-cd.wait * { animation-play-state: paused !important; }
   .aw2-cd { flex-direction: column !important; justify-content: center !important; align-items: center !important; padding: 0 !important; }
   .aw2-cdbox { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .aw2-cdlead { margin: 2vh 0 4vh; font: 300 min(4.4vw, 8vh) var(--f-display); color: #fff; letter-spacing: .01em; animation: awName .8s ease both; }
@@ -3204,7 +3205,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T07:33:17Z';
+const LAST_UPDATE = '2026-10-17T07:37:46Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7976,34 +7977,52 @@ function renderAwarding(key, stamp) {
   const cd = a === 'list' ? 0 : a === 1 ? AW_CD_CHAMP : AW_CD_TOP, sk = ['aw', key, stamp || ''].join('|');
   if (!cd) { qsSetStage(sk, html); return; }
   const lead = a === 1 ? 'Dan juaranya adalah…' : `Peringkat ${a}`;
-  const cdHtml = `<div class="qs-scene awt aw2-cd${a === 1 ? ' champ' : ''}" style="--cd:${cd}s">${bg}
+  const cdHtml = `<div class="qs-scene awt aw2-cd wait${a === 1 ? ' champ' : ''}" style="--cd:${cd}s">${bg}
     <div class="aw2-cdbox"><div class="awt-meta"><span>${C.label}</span></div><div class="aw2-cdlead">${lead}</div>
       <div class="aw2-cdring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54"/><circle class="p" cx="60" cy="60" r="54"/></svg>
         ${Array.from({ length: cd }, (_, i) => `<b style="animation-delay:${i}s">${cd - i}</b>`).join('')}</div></div></div>`;
   if (!qsSetStage(sk, cdHtml)) return;
-  awSfx(a === 1, cd);
   clearTimeout(awCdTimer);
-  awCdTimer = setTimeout(() => { if (qsKey === sk) document.getElementById('qs-stage').innerHTML = html; }, cd * 1000);
+  awStartCd(sk, a === 1, cd, html);
+}
+// Animasi hitung mundur & SFX dijalankan dari satu titik waktu yang sama: animasi ditahan (class .wait) sampai audio siap,
+// SFX dijadwalkan di jam audio (ctx.currentTime + AW_SFX_LEAD) dan animasi dilepas tepat saat suara itu terdengar (+ latensi output).
+const AW_SFX_LEAD = 0.15;
+async function awStartCd(sk, champ, cd, html) {
+  let ctx = null;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) { ctx = bgm.ctx || (awSfx.ctx = awSfx.ctx || new AC());
+      if (ctx.state !== 'running') await Promise.race([ctx.resume().catch(() => {}), new Promise(r => setTimeout(r, 400))]); }
+  } catch (e) { ctx = null; }
+  if (qsKey !== sk) return;
+  let wait = 0;
+  if (ctx && ctx.state === 'running') {
+    awSfx(ctx, champ, cd, ctx.currentTime + AW_SFX_LEAD);
+    wait = (AW_SFX_LEAD + (ctx.outputLatency || ctx.baseLatency || 0)) * 1000;
+  }
+  setTimeout(() => {
+    if (qsKey !== sk) return;
+    document.querySelector('#qs-stage .aw2-cd')?.classList.remove('wait');
+    awCdTimer = setTimeout(() => { if (qsKey === sk) document.getElementById('qs-stage').innerHTML = html; }, cd * 1000);
+  }, wait);
 }
 // SFX dramatis hitung mundur — disintesis langsung lewat Web Audio (tanpa file / sampel pihak lain):
 // detak bass tiap detik (nada naik), riser noise; Juara: drumroll makin rapat + crescendo; saat reveal: hantaman bass + crash + kilau akor.
 // Musik latar diturunkan sementara (bgm.duckUntil). Butuh layar videotron yang sudah diklik sekali (aturan autoplay browser).
 const AW_SFX_VOL = 0.9;
-function awSfx(champ, cd) {
+function awSfx(ctx, champ, cd, start) {
   try {
-    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    const ctx = bgm.ctx || (awSfx.ctx = awSfx.ctx || new AC());
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     bgm.duckUntil = Date.now() + (cd + 2.5) * 1000;
     const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 8; comp.attack.value = 0.003; comp.release.value = 0.25; comp.connect(ctx.destination);
-    const out = ctx.createGain(); out.gain.value = AW_SFX_VOL * 0.32; out.connect(comp);
-    const t0 = ctx.currentTime + 0.05;
+    const out = ctx.createGain(); out.gain.value = AW_SFX_VOL * 0.27; out.connect(comp);
+    const t0 = start;
     const noiseBuf = len => { const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * len), ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; };
     const env = (g, t, a, peak, dec) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); };
     const boom = (t, f0, f1, peak, dec) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dec); env(g, t, 0.005, peak, dec); o.connect(g).connect(out); o.start(t); o.stop(t + dec + 0.1); };
     const noise = (t, dur, type, freq, peak, dec, q = 1) => { const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); src.buffer = noiseBuf(dur); f.type = type; f.frequency.value = freq; f.Q.value = q; env(g, t, 0.003, peak, dec); src.connect(f).connect(g).connect(out); src.start(t); src.stop(t + dur); };
     // detak tiap detik: bass + klik, makin tinggi menjelang akhir
-    for (let i = 0; i < cd; i++) { const t = t0 + i; boom(t, 95 + i * 12, 42, 0.9, 0.55); noise(t, 0.08, 'highpass', 3500, 0.25, 0.06); }
+    for (let i = 0; i < cd; i++) { const t = t0 + i + 0.06; boom(t, 95 + i * 12, 42, 0.9, 0.55); noise(t, 0.08, 'highpass', 3500, 0.25, 0.06); }
     // riser: noise bandpass menyapu naik sepanjang hitung mundur
     { const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); src.buffer = noiseBuf(cd + 0.2); f.type = 'bandpass'; f.Q.value = 6;
       f.frequency.setValueAtTime(250, t0); f.frequency.exponentialRampToValueAtTime(4200, t0 + cd); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(champ ? 0.22 : 0.16, t0 + cd - 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t0 + cd + 0.05);
