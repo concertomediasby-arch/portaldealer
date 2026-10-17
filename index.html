@@ -3067,7 +3067,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T03:09:10Z';
+const LAST_UPDATE = '2026-10-17T03:17:45Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8197,12 +8197,32 @@ const BGM_KEYS = [['qa', '🎤', 'Open Mic'], ['opening', '🎙', 'Opening Speec
   ['newbrand', '✨', 'Launching Brand Baru'], ['lunch', '🍽', 'Makan Siang'], ['testimoni', '💬', 'Testimoni'], ['backdrop', '🖼', 'Backdrop'], ['funmkt', '🎯', 'Fun Marketing'], ['kickoff', '🏁', 'Kick Off 2027'], ['paket', '📦', 'Paket Audio']];
 const BGM_OFF_DEFAULT = [];   // bawaan: musik menyala di semua sesi (Editor bisa membuat sesi tertentu senyap lewat panel); video penuh layar selalu menurunkan musik otomatis
 const bgmOffList = r => r && r.bgm_off != null ? String(r.bgm_off).split(',').map(x => x.trim()).filter(Boolean) : BGM_OFF_DEFAULT;
-const bgm = { ctx: null, gain: null, started: false, why: '', cfg: { on: true, vol: 70, off: BGM_OFF_DEFAULT, scene: 'qa' } };
+const bgmClamp = v => Math.min(100, Math.max(0, +v || 0));
+const bgmDefault = () => ({ on: false, vol: 70, off: BGM_OFF_DEFAULT.slice() });   // bawaan: MATI sampai Editor menyalakan
+function bgmLocal() {   // pengaturan terakhir dari Editor, tersimpan di browser layar videotron (tak perlu kolom Supabase)
+  try { const o = JSON.parse(localStorage.getItem('cai-bgm') || 'null'); if (o && typeof o.on === 'boolean') return { on: o.on, vol: bgmClamp(o.vol ?? 70), off: Array.isArray(o.off) ? o.off : [] }; } catch (e) {}
+  return null;
+}
+function bgmLocalSave(c) { try { localStorage.setItem('cai-bgm', JSON.stringify({ on: c.on, vol: c.vol, off: c.off })); } catch (e) {} }
+const bgm = { ctx: null, gain: null, started: false, why: '', cfg: { ...bgmDefault(), scene: 'qa' } };
 function bgmApply(s) {
-  bgm.cfg = { on: s?.bgm_on !== false, vol: Math.min(100, Math.max(0, +(s?.bgm_vol ?? 70))), off: bgmOffList(s), scene: s?.scene ? sceneBase(s.scene) : 'qa' };
+  const base = s && s.bgm_on != null ? { on: s.bgm_on !== false, vol: bgmClamp(s.bgm_vol ?? 70), off: bgmOffList(s) } : (bgmLocal() || bgmDefault());
+  bgm.cfg = { ...base, scene: s?.scene ? sceneBase(s.scene) : 'qa' };
   if (!bgm.inited) { bgm.inited = true; bgmInit(); }
 }
+// Perintah Editor → layar videotron lewat Realtime broadcast (channel 'bgm-cmd'); layar menyimpan di localStorage-nya
+function bgmCmdListen() {
+  if (bgm.cmdCh || !supabase) return;
+  try {
+    bgm.cmdCh = supabase.channel('bgm-cmd').on('broadcast', { event: 'cmd' }, m => {
+      const p = m.payload || {}; if (typeof p.on !== 'boolean') return;
+      const c = { on: p.on, vol: bgmClamp(p.vol ?? 70), off: Array.isArray(p.off) ? p.off : [] };
+      bgmLocalSave(c); bgm.cfg = { ...bgm.cfg, ...c }; bgmTick();
+    }).subscribe();
+  } catch (e) { bgm.cmdCh = null; }
+}
 function bgmInit() {
+  bgmCmdListen();
   const unlock = () => bgmResume();
   ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, unlock));
   setInterval(bgmTick, 400);
@@ -8268,7 +8288,7 @@ function bgmTick() {
   // status dilaporkan ke panel Editor (tidak ada tombol / tulisan musik di layar videotron)
   const bad = bgm.mode === 'file' && bgm.loadErr, wait = bgm.mode === 'file' && bgm.loading;
   const kind = !c.on ? 'mati' : bad ? 'gagal' : wait ? 'memuat' : !running ? 'klik' : vid ? 'video' : sceneOff ? 'senyap' : 'bunyi';
-  bgmReport({ kind, scene: label, err: bgm.loadErr || '', mode: bgm.mode });
+  bgmReport({ kind, scene: label, err: bgm.loadErr || '', mode: bgm.mode, cfg: { on: c.on, vol: c.vol, off: c.off } });
 }
 // Laporan status musik: layar videotron → panel Editor lewat Supabase Realtime broadcast (tanpa tabel / kolom baru)
 let bgmCh = null, bgmLastSent = '', bgmLastAt = 0, bgmRemote = null, bgmWatch = null;
@@ -8284,7 +8304,7 @@ function bgmReport(st) {
 function bgmWatchStart() {   // dipanggil di panel Editor: dengarkan laporan dari layar videotron
   if (bgmWatch || !supabase) return;
   try {
-    bgmWatch = supabase.channel('bgm-status').on('broadcast', { event: 'status' }, m => { bgmRemote = { ...(m.payload || {}), at: Date.now() }; bgmShowStatus(); }).subscribe();
+    bgmWatch = supabase.channel('bgm-status').on('broadcast', { event: 'status' }, m => { bgmRemote = { ...(m.payload || {}), at: Date.now() }; bgmShowStatus(); bgmRefreshBox(); }).subscribe();
     setInterval(bgmShowStatus, 3000);
   } catch (e) { bgmWatch = null; }
 }
@@ -8299,7 +8319,7 @@ function bgmShowStatus() {
   el.className = 'scr-bgm-status ' + cls; el.textContent = txt;
 }
 function bgmPanelHtml() {
-  const has = !!scrRow && 'bgm_on' in scrRow && isEditor(), on = scrRow?.bgm_on !== false, vol = scrRow?.bgm_vol ?? 70, off = bgmOffList(scrRow);
+  const has = isEditor(), cfg = bgmDisplayCfg(), on = cfg.on, vol = cfg.vol, off = cfg.off;
   if (isEditor()) setTimeout(() => { bgmWatchStart(); bgmShowStatus(); }, 0);
   return `<div class="scr-bgm"><div class="scr-bgm-row"><b>🎵 Musik latar videotron</b>
       <button class="gt-btn ${on ? 'confirm' : 'ghost'}" onclick="bgmSave({ bgm_on: ${!on} })" ${has ? '' : 'disabled'}>${on ? '● Menyala' : '○ Mati'}</button>
@@ -8309,9 +8329,9 @@ function bgmPanelHtml() {
     <div class="scr-bgm-chips">${BGM_KEYS.map(([k, ic, l]) => { const m = !off.includes(k);
       return `<button class="scr-bgm-chip${m ? ' on' : ''}" onclick="bgmToggleSession('${k}')" ${has ? '' : 'disabled'}>${ic} ${l}<i>${m ? 'musik' : 'senyap'}</i></button>`; }).join('')}</div>
     ${isEditor() ? `<div class="scr-actions" style="margin-top:10px"><button class="gt-btn ghost" id="bgm-test-btn" onclick="bgmTestHere()">🔊 Tes musik di komputer ini</button><span class="scr-bgm-k" id="bgm-test-msg" style="margin:0"></span></div>` : ''}
-    ${!isEditor() ? '<div class="scr-note">Hanya <b>Editor</b> yang bisa menyalakan / mematikan dan mengatur musik latar.</div>' : has ? '' : `<div class="scr-warn">Tombol Menyala/Mati &amp; volume baru aktif setelah kolom musik dibuat di Supabase (SQL Editor → tempel → Run). Sementara itu musik tetap jalan dengan pengaturan bawaan. <button class="gt-btn ghost" onclick="bgmCopySql()">📋 Salin SQL</button></div>`}</div>`;
+    ${!isEditor() ? '<div class="scr-note">Hanya <b>Editor</b> yang bisa menyalakan / mematikan dan mengatur musik latar.</div>' : `<div class="scr-note">Musik <b>mati</b> sampai Editor menekan Menyala; setelah menyala, musik berbunyi di <b>semua sesi</b> (kecuali yang ditandai senyap). Pengaturan dikirim langsung ke layar videotron &amp; diingat di komputer itu. Opsional agar permanen lintas komputer: <button class="gt-btn ghost" onclick="bgmCopySql()">📋 Salin SQL</button></div>`}</div>`;
 }
-const BGM_SQL = "alter table public.gathering_screen\n  add column if not exists bgm_on boolean default true,\n  add column if not exists bgm_vol integer default 70,\n  add column if not exists bgm_off text;";
+const BGM_SQL = "alter table public.gathering_screen\n  add column if not exists bgm_on boolean default false,\n  add column if not exists bgm_vol integer default 70,\n  add column if not exists bgm_off text;\nupdate public.gathering_screen set bgm_on = coalesce(bgm_on, false) where id = 1;";
 function bgmCopySql() { (navigator.clipboard?.writeText(BGM_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => { prompt('Salin SQL ini:', BGM_SQL); }); }
 // Tes musik di komputer ini (Editor): memastikan file musik termuat & terdengar di browser yang dipakai
 let bgmTestAudio = null;
@@ -8324,14 +8344,31 @@ function bgmTestHere() {
   a.play().then(() => { if (btn) btn.textContent = '⏹ Hentikan tes'; if (msg) msg.textContent = 'Terdengar? Berarti file musik & suara komputer ini baik.'; setTimeout(() => { if (bgmTestAudio === a) bgmTestHere(); }, 20000); })
     .catch(e => { bgmTestAudio = null; if (msg) msg.textContent = '⚠ Tidak bisa diputar: ' + (e?.message || e); });
 }
+function bgmDisplayCfg() {   // yang ditampilkan di panel Editor: laporan layar (segar) → baris DB → cadangan lokal → bawaan
+  const r = bgmRemote;
+  if (r && r.cfg && Date.now() - r.at < 12000) return { on: !!r.cfg.on, vol: bgmClamp(r.cfg.vol), off: r.cfg.off || [] };
+  if (scrRow && scrRow.bgm_on != null) return { on: scrRow.bgm_on !== false, vol: bgmClamp(scrRow.bgm_vol ?? 70), off: bgmOffList(scrRow) };
+  return bgmLocal() || bgmDefault();
+}
+function bgmRefreshBox() {
+  const box = document.querySelector('.scr-bgm'); if (!box || !isEditor() || box.contains(document.activeElement)) return;
+  const t = document.createElement('div'); t.innerHTML = bgmPanelHtml(); box.replaceWith(t.firstElementChild); bgmShowStatus();
+}
 async function bgmSave(patch) {
   if (!supabase || !isEditor()) { showToast('Hanya Editor yang bisa mengatur musik latar.'); return; }
-  const { error } = await supabase.from(QA_SCREEN).upsert({ id: 1, ...patch });
-  if (error) { showToast('Gagal menyimpan musik latar: ' + error.message, 8000); return; }
-  scrRow = { ...scrRow, ...patch }; renderScreenPanel();
+  const cur = bgmDisplayCfg(), c = { on: patch.bgm_on ?? cur.on, vol: bgmClamp(patch.bgm_vol ?? cur.vol), off: patch.bgm_off != null ? patch.bgm_off.split(',').filter(Boolean) : cur.off };
+  bgmLocalSave(c);
+  bgmRemote = { ...(bgmRemote || {}), cfg: c, at: bgmRemote?.at || 0, local: true };
+  try { const r = await supabase.from(QA_SCREEN).upsert({ id: 1, bgm_on: c.on, bgm_vol: c.vol, bgm_off: c.off.join(',') }); if (!r.error) scrRow = { ...scrRow, bgm_on: c.on, bgm_vol: c.vol, bgm_off: c.off.join(',') }; } catch (e) {}
+  try {
+    if (!bgm.sendCh) { bgm.sendCh = supabase.channel('bgm-cmd'); await new Promise(ok => { bgm.sendCh.subscribe(st => { if (st === 'SUBSCRIBED') ok(); }); setTimeout(ok, 3000); }); }
+    await bgm.sendCh.send({ type: 'broadcast', event: 'cmd', payload: c });
+  } catch (e) { showToast('Perintah musik gagal dikirim ke layar videotron.', 6000); }
+  if (bgmRemote?.cfg) bgmRemote.at = Date.now() - 11000;   // tampilkan nilai baru sampai laporan layar berikutnya
+  bgmRefreshBox();
 }
 function bgmToggleSession(k) {
-  const off = bgmOffList(scrRow), i = off.indexOf(k);
+  const off = bgmDisplayCfg().off.slice(), i = off.indexOf(k);
   if (i < 0) off.push(k); else off.splice(i, 1);
   bgmSave({ bgm_off: off.join(',') });
 }
