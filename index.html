@@ -3067,7 +3067,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T04:19:10Z';
+const LAST_UPDATE = '2026-10-17T04:23:03Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7367,14 +7367,13 @@ const LAUNCH_VIDEOS = {
 // File di assets/testimoni/<slug>.mp4 (H.264 1080p, faststart; batas file GitHub 100 MB). title = nama dealer/partner.
 // Sebelum file ada di repo, operator bisa memilih file video dari komputer videotron (tombol 📁 muncul di layar).
 const TESTIMONI_VIDEOS = [
-  { title: 'Mega Audio — Jakarta', src: 'assets/testimoni/mega-audio-jakarta.mp4' },
-  { title: 'Blitz — Cirebon', src: 'assets/testimoni/blitz-cirebon.mp4' },
-  { title: 'Blitz — Tegal', src: 'assets/testimoni/blitz-tegal.mp4' },
-  { title: 'Atmos Auto Sound — Kudus', src: 'assets/testimoni/atmos-kudus.mp4' },
+  { title: 'Central Garage — Surabaya Selatan', src: 'assets/testimoni/central-garage.mp4' },
   { title: 'Concerto — Malang', src: 'assets/testimoni/concerto-malang.mp4' },
+  { title: 'Atmos Auto Sound — Kudus', src: 'assets/testimoni/atmos-kudus.mp4' },
+  { title: 'Mega Audio — Jakarta', src: 'assets/testimoni/mega-audio-jakarta.mp4' },
   { title: 'Nai Audioworks — Batam', src: 'assets/testimoni/naiaudioworks-batam.mp4' },
-  { title: 'The Peak Garage — Semarang', src: 'assets/testimoni/tpg-julian.mp4' },
-  { title: 'Central Garage', src: 'assets/testimoni/central-garage.mp4' },
+  { title: 'Blitz — Tegal', src: 'assets/testimoni/blitz-tegal.mp4' },
+  { title: 'Blitz — Cirebon', src: 'assets/testimoni/blitz-cirebon.mp4' },
   { title: 'Blitz — Pekalongan', src: 'assets/testimoni/blitz-pekalongan.mp4' },
 ];
 const tmParts = k => { const m = /^testimoni:(all|\d+)$/.exec(k || ''); return m ? { idx: m[1] === 'all' ? null : +m[1] } : null; };
