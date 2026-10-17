@@ -3205,7 +3205,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T07:37:46Z';
+const LAST_UPDATE = '2026-10-17T07:41:27Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8015,7 +8015,7 @@ function awSfx(ctx, champ, cd, start) {
   try {
     bgm.duckUntil = Date.now() + (cd + 2.5) * 1000;
     const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 8; comp.attack.value = 0.003; comp.release.value = 0.25; comp.connect(ctx.destination);
-    const out = ctx.createGain(); out.gain.value = AW_SFX_VOL * 0.27; out.connect(comp);
+    const out = ctx.createGain(); out.gain.value = AW_SFX_VOL * 0.62; out.connect(comp);
     const t0 = start;
     const noiseBuf = len => { const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * len), ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; };
     const env = (g, t, a, peak, dec) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); };
@@ -8029,10 +8029,31 @@ function awSfx(ctx, champ, cd, start) {
       src.connect(f).connect(g).connect(out); src.start(t0); src.stop(t0 + cd + 0.2); }
     // Juara: drumroll snare makin rapat & keras
     if (champ) { let t = t0, step = 0.11; while (t < t0 + cd - 0.05) { const k = (t - t0) / cd; noise(t, 0.09, 'bandpass', 1900, 0.08 + k * 0.32, 0.07, 0.8); t += step; step = Math.max(0.045, step * 0.985); } }
-    // reveal: hantaman + crash + kilau akor (C–E–G–C)
     const tr = t0 + cd;
-    boom(tr, 120, 38, 1, 1.6); noise(tr, 2.6, 'highpass', 4500, champ ? 0.5 : 0.32, champ ? 2.4 : 1.4);
-    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = f; env(g, tr + i * 0.04, 0.02, champ ? 0.12 : 0.07, champ ? 2.6 : 1.6); o.connect(g).connect(out); o.start(tr); o.stop(tr + 3); });
+    // nada "brass" hangat: sawtooth lewat lowpass yang membuka (dipakai fanfare juara)
+    const brass = (t, f, peak, dur) => { const o = ctx.createOscillator(), o2 = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+      o.type = 'sawtooth'; o2.type = 'sawtooth'; o.frequency.value = f; o2.frequency.value = f * 1.004; lp.type = 'lowpass'; lp.Q.value = 0.7;
+      lp.frequency.setValueAtTime(500, t); lp.frequency.exponentialRampToValueAtTime(2600, t + 0.35); lp.frequency.exponentialRampToValueAtTime(900, t + dur);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.09); g.gain.setTargetAtTime(peak * 0.55, t + 0.3, 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(lp); o2.connect(lp); lp.connect(g).connect(out); o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05); };
+    const bell = (t, f, peak, dec) => [[1, 1], [2.76, 0.4], [5.4, 0.18]].forEach(([m, a]) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = f * m; env(g, t, 0.004, peak * a, dec / m ** 0.3); o.connect(g).connect(out); o.start(t); o.stop(t + dec + 0.1); });
+    const whoosh = (t, dur, peak) => { const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); src.buffer = noiseBuf(dur); f.type = 'bandpass'; f.Q.value = 1.4;
+      f.frequency.setValueAtTime(350, t); f.frequency.exponentialRampToValueAtTime(3200, t + dur); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + dur * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f).connect(g).connect(out); src.start(t); src.stop(t + dur); };
+    if (champ) {
+      // Juara — SFX mengikuti urutan animasi kartu .awc: kartu masuk (0) → medali No.1 (0,5 dtk) → tiga bintang (1,0 / 1,15 / 1,3) → nama juara (1,4) + konfeti
+      noise(tr, 0.25, 'highpass', 6000, 0.22, 0.18); whoosh(tr, 0.55, 0.2); boom(tr, 70, 40, 0.55, 0.7);          // drumroll berhenti → kartu meluncur masuk
+      bell(tr + 0.5, 880, 0.16, 1.8); bell(tr + 0.5, 1318.5, 0.08, 1.5);                                            // medali "ting"
+      [1046.5, 1318.5, 1568].forEach((f, i) => bell(tr + 1.0 + i * 0.15, f, 0.09, 0.9));                           // tiga bintang naik
+      const th = tr + 1.4;                                                                                           // nama juara muncul: hantaman + crash + fanfare
+      boom(th, 110, 36, 1, 1.8); noise(th, 3, 'highpass', 4200, 0.42, 2.6);
+      [[130.81, 0.16], [261.63, 0.13], [329.63, 0.11], [392, 0.11], [523.25, 0.09]].forEach(([f, a]) => brass(th, f, a, 3.2));
+      for (let k = 0; k < 18; k++) bell(th + 0.3 + Math.random() * 2.2, 1800 + Math.random() * 2400, 0.025, 0.5);  // kilau konfeti
+    } else {
+      // Top 2–10: kartu masuk = hantaman ringan + whoosh, nama muncul (0,7 dtk) = kilau akor lembut
+      boom(tr, 110, 38, 0.85, 1.2); noise(tr, 1.6, 'highpass', 4500, 0.26, 1.2); whoosh(tr, 0.6, 0.12);
+      [523.25, 659.25, 783.99].forEach((f, i) => bell(tr + 0.7 + i * 0.05, f, 0.06, 1.4));
+    }
   } catch (e) { /* audio gagal → tetap tampil tanpa suara */ }
 }
 const AW_CD_TOP = 3, AW_CD_CHAMP = 5;   // detik hitung mundur sebelum kartu Top / Juara
