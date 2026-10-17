@@ -1604,6 +1604,8 @@ body {
   .scr-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
   .scr-head b { color: #e9c46a; } .scr-head .gt-btn { margin-left: auto; }
   .scr-warn { margin-top: 8px; font-size: 12.5px; color: #fbbf24; }
+  .scr-grp-k { margin-top: 14px; font: 700 11px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: #e9c46a; }
+  .scr-grp-k + .scr-sessions { margin-top: 6px; }
   .scr-sessions { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 12px; }
   .scr-sessions .scr-btn { position: relative; padding-top: 16px; }
   .scr-btn em { position: absolute; left: 8px; top: 6px; font: 700 10px var(--f-mono); font-style: normal; color: #8b95ab; }
@@ -1677,6 +1679,8 @@ body {
   .lh-topics div { display: flex; gap: 1.4vw; align-items: baseline; justify-content: center; flex-wrap: wrap; }
   .lh-topics b { font: 700 max(14px, 2.5vh) var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: #e9c46a; }
   .lh-topics span { font-size: max(13px, 2.2vh); color: #c3cbdc; }
+  .sc-pills { display: flex; gap: 1.6vw; margin-top: 3.5vh; flex-wrap: wrap; justify-content: center; }
+  .sc-pills span { padding: 1.2vh 2.2vw; border: 1px solid rgba(233,196,106,.55); border-radius: 99px; background: rgba(233,196,106,.1); color: #f3d899; font: 700 max(14px, 2.8vh) var(--f-display); letter-spacing: .08em; text-transform: uppercase; }
   .sc-sub { font-size: max(15px, 3.2vh); color: #c3cbdc; margin: 0; max-width: 70vw; }
   .sc-count { margin-top: 4vh; display: flex; flex-direction: column; align-items: center; padding: 1.6vh 4vw; border-radius: 2vh; border: 1px solid rgba(233,196,106,.4); background: rgba(233,196,106,.07); }
   .qs-count { font: 700 min(9vw, 15vh)/1 var(--f-mono); color: #fff; letter-spacing: .04em; }
@@ -2603,7 +2607,7 @@ body {
         <div class="rd-actions" id="rd-actions">
           <button class="gt-btn ghost" onclick="loadRundown()">↻ Muat ulang</button>
           <button class="gt-btn ghost" onclick="printRundown()">🖨 Cetak</button>
-          <button class="gt-btn ghost" onclick="addRdTemplate()" title="Masukkan 6 sesi Listening and Understanding Partner sekaligus">＋ Template LUP</button>
+          <button class="gt-btn ghost" onclick="addRdTemplate()" title="Masukkan susunan acara pagi (09:00–16:00) dan malam (18:00) sekaligus">＋ Template Acara</button>
           <button class="gt-btn confirm" onclick="openRdForm()">＋ Tambah Sesi</button>
         </div>
       </div>
@@ -3079,7 +3083,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T05:27:36Z';
+const LAST_UPDATE = '2026-10-17T05:54:45Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6980,7 +6984,7 @@ function openRdForm(id) {
   ['title', 'pic', 'location', 'notes'].forEach(k => { document.getElementById('rd-' + k).value = x?.[k] || ''; });
   document.getElementById('rd-segment').value = x ? (x.segment || '') : (last?.segment || '');
   document.getElementById('rd-flexible').checked = !!x?.flexible;
-  document.getElementById('rd-segment-list').innerHTML = [...new Set((rdItems || []).map(r => r.segment).filter(Boolean).concat(QA_SESSION, FREE_NAME))].map(n => `<option value="${escHtml(n)}">`).join('');
+  document.getElementById('rd-segment-list').innerHTML = [...new Set((rdItems || []).map(r => r.segment).filter(Boolean).concat(SEG_PAGI, SEG_MALAM))].map(n => `<option value="${escHtml(n)}">`).join('');
   const f = document.getElementById('rd-form'); f.hidden = false;
   f.scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('rd-title').focus();
@@ -7008,30 +7012,35 @@ const rdColHint = e => { const m = String(e?.message || e); return /segment|flex
 // Template susunan sesi "Listening and Understanding Partner" (jam ± = waktu menyesuaikan, bisa diubah lewat ✏️)
 // Nama sesi tanya-jawab dealer (dulu "Tanya Jawab Partner"); QA_SHORT dipakai di menu/tab/kartu yang sempit.
 const QA_NAME = 'Open Mic Partner: Curhat Bebas', QA_SHORT = 'Open Mic Partner';
-const RD_TEMPLATE_LUP = [
-  { title: 'Opening Speech', start_time: '08:00', end_time: '09:00', flexible: true, notes: 'Mr. Marc (Audiocircle) → Mr. Kelvin (STEG) → Mr. David (Zelos) → Juliar Candra (Harrison Lab) → Arif (Amo Plus) → Yusak (Sound Addict).' },
-  { title: QA_NAME, start_time: '09:00', end_time: '12:00', notes: 'Pertanyaan, usul & unek-unek dealer diketik admin & tampil di videotron — menu Open Mic Partner.' },
-  { title: 'Coffee Break', start_time: '12:00', end_time: '12:20', notes: '20 menit' },
-  { title: 'Refreshment Product', start_time: '12:20', flexible: true, notes: 'Membahas produk yang ada di katalog CAI.' },
-  { title: 'Product Launch', start_time: '13:00', flexible: true, notes: 'Audiocircle: Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line. STEG: SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12. Audio System: AY65 · AY65C · AS10 · AS500.1 · DSP AS6.' },
-  { title: 'Makan Siang', start_time: '13:45', end_time: '14:45', flexible: true, notes: 'Break makan siang 1 jam' },
-  { title: 'Presentasi Fun Marketing', start_time: '14:45', flexible: true },
-  { title: 'Kick Off 2027', start_time: '15:30', flexible: true, notes: 'Membahas situs Portal Dealer CAI (dealer.concerto.id) & PKS Dealer (Perjanjian Kerja Sama) 2027.' },
+// Susunan acara Gathering CAI 2026 (permintaan pemilik): Acara Pagi 09:00–16:00 + Acara Malam mulai 18:00.
+// Jam bertanda flexible = estimasi (tampil ± dan "menyesuaikan"). Acara malam selain Opening Speech: jam perkiraan, ubah di form.
+const SEG_PAGI = 'Acara Pagi', SEG_MALAM = 'Acara Malam';
+const RD_TEMPLATE = [
+  { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '09:00', end_time: '12:00', segment: SEG_PAGI, flexible: true, notes: 'Estimasi sampai 12:00. Pertanyaan dealer diketik admin/editor & tampil di videotron (sistem situs CAI).' },
+  { title: 'Coffee Break', start_time: '12:00', end_time: '12:20', segment: SEG_PAGI, notes: '20 menit' },
+  { title: 'Refreshment Product', start_time: '12:20', segment: SEG_PAGI, flexible: true, notes: 'Mengulas kembali produk-produk dari katalog CAI.' },
+  { title: 'Product Launch', start_time: '13:00', segment: SEG_PAGI, flexible: true, notes: 'Brand Audiocircle, STEG & Audio System. Audiocircle: Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line. STEG: SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12. Audio System: AY65 · AY65C · AS10 · AS500.1 · DSP AS6.' },
+  { title: 'Istirahat Makan Siang', start_time: '13:45', end_time: '14:45', segment: SEG_PAGI, flexible: true, notes: 'Break 1 jam' },
+  { title: 'Kick Off 2027', start_time: '14:45', end_time: '16:00', segment: SEG_PAGI, flexible: true, notes: 'Membahas Portal Dealer CAI (dealer.concerto.id) & PKS Dealer 2027. Penutup acara pagi, selesai 16:00.' },
+  { title: 'Opening Speech', start_time: '18:00', end_time: '19:00', segment: SEG_MALAM, flexible: true, notes: 'Brand partner: Audiocircle → STEG → Zelos → Harrison Lab → Amo Plus → Sound Addict.' },
+  { title: 'Awarding', start_time: '19:00', segment: SEG_MALAM, flexible: true, notes: 'Puncak acara: Best Distributor & Best Dealer (peringkat 10 besar).' },
+  { title: 'Makan Malam (Dinner)', start_time: '20:00', segment: SEG_MALAM, flexible: true },
+  { title: 'Healthy Drink', start_time: '21:00', segment: SEG_MALAM, flexible: true, notes: 'Penutup acara.' },
 ];
 async function addRdTemplate() {
   const def = (rdItems?.length ? [...rdItems].sort((a, b) => b.day.localeCompare(a.day))[0].day : '') || rdNowWIB().day;
-  const day = (prompt(`Tanggal sesi "${QA_SESSION}" (format TTTT-BB-HH):`, def) || '').trim();
+  const day = (prompt('Tanggal acara untuk template Acara Pagi + Malam (format TTTT-BB-HH):', def) || '').trim();
   if (!day) return;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || isNaN(new Date(day + 'T00:00:00'))) { showToast('Format tanggal salah, contoh: 2026-11-20'); return; }
   const rdKey = t => sceneForTitle(t) || (QA_SESSION_RE.test(t) ? 'qa' : String(t).toLowerCase());
   const have = new Set((rdItems || []).filter(r => r.day === day).map(r => rdKey(r.title)));
   const now = new Date().toISOString();
-  const rows = RD_TEMPLATE_LUP.filter(t => !have.has(rdKey(t.title)))
-    .map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, segment: LUP_SCENES.includes(sceneForTitle(t.title) || 'qa') ? QA_SESSION : FREE_SCENES.includes(sceneForTitle(t.title)) ? FREE_NAME : null, updated_at: now }));
+  const rows = RD_TEMPLATE.filter(t => !have.has(rdKey(t.title)))
+    .map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, updated_at: now }));
   if (!rows.length) { showToast('Semua sesi template sudah ada di tanggal itu.'); return; }
   const { error } = await supabase.from(RUNDOWN_TABLE).insert(rows);
   if (error) { showToast('Gagal menambah template: ' + rdColHint(error), 9000); return; }
-  showToast(`✓ ${rows.length} sesi ${QA_SESSION} ditambahkan.`);
+  showToast(`✓ ${rows.length} sesi acara ditambahkan.`);
   loadRundown();
 }
 
@@ -7083,7 +7092,7 @@ function printRundown() {
 ══════════════════════════════════════════ */
 const QA_TABLE = 'gathering_questions', QA_SCREEN = 'gathering_screen';
 const QA_SESSION = 'Listening and Understanding Partner';
-const QA_SESSION_RE = /listening|tanya jawab|q ?& ?a|open ?mic|curhat/i;   // judul lama "Tanya Jawab Partner" tetap dikenali
+const QA_SESSION_RE = /listening|tanya jawab|q ?& ?a|open ?mic|curhat|meeting dealer/i;   // judul lama "Tanya Jawab Partner" tetap dikenali
 const QA_STATUS = { baru: 'Antri', tampil: 'Sudah tampil', dijawab: 'Dijawab' };
 let qaItems = null, qaErr = '', qaScreenId = null, qaEditId = null, qaFilter = 'all', qaSearch = '', qaChannel = null, rdTab = 'rundown';
 
@@ -7343,11 +7352,14 @@ function printQa() {
    scene_text = teks tambahan opsional, scene_until = akhir hitung mundur (opsional). */
 const QS_SCENES = {
   opening: { label: 'Opening Speech', icon: '🎙', match: /opening/i },
-  coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Refreshment Product', match: /coff?ee|break|rehat/i },
+  coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Refreshment Product', match: /coff?ee|rehat/i },
   refresh: { label: 'Refreshment Product', icon: '🔊', match: /refresh|referes/i },
   newbrand: { label: 'Launching Brand Baru', icon: '✨', match: /brand baru|new brand|launching brand/i },
   launch:  { label: 'Product Launch', icon: '🚀', match: /launch|peluncuran/i },
-  lunch:   { label: 'Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan|lunch/i },
+  lunch:   { label: 'Istirahat Makan Siang', icon: '🍽', next: 'Kick Off 2027', match: /makan siang|lunch/i },
+  awarding: { label: 'Awarding', icon: '🏆', match: /award/i },
+  dinner:  { label: 'Makan Malam', icon: '🍷', next: 'Healthy Drink', match: /makan malam|dinner/i },
+  healthy: { label: 'Healthy Drink', icon: '🥤', match: /health[yi]|healty/i },
   funmkt:  { label: 'Fun Marketing', icon: '🎯', match: /fun ?marketing/i },
   kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
   testimoni: { label: 'Testimoni Partner CAI', icon: '💬', match: /testimoni/i },
@@ -7457,11 +7469,6 @@ async function loadScreenRow() {
 }
 
 // Panel layar per sesi: kartu sesi (urutan acara) → pane berisi kontrol khusus sesi terpilih.
-const SCR_SESSIONS = ['opening', 'qa', 'coffee', 'refresh', 'launch', 'lunch', 'funmkt', 'kickoff'];
-// Sesi yang masuk kelompok "Listening and Understanding Partner" (satu kartu di panel, tab di dalamnya)
-const LUP_SCENES = ['qa', 'refresh', 'launch', 'funmkt', 'kickoff'];
-// Sesi "Free Time" (kelompok kedua): Coffee Break + Makan Siang — satu kartu di panel, tab di dalamnya
-const FREE_SCENES = ['coffee', 'lunch', 'testimoni', 'backdrop'];
 // Backdrop (Free Time): 2 foto layar penuh. 'backdrop:1' / 'backdrop:2' = satu foto, 'backdrop' = bergantian otomatis
 const BACKDROPS = [
   { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp', th: 'assets/backdrop/reset-button-thumb.webp', video: 'assets/backdrop/reset-button.mp4' },   // video 24 dtk (gambar = cadangan bila video gagal)
@@ -7471,22 +7478,29 @@ const BACKDROP_SEC = 12;   // detik per foto saat bergantian (backdrop video: di
 let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
 const FREE_NAME = 'Free Time';
-const SCR_CARDS = ['opening', 'lup', 'free', 'newbrand'];
+// Panel Editor disusun mengikuti urutan acara: pagi (09:00–16:00), malam (18:00), lalu layar tambahan.
+const SCR_PAGI = ['qa', 'coffee', 'refresh', 'launch', 'lunch', 'kickoff'];
+const SCR_MALAM = ['opening', 'awarding', 'dinner', 'healthy'];
+const SCR_EXTRA = ['testimoni', 'funmkt', 'backdrop', 'newbrand'];
+const SCR_GROUPS = [['☀️ Acara Pagi · 09:00 – 16:00', SCR_PAGI], ['🌙 Acara Malam · mulai 18:00', SCR_MALAM], ['✨ Layar tambahan', SCR_EXTRA]];
+const SCR_LABEL = { qa: { icon: '🎤', label: 'Meeting Dealer', sub: 'Tanya Jawab Partner CAI' } };
 // Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
 // logo = path logo versi terang (latar gelap), mis. 'assets/brands/<id>.webp' — kosong = nama brand sebagai teks emas.
 const NEW_BRAND = { name: 'Caelum', tagline: 'Power Amplifier', logo: 'assets/brands/caelum.webp', video: 'assets/newbrand/caelum.mp4' };
 const NB_REVEAL_SEC = 6;   // mode 'newbrand:full': lama reveal nama brand sebelum video diputar
-let scrLupSel = 'qa', scrFreeSel = 'coffee';
 const LAUNCH_TOPICS = [['Audiocircle', 'Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line'],
   ['STEG', 'SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12'], ['Audio System', 'AY65 · AY65C · AS10 · AS500.1 · DSP AS6']];
 const SCR_DESC = {
-  qa: 'Pertanyaan dealer tampil di videotron. Pertanyaan, usul & curhatan dealer tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
+  qa: 'Meeting Dealer (Tanya Jawab Partner CAI): pertanyaan dealer diketik admin/editor & tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
   opening: 'Tampilkan susunan pembicara, lalu kartu tiap pembicara secara bergantian. Clicker / panah di komputer videotron juga bisa menggeser.',
   coffee: 'Layar rehat dengan hitung mundur (default 20 menit) dan info sesi berikutnya.',
   refresh: 'Judul sesi (membahas produk yang ada di katalog CAI) dengan strip logo brand berjalan.',
   launch: 'Judul Product Launch beserta daftar produk per brand (Audiocircle, STEG, Audio System); isi nama produk di teks tambahan, atau putar video per brand.',
   newbrand: 'Peluncuran brand baru: hitung mundur 3-2-1, kilatan cahaya, lalu nama/logo brand muncul besar. Isi teks tambahan "Nama Brand | tagline".',
-  lunch: 'Layar makan siang — isi hitung mundur bila perlu.',
+  lunch: 'Layar istirahat makan siang (1 jam) — isi hitung mundur bila perlu.',
+  awarding: 'Puncak acara malam: layar judul Awarding — Best Distributor & Best Dealer (peringkat 10 besar). Daftar pemenang menyusul setelah data peringkat dikirim.',
+  dinner: 'Layar makan malam (dinner) — isi hitung mundur bila perlu.',
+  healthy: 'Layar Healthy Drink sebagai penutup acara.',
   testimoni: 'Judul sesi Testimoni Partner CAI, lalu putar video testimoni dari dealer (satu per satu atau semua berurutan). Teks tambahan = nama partner (opsional).',
   backdrop: 'Backdrop acara tampil layar penuh (Reset Button = video berulang) — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
@@ -7494,13 +7508,7 @@ const SCR_DESC = {
 };
 let scrSel = null;
 const scrOnAir = () => sceneBase(scrRow?.scene) || 'qa';
-function scrSelect(k) {
-  if (k === 'lup') k = LUP_SCENES.includes(scrOnAir()) ? scrOnAir() : scrLupSel;
-  if (k === 'free') k = FREE_SCENES.includes(scrOnAir()) ? scrOnAir() : scrFreeSel;
-  if (LUP_SCENES.includes(k)) scrLupSel = k;
-  if (FREE_SCENES.includes(k)) scrFreeSel = k;
-  scrSel = k; renderScreenPanel();
-}
+function scrSelect(k) { scrSel = k; renderScreenPanel(); }
 function scrSessionTime(k) {
   const x = (rdItems || []).find(r => k === 'qa' ? QA_SESSION_RE.test(r.title) && !sceneForTitle(r.title) : sceneForTitle(r.title) === k);
   return x ? `${x.flexible ? '± ' : ''}${rdT(x.start_time)}` : '';
@@ -7511,7 +7519,7 @@ function renderScreenPanel(err) {
   if (err || !scrRow) { el.innerHTML = `<div class="scr-warn">Layar videotron belum siap: ${escHtml(err ? qaDbError(err) : 'jalankan SQL "gathering_screen".')}</div>`; return; }
   const sc = sceneInfo(scrRow.scene), air = scrOnAir();
   const sel = scrSel || air;
-  const info = sel === 'qa' ? { icon: '🎤', label: QA_NAME } : QS_SCENES[sel];
+  const info = sel === 'qa' ? { icon: '🎤', label: 'Meeting Dealer · Tanya Jawab Partner CAI' } : QS_SCENES[sel];
   const live = sel === air;
   const opts = (mins, ph) => `<div class="scr-opts${mins ? '' : ' one'}">
       <input class="gt-input" id="scr-text" maxlength="120" placeholder="${ph || 'Teks tambahan (opsional) — mengganti kalimat bawah di layar'}">
@@ -7569,19 +7577,14 @@ function renderScreenPanel(err) {
         ${cur ? `<div class="scr-pks-prev-wrap"><canvas id="scr-pks-prev" class="scr-pks-prev"></canvas><span>Pratinjau yang tampil di videotron · hal. ${cur}</span></div>` : ''}
         <div class="scr-pks-pages">${Array.from({ length: n }, (_, i) => `<button class="scr-lv-btn${cur === i + 1 ? ' on' : ''}" onclick="setScene('kickoff:${i + 1}')">${i + 1}</button>`).join('')}</div>`}
     <div class="scr-actions"><label class="gt-btn ghost">⬆ ${pksMeta?.exists ? 'Ganti' : 'Unggah'} PDF PKS<input type="file" accept="application/pdf" hidden onchange="uploadPks(this)"></label></div>`; }
-  else body = `${opts(sel === 'coffee' || sel === 'lunch')}<div class="scr-actions">${showBtn()}</div>`;
+  else body = `${opts(sel === 'coffee' || sel === 'lunch' || sel === 'dinner' || sel === 'healthy')}<div class="scr-actions">${showBtn()}</div>`;
   el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 ' + QA_SHORT}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
     ${sceneCols() ? '' : '<div class="scr-warn">Jalankan SQL kolom <b>scene</b> di Supabase agar tampilan per sesi bisa dipakai.</div>'}
     ${bgmPanelHtml()}
-    <div class="scr-sessions">${SCR_CARDS.map((k, i) => {
-      const G = k === 'lup' ? { scenes: LUP_SCENES, icon: '🤝', label: 'Listening and Understanding Partner' } : k === 'free' ? { scenes: FREE_SCENES, icon: '☕', label: FREE_NAME } : null;
-      const grp = !!G, v = grp ? G : QS_SCENES[k];
-      const isSel = grp ? G.scenes.includes(sel) : k === sel, isAir = grp ? G.scenes.includes(air) : k === air;
-      return `<button class="scr-btn${grp ? ' grp' : ''}${isSel ? ' sel' : ''}${isAir ? ' on' : ''}" onclick="scrSelect('${k}')">${isAir ? '<i class="scr-live">● LIVE</i>' : ''}<em>${i + 1}</em><span>${v.icon}</span>${v.label}${grp ? `<small>${G.scenes.length} sesi${isAir ? ' · ' + (air === 'qa' ? QA_SHORT : QS_SCENES[air].label) : ''}</small>` : `<small>${scrSessionTime(k)}</small>`}</button>`; }).join('')}</div>
+    ${SCR_GROUPS.map(([gl, ks]) => `<div class="scr-grp-k">${gl}</div><div class="scr-sessions">${ks.map(k => { const v = SCR_LABEL[k] || QS_SCENES[k], n = ks === SCR_EXTRA ? '' : ks.indexOf(k) + 1;
+      return `<button class="scr-btn${k === sel ? ' sel' : ''}${k === air ? ' on' : ''}" onclick="scrSelect('${k}')">${k === air ? '<i class="scr-live">● LIVE</i>' : ''}${n ? `<em>${n}</em>` : ''}<span>${v.icon}</span>${v.label}<small>${scrSessionTime(k) || v.sub || ''}</small></button>`; }).join('')}</div>`).join('')}
     <div class="scr-pane">
-      ${LUP_SCENES.includes(sel) || FREE_SCENES.includes(sel) ? `<div class="scr-lup-tabs"><span class="scr-lup-k">${LUP_SCENES.includes(sel) ? '🤝 Listening and Understanding Partner' : '☕ ' + FREE_NAME}</span>${(LUP_SCENES.includes(sel) ? LUP_SCENES : FREE_SCENES).map(k => { const v = k === 'qa' ? { icon: '🎤', label: QA_SHORT } : QS_SCENES[k], tm = scrSessionTime(k);
-        return `<button class="filter-chip${k === sel ? ' active' : ''}" onclick="scrSelect('${k}')">${k === air ? '<i class="scr-live-dot"></i>' : ''}${v.icon} ${v.label}${tm ? ` <small>${tm}</small>` : ''}</button>`; }).join('')}</div>` : ''}
       <div class="scr-pane-head"><span class="scr-pane-ic">${info.icon}</span><div><b>${info.label}</b><p>${SCR_DESC[sel]}</p></div>${live ? '<span class="qa-badge onair">● Sedang tampil</span>' : ''}</div>
       ${body}
     </div>`;
@@ -7671,6 +7674,7 @@ async function setScene(key) {
 
 /* Desain tiap sesi di layar videotron */
 const SC_CUP = '<svg class="sc-svg" viewBox="0 0 120 120" aria-hidden="true"><g class="sc-steam" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linecap="round"><path d="M44 40c-6-8 6-12 0-20"/><path d="M60 40c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g><path d="M26 50h66v20a30 30 0 0 1-30 30h-6a30 30 0 0 1-30-30z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M92 56h5a12 12 0 0 1 0 24h-7" fill="none" stroke="#fff" stroke-width="5"/><line x1="18" y1="110" x2="102" y2="110" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"/></svg>';
+const SC_TROPHY = '<svg class="sc-svg" viewBox="0 0 120 120" aria-hidden="true"><path d="M38 20h44v26c0 14-10 24-22 24S38 60 38 46z" fill="#e9c46a"/><path d="M38 28H22c0 16 6 26 18 28M82 28h16c0 16-6 26-18 28" fill="none" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"/><rect x="54" y="70" width="12" height="16" fill="#c9a24b"/><rect x="40" y="86" width="40" height="10" rx="3" fill="#e9c46a"/><path d="M60 28l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z" fill="#1d2a4d"/></svg>';
 const SC_MEGA = '<svg class="sc-svg sc-mega" viewBox="0 0 140 120" aria-hidden="true"><path d="M22 50h18l46-26v72L40 70H22a6 6 0 0 1-6-6V56a6 6 0 0 1 6-6z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M34 70l8 26h12l-6-24" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><g class="sc-waves" fill="none" stroke="#e9c46a" stroke-width="5" stroke-linecap="round"><path d="M100 46a20 20 0 0 1 0 28"/><path d="M110 36a34 34 0 0 1 0 48"/><path d="M120 26a48 48 0 0 1 0 68"/></g></svg>';
 const SC_QUOTE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><path d="M18 26h66a8 8 0 0 1 8 8v36a8 8 0 0 1-8 8H48l-16 14V78h-14a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M62 56h60a8 8 0 0 1 8 8v30a8 8 0 0 1-8 8h-10v12l-14-12H62a8 8 0 0 1-8-8V64a8 8 0 0 1 8-8z" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linejoin="round"/><circle cx="74" cy="80" r="3.5" fill="#e9c46a"/><circle cx="90" cy="80" r="3.5" fill="#e9c46a"/><circle cx="106" cy="80" r="3.5" fill="#e9c46a"/></svg>';
 const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><circle cx="70" cy="62" r="36" fill="rgba(233,196,106,.10)" stroke="#fff" stroke-width="5"/><circle cx="70" cy="62" r="22" fill="none" stroke="#e9c46a" stroke-width="3"/><path d="M16 28v22a7 7 0 0 0 14 0V28M23 28v74" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M122 28c-9 6-9 28 0 34v40" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -7706,6 +7710,12 @@ function renderScene(s) {
     newbrand: renderNewBrand(s),
     lunch: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Istirahat</div><h1 class="sc-title">Makan <em>Siang</em></h1>
       <p class="sc-sub">${t || 'Break makan siang 1 jam · selamat menikmati hidangan yang telah disediakan'}</p>${count}${next}</div>`,
+    awarding: `<div class="qs-scene sc-awd">${SC_TROPHY}<div class="qs-kicker">Puncak Acara</div><h1 class="sc-title">Awarding <em>Night</em></h1>
+      <p class="sc-sub">${t || 'Penghargaan untuk partner terbaik Concerto Audio Indonesia'}</p><div class="sc-pills"><span>Best Distributor</span><span>Best Dealer · 10 Besar</span></div></div>`,
+    dinner: `<div class="qs-scene sc-lunch">${SC_PLATE}<div class="qs-kicker">Gathering Dinner</div><h1 class="sc-title">Makan <em>Malam</em></h1>
+      <p class="sc-sub">${t || 'Selamat menikmati hidangan makan malam'}</p>${count}${next}</div>`,
+    healthy: `<div class="qs-scene sc-coffee">${SC_CUP}<div class="qs-kicker">Penutup Acara</div><h1 class="sc-title">Healthy <em>Drink</em></h1>
+      <p class="sc-sub">${t || 'Terima kasih atas kehadiran &amp; kebersamaan Anda'}</p>${count}</div>`,
     testimoni: tmScene({ who: t }),
     opening: `<div class="qs-scene sc-open"><div class="qs-kicker">Gathering CAI 2026</div><h1 class="sc-title">Opening <em>Speech</em></h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
       <div class="sc-op-list">${OPENING_SPEAKERS.map((sp, i) => `<div class="sc-op-item" style="--ac:${sp.ac}"><span>${i + 1}</span>${opBrandMark(sp, true)}<b>${escHtml(sp.name)}</b></div>`).join('')}</div></div>`,
@@ -8453,7 +8463,7 @@ function renderBackdrop(s) {
 }
 function qsSetEventSub(base) {
   const el = document.getElementById('qs-event-sub'); if (!el) return;
-  el.textContent = !base || LUP_SCENES.includes(base) ? 'Listening and Understanding Partner' : FREE_SCENES.includes(base) ? FREE_NAME : (QS_SCENES[base]?.label || '');
+  el.textContent = !base || base === 'qa' ? 'Meeting Dealer · Tanya Jawab Partner CAI' : (SCR_MALAM.includes(base) ? 'Acara Malam · ' : SCR_PAGI.includes(base) ? 'Acara Pagi · ' : '') + (QS_SCENES[base]?.label || '');
 }
 function renderQaScreen(q) {
   qsSetEventSub(null);
