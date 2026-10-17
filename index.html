@@ -3164,7 +3164,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T07:24:10Z';
+const LAST_UPDATE = '2026-10-17T07:26:07Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7902,8 +7902,6 @@ function renderAwarding(key, stamp) {
       <ol class="aw2-board${ranks.length - 1 < 6 ? ' few' : ''}">${ranks.slice(1).map((d, i) => `<li style="--i:${i}"><em>${String(d.rank).padStart(2, '0')}</em><b>${escHtml(d.name)}${d.person || d.note ? `<small>${escHtml(d.person || d.note)}</small>` : ''}</b></li>`).join('')}</ol></div>`;
   } else {
     const d = C.list.find(x => x.rank === a); if (!d) return;
-    const pos = AWARD_SEQ.indexOf(key), nx = awPart(AWARD_SEQ[pos + 1]);
-    const nxTxt = !nx ? '' : nx.cat !== cat ? AW_CATS[nx.cat].label : nx.r === 'list' ? 'Papan peringkat' : nx.r === 1 ? 'Juara' : 'Top ' + nx.r;
     const prog = `<div class="aw2-prog">${[...C.list].sort((x, y) => y.rank - x.rank).map(x => `<i class="${x.rank === a ? 'on' : x.rank > a ? 'done' : ''}"></i>`).join('')}</div>`;
     const one = d.rank === 1;
     html = `<div class="qs-scene awt aw2">${bg}${hex(one ? `<small>No.</small><b>1</b><span>${escHtml(d.title ? 'Champion' : 'Juara')}</span><i></i><em>${C.label}</em>` : `<small>Top</small><b>${d.rank}</b><span>dari ${n}</span><i></i><em>${C.label}</em>`)}
@@ -7915,7 +7913,7 @@ function renderAwarding(key, stamp) {
         ${(one ? (d.title ? d.note : d.note) : d.note) ? `<div class="aw2-note">${escHtml(d.note)}</div>` : ''}
         <div class="awt-rule"><i></i><b></b></div>
         <p class="awt-sub">${one ? 'In recognition of outstanding performance, dedication &amp; remarkable achievement throughout 2026' : C.sub}</p>
-        <div class="aw2-foot">${prog}<span>${nxTxt && !one && cat !== 'dist' ? `Berikutnya · <b>${nxTxt}</b>` : ''}</span></div>
+        <div class="aw2-foot">${prog}</div>
       </div></div>`;
   }
   // Hitung mundur dramatis sebelum kartu Top (AW_CD_TOP dtk) / Juara (AW_CD_CHAMP dtk); papan peringkat tanpa hitung mundur
