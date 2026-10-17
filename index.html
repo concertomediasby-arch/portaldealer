@@ -2114,7 +2114,9 @@ body {
   #gt-print { display: none; }
   @media print {
     @page { margin: 12mm 10mm; }
+    @page rd { size: A4 landscape; margin: 12mm 12mm; }
     body > *:not(#gt-print) { display: none !important; }
+    html, body { background: #fff !important; }
     #gt-print, #gt-print * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     #gt-print { display: block !important; color: #000; font: 11px/1.4 Arial, sans-serif; }
     #gt-print .gp-head { display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #1d2a4d; padding-bottom: 8px; margin-bottom: 10px; }
@@ -2127,6 +2129,12 @@ body {
     #gt-print .gp-items th { background: #1d2a4d; color: #fff; }
     #gt-print .gp-items td:nth-child(n+3) { text-align: right; }
     #gt-print .rd-print { table-layout: fixed; } #gt-print .gp-seg td { background: #f3ead2; font-weight: 700; } #gt-print .rd-print td:nth-child(n+3) { text-align: left; }
+    #gt-print .rd-wrap { page: rd; font-size: 12px; }
+    #gt-print .rd-print th, #gt-print .rd-print td { padding: 6px 8px; vertical-align: top; }
+    #gt-print .rd-print thead { display: table-header-group; } #gt-print .rd-print tr { break-inside: avoid; }
+    #gt-print .rd-print .rd-t { font-weight: 700; white-space: nowrap; } #gt-print .rd-print .rd-t small { display: block; font-weight: 400; color: #666; font-size: 10px; }
+    #gt-print .rd-print .rd-n { font-weight: 600; }
+    #gt-print .rd-foot { margin-top: 12px; color: #777; font-size: 10px; }
     #gt-print .gp-sub td, #gt-print .gp-grand td { font-weight: 700; background: #f1f1f1; }
     #gt-print .gp-grand { margin-top: 12px; } #gt-print .gp-grand td:last-child { text-align: right; font-size: 13px; }
     #gt-print .gp-terms { color: #555; margin-top: 10px; }
@@ -3071,7 +3079,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T05:26:10Z';
+const LAST_UPDATE = '2026-10-17T05:27:36Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7048,11 +7056,21 @@ function printRundown() {
   if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
   const items = [...rdItems].sort((a, b) => (a.day + rdT(a.start_time)).localeCompare(b.day + rdT(b.start_time)));
   const days = [...new Set(items.map(x => x.day))];
-  el.innerHTML = `<div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>RUN DOWN ACARA</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
+  const hasPic = items.some(x => x.pic), hasLoc = items.some(x => x.location);   // kolom kosong tidak dicetak
+  const cols = [['Waktu', 17], ['Acara / Sesi', 30], ...(hasPic ? [['PIC', 14]] : []), ...(hasLoc ? [['Lokasi', 14]] : []), ['Catatan', 0]];
+  const fixed = cols.reduce((n, c) => n + c[1], 0); cols[cols.length - 1][1] = 100 - fixed;
+  const timeTxt = x => `${x.flexible ? '± ' : ''}${rdT(x.start_time)}${x.end_time ? '–' + rdT(x.end_time) : ''}${x.flexible ? '<small>menyesuaikan</small>' : ''}`;
+  const row = x => `<tr><td class="rd-t">${timeTxt(x)}</td><td class="rd-n">${escHtml(x.title)}</td>${hasPic ? `<td>${escHtml(x.pic || '')}</td>` : ''}${hasLoc ? `<td>${escHtml(x.location || '')}</td>` : ''}<td>${escHtml(x.notes || '')}</td></tr>`;
+  const printed = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'long', timeStyle: 'short' });
+  el.innerHTML = `<div class="rd-wrap"><div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>RUN DOWN ACARA</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
     ${days.map((d, n) => `<h2>Hari ${n + 1} — ${fmtRdDay(d)}</h2>
-      <table class="gp-items rd-print"><colgroup><col style="width:13%"><col style="width:32%"><col style="width:15%"><col style="width:15%"><col style="width:25%"></colgroup><thead><tr><th>Waktu</th><th>Acara / Sesi</th><th>PIC</th><th>Lokasi</th><th>Catatan</th></tr></thead><tbody>
-      ${items.filter(x => x.day === d).map((x, i, a) => `${x.segment && x.segment !== a[i - 1]?.segment ? `<tr class="gp-seg"><td colspan="5">${escHtml(x.segment)}</td></tr>` : ''}<tr><td>${x.flexible ? '± ' : ''}${rdT(x.start_time)}${x.end_time ? '–' + rdT(x.end_time) : ''}${x.flexible ? ' (menyesuaikan)' : ''}</td><td>${escHtml(x.title)}</td><td>${escHtml(x.pic || '')}</td><td>${escHtml(x.location || '')}</td><td>${escHtml(x.notes || '')}</td></tr>`).join('')}
-      </tbody></table>`).join('')}`;
+      <table class="gp-items rd-print"><colgroup>${cols.map(c => `<col style="width:${c[1]}%">`).join('')}</colgroup><thead><tr>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
+      ${items.filter(x => x.day === d).map((x, i, a) => `${x.segment && x.segment !== a[i - 1]?.segment ? `<tr class="gp-seg"><td colspan="${cols.length}">◆ ${escHtml(x.segment)}</td></tr>` : ''}${row(x)}`).join('')}
+      </tbody></table>`).join('')}
+    <p class="rd-foot">Dicetak ${printed} WIB · dealer.concerto.id</p></div>`;
+  const prevTitle = document.title;
+  document.title = 'Run Down Gathering CAI 2026';   // nama file PDF bawaan
+  window.addEventListener('afterprint', () => { document.title = prevTitle; }, { once: true });
   window.print();
 }
 
