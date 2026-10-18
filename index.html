@@ -3361,7 +3361,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-18T06:24:37Z';
+const LAST_UPDATE = '2026-10-18T12:01:08Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8938,6 +8938,8 @@ const BGM_AWARD_SRC = 'assets/audio/awarding.mp3?v=1';
 const BGM_TRACKS = [
   { id: 'main', name: 'Upward Trend', sub: 'Corporate · musik latar umum', src: BGM_SRC },
   { id: 'awarding', name: 'Champions Anthem', sub: 'Awards Ceremony · cocok untuk Awarding', src: BGM_AWARD_SRC },
+  // lagu panjang (12 mnt) → stream: diputar lewat elemen <audio> (tidak di-decode utuh ke memori ±280 MB), tetap lewat gain & crossfade yang sama
+  { id: 'presentation', name: 'Background Presentation', sub: '12 menit · tenang untuk sesi presentasi', src: 'assets/audio/presentation.mp3?v=1', stream: true },
 ];
 const bgmTrackOk = id => BGM_TRACKS.some(t => t.id === id) ? id : BGM_TRACKS[0].id;
 const BGM_YT_ID = '';   // musik latar dari YouTube (pemutar resmi YouTube IFrame; tidak diunduh / disalin ke repo). Kosongkan untuk memakai file di atas saja.
@@ -8989,6 +8991,13 @@ function bgmInitFile() {   // musik file lokal lewat Web Audio (gapless); tiap b
 function bgmTrackLoad(id) {
   const T = bgm.trk?.[id], def = BGM_TRACKS.find(t => t.id === id); if (!T || !def || T.buf || T.loading) return;
   T.loading = true; T.err = '';
+  if (def.stream) {
+    const el = new Audio(); el.loop = true; el.preload = 'auto'; el.src = def.src;
+    el.addEventListener('canplay', () => { if (!T.buf) { T.buf = true; T.loading = false; bgmTick(); } }, { once: true });
+    el.addEventListener('error', () => { T.err = 'file tidak termuat'; T.loading = false; console.warn('Backsound tidak termuat:', def.name); bgmTick(); }, { once: true });
+    try { T.el = el; T.node = bgm.ctx.createMediaElementSource(el); T.node.connect(T.g); } catch (e) { T.err = String(e?.message || e); T.loading = false; }
+    return;
+  }
   fetch(def.src).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
     .then(b => new Promise((ok, no) => bgm.ctx.decodeAudioData(b, ok, no))).then(buf => { T.buf = buf; })
     .catch(e => { T.err = String(e?.message || e || 'gagal'); console.warn('Backsound tidak termuat:', def.name, e); })
@@ -8999,6 +9008,11 @@ function bgmTrackSync(active, playing) {
   const ctx = bgm.ctx; if (!ctx || !bgm.trk) return;
   Object.entries(bgm.trk).forEach(([id, T]) => {
     const want = playing && id === active && T.buf;
+    if (T.el) {   // lagu stream: mulai dari awal saat dipilih, jeda 3 dtk setelah fade out
+      if (want && !T.src) { clearTimeout(T.stopT); T.el.currentTime = 0; T.el.play().catch(() => {}); T.src = T.el; }
+      if (!want && T.src) { T.src = null; T.stopT = setTimeout(() => { if (!T.src) T.el.pause(); }, 3000); }
+      return;
+    }
     if (want && !T.src) { const src = ctx.createBufferSource(); src.buffer = T.buf; src.loop = true; src.connect(T.g); src.start(); T.src = src; }
     if (!want && T.src) { try { T.src.stop(ctx.currentTime + 3); } catch (e) {} T.src = null; }
   });
