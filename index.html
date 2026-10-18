@@ -3361,7 +3361,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-18T06:22:57Z';
+const LAST_UPDATE = '2026-10-18T06:24:37Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7829,6 +7829,7 @@ const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
   if (sceneBase(k) === 'backdrop') return { ...base, label: bdNum(k) ? `Backdrop · ${BACKDROPS[bdNum(k) - 1]?.t}` : 'Backdrop · bergantian' };
+  if (k === 'cailaunch:full' || k === 'cailaunch:v') return { ...base, icon: '🎬', label: `Launching CAI · ${k === 'cailaunch:v' ? 'video' : 'hitung mundur + video'}` };
   if (k === 'newbrand:full' || k === 'newbrand:v') return { ...base, icon: '🎬', label: `Launching ${NEW_BRAND.name} · ${k === 'newbrand:v' ? 'video' : 'hitung mundur + video'}` };
   if (sceneBase(k) === 'paket') { const pk = paketParse(k); return { ...base, label: pk.pkg ? `Paket Audio · ${pk.pkg.title.split(' — ')[0]}${pk.pages ? ` (hal. ${pk.page}/${pk.pages})` : ` (hal. ${pk.page})`}` : 'Paket Audio · daftar' }; }
   if (k === 'anthem:v') return { ...base, icon: '🎬', label: 'Indonesia Raya · Video lagu kebangsaan' };
@@ -7882,7 +7883,7 @@ const SCR_DESC = {
   coffee: 'Layar rehat dengan hitung mundur (default 20 menit) dan info sesi berikutnya.',
   refresh: 'Judul sesi (membahas produk yang ada di katalog CAI) dengan strip logo brand berjalan.',
   launch: 'Judul Product Launch beserta daftar produk per brand (Audiocircle, STEG, Audio System); isi nama produk di teks tambahan, atau putar video per brand.',
-  cailaunch: 'Peluncuran oleh Concerto Audio Indonesia: hitung mundur 3-2-1, kilatan cahaya, lalu logo CAI muncul besar. Isi teks tambahan = yang diluncurkan (mis. nama produk / program), opsional.',
+  cailaunch: 'Peluncuran logo baru Concerto Audio Indonesia: hitung mundur 3-2-1 lalu video launching logo CAI (30 dtk), selesai → logo CAI muncul besar. Isi teks tambahan = yang diluncurkan (mis. nama produk / program), opsional.',
   newbrand: 'Peluncuran brand baru: hitung mundur 3-2-1, kilatan cahaya, lalu nama/logo brand muncul besar. Isi teks tambahan "Nama Brand | tagline".',
   lunch: 'Layar istirahat makan siang (1 jam) — isi hitung mundur bila perlu.',
   awarding: 'Puncak acara malam: layar judul Awarding — Best Distributor & Best Dealer (peringkat 10 besar). Daftar pemenang menyusul setelah data peringkat dikirim.',
@@ -7953,10 +7954,11 @@ function renderScreenPanel(err) {
         ${vids.length > 1 ? `<button class="scr-lv-btn${scrRow.scene === all ? ' on' : ''}" onclick="setScene('${all}')">${scrRow.scene === all ? '↻ Ulang semua' : `▶ Putar semua (${vids.length})`}</button>` : ''}
         ${vids.map((v, i) => { const k = vids.length > 1 ? `${all}:${i}` : all, on = scrRow.scene === k;
           return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('${k}')">${on ? '↻' : '▶'} ${vids.length > 1 ? (i + 1) + '. ' : ''}${escHtml(v.title)}</button>`; }).join('')}</div>`; }).join('')}</div>`;
-  else if (sel === 'cailaunch') { const cn = scrRow.scene === 'cailaunch:now';
+  else if (sel === 'cailaunch') { const cn = scrRow.scene === 'cailaunch:now', cf = scrRow.scene === 'cailaunch:full', cv = scrRow.scene === 'cailaunch:v';
     body = `${opts(false, 'Yang diluncurkan (opsional) — tampil di bawah logo CAI')}
-    <div class="scr-actions">${showBtn('Hitung mundur 3-2-1 → logo CAI')}<button class="gt-btn${cn ? ' confirm' : ' ghost'}" onclick="setScene('cailaunch:now')">${cn ? '↻ Tampilkan langsung' : '⚡ Tampilkan langsung (tanpa hitung mundur)'}</button></div>
-    <div class="scr-note">Klik ulang = animasi diulang.</div>`; }
+    <div class="scr-actions"><button class="gt-btn confirm" onclick="setScene('cailaunch:full')">${cf ? '↻' : '🚀'} Hitung mundur 3-2-1 → video launching logo CAI</button><button class="gt-btn${cv ? ' confirm' : ' ghost'}" onclick="setScene('cailaunch:v')">${cv ? '↻ Putar ulang video' : '🎬 Putar video saja'}</button></div>
+    <div class="scr-actions">${showBtn('Hitung mundur 3-2-1 → logo CAI (tanpa video)')}<button class="gt-btn${cn ? ' confirm' : ' ghost'}" onclick="setScene('cailaunch:now')">${cn ? '↻ Tampilkan langsung' : '⚡ Logo langsung (tanpa hitung mundur)'}</button></div>
+    <div class="scr-note">Video 30 dtk: logo lama Concerto berubah menjadi logo baru CAI; selesai → layar "Official Launching" + logo CAI tetap tampil. Musik latar otomatis senyap selama video. Klik ulang = diulang.</div>`; }
   else if (sel === 'newbrand') { const nb = scrRow.scene === 'newbrand:now', nf = scrRow.scene === 'newbrand:full', nv = scrRow.scene === 'newbrand:v';
     body = `${opts(false, 'Nama Brand | tagline (opsional) — kosong = ' + NEW_BRAND.name + ' | ' + NEW_BRAND.tagline)}
     ${NEW_BRAND.video ? `<div class="scr-actions"><button class="gt-btn confirm" onclick="setScene('newbrand:full')">${nf ? '↻' : '🚀'} Hitung mundur → ${escHtml(NEW_BRAND.name)} → putar video</button><button class="gt-btn${nv ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:v')">${nv ? '↻' : '🎬'} Putar video ${escHtml(NEW_BRAND.name)} saja</button></div>
@@ -8141,7 +8143,11 @@ function renderScene(s) {
   const kv = s.scene === 'kickoff:v' || s.scene === 'anthem:v';   // video perkenalan portal: diputar di atas kartu Kick Off, selesai → kartu Kick Off tetap tampil
   const changed = qsSetStage(['scene', s.scene, s.scene_text, s.scene_until, kv || ['newbrand', 'cailaunch'].includes(sceneBase(s.scene)) ? s.updated_at : ''].join('|'), html);
   if (kv && changed) setTimeout(s.scene === 'anthem:v' ? playAnthemVideo : playPortalVideo, 500);
-  if (changed && sceneBase(s.scene) === 'cailaunch') nbBurst();
+  if (changed && sceneBase(s.scene) === 'cailaunch') {
+    nbBurst();
+    if (s.scene === 'cailaunch:v') nbVidTimer = setTimeout(playCaiVideo, 500);
+    if (s.scene === 'cailaunch:full') nbVidTimer = setTimeout(playCaiVideo, 3900);   // video langsung setelah 3-2-1 (videonya sendiri = reveal logo)
+  }
   if (changed && sceneBase(s.scene) === 'newbrand') {
     nbBurst();
     if (s.scene === 'newbrand:v') nbVidTimer = setTimeout(playNewBrandVideo, 500);
@@ -8464,6 +8470,17 @@ function qsPickAnthemVideo(input) {
   document.querySelector('.op-pick')?.remove();
   playAnthemVideo();
 }
+// Video launching logo CAI (logo lama → logo baru): overlay layar penuh; selesai → layar logo CAI tetap tampil
+const CAI_LAUNCH_VIDEO = 'assets/newbrand/cai-launch.mp4';
+let qsLocalCai = null;
+function playCaiVideo() { playOverlayVideo(qsLocalCai || CAI_LAUNCH_VIDEO, '.nb', 'qsPickCaiVideo'); }
+function qsPickCaiVideo(input) {
+  const f = input.files?.[0]; if (!f) return;
+  if (qsLocalCai) URL.revokeObjectURL(qsLocalCai);
+  qsLocalCai = URL.createObjectURL(f);
+  document.querySelector('.op-pick')?.remove();
+  playCaiVideo();
+}
 // Video peluncuran brand baru (Caelum): diputar di atas layar reveal; selesai → reveal tetap tampil
 let qsLocalNb = null;
 function playNewBrandVideo() { playOverlayVideo(qsLocalNb || NEW_BRAND.video, '.nb', 'qsPickNbVideo'); }
@@ -8712,7 +8729,7 @@ function renderNewBrand(s) {
 }
 // Launching - CAI: hitung mundur 3-2-1 → kilatan → logo CAI (memakai animasi & CSS .nb-* yang sama dengan Launching - CAELUM)
 function renderCaiLaunch(s) {
-  const what = String(s.scene_text || '').trim(), cd = s.scene === 'cailaunch';
+  const what = String(s.scene_text || '').trim(), cd = s.scene === 'cailaunch' || s.scene === 'cailaunch:full';
   return `<div class="qs-scene sc-launch lh nb${cd ? ' cd' : ''}">
     <div class="lh-bg"><div class="sc-rays"></div><i class="lh-ring r1"></i><i class="lh-ring r2"></i><i class="lh-ring r3"></i>${lhSparks()}<i class="lh-streak s1"></i><i class="lh-streak s2"></i></div>
     ${cd ? '<div class="nb-count"><b>3</b><b>2</b><b>1</b></div><i class="nb-flash"></i>' : ''}
