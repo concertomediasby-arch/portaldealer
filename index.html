@@ -1262,18 +1262,29 @@ body {
 .res-btn-view { background: var(--surface2); color: var(--fg); border: 1px solid var(--border); }
 .res-btn-soon { background: var(--surface); color: var(--fg-dim); border: 1px solid var(--border); cursor: default; font-style: italic; }
 .res-btn-prev { background: var(--surface2); color: var(--fg); border: 1px solid var(--border); }
-.gf-list { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
-.gf-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; }
-.gf-row + .gf-row { border-top: 1px solid var(--border); }
-.gf-info { min-width: 0; }
-.gf-title { font-size: 13px; font-weight: 600; color: var(--fg); overflow-wrap: anywhere; }
-.gf-sub { font: 11px var(--f-mono); color: var(--fg-muted); margin-top: 2px; }
-.gf-actions { display: flex; gap: 6px; flex-shrink: 0; }
-.gf-del { background: transparent; border: 1px solid var(--border); color: var(--fg-muted); padding: 7px 10px; }
+.gf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; margin-top: 4px; }
+.gf-card { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--surface); transition: transform .2s, box-shadow .2s, border-color .2s; }
+.gf-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); box-shadow: 0 12px 28px rgba(0,0,0,.18); }
+.gf-cover { position: relative; display: block; width: 100%; aspect-ratio: 16 / 10; padding: 0; border: 0; border-bottom: 1px solid var(--border); cursor: pointer; overflow: hidden;
+  background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%), #0e131f; }
+.gf-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; transition: opacity .4s, transform .4s; }
+.gf-cover img.on { opacity: 1; }
+.gf-card:hover .gf-cover img.on { transform: scale(1.03); }
+.gf-ph { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 6px; color: rgba(255,255,255,.55); font: 600 11px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; }
+.gf-ph b { font-size: 30px; }
+.gf-cover.loading .gf-ph::after { content: 'memuat cover…'; font-weight: 500; letter-spacing: .08em; text-transform: none; color: rgba(255,255,255,.4); }
+.gf-badge { position: absolute; left: 10px; top: 10px; padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,.6); color: #fff; font: 600 10px var(--f-mono); letter-spacing: .08em; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.gf-new { position: absolute; right: 10px; top: 10px; padding: 3px 8px; border-radius: 6px; background: var(--accent); color: #111; font: 700 10px var(--f-mono); letter-spacing: .08em; }
+.gf-body { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 14px; flex: 1; }
+.gf-title { font-size: 14px; font-weight: 700; line-height: 1.3; color: var(--fg); overflow-wrap: anywhere; }
+.gf-sub { font: 11px var(--f-mono); color: var(--fg-muted); margin-top: 3px; }
+.gf-actions { display: flex; gap: 6px; margin-top: auto; }
+.gf-actions .res-btn { flex: 1; justify-content: center; }
+.gf-del { flex: 0 0 auto !important; background: transparent; border: 1px solid var(--border); color: var(--fg-muted); padding: 7px 10px; }
 .gf-del:hover { border-color: #e5484d; color: #e5484d; opacity: 1; }
-.gf-admin { margin-top: 10px; align-items: center; }
+.gf-admin { margin-top: 14px; align-items: center; }
 .gf-hint { font-size: 11px; color: var(--fg-muted); }
-@media (max-width: 560px) { .gf-row { flex-direction: column; align-items: stretch; } .gf-actions { justify-content: flex-start; } }
+@media (max-width: 560px) { .gf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .gf-body { padding: 10px; } .gf-actions { flex-wrap: wrap; } .gf-title { font-size: 13px; } }
 
 /* PDF Preview Modal */
 .pdf-modal-overlay {
@@ -3350,7 +3361,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-17T10:08:46Z';
+const LAST_UPDATE = '2026-10-18T04:53:29Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4473,6 +4484,7 @@ async function loadGuideFiles() {
     if (isAdmin()) showToast('Daftar panduan tidak bisa dibaca: ' + (e.message || e) + ' — pastikan SQL bucket "guides" sudah dijalankan.', 10000);
   }
   renderGuides();
+  loadGuideThumbs();
 }
 
 const fmtGuideDate = d => d ? new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Jakarta' }) : '';
@@ -4491,14 +4503,19 @@ function renderGuides() {
     const list = guideFiles === null
       ? `<div class="res-actions"><span class="res-btn res-btn-soon">Memuat…</span></div>`
       : files.length
-        ? `<div class="gf-list">${files.map(f => `
-            <div class="gf-row">
-              <div class="gf-info"><div class="gf-title">📄 ${escHtml(f.title)}</div>
-                <div class="gf-sub">${[fmtGuideDate(f.date), fmtGuideSize(f.size)].filter(Boolean).join(' · ')}</div></div>
-              <div class="gf-actions">
-                <button class="res-btn res-btn-view" onclick="openGuideFile('${f.key}', false)">${ICON_VIEW}Buka</button>
-                <button class="res-btn res-btn-dl" onclick="openGuideFile('${f.key}', true)">${ICON_DL}Unduh</button>
-                ${admin ? `<button class="res-btn gf-del" title="Hapus file ini" onclick="deleteGuideFile('${g.id}', '${f.key}')">🗑</button>` : ''}
+        ? `<div class="gf-grid">${files.map(f => `
+            <div class="gf-card">
+              <button class="gf-cover" data-thumb="${escHtml(f.key)}" onclick="openGuideFile('${f.key}', false)" title="Buka ${escHtml(f.title)}">
+                <span class="gf-ph"><b>📄</b>PDF</span><img alt="Cover ${escHtml(f.title)}">
+                <span class="gf-badge">PDF${f.size ? ' · ' + fmtGuideSize(f.size) : ''}</span>
+                ${Date.now() - new Date(f.date) < 14 * 864e5 ? '<span class="gf-new">BARU</span>' : ''}</button>
+              <div class="gf-body">
+                <div><div class="gf-title">${escHtml(f.title)}</div><div class="gf-sub">${fmtGuideDate(f.date)}</div></div>
+                <div class="gf-actions">
+                  <button class="res-btn res-btn-view" onclick="openGuideFile('${f.key}', false)">${ICON_VIEW}Buka</button>
+                  <button class="res-btn res-btn-dl" onclick="openGuideFile('${f.key}', true)">${ICON_DL}Unduh</button>
+                  ${admin ? `<button class="res-btn gf-del" title="Hapus file ini" onclick="deleteGuideFile('${g.id}', '${f.key}')">🗑</button>` : ''}
+                </div>
               </div>
             </div>`).join('')}</div>`
         : `<div class="res-actions"><span class="res-btn res-btn-soon">Segera Hadir</span></div>`;
@@ -4520,6 +4537,74 @@ function renderGuides() {
         ${list}${up}
       </div></div>`;
   }).join('');
+  applyGuideThumbs();
+}
+
+// ── Cover PDF panduan: halaman 1 dirender (pdf.js, unduh sebagian lewat range request) menjadi JPEG kecil.
+// Thumbnail disimpan privat di bucket yang sama: thumbs/<path pdf>.jpg (dibuat otomatis saat Admin/Editor membuka halaman ini);
+// dealer cukup memuat gambar kecil itu. Thumbnail lebih lama dari PDF-nya (PDF diganti) → dibuat ulang.
+const GUIDE_THUMB_DIR = 'thumbs';
+const guideThumbs = new Map();   // key pdf → url gambar
+let guideThumbMeta = null;       // Map path thumb → updated_at
+const guideThumbPath = key => `${GUIDE_THUMB_DIR}/${key}.jpg`;
+async function loadGuideThumbMeta(folders) {
+  const store = supabase.storage.from(GUIDES_BUCKET), meta = new Map();
+  await Promise.all(['', ...folders].map(async f => {
+    const dir = f ? `${GUIDE_THUMB_DIR}/${f}` : GUIDE_THUMB_DIR;
+    const { data } = await store.list(dir, { limit: 1000 });
+    (data || []).filter(x => x.id).forEach(x => meta.set(`${dir}/${x.name}`, x.updated_at || x.created_at));
+  }));
+  return meta;
+}
+function applyGuideThumbs() {
+  document.querySelectorAll('#guides-list .gf-cover[data-thumb]').forEach(btn => {
+    const url = guideThumbs.get(btn.dataset.thumb); if (!url) return;
+    const img = btn.querySelector('img');
+    if (img.getAttribute('src') !== url) { img.onload = () => img.classList.add('on'); img.src = url; }
+    else img.classList.add('on');
+    btn.classList.remove('loading');
+  });
+}
+let guideThumbRun = 0;
+async function loadGuideThumbs() {
+  if (!guideFiles || !supabase) return;
+  const run = ++guideThumbRun, store = supabase.storage.from(GUIDES_BUCKET);
+  const all = [...guideFiles.values()].flat().filter(f => !guideThumbs.has(f.key));
+  if (!all.length) return applyGuideThumbs();
+  try { guideThumbMeta = await loadGuideThumbMeta([...new Set(DEALER_GUIDES.filter(g => !g.hidden && g.folder).map(g => g.folder))]); } catch (e) { guideThumbMeta = new Map(); }
+  const fresh = all.filter(f => { const t = guideThumbMeta.get(guideThumbPath(f.key)); return t && new Date(t) >= new Date(f.date); });
+  if (fresh.length) {
+    const { data } = await store.createSignedUrls(fresh.map(f => guideThumbPath(f.key)), 3600);
+    (data || []).forEach((d, i) => { if (d?.signedUrl && !d.error) guideThumbs.set(fresh[i].key, d.signedUrl); });
+    applyGuideThumbs();
+  }
+  // yang belum punya cover: render dari PDF satu per satu (Admin/Editor sekalian menyimpannya untuk semua dealer)
+  for (const f of all.filter(x => !guideThumbs.has(x.key))) {
+    if (run !== guideThumbRun) return;
+    document.querySelector(`#guides-list .gf-cover[data-thumb="${CSS.escape(f.key)}"]`)?.classList.add('loading');
+    try {
+      const blob = await renderGuideCover(f.key);
+      guideThumbs.set(f.key, URL.createObjectURL(blob));
+      applyGuideThumbs();
+      if (isAdmin()) store.upload(guideThumbPath(f.key), blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '3600' }).catch(() => {});
+    } catch (e) {
+      console.warn('guide cover', f.key, e);
+      document.querySelector(`#guides-list .gf-cover[data-thumb="${CSS.escape(f.key)}"]`)?.classList.remove('loading');
+    }
+  }
+}
+async function renderGuideCover(key) {
+  const lib = await loadPdfJs();
+  const { data, error } = await supabase.storage.from(GUIDES_BUCKET).createSignedUrl(key, 600);
+  if (error) throw error;
+  const doc = await lib.getDocument({ url: data.signedUrl, disableAutoFetch: true, disableStream: true, rangeChunkSize: 262144 }).promise;
+  try {
+    const page = await doc.getPage(1), v1 = page.getViewport({ scale: 1 }), scale = 640 / Math.max(v1.width, v1.height);
+    const vp = page.getViewport({ scale }), cv = document.createElement('canvas');
+    cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    return await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('cover kosong')), 'image/jpeg', 0.82));
+  } finally { doc.destroy(); }
 }
 
 async function openGuideFile(key, download) {
@@ -4562,6 +4647,7 @@ async function uploadGuideFiles(id, input) {
       const { error } = await supabase.storage.from(GUIDES_BUCKET)
         .upload(`${g.folder}/${guideSafeName(file.name)}`, file, { upsert: true, contentType: 'application/pdf', cacheControl: '60' });
       if (error) throw error;
+      guideThumbs.delete(`${g.folder}/${guideSafeName(file.name)}`);
       ok++;
     } catch (e) {
       const m = String(e.message || e);
@@ -4581,6 +4667,8 @@ async function deleteGuideFile(id, key) {
     const { data, error } = await supabase.storage.from(GUIDES_BUCKET).remove([key]);
     if (error) throw error;
     if (!data?.length) throw new Error('file tidak terhapus — policy hapus (DELETE) bucket "guides" belum mengizinkan akun ini');
+    guideThumbs.delete(key);
+    supabase.storage.from(GUIDES_BUCKET).remove([guideThumbPath(key)]).catch(() => {});
     await loadGuideFiles();
     showToast(`"${f.title}" dihapus.`);
   } catch (e) {
