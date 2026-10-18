@@ -3361,7 +3361,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-18T12:24:18Z';
+const LAST_UPDATE = '2026-10-18T12:25:26Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8409,7 +8409,7 @@ function ogBg(colors) {
 const ogMark = sp => { const b = BRANDS.find(x => x.id === sp.id), src = sp.logo || b?.logo; return src ? `<img src="${src}" alt="${escHtml(sp.brand)}">` : `<b>${escHtml(sp.brand.split(/\s+/).map(w => w[0]).join('').slice(0, 3))}</b>`; };
 function ogTitleHtml(t) {
   return `<div class="qs-scene og og-title">${ogBg(OPENING_SPEAKERS.map(s => s.ac))}
-    <div class="og-head"><div class="og-kick"><i></i><span>Gathering CAI 2026 · Acara Malam</span><i></i></div>
+    <div class="og-head"><div class="og-kick"><i></i><span>Gathering CAI 2026</span><i></i></div>
       <h1 class="og-h1">Opening <em>Speech</em></h1><p class="og-sub">${t || 'Sambutan dari brand partner Concerto Audio Indonesia'}</p></div>
     <div class="og-grid">${OPENING_SPEAKERS.map((sp, i) => `<div class="og-card og-glass" style="--ac:${sp.ac};--d:${(0.7 + i * 0.12).toFixed(2)}s;--sd:${(2 + i * 0.35).toFixed(2)}s">
       <span class="og-no">${String(i + 1).padStart(2, '0')}</span><div class="og-logo">${ogMark(sp)}</div>
