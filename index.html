@@ -3362,7 +3362,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-19T15:07:20Z';
+const LAST_UPDATE = '2026-10-19T15:13:02Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3456,6 +3456,9 @@ const DSP_SOFTWARE = [
 ];
 
 const RECENT_UPDATES = [
+  { date:'2026-10-19', type:'photo', brandId:'audiocircle', productId:'ac-blamp4', note:'Foto BL AMP.4 ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'audiocircle', productId:'ac-blamp4', note:'SRP & fitur BL AMP.4 ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'audiocircle', productId:'ac-blamp2', note:'SRP & fitur BL AMP.2 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qm754', note:'Produk baru QM 75.4 (Amplifier) ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'audiocircle', productId:'ac-blamp4', note:'Spesifikasi BL AMP.4 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'audiocircle', productId:'ac-blamp2', note:'Spesifikasi BL AMP.2 ditambahkan' },
@@ -3768,14 +3771,14 @@ const BRANDS = [
           specs:{'Freq. Response':'40 Hz – 200 Hz','Operating Voltage':'9.5 – 16 VDC','Input Sensitivity':'180 mV','Peak Power Output':'350 W','RMS Power Output':'150 W','Impedansi':'4 Ω'} },
       ]},
       { name: 'Power Amplifier', products: [
-        { id:'ac-blamp2', name:'BL AMP.2', model:'BL AMP.2', category:'Amplifier', emoji:'⚡', hasVideo:false,
+        { id:'ac-blamp2', price:20250000, name:'BL AMP.2', model:'BL AMP.2', category:'Amplifier', emoji:'⚡', hasVideo:false,
           photos:['assets/ac-blamp-1.webp','assets/ac-blamp-2.webp','assets/ac-blamp-3.webp'],
           desc:'High-End 2 Channel Amplifier Berlin Line — Class AB SQ-optimized, 2 × 180 W @ 4Ω, 2 × 320 W @ 2Ω.',
-          specs:{'Channel':'2CH','Class':'AB (SQ-optimized)','Output (4Ω)':'2 × 180 W RMS','Output (2Ω)':'2 × 320 W RMS','Bridged (2Ω)':'1 × 1080 W RMS','Freq. Response':'10 Hz – 30 kHz','Signal-to-Noise':'> 110 dB','Crossover':'Adjustable High-pass / Low-pass','Heatsink':'High-density extruded aluminum','Design':'Compact, for professional installations'} },
-        { id:'ac-blamp4', name:'BL AMP.4', model:'BL AMP.4', category:'Amplifier', emoji:'⚡', hasVideo:false,
-          photos:['assets/ac-blamp-1.webp','assets/ac-blamp-2.webp','assets/ac-blamp-3.webp'],
+          specs:{'Channel':'2CH','Class':'AB (SQ-optimized)','Output (4Ω)':'2 × 180 W RMS','Output (2Ω)':'2 × 320 W RMS','Bridged (2Ω)':'1 × 1080 W RMS','Freq. Response':'10 Hz – 30 kHz','Signal-to-Noise':'> 110 dB','Filters':'Wide-band adjustable High-pass & Low-pass','Band-pass':'Yes (LPF & HPF active)','Stability':'2 Ω stable (stereo)','BIAS Control':'Adjustable','Capacitors':'High-end WIMA','Op-amp':'Latest Burr-Brown','Input Sensitivity':'Adjustable','Remote Turn-on':'Soft delayed','Auto Start-Stop':'Compatible','Protection':'Thermal / speaker short circuit / overload / over current','Cooling':'Temperature-controlled fan','Heatsink':'High-density extruded aluminum','Design':'Compact, for professional installations'} },
+        { id:'ac-blamp4', price:20250000, name:'BL AMP.4', model:'BL AMP.4', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          photos:['assets/ac-blamp4-1.webp','assets/ac-blamp-1.webp','assets/ac-blamp-2.webp','assets/ac-blamp-3.webp'],
           desc:'High-End 4 Channel Amplifier Berlin Line — Class AB SQ-optimized, 4 × 180 W @ 4Ω, 4 × 320 W @ 2Ω.',
-          specs:{'Channel':'4CH','Class':'AB (SQ-optimized)','Output (4Ω)':'4 × 180 W RMS','Output (2Ω)':'4 × 320 W RMS','Bridged (2Ω)':'2 × 1080 W RMS','Freq. Response':'10 Hz – 30 kHz','Signal-to-Noise':'> 110 dB','Crossover':'Adjustable High-pass / Low-pass','Heatsink':'High-density extruded aluminum','Design':'Compact, for professional installations'} },
+          specs:{'Channel':'4CH','Class':'AB (SQ-optimized)','Output (4Ω)':'4 × 180 W RMS','Output (2Ω)':'4 × 320 W RMS','Bridged (2Ω)':'2 × 1080 W RMS','Freq. Response':'10 Hz – 30 kHz','Signal-to-Noise':'> 110 dB','Filters':'Wide-band adjustable High-pass & Low-pass','Band-pass':'Yes (LPF & HPF active)','Stability':'2 Ω stable (stereo)','BIAS Control':'Adjustable','Capacitors':'High-end WIMA','Op-amp':'Latest Burr-Brown','Input Sensitivity':'Adjustable','Remote Turn-on':'Soft delayed','Auto Start-Stop':'Compatible','Protection':'Thermal / speaker short circuit / overload / over current','Cooling':'Temperature-controlled fan','Heatsink':'High-density extruded aluminum','Design':'Compact, for professional installations'} },
       ]},
       { name: 'IQ Line — BMW', products: [
         { id:'ac-iqc42bmwa', price:12000000, priceUnit:'set', name:'IQ-C4.2 BMW Ver.A', model:'IQ-C4.2 BMW Ver.A', category:'Speaker', emoji:'🔊', hasVideo:false,
