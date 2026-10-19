@@ -3362,7 +3362,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-19T15:13:02Z';
+const LAST_UPDATE = '2026-10-19T15:21:18Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3783,7 +3783,7 @@ const BRANDS = [
       { name: 'IQ Line — BMW', products: [
         { id:'ac-iqc42bmwa', price:12000000, priceUnit:'set', name:'IQ-C4.2 BMW Ver.A', model:'IQ-C4.2 BMW Ver.A', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'4" Two Way Component — BMW Plug & Play, Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
-          photos:['assets/ac-iqc42bmwa-8.webp','assets/ac-iqc42bmwa-7.webp',,'assets/ac-iqc42bmwa-9.webp','assets/ac-iqc42bmwa-10.webp','assets/ac-iqc42bmwa-11.webp'],
+          photos:['assets/ac-iqc42bmwa-8.webp','assets/ac-iqc42bmwa-7.webp','assets/ac-iqc42bmwa-9.webp','assets/ac-iqc42bmwa-10.webp','assets/ac-iqc42bmwa-11.webp'],
           specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'BMW Plug & Play'} },
         { id:'ac-iqc42bmwb', price:12000000, priceUnit:'set', name:'IQ-C4.2 BMW Ver.B', model:'IQ-C4.2 BMW Ver.B', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'4" Two Way Component — BMW Plug & Play (Ver.B), Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
@@ -4393,7 +4393,10 @@ function findProduct(brandId, productId) {
 
 function init() {
   // Products with a `photos` list use the first one as their main `photo` (card, detail, PDF)
-  BRANDS.forEach(b => b.lines.forEach(l => l.products.forEach(p => { if (p.photos && !p.photo) p.photo = p.photos[0]; })));
+  BRANDS.forEach(b => b.lines.forEach(l => l.products.forEach(p => {
+    if (p.photos) p.photos = p.photos.filter(Boolean);   // buang slot kosong (mis. ',,' salah ketik) agar detail produk tidak error
+    if (p.photos && !p.photo) p.photo = p.photos[0];
+  })));
 
   // Stats
   const totalProducts = BRANDS.reduce((s,b) => s + brandProducts(b).length, 0);
