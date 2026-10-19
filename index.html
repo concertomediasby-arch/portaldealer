@@ -2435,6 +2435,7 @@ body {
     font: 700 9.5px var(--f-mono); letter-spacing: .08em; color: #fff; background: #c2410c; }
   .panel-name .eol-tag { font-size: 11px; vertical-align: 4px; }
   .eol-note { font: 500 12px var(--f-body); color: #c2410c; margin-top: 4px; }
+  .eol-tag.soon-tag { background: #2563eb; } .eol-note.soon-note { color: #3b82f6; }
   .pp-tag { font: 600 9.5px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); }
   .product-price { font: 700 13px var(--f-mono); color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .product-price small { font-size: 10.5px; font-weight: 500; color: var(--fg-muted); }
@@ -3361,7 +3362,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-19T07:09:54Z';
+const LAST_UPDATE = '2026-10-19T07:12:27Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3930,14 +3931,14 @@ const BRANDS = [
           photos:['assets/st-mdsp8-2.webp','assets/st-mdsp8-1.webp','assets/st-mdsp8-3.webp'],
           desc:'OTG DSP Power Amplifier — High Level 6 In 8 Out, AKM7735 High Performance DSP Chip.',
           specs:{'DSP Chip':'AKM7735','Channel':'6 In 8 Out','Power Output':'6×50 W (4Ω)','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 18 V'} },
-        { id:'st-xss16', name:'XSS16', model:'XSS16', category:'DSP', emoji:'💻', hasVideo:false,
-          desc:'DSP. Spesifikasi & foto menyusul.',
+        { id:'st-xss16', soon:true, name:'XSS16', model:'XSS16', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'Produk baru STEG — coming soon. Spesifikasi & foto menyusul.',
           specs:{} },
-        { id:'st-ssdsp10', name:'SSDSP10', model:'SSDSP10', category:'DSP', emoji:'💻', hasVideo:false,
-          desc:'DSP. Spesifikasi & foto menyusul.',
+        { id:'st-ssdsp10', soon:true, name:'SSDSP10', model:'SSDSP10', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'Produk baru STEG — coming soon. Spesifikasi & foto menyusul.',
           specs:{} },
-        { id:'st-ssaw8', name:'SSAW8', model:'SSAW8', category:'DSP', emoji:'💻', hasVideo:false,
-          desc:'Spesifikasi & foto menyusul.',
+        { id:'st-ssaw8', soon:true, name:'SSAW8', model:'SSAW8', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'Produk baru STEG — coming soon. Spesifikasi & foto menyusul.',
           specs:{} },
         { id:'st-drcv3', price:1750000, name:'DRC V3', model:'DRC V3', category:'Accessories', emoji:'🎚️', hasVideo:false,
           desc:'Remote control DSP (DRC). Spesifikasi & foto menyusul.',
@@ -5057,7 +5058,9 @@ const hasPrice = p => !!(p.price || (p.priceList && Object.keys(p.priceList).len
 const unitText = p => p.priceUnit ? ' / ' + p.priceUnit : '';
 // EOL (End of Line): produk tidak diproduksi lagi, dijual selama stok masih ada → field `eol:true`
 const EOL_TITLE = 'End of Line — tidak diproduksi lagi, selama stok masih ada';
-const eolTag = p => p.eol ? `<span class="eol-tag" title="${EOL_TITLE}">EOL</span>` : '';
+const SOON_TITLE = 'Produk baru — segera hadir (coming soon)';
+const eolTag = p => (p.eol ? `<span class="eol-tag" title="${EOL_TITLE}">EOL</span>` : '')
+  + (p.soon ? `<span class="eol-tag soon-tag" title="${SOON_TITLE}">COMING SOON</span>` : '');   // soon:true = produk baru belum rilis
 const srpFrom = p => !p.price && hasPrice(p);
 const srpAmount = p => p.price || (hasPrice(p) ? Math.min(...Object.values(p.priceList)) : 0);
 const srpText = p => hasPrice(p) ? (srpFrom(p) ? 'mulai ' : '') + fmtRp(srpAmount(p)) + unitText(p) : '';
@@ -5194,7 +5197,8 @@ function showProduct(brandId, productId) {
   document.getElementById('product-back-label').textContent = brand.name;
   document.getElementById('panel-brand').textContent = brand.name + (line ? ' · ' + line : '');
   document.getElementById('panel-name').innerHTML = escHtml(product.name) + eolTag(product)
-    + (product.eol ? `<div class="eol-note">${EOL_TITLE}</div>` : '');
+    + (product.eol ? `<div class="eol-note">${EOL_TITLE}</div>` : '')
+    + (product.soon ? `<div class="eol-note soon-note">${SOON_TITLE}</div>` : '');
   document.getElementById('panel-model').textContent = product.model;
   const pp = document.getElementById('panel-price');
   pp.hidden = !hasPrice(product);
