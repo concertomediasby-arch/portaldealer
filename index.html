@@ -3361,7 +3361,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-19T04:13:40Z';
+const LAST_UPDATE = '2026-10-19T04:22:50Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -9101,7 +9101,7 @@ function bgmPanelHtml() {
   if (isEditor()) setTimeout(() => { bgmWatchStart(); bgmShowStatus(); }, 0);
   return `<div class="scr-bgm"><div class="scr-bgm-row"><b>🎵 Musik latar videotron</b>
       <button class="gt-btn ${on ? 'confirm' : 'ghost'}" onclick="bgmSave({ bgm_on: ${!on} })" ${has ? '' : 'disabled'}>${on ? '● Menyala' : '○ Mati'}</button>
-      <label>Volume <input type="range" min="0" max="100" value="${vol}" onchange="bgmSave({ bgm_vol: +this.value })" ${has ? '' : 'disabled'}><span>${vol}%</span></label></div>
+      <label>Volume <input type="range" min="0" max="100" value="${vol}" oninput="this.nextElementSibling.textContent = this.value + '%'" onchange="bgmSave({ bgm_vol: +this.value })" ${has ? '' : 'disabled'}><span>${vol}%</span></label></div>
     <div class="scr-bgm-status warn" id="bgm-status">…</div>
     <div class="scr-bgm-k">🎼 <b>Backsound</b> — pilih lagu yang diputar (berganti dengan crossfade, mulai dari awal lagu):</div>
     <div class="scr-bgm-tracks">${BGM_TRACKS.map(t => `<button class="scr-bgm-track${cfg.track === t.id ? ' on' : ''}" onclick="bgmSave({ bgm_track: '${t.id}' })" ${has ? '' : 'disabled'}><b>${cfg.track === t.id ? '▶ ' : ''}${escHtml(t.name)}</b><span>${escHtml(t.sub)}</span></button>`).join('')}</div>
@@ -9122,28 +9122,34 @@ function bgmTestHere() {
   a.play().then(() => { if (btn) btn.textContent = '⏹ Hentikan tes'; if (msg) msg.textContent = 'Terdengar? Berarti file musik & suara komputer ini baik.'; setTimeout(() => { if (bgmTestAudio === a) bgmTestHere(); }, 20000); })
     .catch(e => { bgmTestAudio = null; if (msg) msg.textContent = '⚠ Tidak bisa diputar: ' + (e?.message || e); });
 }
-function bgmDisplayCfg() {   // yang ditampilkan di panel Editor: laporan layar (segar) → baris DB → cadangan lokal → bawaan
-  const r = bgmRemote;
+let bgmPending = null;   // pilihan Editor yang baru diklik: langsung tampil di panel sampai layar melapor nilai yang sama (maks. 15 dtk)
+function bgmDisplayCfg() {   // yang ditampilkan di panel Editor: pilihan baru → laporan layar (segar) → baris DB → cadangan lokal → bawaan
+  const r = bgmRemote, pd = bgmPending;
+  if (pd && Date.now() < pd.until) {
+    const rc = r && r.cfg && r.at > pd.at ? r.cfg : null;
+    if (!rc || rc.on !== pd.cfg.on || bgmClamp(rc.vol) !== pd.cfg.vol || bgmTrackOk(rc.track) !== pd.cfg.track) return { ...pd.cfg, off: [] };
+  }
   if (r && r.cfg && Date.now() - r.at < 12000) return { on: !!r.cfg.on, vol: bgmClamp(r.cfg.vol), off: r.cfg.off || [], track: bgmTrackOk(r.cfg.track) };
   if (scrRow && scrRow.bgm_on != null) return { on: scrRow.bgm_on !== false, vol: bgmClamp(scrRow.bgm_vol ?? 70), off: bgmOffList(scrRow), track: bgmTrackOk(scrRow.bgm_track || bgmLocal()?.track) };
   return bgmLocal() || bgmDefault();
 }
 function bgmRefreshBox() {
-  const box = document.querySelector('.scr-bgm'); if (!box || !isEditor() || box.contains(document.activeElement)) return;
+  const box = document.querySelector('.scr-bgm'), ae = document.activeElement;
+  if (!box || !isEditor() || (ae && ae.tagName === 'INPUT' && box.contains(ae))) return;   // jangan ganggu slider volume yang sedang digeser; tombol yang baru diklik tidak menahan render ulang
   const t = document.createElement('div'); t.innerHTML = bgmPanelHtml(); box.replaceWith(t.firstElementChild); bgmShowStatus();
 }
 async function bgmSave(patch) {
   if (!supabase || !isEditor()) { showToast('Hanya Editor yang bisa mengatur musik latar.'); return; }
   const cur = bgmDisplayCfg(), c = { on: patch.bgm_on ?? cur.on, vol: bgmClamp(patch.bgm_vol ?? cur.vol), off: [], track: bgmTrackOk(patch.bgm_track ?? cur.track) };
   bgmLocalSave(c);
-  bgmRemote = { ...(bgmRemote || {}), cfg: c, at: bgmRemote?.at || 0, local: true };
+  bgmPending = { cfg: c, at: Date.now(), until: Date.now() + 15000 };
+  bgmRefreshBox();   // tombol langsung berganti warna, tanpa menunggu jaringan
   try { const r = await supabase.from(QA_SCREEN).upsert({ id: 1, bgm_on: c.on, bgm_vol: c.vol, bgm_off: '' }); if (!r.error) scrRow = { ...scrRow, bgm_on: c.on, bgm_vol: c.vol, bgm_off: '' }; } catch (e) {}
   try { const r = await supabase.from(QA_SCREEN).upsert({ id: 1, bgm_track: c.track }); if (!r.error) scrRow = { ...scrRow, bgm_track: c.track }; } catch (e) {}   // kolom opsional bgm_track
   try {
     if (!bgm.sendCh) { bgm.sendCh = supabase.channel('bgm-cmd'); await new Promise(ok => { bgm.sendCh.subscribe(st => { if (st === 'SUBSCRIBED') ok(); }); setTimeout(ok, 3000); }); }
-    await bgm.sendCh.send({ type: 'broadcast', event: 'cmd', payload: c });
+    await bgm.sendCh.send({ type: 'broadcast', event: 'cmd', payload: bgmPending?.cfg || c });   // selalu kirim pilihan terakhir (klik cepat beruntun tidak tertimpa nilai lama)
   } catch (e) { showToast('Perintah musik gagal dikirim ke layar videotron.', 6000); }
-  if (bgmRemote?.cfg) bgmRemote.at = Date.now() - 11000;   // tampilkan nilai baru sampai laporan layar berikutnya
   bgmRefreshBox();
 }
 function bgmToggleSession(k) {
