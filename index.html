@@ -3362,7 +3362,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-19T13:53:05Z';
+const LAST_UPDATE = '2026-10-19T13:55:24Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3456,6 +3456,37 @@ const DSP_SOFTWARE = [
 ];
 
 const RECENT_UPDATES = [
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-drcv5', note:'Keterangan & spesifikasi DRC V3/V4/V5 ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-st10prosub', note:'Spesifikasi ST10PRO ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-sa65w', note:'Spesifikasi SA-65W ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qk2002', note:'Spesifikasi QK 200.2 ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qk2004', note:'Spesifikasi QK 200.4 ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'ms-mss1pro', note:'Spesifikasi MSS1 PRO ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'ms-ss10', note:'Spesifikasi SS-10 ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'ms-mss1m', note:'Spesifikasi MSS1 M ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-drcv3', note:'Foto DRC V3 ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-drcv4', note:'Foto DRC V4 ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-drcv5', note:'Foto DRC V5 ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'ms-mss1m', note:'Foto MSS1 M ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-st10prosub', note:'Foto ST10PRO ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-qk2004', note:'Foto QK 200.4 ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'ms-ss10', note:'Foto SS-10 ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-sa65w', note:'Foto SA-65W ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'ms-mss1pro', note:'Foto MSS1 PRO ditambahkan' },
+  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-ssdsp12ii', note:'Foto SS-DSP12 II ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qk2002', note:'Produk baru QK 200.2 (Amplifier) ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-ssdsp12', note:'SRP SS-DSP12 diperbarui' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-sa55w', note:'Produk baru SA-55W (Active Subwoofer) — coming soon' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-ssdsp12ii', note:'Produk baru SS-DSP12 II (DSP) ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-ss16', note:'SS16 menjadi XSS16 — coming soon' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-ssaw8', note:'Produk baru SSAW8 (Active Subwoofer) — coming soon' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-ssdsp10', note:'Produk baru SSDSP10 (DSP) — coming soon' },
+  { date:'2026-10-19', type:'data', brandId:'audiocircle', productId:'ac-blamp2', note:'Produk baru BL AMP.2 (Power Amplifier) ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'audiocircle', productId:'ac-blamp4', note:'Produk baru BL AMP.4 (Power Amplifier) ditambahkan' },
+  { date:'2026-10-18', type:'photo', brandId:'audiocircle', productId:'ac-hlt25', note:'Foto baru & nama menjadi HL-T25V MKII NP' },
+  { date:'2026-10-18', type:'video', brandId:'audiocircle', productId:'ac-hlw6', note:'Video Hamburg Line ditambahkan' },
+  { date:'2026-10-14', type:'data', brandId:'audiosystem', productId:'as-ay65', note:'SRP AY65 diperbarui' },
+  { date:'2026-10-14', type:'data', brandId:'audiosystem', productId:'as-ay65c', note:'SRP AY65C diperbarui' },
   { date:'2026-10-13', type:'data',  brandId:'steg',        productId:'st-sst50',    note:'SST50 diganti menjadi SST50II' },
   { date:'2026-10-11', type:'data',  brandId:'steg',        productId:'st-ssdsp16v1', note:'Produk baru SS-DSP16 (DSP) ditambahkan' },
   { date:'2026-10-10', type:'photo', brandId:'diosdela',     productId:'dm-septuple8g', note:'Foto Septuple Cable 8G ditambahkan' },
@@ -4912,7 +4943,7 @@ function openUpdates() {
   let html = '<div style="padding-top:28px;display:flex;flex-direction:column;gap:28px">';
   byDate.forEach((updates, date) => {
     const d = new Date(date + 'T00:00:00+07:00');
-    const label = d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    const label = d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta' });
     html += `<div>
       <div style="font-size:11px;font-family:var(--f-mono);color:var(--accent);letter-spacing:.12em;font-weight:700;text-transform:uppercase;margin-bottom:12px">${label}</div>
       <div style="display:flex;flex-direction:column;gap:8px">`;
