@@ -3361,7 +3361,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-19T04:32:05Z';
+const LAST_UPDATE = '2026-10-19T07:09:54Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3559,6 +3559,12 @@ const BRANDS = [
           photo:'assets/ac-blx3.jpg', video:'assets/ac-berlinline.mp4?v=1', videoPoster:'assets/ac-berlinline-poster.jpg?v=1',
           desc:'3.5" Coaxial Speaker (per Pcs).',
           specs:{'Handling Power':'100 W','SPL':'90 dB','Freq. Response':'80 Hz – 20 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'83 mm','Mounting Depth':'38 / 40 mm'} },
+        { id:'ac-blamp2', name:'BL AMP.2', model:'BL AMP.2', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Amplifier 2 channel Berlin Line. Spesifikasi & foto menyusul.',
+          specs:{} },
+        { id:'ac-blamp4', name:'BL AMP.4', model:'BL AMP.4', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Amplifier 4 channel Berlin Line. Spesifikasi & foto menyusul.',
+          specs:{} },
       ]},
       { name: 'Hamburg Line', products: [
         { id:'ac-hlw6', price:6100000, priceUnit:'set', name:'HL-W6 MKIII', model:'HL-W6 MKIII', category:'Speaker', emoji:'🔊', hasVideo:true,
@@ -3788,6 +3794,15 @@ const BRANDS = [
           desc:'SQ Midrange — Hand Crafted Audiophile series, High End.',
           photos:['assets/ms-mss3-5.webp','assets/ms-mss3-1.webp','assets/ms-mss3-2.webp','assets/ms-mss3-3.webp','assets/ms-mss3-4.webp'],
           specs:{'Speaker Size':'4.3 inch','Impedansi':'4 Ω','DC Resistance (Re)':'3.6 Ω','Voice Coil':'25.5 mm','VC Inductance (Le)':'0.09 mH','VC Former':'Kapton CCAW','Membrane':'Carbon fiber loaded with resin','Magnet':'Neodymium','Net Weight':'0.36 kg','Qms':'6.08','Qts':'0.65','BL':'3.76 T·m','Centering Device':'Konex','Suspension Cone':'50sh Rubber','Fs':'97 Hz','Freq. Response':'100 Hz – 12 kHz','SPL':'86 dB','Power RMS (Hi-pass 150 Hz)':'70 W','Mms':'4.74 g','Cms':'568 µm/N','Vas':'2.04 L','Sd':'50 cm²','Xmax':'3 mm','Outer Diameter':'105 mm','Mounting Depth':'41 mm'} },
+        { id:'ms-mss1pro', price:11000000, priceUnit:'set', name:'MSS1 PRO', model:'MSS1 PRO', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Tweeter Master Stroke SQ Series. Spesifikasi & foto menyusul.',
+          specs:{} },
+        { id:'ms-mss1m', name:'MSS1 M', model:'MSS1 M', category:'Tweeter', emoji:'🎺', hasVideo:false,
+          desc:'Tweeter Master Stroke SQ Series. Spesifikasi & foto menyusul.',
+          specs:{} },
+        { id:'ms-ss10', price:30000000, name:'SS-10', model:'SS-10', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'Subwoofer 10 inch Master Stroke. Spesifikasi & foto menyusul.',
+          specs:{} },
       ]},
       { name: 'Master Stroke — MGL 3-Way Component', products: [
         { id:'ms-mgl1', price:9500000, priceUnit:'set', name:'MGL1', model:'MGL1', category:'Tweeter', emoji:'🎺', hasVideo:false,
@@ -3915,6 +3930,24 @@ const BRANDS = [
           photos:['assets/st-mdsp8-2.webp','assets/st-mdsp8-1.webp','assets/st-mdsp8-3.webp'],
           desc:'OTG DSP Power Amplifier — High Level 6 In 8 Out, AKM7735 High Performance DSP Chip.',
           specs:{'DSP Chip':'AKM7735','Channel':'6 In 8 Out','Power Output':'6×50 W (4Ω)','Bluetooth':'5.0','SNR':'≥100 dB','THD':'<0.01%','Operating Voltage':'9 – 18 V'} },
+        { id:'st-xss16', name:'XSS16', model:'XSS16', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'DSP. Spesifikasi & foto menyusul.',
+          specs:{} },
+        { id:'st-ssdsp10', name:'SSDSP10', model:'SSDSP10', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'DSP. Spesifikasi & foto menyusul.',
+          specs:{} },
+        { id:'st-ssaw8', name:'SSAW8', model:'SSAW8', category:'DSP', emoji:'💻', hasVideo:false,
+          desc:'Spesifikasi & foto menyusul.',
+          specs:{} },
+        { id:'st-drcv3', price:1750000, name:'DRC V3', model:'DRC V3', category:'Accessories', emoji:'🎚️', hasVideo:false,
+          desc:'Remote control DSP (DRC). Spesifikasi & foto menyusul.',
+          specs:{} },
+        { id:'st-drcv4', price:1750000, name:'DRC V4', model:'DRC V4', category:'Accessories', emoji:'🎚️', hasVideo:false,
+          desc:'Remote control DSP (DRC). Spesifikasi & foto menyusul.',
+          specs:{} },
+        { id:'st-drcv5', price:3900000, name:'DRC V5', model:'DRC V5', category:'Accessories', emoji:'🎚️', hasVideo:false,
+          desc:'Remote control DSP (DRC). Spesifikasi & foto menyusul.',
+          specs:{} },
       ]},
       { name: 'DK Line Amplifier', products: [
         { id:'st-dk754', price:10000000, name:'DK75.4', model:'DK75.4', category:'Amplifier', emoji:'⚡', hasVideo:false,
@@ -3933,6 +3966,9 @@ const BRANDS = [
           photos:['assets/st-dk10001-2.webp','assets/st-dk10001-1.webp','assets/st-dk10001-3.webp','assets/st-dk10001-4.webp'],
           desc:'Mono Power Amplifier — DK Line, Made in Italy.',
           specs:{'Channel':'1CH (Mono)','Output (4Ω)':'500 W','Output (2Ω)':'1000 W','Output (1Ω)':'1200 W','THD':'<0.1%','Low Pass Filter':'50 – 250 Hz','Max Size':'240.5 × 176 × 50 mm'} },
+        { id:'st-qk2004', name:'QK 200.4', model:'QK 200.4', category:'Amplifier', emoji:'⚡', hasVideo:false,
+          desc:'Amplifier 4 channel. Spesifikasi & foto menyusul.',
+          specs:{} },
       ]},
       { name: 'Active Subwoofer', products: [
         { id:'st-sa8w', price:4900000, name:'SA-8W', model:'SA-8W', category:'Subwoofer', emoji:'📦', hasVideo:false,
@@ -3943,6 +3979,9 @@ const BRANDS = [
           photos:['assets/st-s10-1.webp','assets/st-s10-2.webp','assets/st-s10-3.webp','assets/st-s10-4.webp'],
           desc:'10 inch Spare Tire Active Subwoofer.',
           specs:{'Subwoofer Size':'10 inch, 0.4 Ω','RMS Power':'200 W','THD':'<0.5%','Signal-to-Noise':'>95 dB','Freq. Response':'25 Hz – 200 Hz','Low Pass Filter':'50 Hz – 200 Hz','Subsonic Filter':'25 Hz'} },
+        { id:'st-sa65w', price:4500000, name:'SA-65W', model:'SA-65W', category:'Subwoofer', emoji:'📦', hasVideo:false,
+          desc:'Active Subwoofer. Spesifikasi & foto menyusul.',
+          specs:{} },
       ]},
       { name: 'Subwoofer', products: [
         { id:'st-st10', price:6000000, name:'ST10', model:'ST10', category:'Subwoofer', emoji:'🥁', hasVideo:false,
@@ -3961,6 +4000,9 @@ const BRANDS = [
           photos:['assets/st-sq82se-1.webp','assets/st-sq82se-2.webp','assets/st-sq82se-3.webp','assets/st-sq82se-4.webp','assets/st-sq82se-5.webp'],
           desc:'8 inch Subwoofer.',
           specs:{'Speaker Size':'8 inch','RMS Power':'300 W','Max Power':'600 W','Fo':'35 Hz','Impedansi':'2 + 2 Ω','Sensitivity':'83 dB','Freq. Range':'35 Hz – 500 Hz','Magnet':'40 Oz','Voice Coil':'2" TIL','Mounting Depth':'80 mm','Mounting Diameter':'182 mm'} },
+        { id:'st-st10prosub', price:8000000, name:'ST10PRO', model:'ST10PRO', category:'Subwoofer', emoji:'🥁', hasVideo:false,
+          desc:'10 inch Subwoofer (berbeda dengan ST10P PRO). Spesifikasi & foto menyusul.',
+          specs:{} },
       ]},
       { name: 'Subwoofer Speaker', products: [
         { id:'st-sqw6', price:7000000, name:'SQW-6', model:'SQW-6', category:'Subwoofer', emoji:'🥁', hasVideo:false,
@@ -6138,7 +6180,7 @@ const STOCK_ALIASES = {
   ogsup1m: 'og-streamline', ogsup2m: 'og-streamline', ogsup3m: 'og-streamline', ogsup5m: 'og-streamline',
   ogap1m: 'og-reddragon', ogap2m: 'og-reddragon', ogap3m: 'og-reddragon', ogap5m: 'og-reddragon',
   slc62mkiv: '-',   // hanya SL-C6.2 MK IV S yang dimasukkan (konfirmasi pemilik); '-' = abaikan
-  // ST10PRO ≠ ST10P-PRO (produk berbeda) → ST10PRO tetap masuk "Produk Lain"
+  // ST10PRO ≠ ST10P-PRO (produk berbeda) → ST10PRO = produk katalog sendiri (st-st10prosub), cocok otomatis lewat model
 };
 // Pilihan manual admin di pratinjau ('-' = abaikan), disimpan di browser ini
 const ALIAS_KEY = 'cai-stock-alias';
