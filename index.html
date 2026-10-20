@@ -2219,7 +2219,7 @@ body {
   .qs-slide.qs-bd .bd-s img, .qs-slide.qs-bd .bd-s video { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 1; transition: none; }
   .bd-s .bd-bg { object-fit: cover; filter: blur(34px) brightness(.55); transform: scale(1.12); }
   .bd-s .bd-fg { object-fit: contain; filter: drop-shadow(0 0 4vh rgba(0,0,0,.5)); }
-  .scr-bd { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 14px; margin: 4px 0 12px; }
+  .scr-bd { display: grid; grid-template-columns: repeat(3, minmax(0, 230px)); gap: 14px; margin: 4px 0 12px; }
   .scr-bd-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #e8ecf5; cursor: pointer; text-align: left; font: inherit; }
   .scr-bd-card img { width: 100%; aspect-ratio: 5/4; object-fit: cover; border-radius: 9px; }
   .scr-bd-card b { font-size: 13px; } .scr-bd-vid { font-style: normal; font-size: 11px; color: #e9c46a; margin-left: 4px; } .scr-bd-card span { font-size: 11.5px; color: #e9c46a; }
@@ -3428,7 +3428,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-20T13:45:57Z';
+const LAST_UPDATE = '2026-10-20T14:01:14Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8096,6 +8096,7 @@ async function loadScreenRow() {
 const BACKDROPS = [
   { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp?v=2', th: 'assets/backdrop/reset-button-thumb.webp?v=2' },   // gambar 16:10 untuk layar 4 × 2,5 m (20 Okt 2026, menggantikan video 16:9)
   { t: '5th Annual Gathering · Dinner', src: 'assets/backdrop/gathering-dinner.webp', th: 'assets/backdrop/gathering-dinner-thumb.webp' },
+  { t: 'Dinner · 16:10', src: 'assets/backdrop/dinner-1610.webp', th: 'assets/backdrop/dinner-1610-thumb.webp' },   // opsi kedua backdrop dinner (20 Okt 2026, layar 4 × 2,5 m, tanpa foto)
 ];
 const BACKDROP_SEC = 12;   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
 let qsBdTimer = null;
@@ -8973,7 +8974,7 @@ async function qsFmKey(d) {
   }
   if (sceneBase(s?.scene) === 'paket') return paketStep(d, true);
   if (sceneBase(s?.scene) === 'backdrop') {   // Backdrop: panah = ganti foto
-    const cur = bdNum(s.scene) || 0, next = cur === 0 ? (d > 0 ? 1 : 2) : Math.min(BACKDROPS.length, Math.max(1, cur + d));
+    const cur = bdNum(s.scene) || 0, next = cur === 0 ? (d > 0 ? 1 : BACKDROPS.length) : Math.min(BACKDROPS.length, Math.max(1, cur + d));
     if (next === cur) return;
     const scene = 'backdrop:' + next;
     renderScene({ scene });
