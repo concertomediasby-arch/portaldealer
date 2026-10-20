@@ -3428,7 +3428,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-20T07:23:57Z';
+const LAST_UPDATE = '2026-10-20T13:45:57Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8094,7 +8094,7 @@ async function loadScreenRow() {
 // Panel layar per sesi: kartu sesi (urutan acara) → pane berisi kontrol khusus sesi terpilih.
 // Backdrop (Free Time): 2 foto layar penuh. 'backdrop:1' / 'backdrop:2' = satu foto, 'backdrop' = bergantian otomatis
 const BACKDROPS = [
-  { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp', th: 'assets/backdrop/reset-button-thumb.webp', video: 'assets/backdrop/reset-button.mp4' },   // video 24 dtk (gambar = cadangan bila video gagal)
+  { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp?v=2', th: 'assets/backdrop/reset-button-thumb.webp?v=2' },   // gambar 16:10 untuk layar 4 × 2,5 m (20 Okt 2026, menggantikan video 16:9)
   { t: '5th Annual Gathering · Dinner', src: 'assets/backdrop/gathering-dinner.webp', th: 'assets/backdrop/gathering-dinner-thumb.webp' },
 ];
 const BACKDROP_SEC = 12;   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
