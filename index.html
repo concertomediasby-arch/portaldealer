@@ -2134,6 +2134,7 @@ body {
   .sc-launch-name { font: 800 min(9vw, 16vh)/1.05 var(--f-display); margin-bottom: 2vh; text-wrap: balance; }
   .sc-year { font: 800 min(16vw, 26vh)/1 var(--f-display); margin: .5vh 0 1vh; letter-spacing: .02em; background: linear-gradient(180deg, #fff3d6 0%, #e9c46a 45%, #9c7330 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 4vh rgba(233,196,106,.3)); }
   .sc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; margin-top: 3vh; width: min(86vw, 1500px); text-align: left; }
+  .sc-cards.one { grid-template-columns: 1fr; width: min(56vw, 900px); }   /* pembuka Kick Off: portal sengaja tidak ditampilkan (muncul setelah Absen Dosa) */
   .sc-card { padding: 3vh 2.4vw; border-radius: 2.4vh; background: rgba(255,255,255,.05); border: 1px solid rgba(233,196,106,.35); }
   .sc-card-k { font: 700 max(11px, 1.9vh) var(--f-mono); letter-spacing: .2em; text-transform: uppercase; color: #e9c46a; }
   .sc-card-t { font: 700 max(18px, 4.4vh) var(--f-display); color: #fff; margin: 1vh 0 2vh; }
@@ -3399,7 +3400,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-20T05:59:19Z';
+const LAST_UPDATE = '2026-10-20T06:12:06Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8353,10 +8354,8 @@ function renderScene(s) {
       <p class="ir-sub">${t || 'W.R. Supratman · 1928'}</p>
       <div class="ir-stand">Hadirin dimohon berdiri</div></div>`,
     kickoff: `<div class="qs-scene sc-kickoff"><div class="qs-kicker">Kick Off</div><h1 class="sc-year">2027</h1>${t ? `<p class="sc-sub">${t}</p>` : ''}
-      <div class="sc-cards">
-        <div class="sc-card"><div class="sc-card-k">01 · Portal Dealer CAI</div><div class="sc-card-t">dealer.concerto.id</div>
-          <div class="sc-card-body"><img class="sc-qr" src="assets/qr-portal.svg" alt="QR dealer.concerto.id"><ul>${li(PORTAL_POINTS)}</ul></div></div>
-        <div class="sc-card"><div class="sc-card-k">02 · PKS Dealer 2027</div><div class="sc-card-t">Perjanjian Kerja Sama</div>
+      <div class="sc-cards one">
+        <div class="sc-card"><div class="sc-card-k">PKS Dealer 2027</div><div class="sc-card-t">Perjanjian Kerja Sama</div>
           <div class="sc-card-body"><div class="sc-pks">PKS</div><ul>${li(PKS_POINTS)}</ul></div></div>
       </div>${count}</div>`,
   }[sceneBase(s.scene)];
