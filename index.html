@@ -2845,6 +2845,14 @@ body {
     <div class="sidebar-section sidebar-editor staff-sec">
       <hr class="sidebar-divider">
       <div class="sidebar-label">Admin &amp; Editor</div>
+      <button class="sidebar-item staff-nav" id="nav-gtrekap" onclick="openGathering('rekap')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Rekap Gathering
+      </button>
+      <button class="sidebar-item staff-nav" id="nav-sheet" onclick="staffSyncSheet()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
+        Update Stok (Sheet)
+      </button>
       <button class="sidebar-item editor-only" id="nav-dealers" onclick="openDealers()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
         Kelola Dealer
@@ -2852,10 +2860,6 @@ body {
       <button class="sidebar-item staff-nav" id="nav-rundown" onclick="openRundown()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
         Run Down Gathering
-      </button>
-      <button class="sidebar-item staff-nav" id="nav-qa" onclick="openRundown('qa')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg>
-        Open Mic Partner
       </button>
     </div>
   </aside>
@@ -3240,9 +3244,13 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
       <span>Run Down</span>
     </button>
-    <button class="mobile-nav-item staff-nav" id="mnav-qa" onclick="openRundown('qa')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg>
-      <span>Open Mic</span>
+    <button class="mobile-nav-item staff-nav" id="mnav-gtrekap" onclick="openGathering('rekap')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span>Rekap</span>
+    </button>
+    <button class="mobile-nav-item staff-nav" id="mnav-sheet" onclick="staffSyncSheet()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
+      <span>Sheet</span>
     </button>
     <button class="mobile-nav-item" id="mnav-dsp" onclick="openDspSoftware()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
@@ -3374,10 +3382,7 @@ body {
       <div id="admin-stock-section" style="display:none">
         <div class="admin-tools">
           <button class="admin-btn ghost" onclick="downloadStockTemplate()">⬇ Template Excel</button>
-          <button class="admin-btn primary" onclick="syncFromSheet()" title="Ambil stok terbaru langsung dari Google Sheet">🔄 Sinkron Google Sheet</button>
           <button class="admin-btn ghost" onclick="toggleImport()">⬆ Import dari Excel</button>
-          <button class="admin-btn ghost" onclick="closeAdmin(); openGathering('rekap')">🛍 Rekap Gathering</button>
-          <button class="admin-btn ghost" onclick="closeAdmin(); openRundown('qa')">🎤 Open Mic Partner</button>
           <button class="admin-btn ghost editor-only" onclick="closeAdmin(); openDealers()">👥 Kelola Dealer</button>
         </div>
         <div class="sheet-link" id="sheet-link"></div>
@@ -3423,7 +3428,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-20T06:14:10Z';
+const LAST_UPDATE = '2026-10-20T06:34:14Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5126,7 +5131,7 @@ function showView(viewId) {
   if (viewId === 'gathering') document.getElementById('nav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('nav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('nav-dealers')?.classList.add('active');
-  if (viewId === 'rundown') document.getElementById(rdTab === 'qa' ? 'nav-qa' : 'nav-rundown')?.classList.add('active');
+  if (viewId === 'rundown') document.getElementById('nav-rundown')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('nav-stock')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
@@ -5140,7 +5145,7 @@ function showView(viewId) {
   if (viewId === 'gathering') document.getElementById('mnav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('mnav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('mnav-dealers')?.classList.add('active');
-  if (viewId === 'rundown') document.getElementById(rdTab === 'qa' ? 'mnav-qa' : 'mnav-rundown')?.classList.add('active');
+  if (viewId === 'rundown') document.getElementById('mnav-rundown')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('mnav-stock')?.classList.add('active');
 }
 
@@ -6004,6 +6009,11 @@ function openAdmin() {
   document.getElementById('admin-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
   if (authUser) showAdminStockSection(); else resetAdminLoginUI();
+}
+// Menu sidebar "Update Stok (Sheet)": buka panel admin lalu langsung sinkron Google Sheet (belum login → form login admin dulu)
+function staffSyncSheet() {
+  openAdmin();
+  if (authUser && isAdmin()) syncFromSheet();
 }
 function closeAdmin() {
   document.getElementById('admin-overlay').classList.remove('open');
@@ -7647,9 +7657,9 @@ function setRdTab(t) {
     ? '<b>Open Mic Partner: Curhat Bebas</b> — ketik pertanyaan / curhatan dealer, tampilkan di videotron, semua otomatis masuk rekap.'
     : 'Run down acara — tambah, ubah, dan centang sesi yang sudah selesai. Khusus Admin &amp; Editor.';
   if (document.getElementById('view-rundown')?.classList.contains('active')) {
-    ['nav-rundown', 'nav-qa', 'mnav-rundown', 'mnav-qa'].forEach(id => document.getElementById(id)?.classList.remove('active'));
-    document.getElementById(qa ? 'nav-qa' : 'nav-rundown')?.classList.add('active');
-    document.getElementById(qa ? 'mnav-qa' : 'mnav-rundown')?.classList.add('active');
+    ['nav-rundown', 'mnav-rundown'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+    document.getElementById('nav-rundown')?.classList.add('active');
+    document.getElementById('mnav-rundown')?.classList.add('active');
   }
   if (qa) { renderQa(); loadQa(); subscribeQa(); }
 }
