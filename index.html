@@ -2141,6 +2141,43 @@ body {
   .sc-card ul { margin: 0; padding-left: 1.2em; font-size: max(13px, 2.6vh); line-height: 1.55; color: #dfe5f2; }
   .sc-qr { width: min(11vw, 20vh); height: auto; border-radius: 1.2vh; background: #fff; padding: .6vh; flex-shrink: 0; }
   .sc-pks { flex-shrink: 0; width: min(11vw, 20vh); aspect-ratio: 1; border-radius: 1.2vh; display: grid; place-items: center; font: 800 min(3.6vw, 6.5vh) var(--f-display); color: #1a1305; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); }
+  /* Kick Off · Absen Dosa Dealer CAI (.ab-*) */
+  .qa-screen:has(.ab) .qs-top, .qa-screen:has(.ab) .qs-foot { display: none; }
+  .ab { width: min(94vw, 1760px); }
+  .ab-kick { font: 700 max(12px, 2vh) var(--f-mono); letter-spacing: .3em; color: #e9c46a; text-transform: uppercase; }
+  .ab-title { font: 800 min(4.6vw, 7.6vh)/1.05 var(--f-display); margin: 1vh 0 1.2vh; color: #fff; letter-spacing: -.01em; text-align: center; }
+  .ab-title em { font-style: normal; background: linear-gradient(180deg, #fff3d6 0%, #e9c46a 50%, #b08840 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ab-intro { margin: 0 0 2.2vh; font: 500 max(14px, 2.7vh) var(--f-body); color: #dfe5f2; text-align: center; }
+  .ab-head { display: flex; flex-direction: column; align-items: center; animation: qsIn .8s ease both; }
+  .ab-list { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(10, auto); grid-auto-flow: column; gap: .9vh 1.6vw; text-align: left; }
+  .ab-it { position: relative; display: flex; align-items: center; gap: 1.2vw; min-height: 5.4vh; padding: .5vh 1vw .5vh .6vw; border-radius: 1.4vh; border: 1px dashed rgba(233,196,106,.16); background: rgba(255,255,255,.015); }
+  .ab-it em { flex-shrink: 0; width: 4.6vh; height: 4.6vh; border-radius: 1vh; display: grid; place-items: center; font: 700 max(12px, 2.2vh) var(--f-mono); font-style: normal; color: rgba(233,196,106,.35); border: 1px solid rgba(233,196,106,.2); }
+  .ab-it span { flex: 1; font: 600 max(13px, 2.4vh)/1.2 var(--f-body); color: #fff; visibility: hidden; }
+  .ab-chk { flex-shrink: 0; width: 3.4vh; height: 3.4vh; border-radius: .7vh; border: 2px solid rgba(255,255,255,.18); visibility: hidden; }
+  .ab-it.on { border-style: solid; border-color: rgba(233,196,106,.32); background: linear-gradient(90deg, rgba(233,196,106,.1), rgba(255,255,255,.035)); }
+  .ab-it.on em { color: #1a1305; border: 0; background: linear-gradient(135deg, #f3d899, #d8b26a 55%, #a9823a); }
+  .ab-it.on span, .ab-it.on .ab-chk { visibility: visible; }
+  .ab-it.in { animation: abIn .7s cubic-bezier(.2,.8,.2,1) var(--d) both; }
+  .ab-it.new { border-color: #e9c46a; box-shadow: 0 0 3.5vh rgba(233,196,106,.28), inset 0 0 2vh rgba(233,196,106,.08); }
+  .ab-it.new::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(100deg, transparent 30%, rgba(255,243,214,.22) 50%, transparent 70%); background-size: 250% 100%; animation: abShine 1.4s ease .25s both; }
+  @keyframes abIn { 0% { opacity: 0; transform: translateX(-3vw) scale(.97); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+  @keyframes abShine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+  .ab-count { margin-top: 1.4vh; font: 700 max(12px, 2vh) var(--f-mono); letter-spacing: .2em; color: rgba(233,196,106,.7); }
+  .ab-j .ab-title { margin-bottom: 2.6vh; animation: qsIn .9s ease .25s both; }
+  .ab-j .ab-kick { animation: qsIn .8s ease both; }
+  .ab-grid { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4vh 1.2vw; text-align: left; }
+  .ab-tile { position: relative; display: flex; gap: 1vw; align-items: flex-start; padding: 1.5vh 1vw; border-radius: 1.8vh; background: rgba(255,255,255,.05); border: 1px solid rgba(233,196,106,.3); animation: abIn .7s cubic-bezier(.2,.8,.2,1) var(--d) both; }
+  .ab-ti { font-size: max(20px, 4.6vh); line-height: 1; }
+  .ab-tile > div { padding-right: 1.4vw; }
+  .ab-tile b { display: block; font: 700 max(13px, 2.5vh)/1.15 var(--f-display); color: #fff; }
+  .ab-tile small { display: block; margin-top: .5vh; font-size: max(11px, 1.75vh); line-height: 1.3; color: #c3cbdc; }
+  .ab-nos { display: flex; flex-wrap: wrap; gap: .5vh; margin-top: 1vh; }
+  .ab-nos em { font: 700 max(10px, 1.6vh) var(--f-mono); font-style: normal; padding: .3vh .7vh; border-radius: .6vh; color: #1a1305; background: #e9c46a; }
+  .ab-ok { position: absolute; top: 1.2vh; right: 1vw; font: 800 max(13px, 2.4vh) var(--f-body); font-style: normal; color: #6fdc8c; }
+  .ab-url { display: flex; align-items: center; gap: 1.6vw; margin-top: 2.6vh; padding: 1.4vh 2vw 1.4vh 1.4vh; border-radius: 2vh; border: 1px solid #e9c46a; background: rgba(233,196,106,.08); animation: qsIn .9s ease 2.6s both; }
+  .ab-url img { width: 11vh; height: 11vh; border-radius: 1vh; background: #fff; padding: .5vh; }
+  .ab-url small { display: block; font: 700 max(11px, 1.8vh) var(--f-mono); letter-spacing: .25em; text-transform: uppercase; color: #e9c46a; }
+  .ab-url b { font: 800 max(20px, 5.4vh) var(--f-display); color: #fff; }
 
   .sc-lv-logo { height: min(16vw, 26vh); width: auto; max-width: 70vw; object-fit: contain; margin: 2vh 0 3vh; filter: drop-shadow(0 0 4vh rgba(233,196,106,.25)); animation: qsIn .9s ease both; }
   .sc-lv .sc-launch-name { font-size: min(6vw, 10vh); }
@@ -3362,7 +3399,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-20T04:17:03Z';
+const LAST_UPDATE = '2026-10-20T05:59:19Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7848,6 +7885,47 @@ const QS_SCENES = {
 };
 const PORTAL_POINTS = ['Katalog produk & harga SRP resmi', 'Stok produk real-time', 'Panduan Dealer & Concerto Academy', 'Paket Audio & Shopping Gathering'];
 const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitmen kerja sama', 'Program & dukungan untuk dealer'];
+// Kick Off 2027 · "Absen Dosa Dealer CAI" (permintaan pemilik): judul Kick Off → absen dosa (clicker membuka 1 per 1) → "semua jawabannya ada di portal" → video portal → PKS.
+// Butir 1–10 dari pemilik, 11–20 tambahan. f = kunci fitur portal yang menjawabnya (ABSEN_FEAT).
+const ABSEN_DOSA = [
+  { t: 'Sudah dealing sama customer, ternyata stok nggak ada', f: 'stok' },
+  { t: 'Telepon distri, distrinya masih tidur 😴', f: 'h24' },
+  { t: 'Ditanya harga, kita sendiri nggak hafal', f: 'harga' },
+  { t: 'Sebenarnya kita punya barang apa aja, juga nggak tahu', f: 'katalog' },
+  { t: 'Customer tanya paketan audio, bingung', f: 'paket' },
+  { t: 'Ditanya spec audio, bingung', f: 'spec' },
+  { t: 'Cari software, bingung', f: 'dsp' },
+  { t: 'Di toilet nggak ada bacaan bermutu 🚽', f: 'academy' },
+  { t: 'Cara menjual produk, bingung', f: 'guide' },
+  { t: 'Ditanya pengetahuan audio, bingung', f: 'academy' },
+  { t: 'Customer minta foto & video produk, yang dikirim foto buram 📸', f: 'media' },
+  { t: 'Ditanya "barangnya kapan datang?", jawabnya "sabar ya, Bos"', f: 'stok' },
+  { t: 'Kirim spec ke customer pakai screenshot miring', f: 'spec' },
+  { t: 'Produk baru keluar, customer malah tahu duluan 😅', f: 'update' },
+  { t: 'Katalog cetak sudah lecek kena tumpahan kopi ☕', f: 'katalog' },
+  { t: 'Ditanya "ini brand resmi?", jawabnya ragu-ragu', f: 'katalog' },
+  { t: 'Cari satu produk, scroll galeri HP 3.000 foto', f: 'katalog' },
+  { t: 'Mau order, chat ke sales panjang lebar penuh typo', f: 'wa' },
+  { t: 'Nggak sempat ke kantor distri cuma buat cek barang', f: 'h24' },
+  { t: 'Karyawan baru di toko belum ngerti produk sama sekali', f: 'academy' },
+];
+const ABSEN_FEAT = {
+  stok:    { i: '📦', n: 'Stok Real-time', d: 'Ready / indent + info barang OTW 🚚' },
+  h24:     { i: '🌙', n: 'Buka 24 Jam', d: 'Cek sendiri dari HP, kapan saja' },
+  harga:   { i: '🏷', n: 'Harga SRP', d: 'Harga jual resmi di tiap produk' },
+  katalog: { i: '📚', n: 'Katalog & Brand Resmi', d: 'Semua brand resmi CAI + pencarian' },
+  paket:   { i: '🎁', n: 'Paket Audio', d: 'Paket siap tawar ke customer' },
+  spec:    { i: '📄', n: 'Spec Sheet PDF', d: 'Spesifikasi lengkap, tinggal unduh' },
+  dsp:     { i: '💾', n: 'DSP Software', d: 'Unduh software resmi brand' },
+  academy: { i: '🎓', n: 'Concerto Academy', d: 'Materi pengetahuan audio' },
+  guide:   { i: '🧭', n: 'Panduan Dealer', d: 'Tips & teknik penjualan' },
+  media:   { i: '🎬', n: 'Foto & Video Produk', d: 'Tombol Bagikan ke WhatsApp' },
+  update:  { i: '🆕', n: 'Update Terbaru', d: 'Produk baru & Coming Soon' },
+  wa:      { i: '💬', n: 'Order via WhatsApp', d: 'Pesan otomatis: produk + stok' },
+};
+// scene: 'kickoff:absen:<k>' = k butir sudah dibuka (0 = pembuka), 'kickoff:absen:all' = semua sekaligus, 'kickoff:jawab' = jawaban
+const absenPart = k => { if (k === 'kickoff:jawab') return { jawab: true }; const m = /^kickoff:absen:(\d+|all)$/.exec(k || ''); return m ? { k: m[1] === 'all' ? ABSEN_DOSA.length : Math.min(ABSEN_DOSA.length, +m[1]), all: m[1] === 'all' } : null; };
+const KICKOFF_PRE = ['kickoff', ...ABSEN_DOSA.map((_, i) => 'kickoff:absen:' + i), 'kickoff:absen:' + ABSEN_DOSA.length, 'kickoff:jawab', 'kickoff:v'];
 const sceneForTitle = t => Object.keys(QS_SCENES).find(k => QS_SCENES[k].match.test(t || ''));
 // Video Product Launch per brand — scene 'launch:<id brand>'. File MP4 (H.264) di assets/launch/.
 // Bila file belum ada / internet putus, operator di komputer videotron bisa memilih file video lokal.
@@ -7957,6 +8035,7 @@ const sceneInfo = k => {
   if (sceneBase(k) === 'paket') { const pk = paketParse(k); return { ...base, label: pk.pkg ? `Paket Audio · ${pk.pkg.title.split(' — ')[0]}${pk.pages ? ` (hal. ${pk.page}/${pk.pages})` : ` (hal. ${pk.page})`}` : 'Paket Audio · daftar' }; }
   if (k === 'anthem:v') return { ...base, icon: '🎬', label: 'Indonesia Raya · Video lagu kebangsaan' };
   if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
+  { const ab = absenPart(k); if (ab) return { ...base, icon: ab.jawab ? '✅' : '📋', label: ab.jawab ? 'Kick Off 2027 · Semua jawabannya ada di Portal' : `Kick Off 2027 · Absen Dosa ${ab.k}/${ABSEN_DOSA.length}` }; }
   if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
   { const a = awPart(k); if (a) { const C = AW_CATS[a.cat]; return { ...base, label: a.r === 'intro' ? `Awarding · Pembuka ${C.short}` : a.r === 'list' ? `Awarding · Papan peringkat ${C.short}` : `Awarding · ${C.short} ${a.r === 1 ? 'Juara' : 'Top ' + a.r} — ${C.list.find(d => d.rank === a.r)?.name || ''}` }; } }
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
@@ -8016,7 +8095,7 @@ const SCR_DESC = {
   backdrop: 'Backdrop acara tampil layar penuh (Reset Button = video berulang) — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
   anthem: 'Pembuka acara pagi: layar "Menyanyikan Lagu Kebangsaan Indonesia Raya — hadirin dimohon berdiri", lalu video Indonesia Raya layar penuh (±1 menit 48 dtk). Musik latar otomatis senyap selama sesi ini.',
-  kickoff: 'Judul Kick Off 2027 (Portal Dealer + QR & PKS), video perkenalan portal, lalu halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron juga bisa mengganti halaman.',
+  kickoff: 'Judul Kick Off 2027 → Absen Dosa Dealer CAI (dibuka 1 per 1) → "Semua jawabannya ada di Portal" → video perkenalan portal → halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron mengikuti urutan ini.',
 };
 let scrSel = null;
 const scrOnAir = () => sceneBase(scrRow?.scene) || 'qa';
@@ -8093,8 +8172,17 @@ function renderScreenPanel(err) {
     <div class="scr-note">Urutan: tampilkan layar judul (MC mempersilakan hadirin berdiri) → <b>Putar Video</b> → video layar penuh; selesai kembali ke layar judul. Musik latar senyap selama sesi Indonesia Raya. Spasi = jeda/lanjut.</div>`; }
   else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
     const pv = scrRow.scene === 'kickoff:v';
+    const ab = absenPart(scrRow.scene);
     body = `${opts(false)}<div class="scr-actions">${showBtn('Tampilkan judul Kick Off 2027')}<button class="gt-btn${pv ? ' confirm' : ' ghost'}" onclick="setScene('kickoff:v')">${pv ? '↻ Putar ulang video perkenalan' : '🎬 Putar Video Perkenalan Portal'}</button></div>
     <div class="scr-note">Video motion Portal Dealer (40 dtk, dengan musik & efek suara) diputar layar penuh di videotron; selesai → kembali ke kartu Kick Off. Spasi = jeda/lanjut.</div>
+    <div class="scr-sub-k">📋 Absen Dosa Dealer CAI</div>
+    <div class="scr-fm-nav">
+      <button class="scr-lv-btn" onclick="absenStep(-1)" ${ab && !ab.jawab && ab.k > 0 ? '' : 'disabled'}>◀ Sebelumnya</button>
+      <span class="scr-fm-now">${ab ? (ab.jawab ? '✅ Layar jawaban' : `Dibuka <b>${ab.k}</b> / ${ABSEN_DOSA.length}`) : 'Belum tampil'}</span>
+      <button class="scr-lv-btn${ab ? '' : ' on'}" onclick="absenStep(1)" ${ab?.jawab ? 'disabled' : ''}>${!ab ? '▶ Mulai Absen Dosa' : ab.k < ABSEN_DOSA.length ? 'Buka berikutnya ▶' : 'Jawaban ▶'}</button>
+    </div>
+    <div class="scr-actions"><button class="gt-btn ghost" onclick="setScene('kickoff:absen:all')">Tampilkan semua ${ABSEN_DOSA.length} sekaligus</button><button class="gt-btn${ab?.jawab ? ' confirm' : ' ghost'}" onclick="setScene('kickoff:jawab')">✅ Semua jawabannya ada di Portal</button></div>
+    <div class="scr-note">Clicker / panah: judul Kick Off → pembuka absen → dosa 1 … ${ABSEN_DOSA.length} (satu per klik) → layar jawaban (fitur portal) → video perkenalan portal → PKS.</div>
     <div class="scr-sub-k">Materi PKS Dealer 2027 <span class="scr-priv">🔒 file privat — tidak ikut situs publik</span></div>
     ${pksMeta === null ? '<div class="scr-note">Memeriksa file PKS…</div>' : !pksMeta.exists
       ? `<div class="scr-note">Belum ada file PKS. Unggah PDF <b>PKS Dealer 2027</b> sekali saja — tersimpan di penyimpanan privat portal.</div>`
@@ -8129,6 +8217,14 @@ async function renderPksPreview(n) {
     cv.width = vp.width; cv.height = vp.height;
     await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
   } catch (e) {}
+}
+function absenStep(d) {
+  const ab = absenPart(scrRow?.scene), N = ABSEN_DOSA.length;
+  if (!ab) return d > 0 && setScene('kickoff:absen:0');
+  if (ab.jawab) return d < 0 && setScene('kickoff:absen:' + N);
+  const k = ab.k + d;
+  if (k > N) return setScene('kickoff:jawab');
+  if (k >= 0) setScene('kickoff:absen:' + k);
 }
 function pksStep(d) {
   const n = pksNum(scrRow?.scene), max = pksMeta?.pages || 999;
@@ -8217,6 +8313,7 @@ function renderScene(s) {
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene), opVid(s.scene), s.updated_at);
   if (s.scene === 'awarding') return renderAwardTitle(s);
   if (awPart(s.scene)) return renderAwarding(s.scene, s.updated_at);
+  if (absenPart(s.scene)) return renderAbsen(s);
   if (pksNum(s.scene)) return renderPksPage(pksNum(s.scene));
   const sc = QS_SCENES[sceneBase(s.scene)], t = s.scene_text ? escHtml(s.scene_text) : '';
   const count = s.scene_until ? `<div class="sc-count"><span class="qs-count" data-until="${escHtml(s.scene_until)}">--:--</span><small>sisa waktu</small></div>` : '';
@@ -8582,6 +8679,29 @@ function playSpeakerVideo(n) {
 }
 // Video perkenalan portal (Kick Off 2027): overlay layar penuh; file gagal → pilih file lokal
 let qsLocalPortal = null;
+// Kick Off · Absen Dosa Dealer CAI: daftar dibuka 1 per 1 (clicker), lalu layar jawaban = fitur portal yang menjawab tiap dosa
+function renderAbsen(s) {
+  const a = absenPart(s.scene), N = ABSEN_DOSA.length;
+  let html;
+  if (a.jawab) {
+    const tiles = [...new Set(ABSEN_DOSA.map(x => x.f))].map((f, j) => {
+      const F = ABSEN_FEAT[f], nos = ABSEN_DOSA.map((x, i) => x.f === f ? i + 1 : 0).filter(Boolean);
+      return `<div class="ab-tile" style="--d:${(0.8 + j * 0.12).toFixed(2)}s"><span class="ab-ti">${F.i}</span><div><b>${F.n}</b><small>${F.d}</small>
+        <div class="ab-nos">${nos.map(n => `<em>${pad2(n)}</em>`).join('')}</div></div><i class="ab-ok">✓</i></div>`; }).join('');
+    html = `<div class="qs-scene ab ab-j"><div class="ab-kick">Kabar baiknya…</div><h1 class="ab-title">Semua <em>jawabannya</em> ada di Portal</h1>
+      <div class="ab-grid">${tiles}</div>
+      <div class="ab-url"><img src="assets/qr-portal.svg" alt="QR dealer.concerto.id"><div><small>Portal Dealer CAI</small><b>dealer.concerto.id</b></div></div></div>`;
+  } else {
+    const items = ABSEN_DOSA.map((x, i) => {
+      const cls = i >= a.k ? '' : a.all ? 'on in' : i === a.k - 1 ? 'on in new' : 'on';
+      return `<li class="ab-it ${cls}" style="--d:${a.all ? (0.2 + i * 0.1).toFixed(2) : 0}s"><em>${pad2(i + 1)}</em><span>${escHtml(x.t)}</span><i class="ab-chk"></i></li>`; }).join('');
+    html = `<div class="qs-scene ab"><div class="ab-head"><div class="ab-kick">Kick Off 2027</div>
+      <h1 class="ab-title">📋 Absen Dosa <em>Dealer CAI</em> 😄</h1>
+      <p class="ab-intro">Halo rekan-rekan dealer 🙏 Silakan hitung dalam hati, berapa yang pernah kejadian:</p></div>
+      <ol class="ab-list">${items}</ol><div class="ab-count">${a.k} / ${N}</div></div>`;
+  }
+  qsSetStage(['absen', s.scene, a.all || a.jawab ? s.updated_at : ''].join('|'), html);
+}
 function playPortalVideo() { playOverlayVideo(qsLocalPortal || PORTAL_INTRO_VIDEO, '.sc-kickoff', 'qsPickPortalVideo'); }
 // Video Indonesia Raya (pembuka acara pagi): overlay layar penuh di atas layar judul; file gagal → pilih file lokal
 let qsLocalAnthem = null;
@@ -8785,13 +8905,15 @@ async function qsFmKey(d) {
     await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: now });
     return;
   }
-  if (sceneBase(s?.scene) === 'kickoff') {   // PKS: 0 = judul Kick Off, 1..n = halaman
-    const cur = pksNum(s.scene), max = qsPksPages || (await getPksDoc().then(d => d.numPages).catch(() => 0));
+  if (sceneBase(s?.scene) === 'kickoff') {   // judul Kick Off → Absen Dosa (1 per 1) → jawaban → video portal → PKS hal. 1..n
+    const pre = s.scene === 'kickoff:absen:all' ? KICKOFF_PRE.indexOf('kickoff:absen:' + ABSEN_DOSA.length) : KICKOFF_PRE.indexOf(s.scene);
+    const cur = pre >= 0 ? pre : KICKOFF_PRE.length - 1 + pksNum(s.scene);
+    const max = KICKOFF_PRE.length - 1 + (qsPksPages || (await getPksDoc().then(d => d.numPages).catch(() => 0)));
     const next = Math.min(max, Math.max(0, cur + d));
-    if (next === cur || !max) return;
-    const scene = next ? 'kickoff:' + next : 'kickoff';
-    renderScene({ scene });
-    await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
+    if (next === cur) return;
+    const scene = next < KICKOFF_PRE.length ? KICKOFF_PRE[next] : 'kickoff:' + (next - KICKOFF_PRE.length + 1), now = new Date().toISOString();
+    renderScene({ scene, updated_at: now });
+    await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: now });
     return;
   }
   if (sceneBase(s?.scene) === 'paket') return paketStep(d, true);
