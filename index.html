@@ -2184,7 +2184,7 @@ body {
   .ab-it.in { animation: abIn .7s cubic-bezier(.2,.8,.2,1) var(--d) both; }
   .ab-it.new { border-color: #e9c46a; box-shadow: 0 0 3.5vh rgba(233,196,106,.28), inset 0 0 2vh rgba(233,196,106,.08); }
   .ab-it.new::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(100deg, transparent 30%, rgba(255,243,214,.22) 50%, transparent 70%); background-size: 250% 100%; animation: abShine 1.4s ease .25s both; }
-  @keyframes abIn { 0% { opacity: 0; transform: translateX(-3vw) scale(.97); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+  @keyframes abIn { 0% { opacity: 0; transform: translateY(4vh); } 60% { opacity: 1; } 100% { opacity: 1; transform: none; } }   /* tiap poin muncul slide up */
   @keyframes abShine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
   .ab-count { margin-top: 1.4vh; font: 700 max(12px, 2vh) var(--f-mono); letter-spacing: .2em; color: rgba(233,196,106,.7); }
   .ab-j .ab-title { margin-bottom: 2.6vh; animation: qsIn .9s ease .25s both; }
@@ -3428,7 +3428,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-20T06:34:14Z';
+const LAST_UPDATE = '2026-10-20T07:23:57Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8721,6 +8721,22 @@ let qsLocalPortal = null;
 // Kick Off · Absen Dosa Dealer CAI: daftar dibuka 1 per 1 (clicker), lalu layar jawaban = fitur portal yang menjawab tiap dosa
 function renderAbsen(s) {
   const a = absenPart(s.scene), N = ABSEN_DOSA.length;
+  // pindah poin (bukan "semua sekaligus"): perbarui daftar yang sudah tampil — hanya poin baru yang beranimasi, halaman tidak dirender ulang
+  const list = !a.jawab && !a.all && document.querySelector('#qs-stage .ab:not(.ab-j) .ab-list');
+  if (list && String(qsKey).startsWith('absen|kickoff:absen:')) {
+    const key = ['absen', s.scene, ''].join('|');
+    if (key === qsKey) return;
+    const pm = /^absen\|kickoff:absen:(\d+|all)/.exec(qsKey)?.[1], prev = pm === 'all' ? N : +pm || 0;
+    qsKey = key;
+    [...list.children].forEach((li, i) => {
+      const isNew = a.k > prev && i === a.k - 1;
+      li.className = 'ab-it' + (i < a.k ? ' on' : '') + (isNew ? ' in new' : '');
+      li.style.setProperty('--d', '0s');
+      if (isNew) { li.style.animation = 'none'; void li.offsetWidth; li.style.animation = ''; }
+    });
+    const c = document.querySelector('#qs-stage .ab-count'); if (c) c.textContent = `${a.k} / ${N}`;
+    return;
+  }
   let html;
   if (a.jawab) {
     const tiles = [...new Set(ABSEN_DOSA.map(x => x.f))].map((f, j) => {
