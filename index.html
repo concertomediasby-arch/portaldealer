@@ -3493,7 +3493,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T06:51:57Z';
+const LAST_UPDATE = '2026-10-21T07:08:28Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3610,7 +3610,6 @@ const RECENT_UPDATES = [
   { date:'2026-10-21', type:'data', brandId:'steg', productId:'ms-mss1pro', note:'SRP MSS1 PRO jadi 10.000.000' },
   { date:'2026-10-21', type:'photo', brandId:'audiocircle', productId:'ac-prow6c', note:'Foto PRO-W6C NEO diganti (3 foto baru)' },
   { date:'2026-10-21', type:'data', brandId:'audiocircle', productId:'ac-deadening', note:'SRP AC Sound Deadening jadi Rp 400.000/lembar' },
-  { date:'2026-10-21', type:'photo', brandId:'audiocircle', productId:'ac-iquss8a', note:'Foto IQ-USS8A ditambahkan (3 foto)' },
   { date:'2026-10-21', type:'data', brandId:'audiocircle', productId:'ac-iqs82bmw', note:'IQ-S8 BMW dipisah menjadi IQ-S8 BMW 2 Ohm dan 4 Ohm' },
   { date:'2026-10-20', type:'video', brandId:'audiocircle', productId:'ac-mls10', note:'Video ML-S10 ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'audiocircle', productId:'ac-slc62', note:'Foto tweeter SL-C6.2 MKIV S diganti' },
@@ -3626,13 +3625,12 @@ const RECENT_UPDATES = [
   { date:'2026-10-19', type:'data', brandId:'audiocircle', productId:'ac-blamp2', note:'Spesifikasi BL AMP.2 ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'audiocircle', productId:'ac-blamp2', note:'Foto BL AMP.2 ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'audiocircle', productId:'ac-blamp4', note:'Foto BL AMP.4 ditambahkan' },
-  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-drcv5', note:'Keterangan & spesifikasi DRC V3/V4/V5 ditambahkan' },
+  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-drcv5', note:'Keterangan & spesifikasi DRC V4/V5 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-st10prosub', note:'Spesifikasi ST10PRO ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qk2002', note:'Spesifikasi QK 200.2 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qk2004', note:'Spesifikasi QK 200.4 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'ms-mss1pro', note:'Spesifikasi MSS1 PRO ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'ms-ss10', note:'Spesifikasi SS-10 ditambahkan' },
-  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-drcv3', note:'Foto DRC V3 ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-drcv4', note:'Foto DRC V4 ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-drcv5', note:'Foto DRC V5 ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-st10prosub', note:'Foto ST10PRO ditambahkan' },
@@ -3913,10 +3911,6 @@ const BRANDS = [
           photos:['assets/ac-iqles10a-1.webp','assets/ac-iqles10a-2.webp','assets/ac-iqles10a-3.webp'], video:'assets/ac-iqles10a.mp4?v=1', videoPoster:'assets/ac-iqles10a-poster.jpg?v=1',
           desc:'10" Active Subwoofer Load Enclosure — built-in amplifier dengan kontrol gain, phase, dan low-pass.',
           specs:{'Freq. Response':'40 Hz – 200 Hz','Operating Voltage':'9.5 – 16 VDC','Input Sensitivity':'180 mV','Peak Power Output':'350 W','RMS Power Output':'150 W','Impedansi':'4 Ω','Dimensions':'270 × 310 × 380 mm','Volume':'20.4 L'} },
-        { id:'ac-iquss8a', price:4900000, name:'IQ-USS8A', model:'IQ-USS8A', category:'Subwoofer', emoji:'📦', hasVideo:false,
-          photos:['assets/ac-iquss8a-1.webp','assets/ac-iquss8a-2.webp','assets/ac-iquss8a-3.webp'],
-          desc:'8" Under-seat Active Subwoofer — desain slim, built-in amplifier, bass padat untuk bawah jok.',
-          specs:{'Freq. Response':'40 Hz – 200 Hz','Operating Voltage':'9.5 – 16 VDC','Input Sensitivity':'180 mV','Peak Power Output':'350 W','RMS Power Output':'150 W','Impedansi':'4 Ω'} },
       ]},
       { name: 'Power Amplifier', products: [
         { id:'ac-blamp2', price:20250000, name:'BL AMP.2', model:'BL AMP.2', category:'Amplifier', emoji:'⚡', hasVideo:false,
@@ -4218,10 +4212,6 @@ const BRANDS = [
           photos:['assets/st-s15-2.webp','assets/st-s15-1.webp','assets/st-s15-3.webp'] },
       ]},
       { name: 'Accessories', products: [
-        { id:'st-drcv3', price:1750000, name:'DRC V3', model:'DRC V3', category:'Accessories', emoji:'🎚️', hasVideo:false,
-          photos:['assets/st-drcv3-1.webp'],
-          desc:'DRC Universal — remote control untuk semua DSP tanpa OTG.',
-          specs:{'Series':'DRC Universal','Type':'DSP Remote Control','Compatibility':'All DSP without OTG'} },
         { id:'st-drcv4', price:1750000, name:'DRC V4', model:'DRC V4', category:'Accessories', emoji:'🎚️', hasVideo:false,
           photos:['assets/st-drcv4-1.webp'],
           desc:'DRC-X for OTG DSP — remote control untuk semua DSP dengan OTG.',
@@ -6365,7 +6355,7 @@ const STOCK_ALIASES = {
   plt28: 'ac-prot28', plw6cneo: 'ac-prow6c', plw6c: 'ac-prow6c', plm3c: 'ac-prom3c', plm3p: '-', mss1m: '-', plm3pnextel: '-', prom3pnextel: '-',
   hlm2mkii: 'ac-hlm2', hlt20mkii: 'ac-hlt20', hlt25vmkiinp: 'ac-hlt25', hlt25mkiinp: 'ac-hlt25', hlt25np: 'ac-hlt25',
   ss16: 'st-ss16', xss16dsp: 'st-ss16',   // XSS16 (dulu ditulis SS16) — konfirmasi pemilik
-  ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16', sst50: 'st-sst50', ms650: '-', sec650: '-', mz650ctw: '-', ml35: '-', ms30: '-', qm754: '-', sa65w: '-', s8: '-', s82ohm: '-', s84ohm: '-', ssdsp10unico: 'st-ssdsp10', ssdsp10: 'st-ssdsp10',
+  ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16', sst50: 'st-sst50', ms650: '-', sec650: '-', mz650ctw: '-', ml35: '-', ms30: '-', qm754: '-', sa65w: '-', iquss8a: '-', drcv3: '-', s8: '-', s82ohm: '-', s84ohm: '-', ssdsp10unico: 'st-ssdsp10', ssdsp10: 'st-ssdsp10',
   // file STOCK DISTRIBUTOR (Merk · Unit · Stok Tersedia)
   bls10: 'ac-bls10', blt26vmkii: 'ac-blt26', hlt25npmkii: 'ac-hlt25', iqc42bmwa: 'ac-iqc42bmwa', iqc42bmwb: 'ac-iqc42bmwb',
   iqs8bmw2ohm: 'ac-iqs82bmw', iqs8bmw4ohm: 'ac-iqs824bmw', microfaser: 'ac-microfiber',
