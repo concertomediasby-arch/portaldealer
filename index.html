@@ -3493,7 +3493,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T07:08:28Z';
+const LAST_UPDATE = '2026-10-21T07:11:33Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3587,6 +3587,8 @@ const DSP_SOFTWARE = [
 ];
 
 const RECENT_UPDATES = [
+  { date:'2026-10-21', type:'data', brandId:'steg', productId:'st-sqw10', note:'Spesifikasi SQW-10 ditambahkan (mengikuti SQW-8)' },
+  { date:'2026-10-21', type:'data', brandId:'steg', productId:'st-sst50ii', note:'Spesifikasi SST50II ditambahkan (mengikuti SST50)' },
   { date:'2026-10-21', type:'photo', brandId:'steg', productId:'st-ssdsp10', note:'Foto SSDSP10/Unico diganti (2 foto baru)' },
   { date:'2026-10-21', type:'photo', brandId:'audiosystem', productId:'as-dspas6', note:'Foto baru DSP-AS6 ditambahkan (foto utama)' },
   { date:'2026-10-21', type:'photo', brandId:'zelos', productId:'zl-verdi2', note:'Urutan foto Verdi EVO+ 2CH diubah' },
@@ -4053,8 +4055,8 @@ const BRANDS = [
           specs:{'DCR Impedance':'3.2 Ω','Nominal Impedance':'4 Ω','Sensitivity':'89 dB','Fs':'3.3 kHz','Freq. Up To':'50 kHz','Freq. Cut':'≥ 4.5 kHz','External Diameter':'55 mm','Installation Diameter':'42 mm','Installation Depth':'21.5 mm','Diaphragm':'Aluminum Foil','Panel':'CNC Aluminum'} },
         { id:'st-sst50ii', soon:true, price:4200000, priceUnit:'set', name:'SST50II', model:'SST50II', category:'Tweeter', emoji:'🎺', hasVideo:false,
           photos:['assets/st-sst50ii-1.webp','assets/st-sst50ii-2.webp','assets/st-sst50ii-3.webp'],
-          desc:'Ultra High-End Air Motion Tweeter — generasi II. Spesifikasi menyusul.',
-          specs:{} },
+          desc:'Ultra High-End Air Motion Tweeter — generasi II.',
+          specs:{'DCR Impedance':'3.2 Ω','Nominal Impedance':'4 Ω','Sensitivity':'89 dB','Fs':'3.3 kHz','Freq. Up To':'50 kHz','Freq. Cut':'≥ 4.5 kHz','External Diameter':'55 mm','Installation Diameter':'42 mm','Installation Depth':'21.5 mm','Diaphragm':'Aluminum Foil','Panel':'CNC Aluminum'} },
         { id:'st-sff1', price:5200000, priceUnit:'set', name:'SFF1', model:'SFF1', category:'Tweeter', emoji:'🎺', hasVideo:false,
           photos:['assets/st-sff1-1.webp','assets/st-sff1-2.webp'],
           desc:'Ultra Atmos Sound Speaker — aluminum foil diaphragm, CNC aluminium panel, with pod mounting bracket.',
@@ -4185,7 +4187,8 @@ const BRANDS = [
           specs:{'Size':'8"','RMS Power':'200 W','Impedansi':'3 Ω','Voice Coil':'2.625" Aluminum','Magnet':'18.75 Oz','Freq. Response':'25 Hz – 500 Hz','Sensitivity':'84.68 dB','Outer Diameter':'206 mm','Mounting Depth':'80 – 110 mm'} },
         { id:'st-sqw10', soon:true, name:'SQW-10', model:'SQW-10', category:'Subwoofer', emoji:'🥁', hasVideo:false,
           photos:['assets/st-sqw10-coming-soon.webp?v=2'],
-          desc:'10" Subwoofer Speaker — Coming Soon.', specs:{'Size':'10"','Status':'Coming Soon'} },
+          desc:'10" Subwoofer Speaker — Rubber honeycomb aluminum cone. Coming Soon.',
+          specs:{'Size':'10"','RMS Power':'200 W','Impedansi':'3 Ω','Voice Coil':'2.625" Aluminum','Magnet':'18.75 Oz','Freq. Response':'25 Hz – 500 Hz','Sensitivity':'84.68 dB','Outer Diameter':'206 mm','Mounting Depth':'80 – 110 mm'} },
       ]},
       { name: 'Bluetooth Player', products: [
         { id:'st-bt1', price:6500000, name:'BT1', model:'BT1', category:'DSP', emoji:'📲', hasVideo:false,
