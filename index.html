@@ -3487,7 +3487,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T05:22:18Z';
+const LAST_UPDATE = '2026-10-21T05:22:27Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3707,10 +3707,6 @@ const BRANDS = [
           photo:'assets/ac-prot28.jpg', video:'assets/ac-proline.mp4?v=2#t=36', videoPoster:'assets/ac-prot28-poster.jpg?v=2',
           desc:'Industry-leading design, hand-coated silk dome, stainless steel chamber dengan multipart housing.',
           specs:{'Impedansi':'4 Ω','Handling Power':'40 W','SPL':'92 dB','Fs':'650 Hz','Freq. Response':'1200 Hz – 35 kHz','Outer Diameter':'57 mm','Mounting Diameter':'52 mm','Mounting Depth':'37 mm','Weight':'392 g'} },
-        { id:'ac-prom3pnextel', price:20500000, priceUnit:'set', name:'PRO-M3P Nextel', model:'PRO-M3P Nextel', category:'Midrange', emoji:'🔉', hasVideo:false,
-          photo:'assets/ac-prom3pnextel.jpg',
-          desc:'Versi Nextel dari PRO-M3P dengan crossover.',
-          specs:{'Impedansi':'4 Ω','Handling Power':'80 W (with crossover)','Resonance Frequency':'97 Hz','Freq. Response':'85 Hz – 18 kHz','SPL':'88 dB','Qts':'0.4','Outer Diameter':'91 mm','Mounting Diameter':'78 mm','Mounting Depth':'35 mm','Weight':'227 g'} },
       ]},
       { name: 'Concerto Line', products: [
         { id:'ac-clw6', price:25000000, priceUnit:'set', name:'MIDBASS CL-W6', model:'CL-W6', category:'Speaker', emoji:'🔊', hasVideo:true,
@@ -6359,7 +6355,7 @@ function parseImportText() {
 
 // Kode gudang CAI yang berbeda dengan nama model di katalog (kunci = normKey kode gudang)
 const STOCK_ALIASES = {
-  plt28: 'ac-prot28', plw6cneo: 'ac-prow6c', plw6c: 'ac-prow6c', plm3c: 'ac-prom3c', plm3p: '-', mss1m: '-', plm3pnextel: 'ac-prom3pnextel',
+  plt28: 'ac-prot28', plw6cneo: 'ac-prow6c', plw6c: 'ac-prow6c', plm3c: 'ac-prom3c', plm3p: '-', mss1m: '-', plm3pnextel: '-', prom3pnextel: '-',
   hlm2mkii: 'ac-hlm2', hlt20mkii: 'ac-hlt20', hlt25vmkiinp: 'ac-hlt25', hlt25mkiinp: 'ac-hlt25', hlt25np: 'ac-hlt25',
   ss16: 'st-ss16', xss16dsp: 'st-ss16',   // XSS16 (dulu ditulis SS16) — konfirmasi pemilik
   ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16', sst50: 'st-sst50', ms650: '-', sec650: '-', mz650ctw: '-', ml35: '-', ms30: '-', qm754: '-', sa65w: '-', s8: '-', s82ohm: '-', s84ohm: '-', ssdsp10unico: 'st-ssdsp10', ssdsp10: 'st-ssdsp10',
