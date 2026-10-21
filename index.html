@@ -529,7 +529,7 @@ body {
   padding: 24px 28px;
   align-items: start;
 }
-.media-gallery { }
+.media-gallery { min-width: 0; }
 .media-main {
   width: 100%; aspect-ratio: 16/10;
   background: var(--surface2);
@@ -608,7 +608,7 @@ body {
 @media (max-width: 720px) {
   .app { grid-template-columns: 1fr; grid-template-rows: 56px auto 1fr; }
   .sidebar { display: none; }
-  .product-detail-layout { grid-template-columns: 1fr; padding: 16px; gap: 16px; }
+  .product-detail-layout { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 16px; }
   .product-panel { position: static; }
   .brands-grid { grid-template-columns: 1fr; }
   .page-header, .brands-grid, .section-header,
@@ -3504,7 +3504,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T16:32:24Z';
+const LAST_UPDATE = '2026-10-21T16:35:30Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3755,7 +3755,7 @@ const BRANDS = [
           desc:'3.5" Midrange Speaker.',
           specs:{'Handling Power':'75 W','SPL':'88 dB','Fs':'85 Hz','Freq. Response':'65 Hz – 15 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'82 mm','Mounting Depth':'42 mm'} },
         { id:'ac-blx3', price:3850000, priceUnit:'pcs', name:'BL-X3 3.5"', model:'BL-X3', category:'Speaker', emoji:'🔊', hasVideo:true,
-          photos:['assets/ac-blx3-1.webp','assets/ac-blx3-2.webp','assets/ac-blx3-3.webp','assets/ac-blx3-4.webp'], video:'assets/ac-berlinline.mp4?v=1', videoPoster:'assets/ac-berlinline-poster.jpg?v=1',
+          photos:['assets/ac-blx3-3.webp','assets/ac-blx3-1.webp','assets/ac-blx3-2.webp','assets/ac-blx3-4.webp'], video:'assets/ac-berlinline.mp4?v=1', videoPoster:'assets/ac-berlinline-poster.jpg?v=1',
           desc:'3.5" Coaxial Speaker (per Pcs).',
           specs:{'Handling Power':'100 W','SPL':'90 dB','Freq. Response':'80 Hz – 20 kHz','Impedansi':'4 Ω','Outer Diameter':'90 mm','Fastening Diameter':'83 mm','Mounting Depth':'38 / 40 mm'} },
       ]},
