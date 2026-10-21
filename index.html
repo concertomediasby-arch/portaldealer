@@ -3487,7 +3487,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T05:03:15Z';
+const LAST_UPDATE = '2026-10-21T05:22:18Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7320,6 +7320,21 @@ function terbilang(n) {
   return w ? w.charAt(0).toUpperCase() + w.slice(1) + ' rupiah' : 'Nol rupiah';
 }
 
+// Kode barang untuk invoice (permintaan pemilik 21 Okt 2026): ambil bagian depan nama yang cocok dengan
+// model/alias katalog (mis. "SQ8-2SE Subwoofer 8\"" → "SQ8-2SE"); bila tak cocok, potong di kata keterangan
+let gtCodeKeys = null;
+const GT_DESC_WORD = /^(subwoofer|sub|speaker|speakers|tweeter|tweeters|midrange|mid|woofer|amplifier|amp|power|coaxial|component|komponen|cable|kabel|sound|deadening|active|processor|set|pair|pasang|channel|class|mono|slim|underseat|under-seat|plug|for|untuk)$/i;
+function gtCode(name) {
+  const nm = String(name || '').trim(), n = x => String(x).toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!gtCodeKeys) {
+    gtCodeKeys = new Set(Object.keys(STOCK_ALIASES).map(n));
+    BRANDS.forEach(b => b.lines.forEach(l => l.products.forEach(p => { gtCodeKeys.add(n(p.model)); gtCodeKeys.add(n(p.name)); })));
+  }
+  const t = nm.split(/\s+/);
+  for (let i = t.length; i > 0; i--) { const c = t.slice(0, i).join(' '); if (gtCodeKeys.has(n(c))) return c; }
+  const k = t.findIndex((w, i) => i > 0 && (GT_DESC_WORD.test(w.replace(/[^\w-]/g, '')) || /\d+(\.\d+)?("|''|inch|in)$/i.test(w)));
+  return k > 0 ? t.slice(0, k).join(' ') : nm;
+}
 function downloadGtInvoice(id) {
   const o = gtOrders?.find(x => x.id === id);
   if (!o) return;
@@ -7383,7 +7398,7 @@ function downloadGtInvoice(id) {
     doc.text(String(txt), tx, y + 3.9, { align: c.a, maxWidth: c.w - 3 });
   };
   thead();
-  const rows = items.map((it, n) => [n + 1, it.brand || it.group || '', it.name + (it.section === 'clearance' ? ' (Clearance)' : ''), it.qty, rp(it.price), rp(it.total)]);
+  const rows = items.map((it, n) => [n + 1, it.brand || it.group || '', gtCode(it.name) + (it.section === 'clearance' ? ' (Clearance)' : ''), it.qty, rp(it.price), rp(it.total)]);
   const minRows = Math.max(rows.length, rows.length <= 17 ? 17 : rows.length);
   for (let n = 0; n < minRows; n++) {
     if (y + rowH > 250) { footer(); doc.addPage(); header(); y = 44; thead(); }
