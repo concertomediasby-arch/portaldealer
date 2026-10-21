@@ -3493,7 +3493,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T07:11:33Z';
+const LAST_UPDATE = '2026-10-21T07:14:39Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7632,7 +7632,7 @@ const RD_TEMPLATE = [
   { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '08:30', end_time: '11:30', segment: SEG_PAGI, notes: 'Dibuka dengan menyanyikan Lagu Kebangsaan Indonesia Raya (video di videotron). Pertanyaan dealer diketik admin/editor & tampil di videotron.' },
   { title: 'Coffee Break', start_time: '11:30', end_time: '12:00', segment: SEG_PAGI, notes: '30 menit' },
   { title: 'Refreshment Product', start_time: '12:00', end_time: '12:30', segment: SEG_PAGI, notes: 'Mengulas kembali produk-produk dari katalog CAI.' },
-  { title: 'Product Launch', start_time: '12:30', end_time: '13:00', segment: SEG_PAGI, notes: 'Brand Audiocircle, STEG & Audio System. Audiocircle: Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line. STEG: SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12. Audio System: AY65 · AY65C · AS10 · AS500.1 · DSP AS6.' },
+  { title: 'Product Launch', start_time: '12:30', end_time: '13:00', segment: SEG_PAGI, notes: 'Brand Audiocircle, STEG & Audio System. Audiocircle: Köln Series · IQ-LES10A. STEG: SEC650C · K Series 136 · DSP S12 · DSP S6. Audio System: AY65C · AY65 · AS500.1 · AS10 · DSP AS6.' },
   { title: 'ISHOMA (Istirahat, Sholat, Makan Siang)', start_time: '13:00', end_time: '14:00', segment: SEG_PAGI, notes: '1 jam' },
   { title: 'Kick Off 2027 & PKS', start_time: '14:00', end_time: '16:00', segment: SEG_PAGI, notes: 'Membahas Portal Dealer CAI (dealer.concerto.id) & PKS Dealer 2027. Penutup acara pagi, selesai 16:00.' },
   { title: 'Opening Speech', start_time: '18:00', end_time: '19:00', segment: SEG_MALAM, flexible: true, notes: 'Brand partner: Audiocircle → STEG → Zelos → Harrison Lab → Amo Plus → Sound Addict.' },
@@ -8043,25 +8043,20 @@ const sceneForTitle = t => Object.keys(QS_SCENES).find(k => QS_SCENES[k].match.t
 // Sumber: folder Google Drive per brand dari pemilik (Okt 2026). Urutan = urutan putar "Putar semua".
 const LAUNCH_VIDEOS = {
   audiocircle: [
-    { title: 'Pro Line', src: 'assets/launch/ac-proline.mp4' },
-    { title: 'Concerto Line', src: 'assets/launch/ac-concertoline.mp4', alt: ['Cocnerto Line'] },
-    { title: 'Berlin Line', src: 'assets/launch/ac-berlinline.mp4' },
-    { title: 'Hamburg Line', src: 'assets/launch/ac-hamburgline.mp4' },
-    { title: 'Köln KL-C6.2', src: 'assets/launch/ac-koln-klc62.mp4' },
+    { title: 'Köln Series', src: 'assets/launch/ac-koln-klc62.mp4', alt: ['Köln KL-C6.2', 'KL-C6.2', 'Koln'] },
     { title: 'IQ-LES10A', src: 'assets/launch/ac-iq-les10a.mp4' },
   ],
   steg: [
-    { title: 'SEC650', src: 'assets/launch/steg-sec650.mp4' },
     { title: 'SEC650C', src: 'assets/launch/steg-sec650c.mp4' },
     { title: 'K Series 136', src: 'assets/launch/steg-k136.mp4' },
-    { title: 'DSP S6', src: 'assets/launch/steg-dsp-s6.mp4' },
     { title: 'DSP S12', src: 'assets/launch/steg-dsp-s12.mp4' },
+    { title: 'DSP S6', src: 'assets/launch/steg-dsp-s6.mp4' },
   ],
   audiosystem: [
-    { title: 'AY65', src: 'assets/launch/as-ay65.mp4' },
     { title: 'AY65C', src: 'assets/launch/as-ay65c.mp4' },
-    { title: 'AS10', src: 'assets/launch/as-as10.mp4' },
+    { title: 'AY65', src: 'assets/launch/as-ay65.mp4' },
     { title: 'AS500.1', src: 'assets/launch/as-as500-1.mp4' },
+    { title: 'AS10', src: 'assets/launch/as-as10.mp4' },
     { title: 'DSP AS6', src: 'assets/launch/as-dsp-as6.mp4' },
   ],
 };
@@ -8199,8 +8194,8 @@ const SCR_LABEL = { qa: { icon: '🎤', label: 'Meeting Dealer', sub: 'Tanya Jaw
 // logo = path logo versi terang (latar gelap), mis. 'assets/brands/<id>.webp' — kosong = nama brand sebagai teks emas.
 const NEW_BRAND = { name: 'Caelum', tagline: 'Power Amplifier', logo: 'assets/brands/caelum.webp', video: 'assets/newbrand/caelum.mp4' };
 const NB_REVEAL_SEC = 6;   // mode 'newbrand:full': lama reveal nama brand sebelum video diputar
-const LAUNCH_TOPICS = [['Audiocircle', 'Pro Line · Concerto Line · Berlin Line · Hamburg Line · IQ-LES10A · Köln Line'],
-  ['STEG', 'SEC650 · SEC650C · K Series 136 · DSP S6 · DSP S12'], ['Audio System', 'AY65 · AY65C · AS10 · AS500.1 · DSP AS6']];
+const LAUNCH_TOPICS = [['Audiocircle', 'Köln Series · IQ-LES10A'],
+  ['STEG', 'SEC650C · K Series 136 · DSP S12 · DSP S6'], ['Audio System', 'AY65C · AY65 · AS500.1 · AS10 · DSP AS6']];
 const SCR_DESC = {
   qa: 'Meeting Dealer (Tanya Jawab Partner CAI): pertanyaan dealer diketik admin/editor & tampil di videotron. Ketik & atur antrian di menu Open Mic Partner.',
   opening: 'Tampilkan susunan pembicara, lalu kartu tiap pembicara secara bergantian. Clicker / panah di komputer videotron juga bisa menggeser.',
