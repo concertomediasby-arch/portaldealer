@@ -2178,8 +2178,6 @@ body {
   .ce-line b { width: 1.2vh; height: 1.2vh; transform: rotate(45deg); background: #d9b56e; box-shadow: 0 0 2vh #e9c46a; }
   .ce-role { position: relative; z-index: 2; font: 600 max(13px, 2.4vh) var(--f-body); letter-spacing: .3em; text-transform: uppercase; color: #f6efdf; animation: ceUp .8s ease 1s both; }
   .ce-grp { position: relative; z-index: 2; margin-top: 2.2vh; padding: 1vh 2vw; border-radius: 4vh; border: 1px solid rgba(217,181,110,.5); background: rgba(217,181,110,.08); font: 600 max(11px, 1.9vh) var(--f-mono); letter-spacing: .25em; text-transform: uppercase; color: #e9c46a; animation: ceUp .8s ease 1.15s both; }
-  .ce-prog { position: absolute; z-index: 2; left: 0; right: 0; bottom: 9vh; display: flex; justify-content: center; align-items: center; gap: 1.2vw; font: 600 max(11px, 1.7vh) var(--f-mono); letter-spacing: .2em; color: #9d8e6c; animation: ceUp .8s ease 1.3s both; }
-  .ce-prog div { width: 18vw; height: .5vh; border-radius: 1vh; background: rgba(217,181,110,.18); overflow: hidden; } .ce-prog i { display: block; height: 100%; background: linear-gradient(90deg, #a87b30, #f1d38c); }
   .ce-list { background: #02040b; } .ce-list img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; animation: ceFade .9s ease both; }
   @keyframes ceFade { from { opacity: 0; } to { opacity: 1; } }
   /* Kick Off 2027 — layar pembuka glassmorphism (.ko-*, memakai latar & panel kaca .og-*) */
@@ -3476,7 +3474,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T03:10:50Z';
+const LAST_UPDATE = '2026-10-21T03:14:27Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8876,8 +8874,7 @@ function renderCert(s) {
       <h1 class="ce-name" style="font-size:${fs}"><span>${escHtml(c.d)}</span></h1>
       <div class="ce-line"><i></i><b></b><i></i></div>
       <div class="ce-role">Dealer Resmi Concerto Audio Indonesia</div>
-      <div class="ce-grp">Distributor · ${escHtml(c.g)}</div>
-      <div class="ce-prog"><span>${String(n).padStart(2, '0')} / ${N}</span><div><i style="width:${(n / N * 100).toFixed(1)}%"></i></div></div></div>`;
+      <div class="ce-grp">Distributor · ${escHtml(c.g)}</div></div>`;
   } else html = `<div class="qs-scene ce ce-title">${ceBg()}
       <div class="ce-script">Penyerahan</div>
       <h1 class="ce-h1">SERTIFIKAT DEALER</h1>
