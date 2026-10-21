@@ -2384,7 +2384,8 @@ body {
   .gt-table.clear { border-color: color-mix(in srgb, var(--clr) 40%, var(--border)); border-left: 4px solid var(--clr); }
   .gt-table.clear .gt-head { background: color-mix(in srgb, var(--clr) 10%, var(--surface2)); color: var(--clr); }
   .gt-table.clear .gt-row.has-qty { background: color-mix(in srgb, var(--clr) 9%, transparent); }
-  .gt-table.clear .gt-row { grid-template-columns: minmax(0, 2.2fr) repeat(2, minmax(0, 1fr)) 84px minmax(0, 1.1fr); }
+  .gt-table.clear .gt-row { grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)) 84px minmax(0, 1.1fr); }
+  .gt-cb { color: var(--clr); }
   .gt-table.clear .gt-sp { color: var(--clr); font-size: 14px; }
   .gt-off { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 99px; background: var(--clr); color: #fff; font: 700 10.5px var(--f-mono); vertical-align: 2px; }
   .gt-stock { display: inline-block; padding: 1px 8px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--clr) 50%, transparent); color: var(--clr); font: 600 10.5px var(--f-mono); }
@@ -2405,7 +2406,7 @@ body {
     .gt-q { grid-column: 1; }
     .gt-row > .gt-line { grid-column: 2 / -1; text-align: right; align-self: end; font-size: 13.5px; }
     .gt-qty { width: 100%; max-width: 96px; }
-    .gt-table.clear .gt-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .gt-table.clear .gt-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .gt-table.clear .gt-q { grid-column: 1; }
     .gt-p::before { content: attr(data-l); display: block; font: 600 9.5px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); text-decoration: none; }
     .gt-q { text-align: left; }
@@ -3136,7 +3137,7 @@ body {
           <button class="filter-chip staff-only" id="gt-tab-rekap" onclick="setGtTab('rekap')">📋 Rekap Pesanan Dealer</button>
         </div>
         <div class="page-subtitle">Form belanja dealer <b>Gathering CAI 2026</b>. Isi jumlah pesanan, total dihitung otomatis, lalu kirim ke sales CAI lewat WhatsApp atau cetak sebagai PDF.</div>
-        <div class="gt-terms">* Harga Spesial Gathering = harga lama − diskon 35% − cashback, hanya berlaku selama acara berlangsung. Produk yang tidak masuk promo memakai harga lama. Clearance Sale: harga clearance = 50% dari harga normal, stok terbatas.</div>
+        <div class="gt-terms">* Harga Spesial Gathering = harga lama − diskon 35% − cashback, hanya berlaku selama acara berlangsung. Produk yang tidak masuk promo memakai harga lama. Clearance Sale: harga clearance = harga normal − diskon 50% − cashback (10% × DPP, DPP = harga setelah diskon ÷ 1,11), stok terbatas.</div>
       </div>
       <div id="gt-top" class="gt-top" hidden></div>
       <div id="gt-rekap" class="gt-rekap" hidden></div>
@@ -3486,7 +3487,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T04:41:17Z';
+const LAST_UPDATE = '2026-10-21T05:03:15Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6839,7 +6840,11 @@ const gtKey = r => `${r.section}|${r.brand}|${r.name}`;
 // Harga yang dipakai menghitung total: spesial gathering, atau (clearance) harga clearance
 // Harga yang dipakai untuk pesanan: harga spesial (clearance: harga clearance). Produk tanpa harga spesial tapi punya Harga Baru → dibeli di Harga Baru (tanpa promo). Tanpa keduanya → "Hubungi sales".
 const gtNoPromo = r => r.section !== 'clearance' && r.special_price == null && r.new_price != null;
-const gtNet = r => gtNoPromo(r) ? r.new_price : r.special_price == null ? null : r.special_price;
+// Clearance (rumus pemilik 21 Okt 2026): harga setelah diskon 50% (special_price) − cashback,
+// cashback = DPP × 10% (DPP = harga clearance ÷ 1,11), dibulatkan ke rupiah
+const gtClrCash = r => r.special_price == null ? null : Math.round(r.special_price / 1.11 * 0.10);
+const gtNet = r => gtNoPromo(r) ? r.new_price : r.special_price == null ? null
+  : r.section === 'clearance' ? r.special_price - gtClrCash(r) : r.special_price;
 const gtRp = n => n == null ? '—' : fmtRp(n);
 const gtGroup = r => r.section === 'clearance' ? 'Clearance Sale' : r.brand;
 
@@ -6900,10 +6905,10 @@ function renderGathering() {
     const items = rows.filter(r => gtGroup(r) === g);
     const clear = items[0].section === 'clearance';
     const head = clear
-      ? '<span>Produk</span><span>Harga Normal</span><span>Harga Clearance 50%</span><span>Qty</span><span>Subtotal</span>'
+      ? '<span>Produk</span><span>Harga Normal</span><span>Diskon 50%</span><span>Cashback</span><span>Harga Clearance</span><span>Qty</span><span>Subtotal</span>'
       : '<span>Produk</span><span>Harga Lama</span><span>Harga Baru</span><span>Harga Spesial</span><span>Qty</span><span>Subtotal</span>';
     return `<div class="gt-group${clear ? ' clear' : ''}">
-      ${clear ? `<div class="gt-clear-banner"><div><b>🔥 ${escHtml(g)}</b><span>Harga clearance 50% · stok terbatas, siapa cepat dia dapat</span></div><span class="gt-sub" data-group="${escHtml(g)}"></span></div>`
+      ${clear ? `<div class="gt-clear-banner"><div><b>🔥 ${escHtml(g)}</b><span>Diskon 50% + cashback 10% DPP · stok terbatas, siapa cepat dia dapat</span></div><span class="gt-sub" data-group="${escHtml(g)}"></span></div>`
         : `<div class="line-header"><span class="line-name">${escHtml(g)}</span><span class="line-count">${items.length}</span><span class="gt-sub" data-group="${escHtml(g)}"></span></div>`}
       <div class="gt-table${clear ? ' clear' : ''}"><div class="gt-row gt-head">${head}</div>
       ${items.map(r => {
@@ -6912,8 +6917,10 @@ function renderGathering() {
           ? `${r.stock ? `<div class="gt-note"><span class="gt-stock">Stok ${escHtml(r.stock)}</span></div>` : ''}`
           : (r.note ? `<div class="gt-note">${escHtml(r.note)}</div>` : '');
         const cols = clear
-          ? `<span class="gt-p" data-l="Harga Normal">${gtRp(r.old_price)}</span>
-             <span class="gt-p gt-sp" data-l="Harga Clearance 50%">${gtRp(net)}</span>`
+          ? `<span class="gt-p gt-old" data-l="Harga Normal">${r.old_price == null ? '—' : `<s>${fmtRp(r.old_price)}</s>`}</span>
+             <span class="gt-p" data-l="Diskon 50%">${gtRp(r.special_price)}</span>
+             <span class="gt-p gt-cb" data-l="Cashback 10% DPP">${r.special_price == null ? '—' : '− ' + fmtRp(gtClrCash(r))}</span>
+             <span class="gt-p gt-sp" data-l="Harga Clearance">${gtRp(net)}</span>`
           : `<span class="gt-p gt-old" data-l="Harga Lama">${r.old_price == null ? '—' : `<s>${fmtRp(r.old_price)}</s>`}</span>
              <span class="gt-p" data-l="Harga Baru">${gtRp(r.new_price)}</span>
              <span class="gt-p gt-sp" data-l="Harga Spesial">${gtRp(net)}${gtNoPromo(r) ? '<small>tanpa promo</small>' : ''}</span>`;
@@ -7107,7 +7114,7 @@ function gtPrint() {
       <tr class="gp-sub"><td colspan="4">Subtotal ${escHtml(g.name)}</td><td>${fmtRp(g.total)}</td></tr></tbody></table>`).join('')}
     <table class="gp-items gp-grand"><tr><td>GRAND TOTAL (${o.qty} item)</td><td>${fmtRp(o.total)}</td></tr></table>
     <p class="gp-terms"><b>Pembayaran (transfer ke salah satu):</b><br>${gtBankLines().map(escHtml).join('<br>')}</p>
-    <p class="gp-terms">Harga Spesial Gathering hanya berlaku selama acara berlangsung. Clearance: harga clearance = 50% dari harga normal, stok terbatas.</p>
+    <p class="gp-terms">Harga Spesial Gathering hanya berlaku selama acara berlangsung. Clearance: harga clearance = harga normal − diskon 50% − cashback 10% × DPP (DPP = harga setelah diskon ÷ 1,11), stok terbatas.</p>
     <div class="gp-sign"><div>Dealer<br><br><br>(______________________)</div><div>Sales / PIC CAI<br><br><br>(______________________)</div></div>`;
   window.print();
 }
@@ -7358,7 +7365,7 @@ function downloadGtInvoice(id) {
   doc.setDrawColor(...GOLD); doc.setLineWidth(0.8); doc.line(L, y + 2, R, y + 2); doc.setLineWidth(0.2);
   y += 7;
   doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(90, 90, 100);
-  doc.text('Rincian produk sesuai pesanan Shopping Gathering (termasuk item Clearance Sale 50%). Harga = harga spesial gathering / harga clearance.', L, y, { maxWidth: W });
+  doc.text('Rincian produk sesuai pesanan Shopping Gathering (termasuk item Clearance Sale: diskon 50% − cashback 10% DPP). Harga = harga spesial gathering / harga clearance.', L, y, { maxWidth: W });
   y += 5;
 
   // table
