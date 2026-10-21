@@ -3473,7 +3473,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T02:57:42Z';
+const LAST_UPDATE = '2026-10-21T03:00:36Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8095,7 +8095,8 @@ const AWARD_DEALERS = [   // prize = hadiah (daftar dari pemilik), tampil di kar
 const AWARD_DIST = [
   // person = nama pemilik/PIC (tampil di bawah nama distributor); kosong = tidak ditampilkan
   { rank: 1, name: 'Senada Gema Utama' }, { rank: 2, name: 'Harvest Variasi', person: 'Agustinus' },
-  { rank: 3, name: 'H2R Madiun', person: 'Ronny Koesharyono' }, { rank: 4, name: 'Concerto Malang' }, { rank: 5, name: 'VIN Audioworks', person: 'Kevin Klise' },
+  { rank: 3, name: 'H2R Madiun', person: 'Ronny Koesharyono' }, { rank: 4, name: 'Concerto Malang' },
+  { rank: 5, name: 'Concerto Surabaya' }, { rank: 6, name: 'VIN Audioworks', person: 'Kevin Klise' },
 ];
 // Kategori awarding: kunci scene 'awarding:<rank>' / 'awarding:list' = Best Dealer, 'awarding:d<rank>' / 'awarding:dlist' = Best Distributor
 const AW_CATS = {
@@ -8103,7 +8104,7 @@ const AW_CATS = {
   dealer: { p: '', list: AWARD_DEALERS, label: 'Best Dealer 2026', short: 'Best Dealer', no: '02', intro: 'Dealer dengan performa penjualan terbaik sepanjang 2026', sub: 'Concerto Audio Indonesia Performance Dealer 2026' },
 };
 const awKeys = c => ['awarding:' + AW_CATS[c].p + 'intro'].concat([...AW_CATS[c].list].sort((a, b) => b.rank - a.rank).map(d => 'awarding:' + AW_CATS[c].p + d.rank).concat('awarding:' + AW_CATS[c].p + 'list'));
-// Urutan acara: judul → Best Distributor (pembuka → Top 5 … Juara → papan) → Best Dealer (pembuka → Top 10 … Juara → papan)
+// Urutan acara: judul → Best Distributor (pembuka → Top 6 … Juara → papan) → Best Dealer (pembuka → Top 10 … Juara → papan)
 const AWARD_SEQ = ['awarding', ...awKeys('dist'), ...awKeys('dealer')];
 const awPart = k => { const m = /^awarding:(d?)(\d+|list|intro)$/.exec(k || ''); return m ? { cat: m[1] ? 'dist' : 'dealer', r: /\d/.test(m[2]) ? +m[2] : m[2] } : null; };
 const OPENING_SEQ = ['opening', ...OPENING_SPEAKERS.flatMap((sp, i) => [`opening:${i + 1}`, ...(sp.video ? [`opening:${i + 1}:v`] : [])])];
@@ -8239,7 +8240,7 @@ function renderScreenPanel(err) {
       <span class="scr-fm-now">${ai > 0 ? escHtml(sceneInfo(cur).label.replace('Awarding · ', '')) : 'Belum mulai'}</span>
       <button class="scr-lv-btn${ai > 0 ? '' : ' on'}" onclick="awStep(1)" ${ai < AWARD_SEQ.length - 1 ? '' : 'disabled'}>${ai > 0 ? 'Berikutnya ▶' : '▶ Mulai (Pembuka Best Distributor)'}</button></div>
     ${row('dist')}${row('dealer')}
-    <div class="scr-note">Urutan ▶: Best Distributor (pembuka → Top 5 → Juara → papan) lalu Best Dealer (pembuka → Top 10 → Juara → papan). Tampilan motion graphic + SFX; klik layar videotron sekali sebelum acara agar suara diizinkan. Clicker / panah di komputer videotron juga bisa melangkah.</div>`; }
+    <div class="scr-note">Urutan ▶: Best Distributor (pembuka → Top 6 → Juara → papan) lalu Best Dealer (pembuka → Top 10 → Juara → papan). Tampilan motion graphic + SFX; klik layar videotron sekali sebelum acara agar suara diizinkan. Clicker / panah di komputer videotron juga bisa melangkah.</div>`; }
   else if (sel === 'funmkt') body = `<div class="scr-actions">${showBtn('Tampilkan judul presentasi')}</div>
     <div class="scr-sub-k">Slide materi</div>
     <div class="scr-fm-nav">
