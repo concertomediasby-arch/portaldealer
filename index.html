@@ -1166,6 +1166,17 @@ body {
   .mobile-nav { display: flex; }
   .main { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
   .topbar-text-info { display: flex !important; }
+  /* Header HP/tablet kecil: teks tidak boleh turun baris (dulu "Concerto Audio Indonesia" pecah 3 baris & terpotong) */
+  .topbar { padding: 0 14px; gap: 8px; }
+  .topbar-badge { display: none; }
+  .topbar-logo { gap: 10px !important; min-width: 0; flex-shrink: 1; }
+  .topbar-text-info { padding-left: 10px !important; min-width: 0; white-space: nowrap; }
+}
+@media (max-width: 560px) {
+  /* Nama perusahaan sudah ada di logo — di HP cukup label "Dealer Portal" satu baris */
+  .topbar-logo .logo-img { height: 28px; flex-shrink: 0; }
+  .topbar-text-info .tb-kicker { font-size: 10px !important; letter-spacing: .1em !important; }
+  .topbar-text-info .tb-name { display: none; }
   .line-grid { grid-template-columns: repeat(2, 1fr); }
   .media-thumbnails { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
   .media-thumb { flex-shrink: 0; }
@@ -2826,8 +2837,8 @@ body {
     <a class="topbar-logo" href="#" onclick="backToLanding(); return false;" aria-label="Home — Concerto Audio Indonesia" style="display:flex;align-items:center;gap:12px;text-decoration:none">
       <img id="logo-top-dark" class="logo-img" alt="Concerto Audio Indonesia">
       <div class="topbar-text-info" style="display:flex;flex-direction:column;gap:1px;line-height:1.2;border-left:1px solid var(--border);padding-left:12px">
-        <span style="font-size:9px;font-family:var(--f-mono);letter-spacing:.12em;color:var(--accent);font-weight:600;text-transform:uppercase">Dealer Portal</span>
-        <span style="font-size:11px;font-family:var(--f-display);font-weight:600;color:var(--fg);letter-spacing:.01em">Concerto Audio Indonesia</span>
+        <span class="tb-kicker" style="font-size:9px;font-family:var(--f-mono);letter-spacing:.12em;color:var(--accent);font-weight:600;text-transform:uppercase">Dealer Portal</span>
+        <span class="tb-name" style="font-size:11px;font-family:var(--f-display);font-weight:600;color:var(--fg);letter-spacing:.01em">Concerto Audio Indonesia</span>
       </div>
     </a>
     <div class="topbar-spacer"></div>
@@ -3493,7 +3504,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T09:56:02Z';
+const LAST_UPDATE = '2026-10-21T16:27:42Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
