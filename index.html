@@ -3486,7 +3486,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T03:29:48Z';
+const LAST_UPDATE = '2026-10-21T03:33:57Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3580,6 +3580,7 @@ const DSP_SOFTWARE = [
 ];
 
 const RECENT_UPDATES = [
+  { date:'2026-10-21', type:'data', brandId:'audiocircle', productId:'ac-iqs82bmw', note:'IQ-S8 BMW dipisah menjadi IQ-S8 BMW 2 Ohm dan 4 Ohm' },
   { date:'2026-10-21', type:'data', brandId:'steg', productId:'st-s82', note:'S8 dipisah menjadi S8 2 Ohm dan S8 4 Ohm' },
   { date:'2026-10-20', type:'video', brandId:'audiocircle', productId:'ac-mls10', note:'Video ML-S10 ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'audiocircle', productId:'ac-slc62', note:'Foto tweeter SL-C6.2 MKIV S diganti' },
@@ -3925,10 +3926,14 @@ const BRANDS = [
           desc:'4" Coaxial Speaker untuk rear door — BMW Plug & Play, Carbon Fibre Cone Die Cast Basket.',
           photos:['assets/ac-iqx4bmw-2.webp','assets/ac-iqx4bmw-3.webp','assets/ac-iqx4bmw-4.webp'],
           specs:{'Impedansi':'4 Ω','Rated Power':'40 – 60 W','SPL':'87 dB','Freq. Response':'100 Hz – 20 kHz','Fitment':'BMW Plug & Play'} },
-        { id:'ac-iqs824bmw', price:18500000, priceUnit:'set', name:'IQ-S8-2/4 BMW', model:'IQ-S8-2/4 BMW', category:'Speaker', emoji:'🔊', hasVideo:false,
-          desc:'8" Mid woofer — BMW Plug & Play, High Power Paper Cone Mid Woofer.',
+        { id:'ac-iqs82bmw', price:18500000, priceUnit:'set', name:'IQ-S8 BMW 2 Ohm', model:'IQ-S8 BMW 2 Ohm', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'8" Mid woofer — BMW Plug & Play, High Power Paper Cone Mid Woofer — versi 2 Ω.',
           photos:['assets/ac-iqs824bmw-1.webp','assets/ac-iqs824bmw-2.webp','assets/ac-iqs824bmw-3.webp'],
-          specs:{'Impedansi':'2 / 4 Ω','Rated Power':'70 – 80 W','Handling Power':'200 W','SPL':'88 dB','Freq. Response':'33 Hz – 2000 Hz','Fitment':'BMW Plug & Play'} },
+          specs:{'Impedansi':'2 Ω','Rated Power':'70 – 80 W','Handling Power':'200 W','SPL':'88 dB','Freq. Response':'33 Hz – 2000 Hz','Fitment':'BMW Plug & Play'} },
+        { id:'ac-iqs824bmw', price:18500000, priceUnit:'set', name:'IQ-S8 BMW 4 Ohm', model:'IQ-S8 BMW 4 Ohm', category:'Speaker', emoji:'🔊', hasVideo:false,
+          desc:'8" Mid woofer — BMW Plug & Play, High Power Paper Cone Mid Woofer — versi 4 Ω.',
+          photos:['assets/ac-iqs824bmw-1.webp','assets/ac-iqs824bmw-2.webp','assets/ac-iqs824bmw-3.webp'],
+          specs:{'Impedansi':'4 Ω','Rated Power':'70 – 80 W','Handling Power':'200 W','SPL':'88 dB','Freq. Response':'33 Hz – 2000 Hz','Fitment':'BMW Plug & Play'} },
       ]},
       { name: 'IQ Line — Benz', products: [
         { id:'ac-iqc42mb', price:12000000, priceUnit:'set', name:'IQ-C4.2 MB', model:'IQ-C4.2 MB', category:'Speaker', emoji:'🔊', hasVideo:false,
@@ -6381,7 +6386,7 @@ const STOCK_ALIASES = {
   ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16', sst50: 'st-sst50',
   // file STOCK DISTRIBUTOR (Merk · Unit · Stok Tersedia)
   bls10: 'ac-bls10', blt26vmkii: 'ac-blt26', hlt25npmkii: 'ac-hlt25', iqc42bmwa: 'ac-iqc42bmwa', iqc42bmwb: 'ac-iqc42bmwb',
-  iqs8bmw2ohm: 'ac-iqs824bmw', iqs8bmw4ohm: 'ac-iqs824bmw', microfaser: 'ac-microfiber',
+  iqs8bmw2ohm: 'ac-iqs82bmw', iqs8bmw4ohm: 'ac-iqs824bmw', microfaser: 'ac-microfiber',
   mfa5e2: 'zl-mfa52', verdie2: 'zl-verdi2', verdie4: 'zl-verdi4', a1802: 'zl-dualmono', hd54: 'zl-hd54',
   s97a: 'st-hoodliner', s8isolator: 'st-s8d', s15a: 'st-s15',
   anldios200a: 'dm-fuseanl', anldios100a: 'dm-fuseanl', anldios50a: 'dm-fuseanl', anldios10a: 'dm-fuseanl',
