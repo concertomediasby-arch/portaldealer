@@ -3476,7 +3476,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T03:05:48Z';
+const LAST_UPDATE = '2026-10-21T03:10:50Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7972,9 +7972,9 @@ const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitm
 const CERT_GROUPS = [
   ['Agustinus', ['Autoschoon', 'Central Garage', 'DB Auto', 'Project Audio']],
   ['CV. Concerto Malang', ['Autosound Gallery', 'MM Audioworks', 'Soundart']],
-  ['Garuda Barat', ['Altepro', 'Anugerah Audio', 'CAS Audio', 'DR Audio', 'Dress Up', 'Gema Audio', 'HS Audio', 'Mars Audio', 'SP Audio', 'Sterindo Autosound', 'Victory Audio', 'Xtreme Car Audio Meruya', 'Xtreme Car Audio P.Cabe']],
+  ['Garuda Barat', ['Altepro', 'Anugerah Audio', 'CAS Audio', 'Dr Audio Art', 'Dress Up', 'Gema Audio', 'HS Audio', 'Mars Audio', 'SP Audioworks', 'Sterindo Autosound', 'Victory Audio', 'Xtreme Car Audio Meruya', 'Xtreme Car Audio Pondok Cabe']],
   ['Kevin Klise', ['NAI Audioworkshop', 'Zona Audio']],
-  ['Ronny Koesharyono', ['Atmos Autosound', 'Blitz Cirebon', 'Blitz Pekalongan', 'Blitz Tegal', 'Creative Variasi', 'Dreamsound', 'Icho Kusuma', 'Linggom Audio', 'Kenzo Audio Garage', 'Oscar Variasi', 'Otofine Garage', 'Terang Jaya', 'The Peak Garage', 'Vincent Mevina', 'West Audioworks']],
+  ['Ronny Koesharyono', ['Atmos Autosound', 'Blitz Cirebon', 'Blitz Pekalongan', 'Blitz Tegal', 'Creative Variasi', 'Dreamsound', 'ICO Audioworks', 'Linggom Audio', 'Kenzo Audio Garage', 'Oscar Variasi', 'Otofine Garage', 'Terang Jaya', 'The Peak Garage', 'Mevina Autosoundproof', 'West Audioworks']],
 ];
 const CERT_DEALERS = CERT_GROUPS.flatMap(([g, ds]) => ds.map(d => ({ d, g })));
 const CERT_SEQ = ['sertifikat', ...CERT_DEALERS.map((_, i) => 'sertifikat:' + (i + 1)), 'sertifikat:list'];
@@ -8159,7 +8159,7 @@ const BACKDROPS = [
   { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp?v=2', th: 'assets/backdrop/reset-button-thumb.webp?v=2' },   // gambar 16:10 untuk layar 4 × 2,5 m (20 Okt 2026, menggantikan video 16:9)
   { t: '5th Annual Gathering · Dinner', src: 'assets/backdrop/gathering-dinner.webp', th: 'assets/backdrop/gathering-dinner-thumb.webp' },
   { t: 'Dinner · 16:10', src: 'assets/backdrop/dinner-1610.webp?v=2', th: 'assets/backdrop/dinner-1610-thumb.webp?v=2', video: 'assets/backdrop/dinner-1610.mp4?v=2' },   // opsi kedua backdrop dinner (20 Okt 2026, layar 4 × 2,5 m, tanpa foto): video loop 12 dtk motion graphic halus, gambar = cadangan
-  { t: 'Penyerahan Sertifikat Dealer', src: 'assets/backdrop/sertifikat-dealer.webp', th: 'assets/backdrop/sertifikat-dealer-thumb.webp' },   // 21 Okt 2026: 37 dealer dikelompokkan per distributor (data dari pemilik), 16:10
+  { t: 'Penyerahan Sertifikat Dealer', src: 'assets/backdrop/sertifikat-dealer.webp?v=2', th: 'assets/backdrop/sertifikat-dealer-thumb.webp?v=2' },   // 21 Okt 2026: 37 dealer dikelompokkan per distributor (data dari pemilik), 16:10
 ];
 const BACKDROP_SEC = 12;   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
 let qsBdTimer = null;
@@ -8867,7 +8867,7 @@ function ceSeal() {
 function renderCert(s) {
   const n = certNum(s.scene), N = CERT_DEALERS.length, t = s.scene_text ? escHtml(s.scene_text) : '';
   let html;
-  if (s.scene === 'sertifikat:list') html = `<div class="qs-scene ce ce-list"><img src="assets/backdrop/sertifikat-dealer.webp" alt="Daftar dealer penerima sertifikat"></div>`;
+  if (s.scene === 'sertifikat:list') html = `<div class="qs-scene ce ce-list"><img src="assets/backdrop/sertifikat-dealer.webp?v=2" alt="Daftar dealer penerima sertifikat"></div>`;
   else if (n) {
     const c = CERT_DEALERS[n - 1], L = c.d.length, fs = L > 20 ? 'min(6.4vw, 11vh)' : L > 13 ? 'min(8vw, 14vh)' : 'min(10vw, 17vh)';
     html = `<div class="qs-scene ce ce-one">${ceBg()}
