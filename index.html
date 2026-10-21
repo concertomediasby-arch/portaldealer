@@ -1642,6 +1642,12 @@ body {
   .scr-pks-prev { height: 130px; width: auto; border-radius: 3px; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
   .scr-pks-prev-wrap span { font-size: 11.5px; color: #9aa5bd; }
   .scr-pks-pages { display: flex; flex-wrap: wrap; gap: 6px; }
+  .scr-pks-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 2px 0 10px; }
+  .scr-pks-tab { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #e5e9f2; font: 500 12px var(--f-body); text-align: left; cursor: pointer; }
+  .scr-pks-tab b { font: 600 13px var(--f-body); }
+  .scr-pks-tab small { color: #9aa5bd; font-size: 11px; }
+  .scr-pks-tab.sel { border-color: #e9c46a; background: rgba(233,196,106,.12); box-shadow: 0 0 0 1px rgba(233,196,106,.35) inset; }
+  .scr-pks-tab .scr-live { position: absolute; top: 8px; right: 10px; }
   .scr-pks-pages .scr-lv-btn { min-width: 40px; justify-content: center; }
   .scr-pane { margin-top: 12px; padding: 14px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.25); }
   .scr-pane-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
@@ -3487,7 +3493,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T05:22:27Z';
+const LAST_UPDATE = '2026-10-21T05:50:18Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8128,10 +8134,18 @@ const AWARD_SEQ = ['awarding', ...awKeys('dist'), ...awKeys('dealer')];
 const awPart = k => { const m = /^awarding:(d?)(\d+|list|intro)$/.exec(k || ''); return m ? { cat: m[1] ? 'dist' : 'dealer', r: /\d/.test(m[2]) ? +m[2] : m[2] } : null; };
 const OPENING_SEQ = ['opening', ...OPENING_SPEAKERS.flatMap((sp, i) => [`opening:${i + 1}`, ...(sp.video ? [`opening:${i + 1}:v`] : [])])];
 // Materi PKS Dealer 2027 (isi diskon/target → TIDAK di repo publik): PDF di Storage privat GUIDES_BUCKET, diunggah admin dari panel.
-// Scene 'kickoff' = judul Kick Off, 'kickoff:<n>' = halaman PKS ke-n (dirender pdf.js).
+// Scene 'kickoff' = judul Kick Off, 'kickoff:<n>' = halaman PKS Dealer ke-n, 'kickoff:tl:<n>' = halaman PKS Team Leader ke-n (dirender pdf.js).
+// PKS Team Leader ditambahkan 21 Okt 2026 (permintaan pemilik) — badge sejajar PKS Dealer di panel Kick Off.
 const PKS_PATH = 'gathering/pks-dealer-2027.pdf';
-const pksNum = k => { const m = /^kickoff:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
-let pksMeta = null;   // { exists, pages } — di panel admin
+const PKS_DOCS = {
+  dealer: { label: 'PKS Dealer 2027', short: 'PKS Dealer', path: PKS_PATH },
+  tl: { label: 'PKS Team Leader', short: 'PKS Team Leader', path: 'gathering/pks-team-leader-2027.pdf' },
+};
+const pksPart = k => { const m = /^kickoff:(?:(tl):)?(\d+)$/.exec(k || ''); return m ? { d: m[1] ? 'tl' : 'dealer', n: +m[2] } : null; };
+const pksNum = k => pksPart(k)?.n || 0;
+const pksKey = (d, n) => d === 'tl' ? 'kickoff:tl:' + n : 'kickoff:' + n;
+let pksMeta = null;   // { dealer: { exists, pages }, tl: { exists, pages } } — di panel admin
+let pksSel = 'dealer';   // dokumen PKS yang sedang dibuka di panel
 const opNum = k => { const m = /^opening:(\d+)(:v)?$/.exec(k || ''); return m ? +m[1] : 0; };
 const opVid = k => /^opening:\d+:v$/.test(k || '');
 const ANTHEM_VIDEO = 'assets/opening/indonesia-raya.mp4';   // video lagu kebangsaan Indonesia Raya (scene 'anthem:v'), pembuka acara pagi — dari Drive pemilik
@@ -8148,7 +8162,7 @@ const sceneInfo = k => {
   if (k === 'anthem:v') return { ...base, icon: '🎬', label: 'Indonesia Raya · Video lagu kebangsaan' };
   if (k === 'kickoff:v') return { ...base, icon: '🎬', label: 'Kick Off 2027 · Video Perkenalan Portal' };
   { const ab = absenPart(k); if (ab) return { ...base, icon: ab.jawab ? '✅' : '📋', label: ab.jawab ? 'Kick Off 2027 · Semua jawabannya ada di Portal' : `Kick Off 2027 · Absen Dosa ${ab.k}/${ABSEN_DOSA.length}` }; }
-  if (pksNum(k)) return { ...base, label: `Kick Off 2027 · PKS hal. ${pksNum(k)}${pksMeta?.pages ? '/' + pksMeta.pages : ''}` };
+  { const pk = pksPart(k); if (pk) { const N = pksMeta?.[pk.d]?.pages; return { ...base, label: `Kick Off 2027 · ${PKS_DOCS[pk.d].short} hal. ${pk.n}${N ? '/' + N : ''}` }; } }
   { const a = awPart(k); if (a) { const C = AW_CATS[a.cat]; return { ...base, label: a.r === 'intro' ? `Awarding · Pembuka ${C.short}` : a.r === 'list' ? `Awarding · Papan peringkat ${C.short}` : `Awarding · ${C.short} ${a.r === 1 ? 'Juara' : 'Top ' + a.r} — ${C.list.find(d => d.rank === a.r)?.name || ''}` }; } }
   if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
   const tm = tmParts(k); if (tm) return { ...base, icon: '🎬', label: 'Testimoni Partner CAI · ' + (tm.idx == null ? 'semua video' : (TESTIMONI_VIDEOS[tm.idx]?.title || 'video ' + (tm.idx + 1))) };
@@ -8210,7 +8224,7 @@ const SCR_DESC = {
   sertifikat: 'Penyerahan Sertifikat Dealer: layar judul → nama dealer muncul satu per satu (sesuai urutan maju ke panggung) → daftar semua dealer. Clicker / panah di komputer videotron menggeser ke dealer berikutnya.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
   anthem: 'Pembuka acara pagi: layar "Menyanyikan Lagu Kebangsaan Indonesia Raya — hadirin dimohon berdiri", lalu video Indonesia Raya layar penuh (±1 menit 48 dtk). Musik latar otomatis senyap selama sesi ini.',
-  kickoff: 'Judul Kick Off 2027 → Absen Dosa Dealer CAI (dibuka 1 per 1) → "Semua jawabannya ada di Portal" → video perkenalan portal → halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron mengikuti urutan ini.',
+  kickoff: 'Judul Kick Off 2027 → Absen Dosa Dealer CAI (dibuka 1 per 1) → "Semua jawabannya ada di Portal" → video perkenalan portal → halaman materi PKS Dealer 2027 → PKS Team Leader. Clicker / panah di komputer videotron mengikuti urutan ini.',
 };
 let scrSel = null;
 const scrOnAir = () => sceneBase(scrRow?.scene) || 'qa';
@@ -8295,7 +8309,8 @@ function renderScreenPanel(err) {
   else if (sel === 'anthem') { const av = scrRow.scene === 'anthem:v';
     body = `<div class="scr-actions">${showBtn('Tampilkan layar Indonesia Raya')}<button class="gt-btn${av ? ' confirm' : ' ghost'}" onclick="setScene('anthem:v')">${av ? '↻ Putar ulang video' : '🎬 Putar Video Indonesia Raya'}</button></div>
     <div class="scr-note">Urutan: tampilkan layar judul (MC mempersilakan hadirin berdiri) → <b>Putar Video</b> → video layar penuh; selesai kembali ke layar judul. Musik latar senyap selama sesi Indonesia Raya. Spasi = jeda/lanjut.</div>`; }
-  else if (sel === 'kickoff') { const cur = pksNum(scrRow.scene), n = pksMeta?.pages || 0;
+  else if (sel === 'kickoff') { const onAir = pksPart(scrRow.scene); if (onAir && !scrPksTouched) pksSel = onAir.d;
+    const D = PKS_DOCS[pksSel], M = pksMeta?.[pksSel], cur = onAir?.d === pksSel ? onAir.n : 0, n = M?.pages || 0;
     const pv = scrRow.scene === 'kickoff:v';
     const ab = absenPart(scrRow.scene);
     body = `${opts(false)}<div class="scr-actions">${showBtn('Tampilkan judul Kick Off 2027')}<button class="gt-btn${pv ? ' confirm' : ' ghost'}" onclick="setScene('kickoff:v')">${pv ? '↻ Putar ulang video perkenalan' : '🎬 Putar Video Perkenalan Portal'}</button></div>
@@ -8307,18 +8322,20 @@ function renderScreenPanel(err) {
       <button class="scr-lv-btn${ab ? '' : ' on'}" onclick="absenStep(1)" ${ab?.jawab ? 'disabled' : ''}>${!ab ? '▶ Mulai Absen Dosa' : ab.k < ABSEN_DOSA.length ? 'Buka berikutnya ▶' : 'Jawaban ▶'}</button>
     </div>
     <div class="scr-actions"><button class="gt-btn ghost" onclick="setScene('kickoff:absen:all')">Tampilkan semua ${ABSEN_DOSA.length} sekaligus</button><button class="gt-btn${ab?.jawab ? ' confirm' : ' ghost'}" onclick="setScene('kickoff:jawab')">✅ Semua jawabannya ada di Portal</button></div>
-    <div class="scr-note">Clicker / panah: judul Kick Off → pembuka absen → dosa 1 … ${ABSEN_DOSA.length} (satu per klik) → layar jawaban (fitur portal) → video perkenalan portal → PKS.</div>
-    <div class="scr-sub-k">Materi PKS Dealer 2027 <span class="scr-priv">🔒 file privat — tidak ikut situs publik</span></div>
-    ${pksMeta === null ? '<div class="scr-note">Memeriksa file PKS…</div>' : !pksMeta.exists
-      ? `<div class="scr-note">Belum ada file PKS. Unggah PDF <b>PKS Dealer 2027</b> sekali saja — tersimpan di penyimpanan privat portal.</div>`
+    <div class="scr-note">Clicker / panah: judul Kick Off → pembuka absen → dosa 1 … ${ABSEN_DOSA.length} (satu per klik) → layar jawaban (fitur portal) → video perkenalan portal → PKS Dealer → PKS Team Leader.</div>
+    <div class="scr-sub-k">Materi PKS <span class="scr-priv">🔒 file privat — tidak ikut situs publik</span></div>
+    <div class="scr-pks-tabs">${Object.entries(PKS_DOCS).map(([id, d]) => { const m = pksMeta?.[id];
+      return `<button class="scr-pks-tab${id === pksSel ? ' sel' : ''}" onclick="pksSelect('${id}')">${onAir?.d === id ? '<i class="scr-live">● LIVE</i>' : ''}<b>📄 ${d.label}</b><small>${pksMeta === null ? 'memeriksa…' : m?.exists ? `✓ ${m.pages || '?'} halaman` : 'belum diunggah'}</small></button>`; }).join('')}</div>
+    ${pksMeta === null ? '<div class="scr-note">Memeriksa file PKS…</div>' : !M?.exists
+      ? `<div class="scr-note">Belum ada file <b>${D.label}</b>. Unggah PDF-nya sekali saja — tersimpan di penyimpanan privat portal.</div>`
       : `<div class="scr-fm-nav">
           <button class="scr-lv-btn" onclick="pksStep(-1)" ${cur > 1 ? '' : 'disabled'}>◀ Sebelumnya</button>
           <span class="scr-fm-now">${cur ? `Halaman <b>${cur}</b> / ${n || '?'}` : 'Belum tampil'}</span>
           <button class="scr-lv-btn${cur ? '' : ' on'}" onclick="pksStep(1)" ${!n || cur < n ? '' : 'disabled'}>${cur ? 'Berikutnya ▶' : '▶ Mulai dari halaman 1'}</button>
         </div>
         ${cur ? `<div class="scr-pks-prev-wrap"><canvas id="scr-pks-prev" class="scr-pks-prev"></canvas><span>Pratinjau yang tampil di videotron · hal. ${cur}</span></div>` : ''}
-        <div class="scr-pks-pages">${Array.from({ length: n }, (_, i) => `<button class="scr-lv-btn${cur === i + 1 ? ' on' : ''}" onclick="setScene('kickoff:${i + 1}')">${i + 1}</button>`).join('')}</div>`}
-    <div class="scr-actions"><label class="gt-btn ghost">⬆ ${pksMeta?.exists ? 'Ganti' : 'Unggah'} PDF PKS<input type="file" accept="application/pdf" hidden onchange="uploadPks(this)"></label></div>`; }
+        <div class="scr-pks-pages">${Array.from({ length: n }, (_, i) => `<button class="scr-lv-btn${cur === i + 1 ? ' on' : ''}" onclick="setScene('${pksKey(pksSel, i + 1)}')">${i + 1}</button>`).join('')}</div>`}
+    <div class="scr-actions"><label class="gt-btn ghost">⬆ ${M?.exists ? 'Ganti' : 'Unggah'} PDF ${D.label}<input type="file" accept="application/pdf" hidden onchange="uploadPks(this, '${pksSel}')"></label></div>`; }
   else body = `${opts(sel === 'coffee' || sel === 'lunch' || sel === 'dinner' || sel === 'healthy')}<div class="scr-actions">${showBtn()}</div>`;
   el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Meeting Dealer'}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
@@ -8330,13 +8347,15 @@ function renderScreenPanel(err) {
       <div class="scr-pane-head"><span class="scr-pane-ic">${info.icon}</span><div><b>${info.label}</b><p>${SCR_DESC[sel]}</p></div>${live ? '<span class="qa-badge onair">● Sedang tampil</span>' : ''}</div>
       ${body}
     </div>`;
-  if (sel === 'kickoff' && pksNum(scrRow.scene) && pksMeta?.exists) renderPksPreview(pksNum(scrRow.scene));
+  { const pk = pksPart(scrRow?.scene); if (sel === 'kickoff' && pk && pk.d === pksSel && pksMeta?.[pk.d]?.exists) renderPksPreview(pk.n, pk.d); }
 }
 
 // Pratinjau kecil halaman PKS yang sedang tampil, di panel admin
-async function renderPksPreview(n) {
+let scrPksTouched = false;   // editor memilih badge PKS sendiri → jangan ikut berpindah ke dokumen yang sedang tayang
+function pksSelect(d) { pksSel = d; scrPksTouched = true; renderScreenPanel(); }
+async function renderPksPreview(n, d = 'dealer') {
   try {
-    const doc = await getPksDoc(), page = await doc.getPage(n);
+    const doc = await getPksDoc(d), page = await doc.getPage(n);
     const cv = document.getElementById('scr-pks-prev'); if (!cv) return;
     const vp = page.getViewport({ scale: 260 / page.getViewport({ scale: 1 }).height * (window.devicePixelRatio || 1) });
     cv.width = vp.width; cv.height = vp.height;
@@ -8357,9 +8376,9 @@ function absenStep(d) {
   if (k >= 0) setScene('kickoff:absen:' + k);
 }
 function pksStep(d) {
-  const n = pksNum(scrRow?.scene), max = pksMeta?.pages || 999;
+  const pk = pksPart(scrRow?.scene), n = pk?.d === pksSel ? pk.n : 0, max = pksMeta?.[pksSel]?.pages || 999;
   const next = Math.min(max, Math.max(1, (n || 0) + d));
-  if (next !== n) setScene('kickoff:' + next);
+  if (next !== n) setScene(pksKey(pksSel, next));
 }
 // pdf.js dimuat hanya saat materi PKS dipakai
 let pdfLib = null;
@@ -8375,35 +8394,39 @@ function loadPdfJs() {
   });
   return pdfLib;
 }
-let pksDoc = null;
-function getPksDoc(fresh) {
-  if (pksDoc && !fresh) return pksDoc;
-  pksDoc = (async () => {
+const pksDocs = {};   // per dokumen PKS: promise dokumen pdf.js
+function getPksDoc(d = 'dealer', fresh) {
+  if (pksDocs[d] && !fresh) return pksDocs[d];
+  const p = pksDocs[d] = (async () => {
     const lib = await loadPdfJs();
-    const { data, error } = await supabase.storage.from(GUIDES_BUCKET).createSignedUrl(PKS_PATH, 3600);
+    const { data, error } = await supabase.storage.from(GUIDES_BUCKET).createSignedUrl(PKS_DOCS[d].path, 3600);
     if (error) throw error;
     return lib.getDocument(data.signedUrl).promise;
   })();
-  pksDoc.catch(() => { pksDoc = null; });
-  return pksDoc;
+  p.catch(() => { if (pksDocs[d] === p) delete pksDocs[d]; });
+  return p;
 }
 async function loadPksMeta() {
   if (!supabase || !isAdmin()) return;
+  const meta = {};
   try {
     const { data } = await supabase.storage.from(GUIDES_BUCKET).list('gathering', { limit: 100 });
-    const exists = (data || []).some(f => 'gathering/' + f.name === PKS_PATH);
-    pksMeta = { exists, pages: 0 };
-    if (exists) { const doc = await getPksDoc(); pksMeta.pages = doc.numPages; }
-  } catch (e) { pksMeta = pksMeta || { exists: false, pages: 0 }; showToast('Materi PKS tidak bisa dibaca: ' + (e.message || e), 8000); }
+    for (const [id, D] of Object.entries(PKS_DOCS)) {
+      const exists = (data || []).some(f => 'gathering/' + f.name === D.path);
+      meta[id] = { exists, pages: 0 };
+      if (exists) meta[id].pages = await getPksDoc(id).then(doc => doc.numPages).catch(() => 0);
+    }
+    pksMeta = meta;
+  } catch (e) { pksMeta = pksMeta || { dealer: { exists: false, pages: 0 }, tl: { exists: false, pages: 0 } }; showToast('Materi PKS tidak bisa dibaca: ' + (e.message || e), 8000); }
   renderScreenPanel();
 }
-async function uploadPks(input) {
+async function uploadPks(input, d = 'dealer') {
   const f = input.files?.[0]; input.value = ''; if (!f) return;
   if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { showToast('Pilih file PDF.'); return; }
-  showToast('Mengunggah PKS…', 20000);
-  const { error } = await supabase.storage.from(GUIDES_BUCKET).upload(PKS_PATH, f, { upsert: true, contentType: 'application/pdf' });
+  showToast(`Mengunggah ${PKS_DOCS[d].label}…`, 20000);
+  const { error } = await supabase.storage.from(GUIDES_BUCKET).upload(PKS_DOCS[d].path, f, { upsert: true, contentType: 'application/pdf' });
   if (error) { showToast('Gagal mengunggah: ' + error.message, 9000); return; }
-  pksDoc = null; await loadPksMeta(); showToast(`✓ PKS tersimpan (${pksMeta?.pages || '?'} halaman).`);
+  delete pksDocs[d]; await loadPksMeta(); showToast(`✓ ${PKS_DOCS[d].label} tersimpan (${pksMeta?.[d]?.pages || '?'} halaman).`);
 }
 
 function fmStep(d) {
@@ -8445,7 +8468,7 @@ function renderScene(s) {
   if (s.scene === 'awarding') return renderAwardTitle(s);
   if (awPart(s.scene)) return renderAwarding(s.scene, s.updated_at);
   if (absenPart(s.scene)) return renderAbsen(s);
-  if (pksNum(s.scene)) return renderPksPage(pksNum(s.scene));
+  { const pk = pksPart(s.scene); if (pk) return renderPksPage(pk.n, pk.d); }
   const sc = QS_SCENES[sceneBase(s.scene)], t = s.scene_text ? escHtml(s.scene_text) : '';
   const count = s.scene_until ? `<div class="sc-count"><span class="qs-count" data-until="${escHtml(s.scene_until)}">--:--</span><small>sisa waktu</small></div>` : '';
   const next = sc.next ? `<div class="sc-next">Setelah ini · <b>${sc.next}</b></div>` : '';
@@ -8987,7 +9010,7 @@ function qsPickSpeakerVideo(n, input) {
 
 
 /* ── Halaman PKS di layar: dirender pdf.js ke canvas setinggi layar (A4 tegak di tengah) ── */
-let qsPksPages = 0;
+const qsPksPages = {};   // jumlah halaman per dokumen PKS (layar videotron)
 /* ── Paket Audio di layar (sementara, untuk acara Gathering): PDF paket dirender pdf.js layar penuh ──
    scene 'paket' = daftar paket, 'paket:<i>' / 'paket:<i>:<p>' = paket ke-i (1..n), halaman p. */
 const paketParse = k => {
@@ -9070,15 +9093,16 @@ function paketMarkOnScreen(scene) {
   document.querySelectorAll('.res-btn-screen').forEach(b => { const on = pk.pkg && b.id === 'pk-btn-' + pk.pkg.id; b.classList.toggle('on', !!on); b.textContent = on ? '● Tayang di layar' : '📺 Tayangkan di Layar'; });
   const el = document.getElementById('pk-now'); if (el) el.textContent = sceneBase(scene) === 'paket' ? (pk.pkg ? `${pk.pkg.title.split(' — ')[0]} · hal. ${pk.page}${pk.pages ? '/' + pk.pages : ''}` : 'daftar paket') : '';
 }
-async function renderPksPage(n) {
-  if (!qsSetStage('pks|' + n, '<div class="qs-idle"><p>Memuat materi PKS…</p></div>')) return;
+async function renderPksPage(n, d = 'dealer') {
+  const key = `pks|${d}|${n}`;
+  if (!qsSetStage(key, '<div class="qs-idle"><p>Memuat materi PKS…</p></div>')) return;
   let ov = document.getElementById('qs-slide');
   if (!ov) { ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide qs-pks'; document.getElementById('qa-screen').appendChild(ov); }
   ov.classList.add('qs-pks');
   try {
-    const doc = await getPksDoc();
-    qsPksPages = doc.numPages;
-    if (qsKey !== 'pks|' + n) return;   // sudah pindah halaman sementara memuat
+    const doc = await getPksDoc(d);
+    qsPksPages[d] = doc.numPages;
+    if (qsKey !== key) return;   // sudah pindah halaman sementara memuat
     const page = await doc.getPage(Math.min(n, doc.numPages));
     const base = page.getViewport({ scale: 1 });
     const scale = Math.min(window.innerHeight * 0.96 / base.height, window.innerWidth * 0.96 / base.width) * (window.devicePixelRatio || 1);
@@ -9086,13 +9110,13 @@ async function renderPksPage(n) {
     const cv = document.createElement('canvas');
     cv.width = vp.width; cv.height = vp.height;
     await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
-    if (qsKey !== 'pks|' + n) return;
+    if (qsKey !== key) return;
     ov.appendChild(cv); requestAnimationFrame(() => cv.classList.add('in'));
     setTimeout(() => [...ov.children].slice(0, -1).forEach(x => x.remove()), 600);
   } catch (e) {
     ov.remove();
     qsKey = null;   // coba lagi otomatis di poll berikutnya (mis. PDF baru saja diunggah)
-    document.getElementById('qs-stage').innerHTML = `<div class="qs-idle"><p>Materi PKS belum tersedia (${escHtml(e.message || e)}). Unggah PDF di panel Kick Off 2027.</p></div>`;
+    document.getElementById('qs-stage').innerHTML = `<div class="qs-idle"><p>${PKS_DOCS[d].label} belum tersedia (${escHtml(e.message || e)}). Unggah PDF di panel Kick Off 2027.</p></div>`;
   }
 }
 
@@ -9125,13 +9149,15 @@ async function qsFmKey(d) {
     await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: now });
     return;
   }
-  if (sceneBase(s?.scene) === 'kickoff') {   // judul Kick Off → Absen Dosa (1 per 1) → jawaban → video portal → PKS hal. 1..n
+  if (sceneBase(s?.scene) === 'kickoff') {   // judul Kick Off → Absen Dosa (1 per 1) → jawaban → video portal → PKS Dealer hal. 1..n → PKS Team Leader hal. 1..m
+    const pages = async id => qsPksPages[id] ?? (qsPksPages[id] = await getPksDoc(id).then(x => x.numPages).catch(() => 0));
+    const dp = await pages('dealer'), tp = await pages('tl'), P = KICKOFF_PRE.length - 1, pk = pksPart(s.scene);
     const pre = s.scene === 'kickoff:absen:all' ? KICKOFF_PRE.indexOf('kickoff:absen:' + ABSEN_DOSA.length) : KICKOFF_PRE.indexOf(s.scene);
-    const cur = pre >= 0 ? pre : KICKOFF_PRE.length - 1 + pksNum(s.scene);
-    const max = KICKOFF_PRE.length - 1 + (qsPksPages || (await getPksDoc().then(d => d.numPages).catch(() => 0)));
+    const cur = pre >= 0 ? pre : pk ? P + (pk.d === 'tl' ? dp : 0) + pk.n : 0;
+    const max = P + dp + tp;
     const next = Math.min(max, Math.max(0, cur + d));
     if (next === cur) return;
-    const scene = next < KICKOFF_PRE.length ? KICKOFF_PRE[next] : 'kickoff:' + (next - KICKOFF_PRE.length + 1), now = new Date().toISOString();
+    const r = next - P, scene = next < KICKOFF_PRE.length ? KICKOFF_PRE[next] : r <= dp ? pksKey('dealer', r) : pksKey('tl', r - dp), now = new Date().toISOString();
     renderScene({ scene, updated_at: now });
     await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: now });
     return;
