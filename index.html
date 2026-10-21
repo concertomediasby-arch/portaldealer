@@ -2134,6 +2134,51 @@ body {
   .sc-launch-name { font: 800 min(9vw, 16vh)/1.05 var(--f-display); margin-bottom: 2vh; text-wrap: balance; }
   .sc-year { font: 800 min(16vw, 26vh)/1 var(--f-display); margin: .5vh 0 1vh; letter-spacing: .02em; background: linear-gradient(180deg, #fff3d6 0%, #e9c46a 45%, #9c7330 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 4vh rgba(233,196,106,.3)); }
   .sc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; margin-top: 3vh; width: min(86vw, 1500px); text-align: left; }
+  /* Penyerahan Sertifikat Dealer (.ce-*): navy + emas, senada backdrop Dinner/Sertifikat */
+  .qa-screen:has(.ce) .qs-top, .qa-screen:has(.ce) .qs-foot { display: none; }
+  .qs-stage > .ce { animation: none; }
+  .ce { position: absolute; inset: 0; overflow: hidden; justify-content: center; color: #f4ecd8; background: radial-gradient(ellipse 70% 60% at 50% 45%, #1a2c57 0%, #0d1838 45%, #050a1a 80%, #02040b 100%); }
+  .ce-bg { position: absolute; inset: 0; pointer-events: none; }
+  .ce-glow { position: absolute; left: 50%; top: 46%; width: 70vw; height: 60vh; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(ellipse at center, rgba(233,196,106,.24) 0%, rgba(233,196,106,.08) 45%, transparent 70%); animation: ceGlow 6s ease-in-out infinite; }
+  @keyframes ceGlow { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+  .ce-bk i { position: absolute; left: var(--x); top: var(--y); width: var(--z); height: var(--z); border-radius: 50%; background: radial-gradient(circle, rgba(243,216,153,var(--o)), transparent 70%); animation: ceBk 10s ease-in-out var(--d) infinite; }
+  @keyframes ceBk { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.4vh); } }
+  .ce-frame { position: absolute; inset: 4vh 2.5vw; border: 1.5px solid rgba(217,181,110,.55); pointer-events: none; }
+  .ce-frame2 { position: absolute; inset: 5.4vh 3.3vw; border: 1px solid rgba(217,181,110,.22); pointer-events: none; }
+  .ce-cn { position: absolute; width: 4.2vh; height: 4.2vh; border: 2px solid #d9b56e; }
+  .ce-cn.tl { left: 2vw; top: 3.3vh; border-right: 0; border-bottom: 0; } .ce-cn.tr { right: 2vw; top: 3.3vh; border-left: 0; border-bottom: 0; }
+  .ce-cn.bl { left: 2vw; bottom: 3.3vh; border-right: 0; border-top: 0; } .ce-cn.br { right: 2vw; bottom: 3.3vh; border-left: 0; border-top: 0; }
+  .ce-dm { position: absolute; left: 50%; width: 1.1vh; height: 1.1vh; margin-left: -.55vh; transform: rotate(45deg); background: #d9b56e; }
+  .ce-dm.t { top: 3.5vh; } .ce-dm.b { bottom: 3.5vh; }
+  .ce-logo { position: absolute; left: 5.8vw; top: 8.5vh; height: 5.4vh; width: auto; }
+  .ce-tag { position: absolute; right: 5.8vw; top: 8.6vh; text-align: right; font: 500 max(10px, 1.35vh) var(--f-mono); letter-spacing: .3em; text-transform: uppercase; color: #9d8e6c; }
+  .ce-tag b { display: block; margin-top: .6vh; color: #d9b56e; font-weight: 600; }
+  .ce-script, .ce-name span { background: linear-gradient(180deg, #fff3d6 0%, #f1d38c 30%, #d9b56e 55%, #a87b30 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ce-script { position: relative; z-index: 2; padding: 2vh 4vw 0; font: 400 min(10vw, 17vh)/1 'Great Vibes', 'Playfair Display', cursive; filter: drop-shadow(0 0 3vh rgba(233,196,106,.3)); animation: ceUp 1s cubic-bezier(.2,.9,.25,1) .2s both; }
+  .ce-h1 { position: relative; z-index: 2; margin: .5vh 0 0; font: 900 min(5.4vw, 8.8vh)/1 'Playfair Display', Georgia, serif; letter-spacing: .08em; color: #f6efdf; animation: ceUp 1s ease .55s both; }
+  .ce-sub { position: relative; z-index: 2; margin: 2vh 0 0; font: 500 italic max(15px, 3vh) 'Cormorant Garamond', Georgia, serif; color: #efe3c6; animation: ceUp .9s ease .8s both; }
+  .ce-chips { position: relative; z-index: 2; display: flex; gap: .8vw; margin-top: 5vh; flex-wrap: wrap; justify-content: center; max-width: 92vw; }
+  .ce-chips div { display: flex; align-items: center; gap: .7vw; padding: 1.1vh 1vw; border-radius: 1.4vh; border: 1px solid rgba(217,181,110,.35); background: rgba(255,255,255,.04); animation: ceUp .7s ease both; }
+  .ce-chips div:nth-child(1) { animation-delay: 1.1s; } .ce-chips div:nth-child(2) { animation-delay: 1.2s; } .ce-chips div:nth-child(3) { animation-delay: 1.3s; } .ce-chips div:nth-child(4) { animation-delay: 1.4s; } .ce-chips div:nth-child(5) { animation-delay: 1.5s; }
+  .ce-chips b { font: 800 max(16px, 3.6vh) 'Playfair Display', Georgia, serif; color: #e9c46a; }
+  .ce-chips span { font: 600 max(10px, 1.45vh) var(--f-body); letter-spacing: .04em; color: #e8e0cc; }
+  .ce-total { position: relative; z-index: 2; margin-top: 3.4vh; font: 600 max(11px, 1.9vh) var(--f-mono); letter-spacing: .45em; text-transform: uppercase; color: #d9b56e; animation: ceUp .8s ease 1.7s both; }
+  .ce-kick { position: relative; z-index: 2; display: flex; align-items: center; gap: 1.6vw; font: 600 max(11px, 1.7vh) var(--f-mono); letter-spacing: .5em; text-transform: uppercase; color: #d9b56e; animation: ceUp .8s ease .1s both; }
+  .ce-kick i { width: 7vw; height: 1px; background: linear-gradient(90deg, transparent, #d9b56e); } .ce-kick i:last-child { background: linear-gradient(270deg, transparent, #d9b56e); }
+  .ce-pre { position: relative; z-index: 2; margin-top: 4.5vh; font: 500 italic max(16px, 3.6vh) 'Cormorant Garamond', Georgia, serif; color: #efe3c6; animation: ceUp .8s ease .3s both; }
+  .ce-name { position: relative; z-index: 2; margin: 1.6vh 0 0; max-width: 88vw; text-align: center; font-family: 'Playfair Display', Georgia, serif; font-weight: 900; line-height: 1.08; letter-spacing: .02em; text-transform: uppercase; animation: ceName 1.1s cubic-bezier(.2,.9,.25,1) .45s both; }
+  .ce-name span { position: relative; display: inline-block; filter: drop-shadow(0 0 4vh rgba(233,196,106,.35)) drop-shadow(0 .6vh 1vh rgba(0,0,0,.5)); }
+  @keyframes ceName { from { opacity: 0; transform: translateY(4vh) scale(.94); filter: blur(12px); } to { opacity: 1; transform: none; filter: none; } }
+  @keyframes ceUp { from { opacity: 0; transform: translateY(2.6vh); } to { opacity: 1; transform: none; } }
+  .ce-line { position: relative; z-index: 2; display: flex; align-items: center; gap: 1vw; margin: 3.4vh 0 2.4vh; animation: ceUp .8s ease .9s both; }
+  .ce-line i { width: 12vw; height: 1px; background: linear-gradient(90deg, transparent, #d9b56e); } .ce-line i:last-child { background: linear-gradient(270deg, transparent, #d9b56e); }
+  .ce-line b { width: 1.2vh; height: 1.2vh; transform: rotate(45deg); background: #d9b56e; box-shadow: 0 0 2vh #e9c46a; }
+  .ce-role { position: relative; z-index: 2; font: 600 max(13px, 2.4vh) var(--f-body); letter-spacing: .3em; text-transform: uppercase; color: #f6efdf; animation: ceUp .8s ease 1s both; }
+  .ce-grp { position: relative; z-index: 2; margin-top: 2.2vh; padding: 1vh 2vw; border-radius: 4vh; border: 1px solid rgba(217,181,110,.5); background: rgba(217,181,110,.08); font: 600 max(11px, 1.9vh) var(--f-mono); letter-spacing: .25em; text-transform: uppercase; color: #e9c46a; animation: ceUp .8s ease 1.15s both; }
+  .ce-prog { position: absolute; z-index: 2; left: 0; right: 0; bottom: 9vh; display: flex; justify-content: center; align-items: center; gap: 1.2vw; font: 600 max(11px, 1.7vh) var(--f-mono); letter-spacing: .2em; color: #9d8e6c; animation: ceUp .8s ease 1.3s both; }
+  .ce-prog div { width: 18vw; height: .5vh; border-radius: 1vh; background: rgba(217,181,110,.18); overflow: hidden; } .ce-prog i { display: block; height: 100%; background: linear-gradient(90deg, #a87b30, #f1d38c); }
+  .ce-list { background: #02040b; } .ce-list img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; animation: ceFade .9s ease both; }
+  @keyframes ceFade { from { opacity: 0; } to { opacity: 1; } }
   /* Kick Off 2027 — layar pembuka glassmorphism (.ko-*, memakai latar & panel kaca .og-*) */
   .ko-wm { position: absolute; left: 50%; top: 50%; z-index: 1; transform: translate(-50%, -50%); font: 800 min(52vw, 92vh)/1 var(--f-display); letter-spacing: -.03em; color: transparent; -webkit-text-stroke: 2px rgba(233,196,106,.09); white-space: nowrap; animation: ogFade 1.6s ease .1s both; }
   .ko-hex { position: absolute; left: 50%; top: 50%; z-index: 1; width: min(96vh, 70vw); height: auto; transform: translate(-50%, -50%); overflow: visible; animation: ogFade 1.4s ease .3s both; }
@@ -3428,7 +3473,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T02:54:05Z';
+const LAST_UPDATE = '2026-10-21T02:57:42Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7915,10 +7960,22 @@ const QS_SCENES = {
   kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
   testimoni: { label: 'Testimoni Partner CAI', icon: '💬', match: /testimoni/i },
   backdrop: { label: 'Backdrop', icon: '🖼', match: /backdrop/i },
+  sertifikat: { label: 'Penyerahan Sertifikat Dealer', icon: '📜', match: /sertifikat/i },
   paket: { label: 'Paket Audio', icon: '📦', match: /paket/i },
 };
 const PORTAL_POINTS = ['Katalog produk & harga SRP resmi', 'Stok produk real-time', 'Panduan Dealer & Concerto Academy', 'Paket Audio & Shopping Gathering'];
 const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitmen kerja sama', 'Program & dukungan untuk dealer'];
+// Penyerahan Sertifikat Dealer (21 Okt 2026, data dari tabel "Daftar Dealer" pemilik): judul → dealer satu per satu (clicker) → daftar semua.
+const CERT_GROUPS = [
+  ['Agustinus', ['Autoschoon', 'Central Garage', 'DB Auto', 'Project Audio']],
+  ['CV. Concerto Malang', ['Autosound Gallery', 'MM Audioworks', 'Soundart']],
+  ['Garuda Barat', ['Altepro', 'Anugerah Audio', 'CAS Audio', 'DR Audio', 'Dress Up', 'Gema Audio', 'HS Audio', 'Mars Audio', 'SP Audio', 'Sterindo Autosound', 'Victory Audio', 'Xtreme Car Audio Meruya', 'Xtreme Car Audio P.Cabe']],
+  ['Kevin Klise', ['NAI Audioworkshop', 'Zona Audio']],
+  ['Ronny Koesharyono', ['Atmos Autosound', 'Blitz Cirebon', 'Blitz Pekalongan', 'Blitz Tegal', 'Creative Variasi', 'Dreamsound', 'Icho Kusuma', 'Linggom Audio', 'Kenzo Audio Garage', 'Oscar Variasi', 'Otofine Garage', 'Terang Jaya', 'The Peak Garage', 'Vincent Mevina', 'West Audioworks']],
+];
+const CERT_DEALERS = CERT_GROUPS.flatMap(([g, ds]) => ds.map(d => ({ d, g })));
+const CERT_SEQ = ['sertifikat', ...CERT_DEALERS.map((_, i) => 'sertifikat:' + (i + 1)), 'sertifikat:list'];
+const certNum = k => { const m = /^sertifikat:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 // Kick Off 2027 · "Absen Dosa Dealer CAI" (permintaan pemilik): judul Kick Off → absen dosa (clicker membuka 1 per 1) → "semua jawabannya ada di portal" → video portal → PKS.
 // Butir 1–10 dari pemilik, 11–20 tambahan. f = kunci fitur portal yang menjawabnya (ABSEN_FEAT).
 const ABSEN_DOSA = [
@@ -8063,6 +8120,7 @@ const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] 
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
+  if (sceneBase(k) === 'sertifikat') return { ...base, label: k === 'sertifikat:list' ? 'Sertifikat Dealer · Daftar semua' : certNum(k) ? `Sertifikat Dealer · ${certNum(k)}/${CERT_DEALERS.length} ${CERT_DEALERS[certNum(k) - 1]?.d || ''}` : base.label };
   if (sceneBase(k) === 'backdrop') return { ...base, label: bdNum(k) ? `Backdrop · ${BACKDROPS[bdNum(k) - 1]?.t}` : 'Backdrop · bergantian' };
   if (k === 'cailaunch:full' || k === 'cailaunch:v') return { ...base, icon: '🎬', label: `Launching CAI · ${k === 'cailaunch:v' ? 'video' : 'hitung mundur + video'}` };
   if (k === 'newbrand:full' || k === 'newbrand:v') return { ...base, icon: '🎬', label: `Launching ${NEW_BRAND.name} · ${k === 'newbrand:v' ? 'video' : 'hitung mundur + video'}` };
@@ -8106,7 +8164,7 @@ const FREE_NAME = 'Free Time';
 // Panel Editor disusun mengikuti urutan acara: pagi (09:00–16:00), malam (18:00), lalu layar tambahan.
 const SCR_PAGI = ['anthem', 'qa', 'coffee', 'refresh', 'launch', 'lunch', 'kickoff'];
 const SCR_MALAM = ['opening', 'awarding', 'dinner', 'healthy'];
-const SCR_EXTRA = ['testimoni', 'funmkt', 'backdrop', 'newbrand', 'cailaunch'];
+const SCR_EXTRA = ['sertifikat', 'testimoni', 'funmkt', 'backdrop', 'newbrand', 'cailaunch'];
 const SCR_GROUPS = [['☀️ Acara Pagi · 08:30 – 16:00', SCR_PAGI], ['🌙 Acara Malam · mulai 18:00', SCR_MALAM], ['✨ Layar tambahan', SCR_EXTRA]];
 const SCR_LABEL = { qa: { icon: '🎤', label: 'Meeting Dealer', sub: 'Tanya Jawab Partner CAI' } };
 // Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
@@ -8128,7 +8186,8 @@ const SCR_DESC = {
   dinner: 'Layar makan malam (dinner) — isi hitung mundur bila perlu.',
   healthy: 'Layar Healthy Drink sebagai penutup acara.',
   testimoni: 'Judul sesi Testimoni Partner CAI, lalu putar video testimoni dari dealer (satu per satu atau semua berurutan). Teks tambahan = nama partner (opsional).',
-  backdrop: 'Backdrop acara tampil layar penuh (Reset Button = video berulang) — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah foto.',
+  backdrop: 'Backdrop acara tampil layar penuh — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah backdrop.',
+  sertifikat: 'Penyerahan Sertifikat Dealer: layar judul → nama dealer muncul satu per satu (sesuai urutan maju ke panggung) → daftar semua dealer. Clicker / panah di komputer videotron menggeser ke dealer berikutnya.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
   anthem: 'Pembuka acara pagi: layar "Menyanyikan Lagu Kebangsaan Indonesia Raya — hadirin dimohon berdiri", lalu video Indonesia Raya layar penuh (±1 menit 48 dtk). Musik latar otomatis senyap selama sesi ini.',
   kickoff: 'Judul Kick Off 2027 → Absen Dosa Dealer CAI (dibuka 1 per 1) → "Semua jawabannya ada di Portal" → video perkenalan portal → halaman materi PKS Dealer 2027. Clicker / panah di komputer videotron mengikuti urutan ini.',
@@ -8154,6 +8213,16 @@ function renderScreenPanel(err) {
   const showBtn = (label) => `<button class="gt-btn confirm" onclick="setScene(${sel === 'qa' ? 'null' : `'${sel}'`})">${live && (sel === 'qa' || scrRow.scene === sel) ? '↻ ' : '📺 '}${label || 'Tampilkan di layar'}</button>`;
   let body = '';
   if (sel === 'qa') body = `<div class="scr-actions">${showBtn('Tampilkan Meeting Dealer di layar')}<button class="gt-btn ghost" onclick="setRdTab('qa')">🎤 Buka menu Open Mic</button></div>`;
+  else if (sel === 'sertifikat') { const cur = certNum(scrRow.scene), sc = scrRow.scene || '', N = CERT_DEALERS.length;
+    let i = 0;
+    body = `<div class="scr-actions">${showBtn('Tampilkan layar judul')}<button class="gt-btn${sc === 'sertifikat:list' ? ' confirm' : ' ghost'}" onclick="setScene('sertifikat:list')">📋 Daftar semua dealer</button></div>
+    <div class="scr-fm-nav">
+      <button class="scr-lv-btn" onclick="certStep(-1)" ${sceneBase(sc) === 'sertifikat' && sc !== 'sertifikat' ? '' : 'disabled'}>◀ Sebelumnya</button>
+      <span class="scr-fm-now">${cur ? `Dealer <b>${cur}</b> / ${N} · ${escHtml(CERT_DEALERS[cur - 1].d)}` : sc === 'sertifikat:list' ? 'Daftar semua' : 'Belum ada dealer tampil'}</span>
+      <button class="scr-lv-btn${cur ? '' : ' on'}" onclick="certStep(1)" ${sc === 'sertifikat:list' ? 'disabled' : ''}>${cur ? (cur < N ? 'Berikutnya ▶' : 'Daftar semua ▶') : '▶ Mulai dari dealer 1'}</button>
+    </div>
+    ${CERT_GROUPS.map(([g, ds]) => `<div class="scr-sub-k">Distributor · ${escHtml(g)}</div><div class="scr-pks-pages">${ds.map(d => { const n = ++i; return `<button class="scr-lv-btn${cur === n ? ' on' : ''}" onclick="setScene('sertifikat:${n}')">${n}. ${escHtml(d)}</button>`; }).join('')}</div>`).join('')}
+    <div class="scr-note">Klik nama dealer untuk langsung menampilkannya, atau pakai ◀ / ▶ (clicker di komputer videotron juga bisa).</div>`; }
   else if (sel === 'backdrop') { const cur = bdNum(scrRow.scene), alt = scrRow.scene === 'backdrop';
     body = `<div class="scr-bd">${BACKDROPS.map((b, i) => `<button class="scr-bd-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('backdrop:${i + 1}')"><img src="${b.th}" alt="${escHtml(b.t)}"><b>${i + 1}. ${escHtml(b.t)}${b.video ? ' <em class="scr-bd-vid">🎬 video</em>' : ''}</b><span>${cur === i + 1 ? '● Tampil · klik untuk ulang' : '▶ Tampilkan'}</span></button>`).join('')}</div>
     <div class="scr-actions"><button class="gt-btn${alt ? ' confirm' : ' ghost'}" onclick="setScene('backdrop')">${alt ? '↻ Bergantian otomatis (aktif)' : '🔁 Tampilkan bergantian'}</button></div>`; }
@@ -8254,6 +8323,11 @@ async function renderPksPreview(n) {
     await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
   } catch (e) {}
 }
+function certStep(d) {
+  const sc = scrRow?.scene || '', cur = sceneBase(sc) === 'sertifikat' ? Math.max(0, CERT_SEQ.indexOf(sc)) : -1;
+  const next = Math.min(CERT_SEQ.length - 1, Math.max(0, cur + d));
+  if (next !== cur) setScene(CERT_SEQ[next]);
+}
 function absenStep(d) {
   const ab = absenPart(scrRow?.scene), N = ABSEN_DOSA.length;
   if (!ab) return d > 0 && setScene('kickoff:absen:0');
@@ -8345,6 +8419,7 @@ function renderScene(s) {
   if (tmParts(s.scene)) return renderTestimoniVideo(s);
   if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
   if (sceneBase(s.scene) === 'backdrop') return renderBackdrop(s);
+  if (sceneBase(s.scene) === 'sertifikat') return renderCert(s);
   if (sceneBase(s.scene) === 'paket') return renderPaket(s);
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene), opVid(s.scene), s.updated_at);
   if (s.scene === 'awarding') return renderAwardTitle(s);
@@ -8759,6 +8834,35 @@ function renderAbsen(s) {
   }
   qsSetStage(['absen', s.scene, a.all || a.jawab ? s.updated_at : ''].join('|'), html);
 }
+// Penyerahan Sertifikat Dealer: layar judul, kartu per dealer (nama besar emas), dan daftar semua (gambar backdrop sertifikat)
+function ceBg() {
+  const r = axRnd(5), bk = Array.from({ length: 22 }, () => { const x = r() * 100, y = r() * 100; return (x > 12 && x < 88 && y > 8 && y < 92) ? '' : `<i style="--x:${x.toFixed(1)}%;--y:${y.toFixed(1)}%;--z:${(1 + r() * 4).toFixed(1)}vh;--o:${(.15 + r() * .4).toFixed(2)};--d:-${(r() * 10).toFixed(1)}s"></i>`; }).join('');
+  return `<div class="ce-bg"><div class="ce-glow"></div><div class="ce-bk">${bk}</div></div><div class="ce-frame"></div><div class="ce-frame2"></div>
+    <i class="ce-cn tl"></i><i class="ce-cn tr"></i><i class="ce-cn bl"></i><i class="ce-cn br"></i><i class="ce-dm t"></i><i class="ce-dm b"></i>
+    <img class="ce-logo" src="${LOGO_WHITE}" alt="CAI"><div class="ce-tag">5th Annual Gathering<b>2026</b></div>`;
+}
+function renderCert(s) {
+  const n = certNum(s.scene), N = CERT_DEALERS.length, t = s.scene_text ? escHtml(s.scene_text) : '';
+  let html;
+  if (s.scene === 'sertifikat:list') html = `<div class="qs-scene ce ce-list"><img src="assets/backdrop/sertifikat-dealer.webp" alt="Daftar dealer penerima sertifikat"></div>`;
+  else if (n) {
+    const c = CERT_DEALERS[n - 1], L = c.d.length, fs = L > 20 ? 'min(6.4vw, 11vh)' : L > 13 ? 'min(8vw, 14vh)' : 'min(10vw, 17vh)';
+    html = `<div class="qs-scene ce ce-one">${ceBg()}
+      <div class="ce-kick"><i></i><span>Penyerahan Sertifikat Dealer</span><i></i></div>
+      <div class="ce-pre">Selamat kepada</div>
+      <h1 class="ce-name" style="font-size:${fs}"><span>${escHtml(c.d)}</span></h1>
+      <div class="ce-line"><i></i><b></b><i></i></div>
+      <div class="ce-role">Dealer Resmi Concerto Audio Indonesia</div>
+      <div class="ce-grp">Distributor · ${escHtml(c.g)}</div>
+      <div class="ce-prog"><span>${String(n).padStart(2, '0')} / ${N}</span><div><i style="width:${(n / N * 100).toFixed(1)}%"></i></div></div></div>`;
+  } else html = `<div class="qs-scene ce ce-title">${ceBg()}
+      <div class="ce-script">Penyerahan</div>
+      <h1 class="ce-h1">SERTIFIKAT DEALER</h1>
+      <p class="ce-sub">${t || 'Selamat &amp; terima kasih kepada para dealer resmi Concerto Audio Indonesia'}</p>
+      <div class="ce-chips">${CERT_GROUPS.map(([g, ds]) => `<div><b>${ds.length}</b><span>Dealer · ${escHtml(g)}</span></div>`).join('')}</div>
+      <div class="ce-total">${N} Dealer Resmi</div></div>`;
+  qsSetStage(['cert', s.scene, s.scene_text, s.updated_at].join('|'), html);
+}
 function playPortalVideo() { playOverlayVideo(qsLocalPortal || PORTAL_INTRO_VIDEO, '.sc-kickoff', 'qsPickPortalVideo'); }
 // Video Indonesia Raya (pembuka acara pagi): overlay layar penuh di atas layar judul; file gagal → pilih file lokal
 let qsLocalAnthem = null;
@@ -8969,6 +9073,14 @@ async function qsFmKey(d) {
     const next = Math.min(max, Math.max(0, cur + d));
     if (next === cur) return;
     const scene = next < KICKOFF_PRE.length ? KICKOFF_PRE[next] : 'kickoff:' + (next - KICKOFF_PRE.length + 1), now = new Date().toISOString();
+    renderScene({ scene, updated_at: now });
+    await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: now });
+    return;
+  }
+  if (sceneBase(s?.scene) === 'sertifikat') {   // Sertifikat: judul → dealer 1..n → daftar semua
+    const cur = Math.max(0, CERT_SEQ.indexOf(s.scene)), next = Math.min(CERT_SEQ.length - 1, Math.max(0, cur + d));
+    if (next === cur) return;
+    const scene = CERT_SEQ[next], now = new Date().toISOString();
     renderScene({ scene, updated_at: now });
     await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: now });
     return;
@@ -9194,6 +9306,8 @@ function initQaScreen() {
   qsCheckBuild(); setInterval(qsCheckBuild, 60000);
   document.body.classList.add('screen-mode');
   document.title = 'Layar Videotron — Gathering CAI 2026';
+  { const f = document.createElement('link'); f.rel = 'stylesheet';   // font tambahan khusus layar videotron (layar Sertifikat Dealer)
+    f.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@700;900&family=Cormorant+Garamond:ital,wght@1,500&display=swap'; document.head.appendChild(f); }
   const el = document.getElementById('qa-screen');
   el.hidden = false;
   document.getElementById('qs-logo').src = LOGO_WHITE;
