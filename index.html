@@ -3486,7 +3486,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-21T04:19:21Z';
+const LAST_UPDATE = '2026-10-21T04:29:12Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3617,7 +3617,6 @@ const RECENT_UPDATES = [
   { date:'2026-10-19', type:'photo', brandId:'audiocircle', productId:'ac-blamp4', note:'Foto BL AMP.4 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-drcv5', note:'Keterangan & spesifikasi DRC V3/V4/V5 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-st10prosub', note:'Spesifikasi ST10PRO ditambahkan' },
-  { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-sa65w', note:'Spesifikasi SA-65W ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qk2002', note:'Spesifikasi QK 200.2 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qk2004', note:'Spesifikasi QK 200.4 ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'ms-mss1pro', note:'Spesifikasi MSS1 PRO ditambahkan' },
@@ -3628,7 +3627,6 @@ const RECENT_UPDATES = [
   { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-st10prosub', note:'Foto ST10PRO ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-qk2004', note:'Foto QK 200.4 ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'steg', productId:'ms-ss10', note:'Foto SS-10 ditambahkan' },
-  { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-sa65w', note:'Foto SA-65W ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'steg', productId:'ms-mss1pro', note:'Foto MSS1 PRO ditambahkan' },
   { date:'2026-10-19', type:'photo', brandId:'steg', productId:'st-ssdsp12ii', note:'Foto SS-DSP12 II ditambahkan' },
   { date:'2026-10-19', type:'data', brandId:'steg', productId:'st-qk2002', note:'Produk baru QK 200.2 (Amplifier) ditambahkan' },
@@ -4148,10 +4146,6 @@ const BRANDS = [
           photos:['assets/st-s10-1.webp','assets/st-s10-2.webp','assets/st-s10-3.webp','assets/st-s10-4.webp'],
           desc:'10 inch Spare Tire Active Subwoofer.',
           specs:{'Subwoofer Size':'10 inch, 0.4 Ω','RMS Power':'200 W','THD':'<0.5%','Signal-to-Noise':'>95 dB','Freq. Response':'25 Hz – 200 Hz','Low Pass Filter':'50 Hz – 200 Hz','Subsonic Filter':'25 Hz'} },
-        { id:'st-sa65w', price:4500000, name:'SA-65W', model:'SA-65W', category:'Subwoofer', emoji:'📦', hasVideo:false,
-          photos:['assets/st-sa65w-1.webp','assets/st-sa65w-2.webp','assets/st-sa65w-3.webp','assets/st-sa65w-4.webp'],
-          desc:'6.5 inch Ultra-Compact Active Subwoofer — amplifier Class D 100 W RMS built-in, kabinet tipis muat di bawah jok.',
-          specs:{'Type':'Active under-seat subwoofer','Subwoofer Size':'6.5 inch','Amplifier':'Class D, 100 W RMS','Cone':'Aluminium','Voice Coil':'Heat-resistant','Low Pass Filter':'Adjustable, high-slope','Phase Control':'Yes','High Level Input':'2 channel (auto turn-on)','Low Level Input':'2 channel RCA','Color':'Black'} },
         { id:'st-sa55w', soon:true, name:'SA-55W', model:'SA-55W', category:'Subwoofer', emoji:'📦', hasVideo:false,
           photos:['assets/st-sa55w-4.webp','assets/st-sa55w-3.webp','assets/st-sa55w-1.webp','assets/st-sa55w-2.webp'],
           desc:'5.5 inch Mini Slim Active Subwoofer — 200 W RMS dalam bodi ringkas, muat di bawah jok.',
@@ -6371,7 +6365,7 @@ const STOCK_ALIASES = {
   plt28: 'ac-prot28', plw6cneo: 'ac-prow6c', plw6c: 'ac-prow6c', plm3c: 'ac-prom3c', plm3p: '-', mss1m: '-', plm3pnextel: 'ac-prom3pnextel',
   hlm2mkii: 'ac-hlm2', hlt20mkii: 'ac-hlt20', hlt25vmkiinp: 'ac-hlt25', hlt25mkiinp: 'ac-hlt25', hlt25np: 'ac-hlt25',
   ss16: 'st-ss16', xss16dsp: 'st-ss16',   // XSS16 (dulu ditulis SS16) — konfirmasi pemilik
-  ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16', sst50: 'st-sst50', ms650: '-', sec650: '-', mz650ctw: '-', ml35: '-', ms30: '-', qm754: '-', ssdsp10unico: 'st-ssdsp10', ssdsp10: 'st-ssdsp10',
+  ssf1: 'st-sff1', sspdsp16ii: 'st-ssdsp16', sst50: 'st-sst50', ms650: '-', sec650: '-', mz650ctw: '-', ml35: '-', ms30: '-', qm754: '-', sa65w: '-', ssdsp10unico: 'st-ssdsp10', ssdsp10: 'st-ssdsp10',
   // file STOCK DISTRIBUTOR (Merk · Unit · Stok Tersedia)
   bls10: 'ac-bls10', blt26vmkii: 'ac-blt26', hlt25npmkii: 'ac-hlt25', iqc42bmwa: 'ac-iqc42bmwa', iqc42bmwb: 'ac-iqc42bmwb',
   iqs8bmw2ohm: 'ac-iqs82bmw', iqs8bmw4ohm: 'ac-iqs824bmw', microfaser: 'ac-microfiber',
