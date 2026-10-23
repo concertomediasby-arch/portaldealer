@@ -3504,7 +3504,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-23T08:02:46Z';
+const LAST_UPDATE = '2026-10-23T08:51:53Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8474,6 +8474,7 @@ function renderScene(s) {
   if (sceneBase(s.scene) === 'backdrop') return renderBackdrop(s);
   if (sceneBase(s.scene) === 'sertifikat') return renderCert(s);
   if (sceneBase(s.scene) === 'paket') return renderPaket(s);
+  if (sceneBase(s.scene) === 'opening') qsPrefetchOpening(opNum(s.scene));
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene), opVid(s.scene), s.updated_at);
   if (s.scene === 'awarding') return renderAwardTitle(s);
   if (awPart(s.scene)) return renderAwarding(s.scene, s.updated_at);
@@ -8830,10 +8831,24 @@ function renderOpeningSpeaker(n, vid, stamp) {
 }
 // Video sambutan pembicara (Audiocircle & STEG): overlay layar penuh di atas kartu; selesai → kembali ke kartu
 const qsLocalSpeaker = {};
-let qsSpkChain = null;   // 'n'+'v' = recap ke-n sedang diputar langsung setelah speech (scene di tabel menyusul)
+let qsSpkChain = null;
+// Video Opening Speech (speech Ricky + recap) diunduh ke memori sejak scene Opening tampil → recap langsung jalan
+// begitu speech selesai, tanpa menunggu buffer dari internet venue. Pembicara yang sedang/akan tampil didahulukan.
+let qsOpPrefetching = false;
+async function qsPrefetchOpening(first = 0) {
+  if (qsOpPrefetching) return; qsOpPrefetching = true;
+  try {
+    const sps = OPENING_SPEAKERS.map((sp, i) => ({ sp, i })), order = first ? [...sps.slice(first - 1), ...sps.slice(0, first - 1)] : sps;
+    for (const { sp, i } of order) for (const src of i === first - 1 ? [sp.video, sp.intro] : [sp.intro, sp.video]) {   // pembicara saat ini: recap dulu (speech-nya sedang diputar)
+      if (!src || qsVidCache[src]) continue;
+      try { const r = await fetch(src); if (!r.ok) throw new Error(r.status); qsVidCache[src] = URL.createObjectURL(await r.blob()); } catch (e) { /* gagal → tetap streaming */ }
+    }
+  } finally { qsOpPrefetching = false; }
+}   // 'n'+'v' = recap ke-n sedang diputar langsung setelah speech (scene di tabel menyusul)
 function playSpeakerVideo(n, kind = 'v', chain = false) {
   const sp = OPENING_SPEAKERS[n - 1]; if (!sp) return;
-  const src = qsLocalSpeaker[n + kind] || (kind === 'i' ? sp.intro : sp.video);
+  const raw = kind === 'i' ? sp.intro : sp.video;
+  const src = qsLocalSpeaker[n + kind] || qsVidCache[raw] || raw;
   if (!src) return;
   let ov = chain && document.getElementById('qs-video');
   if (!ov) {
@@ -9426,7 +9441,7 @@ async function qsCheckBuild() {
     const sig = t.length + ':' + t.slice(-200);
     if (qsBuildSig === null) { qsBuildSig = sig; return; }
     const v = document.getElementById('qs-video-el');
-    if (sig !== qsBuildSig && !(v && !v.paused)) location.reload();
+    if (sig !== qsBuildSig && !(v && !v.paused) && !document.getElementById('qs-video')) location.reload();
   } catch (e) {}
 }
 function initQaScreen() {
