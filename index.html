@@ -3504,7 +3504,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-23T05:49:49Z';
+const LAST_UPDATE = '2026-10-23T05:55:38Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8103,16 +8103,17 @@ const FM_SLIDES = 14;
 const FM_TITLE_SLIDES = [];
 const fmSlide = (n, thumb) => `assets/funmarketing/slide-${String(n).padStart(2, '0')}${thumb ? '-thumb' : ''}.webp`;
 // Opening Speech: scene 'opening' = susunan pembicara, 'opening:<n>' = kartu pembicara ke-n. id = brand di BRANDS (pakai logo).
-// ac = warna aksen kartu; video = video sambutan (Audiocircle & STEG dari pemilik — file diletakkan di assets/opening/).
+// ac = warna aksen kartu; video = video recap sambutan (Audiocircle & STEG dari pemilik — file di assets/opening/).
+// intro = video speech Ricky Eko Widodo (CAI) sebelum recap; urutan layar brand ber-video: speech CAI → recap → kartu (backdrop saat pembicara di panggung).
 const OPENING_SPEAKERS = [
-  { name: 'Mr. Marc', brand: 'Audiocircle', id: 'audiocircle', ac: '#ef3b36', video: 'assets/opening/audiocircle.mp4?v=2' },
+  { name: 'Mr. Marc', brand: 'Audiocircle', id: 'audiocircle', ac: '#ef3b36', intro: 'assets/opening/ricky-speech.mp4', introBy: 'Ricky Eko Widodo', video: 'assets/opening/audiocircle.mp4?v=3' },
   { name: 'Mr. Kelvin Lee', brand: 'STEG', id: 'steg', ac: '#22c476', video: 'assets/opening/steg.mp4' },
   { name: 'Mr. David', brand: 'Zelos', id: 'zelos', ac: '#e3b94f' },
   { name: 'Juliar Candra', brand: 'Harrison Lab', logo: 'assets/brands/harrison-lab.webp', ac: '#4aa8ff' },
   { name: 'Arif', brand: 'Amo Plus', logo: 'assets/brands/amo-plus.webp', ac: '#b66cff' },
   { name: 'Yusak', brand: 'Sound Addict', logo: 'assets/brands/sound-addict.webp', ac: '#ff7a3d' },
 ];
-// Urutan tampil (clicker): susunan → pembicara 1 → [video 1] → pembicara 2 → …
+// Urutan tampil (clicker): susunan → [speech CAI 1] → [recap 1] → kartu pembicara 1 → … (pembicara tanpa video: langsung kartu)
 // Awarding — Best Dealer 2026 (dari sertifikat pemilik: top-ten-ranking 2–10 + plakat Defending Champion).
 // Urutan reveal di layar: judul → Top 10 … Top 2 → Juara (Defending Champion) → papan peringkat lengkap.
 const AWARD_DEALERS = [   // prize = hadiah (daftar dari pemilik), tampil di kartu Top/Juara & papan peringkat
@@ -8139,7 +8140,7 @@ const awKeys = c => ['awarding:' + AW_CATS[c].p + 'intro'].concat([...AW_CATS[c]
 // Urutan acara: judul → Best Distributor (pembuka → Top 6 … Juara → papan) → Best Dealer (pembuka → Top 10 … Juara → papan)
 const AWARD_SEQ = ['awarding', ...awKeys('dist'), ...awKeys('dealer')];
 const awPart = k => { const m = /^awarding:(d?)(\d+|list|intro)$/.exec(k || ''); return m ? { cat: m[1] ? 'dist' : 'dealer', r: /\d/.test(m[2]) ? +m[2] : m[2] } : null; };
-const OPENING_SEQ = ['opening', ...OPENING_SPEAKERS.flatMap((sp, i) => [`opening:${i + 1}`, ...(sp.video ? [`opening:${i + 1}:v`] : [])])];
+const OPENING_SEQ = ['opening', ...OPENING_SPEAKERS.flatMap((sp, i) => [...(sp.intro ? [`opening:${i + 1}:i`] : []), ...(sp.video ? [`opening:${i + 1}:v`] : []), `opening:${i + 1}`])];
 // Materi PKS Dealer 2027 (isi diskon/target → TIDAK di repo publik): PDF di Storage privat GUIDES_BUCKET, diunggah admin dari panel.
 // Scene 'kickoff' = judul Kick Off, 'kickoff:<n>' = halaman PKS Dealer ke-n, 'kickoff:tl:<n>' = halaman PKS Team Leader ke-n (dirender pdf.js).
 // PKS Team Leader ditambahkan 21 Okt 2026 (permintaan pemilik) — badge sejajar PKS Dealer di panel Kick Off.
@@ -8153,8 +8154,8 @@ const pksNum = k => pksPart(k)?.n || 0;
 const pksKey = (d, n) => d === 'tl' ? 'kickoff:tl:' + n : 'kickoff:' + n;
 let pksMeta = null;   // { dealer: { exists, pages }, tl: { exists, pages } } — di panel admin
 let pksSel = 'dealer';   // dokumen PKS yang sedang dibuka di panel
-const opNum = k => { const m = /^opening:(\d+)(:v)?$/.exec(k || ''); return m ? +m[1] : 0; };
-const opVid = k => /^opening:\d+:v$/.test(k || '');
+const opNum = k => { const m = /^opening:(\d+)(:[vi])?$/.exec(k || ''); return m ? +m[1] : 0; };
+const opVid = k => (/^opening:\d+:([vi])$/.exec(k || '') || [])[1] || '';   // 'v' = video recap, 'i' = video speech CAI, '' = kartu
 const ANTHEM_VIDEO = 'assets/opening/indonesia-raya.mp4';   // video lagu kebangsaan Indonesia Raya (scene 'anthem:v'), pembuka acara pagi — dari Drive pemilik
 const PORTAL_INTRO_VIDEO = 'assets/intro/portal-dealer-explainer-40s.mp4?v=2';   // video perkenalan portal (scene 'kickoff:v')
 const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
@@ -8171,7 +8172,7 @@ const sceneInfo = k => {
   { const ab = absenPart(k); if (ab) return { ...base, icon: ab.jawab ? '✅' : '📋', label: ab.jawab ? 'Kick Off 2027 · Semua jawabannya ada di Portal' : `Kick Off 2027 · Absen Dosa ${ab.k}/${ABSEN_DOSA.length}` }; }
   { const pk = pksPart(k); if (pk) { const N = pksMeta?.[pk.d]?.pages; return { ...base, label: `Kick Off 2027 · ${PKS_DOCS[pk.d].short} hal. ${pk.n}${N ? '/' + N : ''}` }; } }
   { const a = awPart(k); if (a) { const C = AW_CATS[a.cat]; return { ...base, label: a.r === 'intro' ? `Awarding · Pembuka ${C.short}` : a.r === 'list' ? `Awarding · Papan peringkat ${C.short}` : `Awarding · ${C.short} ${a.r === 1 ? 'Juara' : 'Top ' + a.r} — ${C.list.find(d => d.rank === a.r)?.name || ''}` }; } }
-  if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video' : ''}` }; }
+  if (opNum(k)) { const sp = OPENING_SPEAKERS[opNum(k) - 1]; return { ...base, label: opVid(k) === 'i' ? `Opening Speech · ${sp.brand} · Speech ${sp.introBy || 'CAI'}` : `Opening Speech · ${sp.name} (${sp.brand})${opVid(k) ? ' · video recap' : ''}` }; }
   const tm = tmParts(k); if (tm) return { ...base, icon: '🎬', label: 'Testimoni Partner CAI · ' + (tm.idx == null ? 'semua video' : (TESTIMONI_VIDEOS[tm.idx]?.title || 'video ' + (tm.idx + 1))) };
   const { brand, idx } = launchParts(k), b = brand ? BRANDS.find(x => x.id === brand) : null;
   if (!b) return base;
@@ -8271,7 +8272,9 @@ function renderScreenPanel(err) {
     <div class="scr-sub-k">Pembicara</div>
     <div class="scr-fm-nav">${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1 && !opVid(scrRow.scene);
       return `<button class="scr-lv-btn${on ? ' on' : ''}" onclick="setScene('opening:${i + 1}')" title="${escHtml(sp.brand)}">${i + 1}. ${escHtml(sp.name)} <small class="scr-op-brand">${(sp.logo || b?.logo) ? `<img src="${sp.logo || b.logo}" alt="">` : escHtml(sp.brand)}</small></button>`
-        + (sp.video ? `<button class="scr-lv-btn${opNum(scrRow.scene) === i + 1 && opVid(scrRow.scene) ? ' on' : ''}" onclick="setScene('opening:${i + 1}:v')" title="Putar video sambutan ${escHtml(sp.name)}">🎬 Video</button>` : ''); }).join('')}</div>`;
+        + (sp.intro ? `<button class="scr-lv-btn${opNum(scrRow.scene) === i + 1 && opVid(scrRow.scene) === 'i' ? ' on' : ''}" onclick="setScene('opening:${i + 1}:i')" title="Putar video speech ${escHtml(sp.introBy || 'CAI')}">🎤 Speech ${escHtml((sp.introBy || 'CAI').split(' ')[0])}</button>` : '')
+        + (sp.video ? `<button class="scr-lv-btn${opNum(scrRow.scene) === i + 1 && opVid(scrRow.scene) === 'v' ? ' on' : ''}" onclick="setScene('opening:${i + 1}:v')" title="Putar video recap ${escHtml(sp.name)}">🎬 Recap</button>` : ''); }).join('')}</div>
+    <div class="scr-note">Audiocircle &amp; STEG: ▶ / clicker berurutan 🎤 speech CAI → 🎬 video recap → kartu pembicara (backdrop selama pembicara di panggung).</div>`;
   else if (sel === 'awarding') { const cur = scrRow.scene, ai = AWARD_SEQ.indexOf(cur);
     const row = c => `<div class="scr-sub-k">${AW_CATS[c].label} · Top ${AW_CATS[c].list.length} → Juara</div><div class="scr-lv"><div class="scr-lv-row">${awKeys(c).map(k => { const a = awPart(k), d = AW_CATS[c].list.find(x => x.rank === a.r);
       return `<button class="scr-lv-btn${cur === k ? ' on' : ''}" onclick="setScene('${k}')">${a.r === 'intro' ? '🎬 Pembuka kategori' : a.r === 'list' ? '🏆 Papan peringkat' : a.r === 1 ? `👑 Juara · ${escHtml(d.name)}` : `${a.r}. ${escHtml(d.name)}`}</button>`; }).join('')}</div></div>`;
@@ -8819,14 +8822,14 @@ function renderOpeningSpeaker(n, vid, stamp) {
     </div>
     <div class="og-emblem"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="e1" cx="50" cy="50" r="49" pathLength="100"/><circle class="e2" cx="50" cy="50" r="44"/><circle class="e3" cx="50" cy="50" r="38" pathLength="100"/></svg>
       <div class="og-core og-glass" style="--sd:3s">${ogMark(sp)}</div></div></div>`;
-  const changed = qsSetStage(['opening', n, vid ? 'v' : '', vid ? stamp : ''].join('|'), html);
-  if (changed && vid) setTimeout(() => playSpeakerVideo(n), 600);
+  const changed = qsSetStage(['opening', n, vid, vid ? stamp : ''].join('|'), html);
+  if (changed && vid) setTimeout(() => playSpeakerVideo(n, vid), 600);
 }
 // Video sambutan pembicara (Audiocircle & STEG): overlay layar penuh di atas kartu; selesai → kembali ke kartu
 const qsLocalSpeaker = {};
-function playSpeakerVideo(n) {
+function playSpeakerVideo(n, kind = 'v') {
   const sp = OPENING_SPEAKERS[n - 1]; if (!sp) return;
-  const src = qsLocalSpeaker[n] || sp.video;
+  const src = qsLocalSpeaker[n + kind] || (kind === 'i' ? sp.intro : sp.video);
   if (!src) return;
   document.getElementById('qs-video')?.remove();
   const ov = document.createElement('div');
@@ -8838,7 +8841,7 @@ function playSpeakerVideo(n) {
   v.onended = () => { ov.style.transition = 'opacity .6s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 650); };
   v.onerror = () => {
     ov.remove();
-    document.querySelector('.og-sp')?.insertAdjacentHTML('beforeend', `<label class="op-pick">📁 Video belum tersedia — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="qsPickSpeakerVideo(${n}, this)"></label>`);
+    document.querySelector('.og-sp')?.insertAdjacentHTML('beforeend', `<label class="op-pick">📁 Video belum tersedia — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="qsPickSpeakerVideo(${n}, this, '${kind}')"></label>`);
   };
   um.onclick = () => { v.muted = false; um.hidden = true; };
   v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
@@ -9007,12 +9010,12 @@ function qsPickPortalVideo(input) {
   document.querySelector('.op-pick')?.remove();
   playPortalVideo();
 }
-function qsPickSpeakerVideo(n, input) {
+function qsPickSpeakerVideo(n, input, kind = 'v') {
   const f = input.files?.[0]; if (!f) return;
-  if (qsLocalSpeaker[n]) URL.revokeObjectURL(qsLocalSpeaker[n]);
-  qsLocalSpeaker[n] = URL.createObjectURL(f);
+  if (qsLocalSpeaker[n + kind]) URL.revokeObjectURL(qsLocalSpeaker[n + kind]);
+  qsLocalSpeaker[n + kind] = URL.createObjectURL(f);
   document.querySelector('.op-pick')?.remove();
-  playSpeakerVideo(n);
+  playSpeakerVideo(n, kind);
 }
 
 
