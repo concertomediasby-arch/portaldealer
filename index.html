@@ -3504,7 +3504,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-23T06:15:20Z';
+const LAST_UPDATE = '2026-10-23T07:25:50Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8822,23 +8822,40 @@ function renderOpeningSpeaker(n, vid, stamp) {
     </div>
     <div class="og-emblem"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="e1" cx="50" cy="50" r="49" pathLength="100"/><circle class="e2" cx="50" cy="50" r="44"/><circle class="e3" cx="50" cy="50" r="38" pathLength="100"/></svg>
       <div class="og-core og-glass" style="--sd:3s">${ogMark(sp)}</div></div></div>`;
-  const changed = qsSetStage(['opening', n, vid, vid ? stamp : ''].join('|'), html);
+  const key = ['opening', n, vid, vid && stamp ? new Date(stamp).getTime() : ''].join('|');
+  // speech selesai → recap sudah diputar langsung oleh layar ini (qsSpkChain): cukup catat kunci, jangan putar ulang
+  if (vid && qsSpkChain === n + vid && document.getElementById('qs-video')) { qsSpkChain = null; qsKey = key; return; }
+  const changed = qsSetStage(key, html);
   if (changed && vid) setTimeout(() => playSpeakerVideo(n, vid), 600);
 }
 // Video sambutan pembicara (Audiocircle & STEG): overlay layar penuh di atas kartu; selesai → kembali ke kartu
 const qsLocalSpeaker = {};
-function playSpeakerVideo(n, kind = 'v') {
+let qsSpkChain = null;   // 'n'+'v' = recap ke-n sedang diputar langsung setelah speech (scene di tabel menyusul)
+function playSpeakerVideo(n, kind = 'v', chain = false) {
   const sp = OPENING_SPEAKERS[n - 1]; if (!sp) return;
   const src = qsLocalSpeaker[n + kind] || (kind === 'i' ? sp.intro : sp.video);
   if (!src) return;
-  document.getElementById('qs-video')?.remove();
-  const ov = document.createElement('div');
-  ov.id = 'qs-video'; ov.className = 'qs-video';
-  ov.innerHTML = '<video id="qs-video-el" playsinline preload="auto"></video><button class="qs-unmute" hidden>🔊 Nyalakan suara</button>';
-  document.getElementById('qa-screen').appendChild(ov);
+  let ov = chain && document.getElementById('qs-video');
+  if (!ov) {
+    document.getElementById('qs-video')?.remove();
+    ov = document.createElement('div');
+    ov.id = 'qs-video'; ov.className = 'qs-video';
+    ov.innerHTML = '<video id="qs-video-el" playsinline preload="auto"></video><button class="qs-unmute" hidden>🔊 Nyalakan suara</button>';
+    document.getElementById('qa-screen').appendChild(ov);
+  }
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute');
+  qsVidFade(v);
   v.src = src;
-  v.onended = () => { ov.style.transition = 'opacity .6s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 650); };
+  const recap = qsLocalSpeaker[n + 'v'] || sp.video;
+  v.onended = () => {
+    if (kind === 'i' && recap) {   // Speech Ricky → Recap langsung, tanpa kembali ke kartu
+      qsSpkChain = n + 'v';
+      playSpeakerVideo(n, 'v', true);
+      try { supabase.from(QA_SCREEN).upsert({ id: 1, scene: `opening:${n}:v`, scene_text: null, scene_until: null, updated_at: new Date().toISOString() }).then(() => {}, () => {}); } catch (e) {}
+      return;
+    }
+    ov.classList.add('ending'); ov.style.transition = 'opacity .6s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 650);
+  };
   v.onerror = () => {
     ov.remove();
     document.querySelector('.og-sp')?.insertAdjacentHTML('beforeend', `<label class="op-pick">📁 Video belum tersedia — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="qsPickSpeakerVideo(${n}, this, '${kind}')"></label>`);
@@ -8987,6 +9004,20 @@ function qsPickNbVideo(input) {
   document.querySelector('.op-pick')?.remove();
   playNewBrandVideo();
 }
+// Fade in / fade out tiap video layar penuh di videotron: gambar muncul dari hitam & suara naik di awal,
+// gambar meredup ke hitam & suara turun di QS_VFADE detik terakhir (berlaku juga per video dalam daftar putar).
+const QS_VFADE = 0.8;
+function qsVidFade(v) {
+  if (v._fx) return; v._fx = true;
+  v.style.opacity = '0'; v.style.transition = `opacity ${QS_VFADE}s ease`;
+  let raf = 0, out = false;
+  const ramp = to => { cancelAnimationFrame(raf); const from = v.volume, t0 = performance.now();
+    const step = t => { const k = Math.min(1, Math.max(0, (t - t0) / (QS_VFADE * 1000))); v.volume = Math.min(1, Math.max(0, from + (to - from) * k)); if (k < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step); };
+  v.addEventListener('loadstart', () => { out = false; cancelAnimationFrame(raf); v.style.opacity = '0'; v.volume = 0; });
+  v.addEventListener('playing', () => { if (!out) { v.style.opacity = '1'; ramp(1); } });
+  v.addEventListener('timeupdate', () => { if (!out && v.duration && v.duration - v.currentTime <= QS_VFADE + 0.1) { out = true; v.style.opacity = '0'; ramp(0); } });
+}
 function playOverlayVideo(src, host, pickFn) {
   document.getElementById('qs-video')?.remove();
   const ov = document.createElement('div');
@@ -8994,6 +9025,7 @@ function playOverlayVideo(src, host, pickFn) {
   ov.innerHTML = '<video id="qs-video-el" playsinline preload="auto"></video><button class="qs-unmute" hidden>🔊 Nyalakan suara</button>';
   document.getElementById('qa-screen').appendChild(ov);
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute');
+  qsVidFade(v);
   v.src = src;
   v.onended = () => { ov.classList.add('ending'); ov.style.transition = 'opacity .8s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 850); };
   v.onerror = () => {
@@ -9329,6 +9361,7 @@ function playLaunchVideo(brand, idx, pos) {
   }
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute'), cap = ov.querySelector('.qs-vcap');
   const wasMuted = v.muted;
+  qsVidFade(v);
   v.src = qsVidCache[item.src] || item.src;
   // keterangan kecil "2/3 · judul" di awal tiap video (hanya bila lebih dari satu)
   const tm = brand === 'testimoni', real = tm && idx != null ? idx : pos;
