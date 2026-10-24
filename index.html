@@ -3504,7 +3504,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-24T03:13:46Z';
+const LAST_UPDATE = '2026-10-24T03:32:03Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8199,10 +8199,16 @@ const BACKDROPS = [
   { t: '5th Annual Gathering · Dinner', src: 'assets/backdrop/gathering-dinner.webp', th: 'assets/backdrop/gathering-dinner-thumb.webp' },
   { t: 'Dinner · 16:10', src: 'assets/backdrop/dinner-1610.webp?v=2', th: 'assets/backdrop/dinner-1610-thumb.webp?v=2', video: 'assets/backdrop/dinner-1610.mp4?v=2' },   // opsi kedua backdrop dinner (20 Okt 2026, layar 4 × 2,5 m, tanpa foto): video loop 12 dtk motion graphic halus, gambar = cadangan
   { t: 'Penyerahan Sertifikat Dealer', src: 'assets/backdrop/sertifikat-dealer.webp?v=3', th: 'assets/backdrop/sertifikat-dealer-thumb.webp?v=3' },   // 21 Okt 2026: 37 dealer dikelompokkan per distributor (data dari pemilik), 16:10
-  { t: 'Partner Masuk · Tidak Ada Zona Nyaman', src: 'assets/backdrop/zona-nyaman.webp', th: 'assets/backdrop/zona-nyaman-thumb.webp', video: 'assets/backdrop/zona-nyaman.mp4', welcome: true },   // 24 Okt 2026: video motion 48 dtk dari pemilik, diputar berulang (tanpa suara) saat partner masuk ballroom, sebelum Indonesia Raya
+  { t: 'Partner Masuk · Tidak Ada Zona Nyaman', src: 'assets/backdrop/zona-nyaman.webp', th: 'assets/backdrop/zona-nyaman-thumb.webp', video: 'assets/backdrop/zona-nyaman.mp4', welcome: true, sound: true },   // 24 Okt 2026: video motion 48 dtk dari pemilik, diputar berulang dengan suara aslinya saat partner masuk ballroom, sebelum Indonesia Raya
 ];
 const WELCOME_BD = BACKDROPS.findIndex(b => b.welcome) + 1;   // nomor backdrop pembuka acara pagi (scene backdrop:<n>)
-const BACKDROP_SEC = 12;   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
+const BACKDROP_SEC = 12;
+// putar video backdrop; bila browser menolak autoplay bersuara → diputar tanpa suara (operator klik layar sekali sebelum acara)
+const playBd = v => { if (v) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); };
+// unduh video ke memori (blob URL di qsVidCache) — sekali per file, dipakai backdrop bersuara agar tidak buffering
+const qsBlobJobs = {};
+const qsFetchBlob = src => qsBlobJobs[src] || (qsBlobJobs[src] = fetch(src).then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+  .then(b => (qsVidCache[src] = URL.createObjectURL(b))).catch(() => { delete qsBlobJobs[src]; return src; }));   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
 let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
 const FREE_NAME = 'Free Time';
@@ -9481,6 +9487,7 @@ function qaScreenAuth() {
 }
 function startQaScreen() {
   if (qsTimer) return;
+  setTimeout(() => BACKDROPS.filter(b => b.welcome && b.video).forEach(b => qsFetchBlob(b.video)), 1500);   // video Partner Masuk disiapkan paling awal (dipakai pertama di acara pagi)
   setTimeout(() => qsPrefetchVideos(TESTIMONI_VIDEOS, 'testimoni'), 8000);   // siapkan video testimoni di latar saat layar menganggur
   qsLoad();
   qsTimer = setInterval(qsLoad, 4000);
@@ -9525,7 +9532,7 @@ const bgm = { ctx: null, gain: null, started: false, why: '', cfg: { ...bgmDefau
 function bgmApply(s) {
   const loc = bgmLocal();
   const base = s && s.bgm_on != null ? { on: s.bgm_on !== false, vol: bgmClamp(s.bgm_vol ?? 70), off: [], track: bgmTrackOk(s.bgm_track || loc?.track) } : { ...(loc || bgmDefault()), off: [] };
-  bgm.cfg = { ...base, scene: s?.scene ? sceneBase(s.scene) : 'qa' };
+  bgm.cfg = { ...base, scene: s?.scene ? sceneBase(s.scene) : 'qa', raw: s?.scene || '' };
   if (!bgm.inited) { bgm.inited = true; bgmInit(); }
 }
 // Perintah Editor → layar videotron lewat Realtime broadcast (channel 'bgm-cmd'); layar menyimpan di localStorage-nya
@@ -9603,7 +9610,7 @@ function bgmResume() {
   bgm.ctx?.resume().then(bgmTick).catch(() => {});
 }
 function bgmTick() {
-  const c = bgm.cfg, vid = !!document.getElementById('qs-video'), sceneOff = false, duck = vid && c.scene === 'testimoni', quiet = !c.on || sceneOff || c.scene === 'anthem' || (vid && !duck);   // video testimoni: musik tetap jalan, volume dikecilkan agar suara dealer terdengar
+  const c = bgm.cfg, vid = !!document.getElementById('qs-video'), sceneOff = false, duck = vid && c.scene === 'testimoni', quiet = !c.on || sceneOff || c.scene === 'anthem' || c.scene === 'welcome' || c.raw === 'backdrop:' + WELCOME_BD || (vid && !duck);   // video testimoni: musik tetap jalan, volume dikecilkan agar suara dealer terdengar
   const label = BGM_KEYS.find(k => k[0] === c.scene)?.[2] || c.scene;
   let running = false;
   if (bgm.mode === 'yt') {
@@ -9759,9 +9766,15 @@ function renderBackdrop(s) {
   clearTimeout(qsBdTimer);
   document.getElementById('qs-slide')?.remove();
   const ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide qs-bd';
-  ov.innerHTML = list.map((b, i) => `<div class="bd-s" data-i="${i}"><img class="bd-bg" src="${b.src}" alt="">${b.video
-    ? `<video class="bd-fg" src="${b.video}" poster="${b.src}" muted playsinline preload="auto"${list.length === 1 ? ' loop' : ''}></video>`
-    : `<img class="bd-fg" src="${b.src}" alt="${escHtml(b.t)}">`}</div>`).join('');
+  const vidTag = b => `<video class="bd-fg" src="${qsVidCache[b.video] || b.video}" poster="${b.src}"${b.sound ? '' : ' muted'} playsinline preload="auto"${list.length === 1 ? ' loop' : ''}></video>`;
+  // video bersuara (Partner Masuk) belum ada di memori → tampilkan posternya dulu, video diputar setelah selesai diunduh (anti buffering)
+  const waiting = list.length === 1 && list[0].video && list[0].sound && !qsVidCache[list[0].video];
+  ov.innerHTML = list.map((b, i) => `<div class="bd-s" data-i="${i}"><img class="bd-bg" src="${b.src}" alt="">${b.video && !waiting
+    ? vidTag(b) : `<img class="bd-fg" src="${b.src}" alt="${escHtml(b.t)}">`}</div>`).join('');
+  if (waiting) qsFetchBlob(list[0].video).then(() => {
+    const fg = ov.querySelector('.bd-fg'); if (!document.body.contains(ov) || !fg) return;
+    fg.outerHTML = vidTag(list[0]); playBd(ov.querySelector('video.bd-fg'));
+  });
   document.getElementById('qa-screen').appendChild(ov);
   ov.querySelectorAll('video.bd-fg').forEach(v => v.addEventListener('error', () => {   // video gagal → pakai gambar diamnya
     const img = document.createElement('img'); img.className = 'bd-fg'; img.src = v.poster; v.replaceWith(img);
@@ -9772,7 +9785,7 @@ function renderBackdrop(s) {
     slides.forEach((el, k) => el.classList.toggle('in', k === i));
     const v = slides[i].querySelector('video');
     const next = () => { if (list.length > 1) show((i + 1) % list.length); };
-    if (v) { v.currentTime = 0; v.play().catch(() => {}); if (list.length > 1) { v.onended = next; qsBdTimer = setTimeout(next, 120000); } }   // batas aman 2 menit
+    if (v) { v.currentTime = 0; playBd(v); if (list.length > 1) { v.onended = next; qsBdTimer = setTimeout(next, 120000); } }   // batas aman 2 menit
     else if (list.length > 1) qsBdTimer = setTimeout(next, BACKDROP_SEC * 1000);
     slides.forEach((el, k) => { if (k !== i) el.querySelector('video')?.pause(); });
   };
