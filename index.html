@@ -3504,7 +3504,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-23T09:06:43Z';
+const LAST_UPDATE = '2026-10-24T03:00:08Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8198,7 +8198,9 @@ const BACKDROPS = [
   { t: '5th Annual Gathering · Dinner', src: 'assets/backdrop/gathering-dinner.webp', th: 'assets/backdrop/gathering-dinner-thumb.webp' },
   { t: 'Dinner · 16:10', src: 'assets/backdrop/dinner-1610.webp?v=2', th: 'assets/backdrop/dinner-1610-thumb.webp?v=2', video: 'assets/backdrop/dinner-1610.mp4?v=2' },   // opsi kedua backdrop dinner (20 Okt 2026, layar 4 × 2,5 m, tanpa foto): video loop 12 dtk motion graphic halus, gambar = cadangan
   { t: 'Penyerahan Sertifikat Dealer', src: 'assets/backdrop/sertifikat-dealer.webp?v=3', th: 'assets/backdrop/sertifikat-dealer-thumb.webp?v=3' },   // 21 Okt 2026: 37 dealer dikelompokkan per distributor (data dari pemilik), 16:10
+  { t: 'Partner Masuk · Tidak Ada Zona Nyaman', src: 'assets/backdrop/zona-nyaman.webp', th: 'assets/backdrop/zona-nyaman-thumb.webp', video: 'assets/backdrop/zona-nyaman.mp4', welcome: true },   // 24 Okt 2026: video motion 48 dtk dari pemilik, diputar berulang (tanpa suara) saat partner masuk ballroom, sebelum Indonesia Raya
 ];
+const WELCOME_BD = BACKDROPS.findIndex(b => b.welcome) + 1;   // nomor backdrop pembuka acara pagi (scene backdrop:<n>)
 const BACKDROP_SEC = 12;   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
 let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
@@ -8231,7 +8233,7 @@ const SCR_DESC = {
   backdrop: 'Backdrop acara tampil layar penuh — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah backdrop.',
   sertifikat: 'Penyerahan Sertifikat Dealer: layar judul → nama dealer muncul satu per satu (sesuai urutan maju ke panggung) → daftar semua dealer. Clicker / panah di komputer videotron menggeser ke dealer berikutnya.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
-  anthem: 'Pembuka acara pagi: layar "Menyanyikan Lagu Kebangsaan Indonesia Raya — hadirin dimohon berdiri", lalu video Indonesia Raya layar penuh (±1 menit 48 dtk). Musik latar otomatis senyap selama sesi ini.',
+  anthem: 'Pembuka acara pagi: backdrop Partner Masuk (berulang selama partner & distributor masuk ballroom) → layar "Menyanyikan Lagu Kebangsaan Indonesia Raya — hadirin dimohon berdiri", lalu video Indonesia Raya layar penuh (±1 menit 48 dtk). Musik latar otomatis senyap selama sesi ini.',
   kickoff: 'Judul Kick Off 2027 → Absen Dosa Dealer CAI (dibuka 1 per 1) → "Semua jawabannya ada di Portal" → video perkenalan portal → halaman materi PKS Dealer 2027 → PKS Team Leader. Clicker / panah di komputer videotron mengikuti urutan ini.',
 };
 let scrSel = null;
@@ -8316,8 +8318,10 @@ function renderScreenPanel(err) {
     <div class="scr-note">Alur lengkap: 3-2-1 → nama ${escHtml(NEW_BRAND.name)} tampil ${NB_REVEAL_SEC} dtk → video layar penuh → selesai kembali ke layar nama. Spasi di komputer videotron = jeda/lanjut.</div>` : ''}
     <div class="scr-actions">${showBtn('Hitung mundur 3-2-1 (tanpa video)')}<button class="gt-btn${nb ? ' confirm' : ' ghost'}" onclick="setScene('newbrand:now')">${nb ? '↻ Tampilkan langsung' : '⚡ Tampilkan langsung (tanpa hitung mundur)'}</button></div>
     <div class="scr-note">Contoh: <b>Nama Brand | Sound beyond limits</b>. Nama yang sama dengan brand di katalog otomatis memakai logonya. Klik ulang = animasi diulang.</div>`; }
-  else if (sel === 'anthem') { const av = scrRow.scene === 'anthem:v';
-    body = `<div class="scr-actions">${showBtn('Tampilkan layar Indonesia Raya')}<button class="gt-btn${av ? ' confirm' : ' ghost'}" onclick="setScene('anthem:v')">${av ? '↻ Putar ulang video' : '🎬 Putar Video Indonesia Raya'}</button></div>
+  else if (sel === 'anthem') { const av = scrRow.scene === 'anthem:v', wb = scrRow.scene === 'backdrop:' + WELCOME_BD;
+    body = `${WELCOME_BD ? `<div class="scr-actions"><button class="gt-btn${wb ? ' confirm' : ' ghost'}" onclick="setScene('backdrop:${WELCOME_BD}')">${wb ? '● Backdrop Partner Masuk tampil (berulang)' : '🖼 Backdrop Partner Masuk (loop)'}</button></div>
+    <div class="scr-note">Tampilkan sejak pintu ballroom dibuka: video "Tidak Ada Zona Nyaman" berulang terus tanpa suara (musik latar tetap jalan) sampai operator berpindah ke layar Indonesia Raya.</div>` : ''}
+    <div class="scr-actions">${showBtn('Tampilkan layar Indonesia Raya')}<button class="gt-btn${av ? ' confirm' : ' ghost'}" onclick="setScene('anthem:v')">${av ? '↻ Putar ulang video' : '🎬 Putar Video Indonesia Raya'}</button></div>
     <div class="scr-note">Urutan: tampilkan layar judul (MC mempersilakan hadirin berdiri) → <b>Putar Video</b> → video layar penuh; selesai kembali ke layar judul. Musik latar senyap selama sesi Indonesia Raya. Spasi = jeda/lanjut.</div>`; }
   else if (sel === 'kickoff') { const onAir = pksPart(scrRow.scene); if (onAir && !scrPksTouched) pksSel = onAir.d;
     const D = PKS_DOCS[pksSel], M = pksMeta?.[pksSel], cur = onAir?.d === pksSel ? onAir.n : 0, n = M?.pages || 0;
