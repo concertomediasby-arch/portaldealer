@@ -3028,6 +3028,7 @@ body {
           <button class="gt-btn ghost" onclick="loadRundown()">↻ Muat ulang</button>
           <button class="gt-btn ghost" onclick="printRundown()">🖨 Cetak</button>
           <button class="gt-btn ghost" onclick="addRdTemplate()" title="Masukkan susunan acara pagi (08:30–16:00) dan malam (18:00) sekaligus">＋ Template Acara</button>
+          <button class="gt-btn ghost" onclick="resetRdTemplate()" title="Ganti seluruh sesi di tanggal acara dengan susunan acara terbaru (status selesai dipertahankan)">⟳ Samakan dengan Rencana Terbaru</button>
           <button class="gt-btn confirm" onclick="openRdForm()">＋ Tambah Sesi</button>
         </div>
       </div>
@@ -3504,7 +3505,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-24T03:32:03Z';
+const LAST_UPDATE = '2026-10-24T03:39:45Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7645,7 +7646,9 @@ const QA_NAME = 'Open Mic Partner: Curhat Bebas', QA_SHORT = 'Open Mic Partner';
 const SEG_PAGI = 'Acara Pagi', SEG_MALAM = 'Acara Malam';
 const GATHERING_DAY = '2026-10-28';   // tanggal acara Gathering CAI 2026 (Rabu, 28 Okt) — tanggal bawaan template Run Down
 const RD_TEMPLATE = [
-  { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '08:30', end_time: '10:40', segment: SEG_PAGI, notes: 'Dibuka dengan menyanyikan Lagu Kebangsaan Indonesia Raya (video di videotron). Pertanyaan dealer diketik admin/editor & tampil di videotron.' },
+  { title: 'Partner Masuk Ballroom', start_time: '08:00', end_time: '08:30', segment: SEG_PAGI, flexible: true, notes: 'Partner & distributor masuk ballroom · videotron: backdrop "Tidak Ada Zona Nyaman" (berulang, dengan suara).' },
+  { title: 'Menyanyikan Lagu Kebangsaan Indonesia Raya', start_time: '08:30', end_time: '08:35', segment: SEG_PAGI, notes: 'Hadirin dimohon berdiri · video Indonesia Raya di videotron.' },
+  { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '08:35', end_time: '10:40', segment: SEG_PAGI, notes: 'Pertanyaan dealer diketik admin/editor & tampil di videotron.' },
   { title: 'Coffee Break 1', start_time: '10:40', end_time: '11:00', segment: SEG_PAGI, notes: '20 menit' },
   { title: 'Product Launch', start_time: '11:00', end_time: '11:30', segment: SEG_PAGI, notes: 'Brand Audiocircle, STEG & Audio System. Audiocircle: Köln Series · IQ-LES10A. STEG: SEC650C · K Series 136 · DSP S12 · DSP S6. Audio System: AY65C · AY65 · AS500.1 · AS10 · DSP AS6.' },
   { title: 'Refreshment Product', start_time: '11:30', end_time: '12:00', segment: SEG_PAGI, notes: 'Mengulas kembali produk-produk dari katalog CAI.' },
@@ -7672,6 +7675,27 @@ async function addRdTemplate() {
   const { error } = await supabase.from(RUNDOWN_TABLE).insert(rows);
   if (error) { showToast('Gagal menambah template: ' + rdColHint(error), 9000); return; }
   showToast(`✓ ${rows.length} sesi acara ditambahkan.`);
+  loadRundown();
+}
+
+// Ganti seluruh sesi di satu tanggal dengan RD_TEMPLATE terbaru (sesi lama yang tidak ada di template ikut terhapus; centang selesai dipertahankan)
+async function resetRdTemplate() {
+  const day = (prompt('Samakan Run Down tanggal berapa dengan rencana terbaru? (TTTT-BB-HH)', GATHERING_DAY) || '').trim();
+  if (!day) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || isNaN(new Date(day + 'T00:00:00'))) { showToast('Format tanggal salah, contoh: ' + GATHERING_DAY); return; }
+  const old = (rdItems || []).filter(r => r.day === day);
+  if (!confirm(`Semua ${old.length} sesi di ${day} akan diganti dengan ${RD_TEMPLATE.length} sesi rencana terbaru:\n\n${RD_TEMPLATE.map(t => `${t.flexible ? '± ' : ''}${t.start_time}  ${t.title}`).join('\n')}\n\nLanjutkan?`)) return;
+  const rdKey = t => (sceneForTitle(t) || (QA_SESSION_RE.test(t) ? 'qa' : String(t).toLowerCase())) + (/\b2\b|kedua|\bii\b/i.test(t) && /coffee/i.test(t) ? '#2' : '');
+  const done = new Set(old.filter(r => r.done).map(r => rdKey(r.title)));
+  const now = new Date().toISOString();
+  const rows = RD_TEMPLATE.map(t => ({ day, end_time: null, notes: null, flexible: false, ...t, done: done.has(rdKey(t.title)), updated_at: now }));
+  if (old.length) {
+    const { error } = await supabase.from(RUNDOWN_TABLE).delete().in('id', old.map(r => r.id));
+    if (error) { showToast('Gagal menghapus sesi lama: ' + error.message, 9000); return; }
+  }
+  const { error } = await supabase.from(RUNDOWN_TABLE).insert(rows);
+  if (error) { showToast('Gagal menyimpan rencana terbaru: ' + rdColHint(error), 9000); loadRundown(); return; }
+  showToast(`✓ Run Down ${day} disamakan dengan rencana terbaru (${rows.length} sesi).`);
   loadRundown();
 }
 
