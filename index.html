@@ -3505,7 +3505,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-24T14:44:17Z';
+const LAST_UPDATE = '2026-10-24T14:48:26Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7651,7 +7651,6 @@ const RD_TEMPLATE = [
   { title: 'Meeting Dealer (Tanya Jawab Partner CAI)', start_time: '08:35', end_time: '10:40', segment: SEG_PAGI, notes: 'Pertanyaan dealer diketik admin/editor & tampil di videotron.' },
   { title: 'Coffee Break 1', start_time: '10:40', end_time: '11:00', segment: SEG_PAGI, notes: '20 menit' },
   { title: 'Product Launch', start_time: '11:00', end_time: '11:30', segment: SEG_PAGI, notes: 'Brand Audiocircle, STEG & Audio System. Audiocircle: Köln Series · IQ-LES10A. STEG: SEC650C · K Series 136 · DSP S12 · DSP S6. Audio System: AY65C · AY65 · AS500.1 · AS10 · DSP AS6.' },
-  { title: 'Refreshment Product', start_time: '11:30', end_time: '12:00', segment: SEG_PAGI, notes: 'Mengulas kembali produk-produk dari katalog CAI.' },
   { title: 'Perkenalan Caelum', start_time: '11:30', end_time: '12:00', segment: SEG_PAGI, notes: 'Muncul video Caelum (brand baru Power Amplifier) di videotron.' },
   { title: 'Presentasi Fun Marketing (Opsional)', start_time: '12:00', end_time: '12:30', segment: SEG_PAGI, flexible: true, notes: 'Opsional · 30 menit, menyesuaikan waktu. ISHOMA tetap dimulai 12:00.' },
   { title: 'ISHOMA (Istirahat, Sholat, Makan Siang)', start_time: '12:00', end_time: '13:00', segment: SEG_PAGI, notes: 'Lunch · 1 jam' },
@@ -8011,7 +8010,7 @@ function printQa() {
    scene_text = teks tambahan opsional, scene_until = akhir hitung mundur (opsional). */
 const QS_SCENES = {
   opening: { label: 'Opening Speech', icon: '🎙', match: /opening/i },
-  coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Refreshment Product', match: /coff?ee|rehat/i },
+  coffee:  { label: 'Coffee Break', icon: '☕', mins: 20, next: 'Product Launch', match: /coff?ee|rehat/i },
   refresh: { label: 'Refreshment Product', icon: '🔊', match: /refresh|referes/i },
   newbrand: { label: 'Launching - CAELUM', icon: '✨', match: /brand baru|new brand|launching brand|caelum/i },
   cailaunch: { label: 'Launching - CAI', icon: '🚀', match: /launching\s*-\s*cai\b/i },
@@ -8241,9 +8240,9 @@ let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
 const FREE_NAME = 'Free Time';
 // Panel Editor disusun mengikuti urutan acara: pagi (08:30–16:00), malam (18:00), lalu layar tambahan.
-const SCR_PAGI = ['welcome', 'anthem', 'qa', 'coffee', 'launch', 'refresh', 'lunch', 'kickoff'];
+const SCR_PAGI = ['welcome', 'anthem', 'qa', 'coffee', 'launch', 'newbrand', 'lunch', 'kickoff'];
 const SCR_MALAM = ['opening', 'awarding', 'dinner', 'healthy'];
-const SCR_EXTRA = ['sertifikat', 'testimoni', 'funmkt', 'backdrop', 'newbrand', 'cailaunch'];
+const SCR_EXTRA = ['sertifikat', 'testimoni', 'funmkt', 'backdrop', 'refresh', 'cailaunch'];
 const SCR_GROUPS = [['☀️ Acara Pagi · 08:30 – 16:00', SCR_PAGI], ['🌙 Acara Malam · mulai 18:00', SCR_MALAM], ['✨ Layar tambahan', SCR_EXTRA]];
 const SCR_LABEL = { qa: { icon: '🎤', label: 'Meeting Dealer', sub: 'Tanya Jawab Partner CAI' } };
 // Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
