@@ -3509,7 +3509,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-25T06:41:19Z';
+const LAST_UPDATE = '2026-10-25T06:44:25Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8247,6 +8247,10 @@ const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1]
 // Flier (layar tambahan, 25 Okt 2026): gambar diunggah admin ke Storage privat guides/gathering/flier/ (bukan repo — flier bisa memuat harga promo).
 // Nama file diawali stempel waktu → urutan tampil = urutan unggah. PDF diubah jadi gambar JPEG per halaman saat diunggah.
 const FLIER_DIR = 'gathering/flier';
+// flier bawaan (di repo, tampil paling depan, tanpa tombol hapus) — hanya flier tanpa harga
+const FLIERS = [
+  { t: 'Promo Beli 10 Gratis 1', src: 'assets/flier/beli10-gratis1.webp' },   // 25 Okt 2026, dari pemilik
+];
 const flNum = k => { const m = /^flier:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const flierTitle = n => n.replace(/^\d+-/, '').replace(/\.\w+$/, '').replace(/[_-]+/g, ' ').trim() || 'Flier';
 const flierSafe = n => String(n).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\.\w+$/, '').replace(/[^\w]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'flier';
@@ -8255,13 +8259,15 @@ function flierList(force) {
   if (!force && flierCache && Date.now() - flierAt < 60000) return Promise.resolve(flierCache);
   if (flierJob && !force) return flierJob;
   const job = flierJob = (async () => {
+    const base = FLIERS.map(f => ({ ...f, id: 'repo:' + f.src, repo: true }));
+    if (!supabase) return (flierCache = base, flierAt = Date.now(), base);
     const store = supabase.storage.from(GUIDES_BUCKET);
     const { data, error } = await store.list(FLIER_DIR, { limit: 200, sortBy: { column: 'name', order: 'asc' } });
-    if (error) throw error;
+    if (error) { if (base.length) return base; throw error; }
     const files = (data || []).filter(f => /\.(jpe?g|png|webp)$/i.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
     let urls = [];
     if (files.length) { const r = await store.createSignedUrls(files.map(f => FLIER_DIR + '/' + f.name), 7200); if (r.error) throw r.error; urls = r.data || []; }
-    flierCache = files.map((f, i) => ({ id: f.name, path: FLIER_DIR + '/' + f.name, t: flierTitle(f.name), src: urls[i]?.signedUrl }));
+    flierCache = base.concat(files.map((f, i) => ({ id: f.name, path: FLIER_DIR + '/' + f.name, t: flierTitle(f.name), src: urls[i]?.signedUrl })));
     flierAt = Date.now();
     return flierCache;
   })();
@@ -8400,7 +8406,7 @@ function renderScreenPanel(err) {
           <span class="scr-fm-now">${cur ? `Flier <b>${cur}</b> / ${N}` : alt ? 'Bergantian otomatis' : 'Belum tampil'}</span>
           <button class="scr-lv-btn${cur ? '' : ' on'}" onclick="flierStep(1)" ${cur && cur >= N ? 'disabled' : ''}>${cur ? 'Berikutnya ▶' : '▶ Mulai dari flier 1'}</button>
         </div>
-        <div class="scr-bd">${L.map((f, i) => `<div class="scr-fl"><button class="scr-bd-card scr-fl-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('flier:${i + 1}')"><img src="${escHtml(f.src || '')}" alt="${escHtml(f.t)}" loading="lazy"><b>${i + 1}. ${escHtml(f.t)}</b><span>${cur === i + 1 ? '● Tampil' : '▶ Tampilkan'}</span></button><button class="scr-fl-del" title="Hapus flier" onclick="deleteFlier('${escHtml(f.path)}')">🗑</button></div>`).join('')}</div>`}
+        <div class="scr-bd">${L.map((f, i) => `<div class="scr-fl"><button class="scr-bd-card scr-fl-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('flier:${i + 1}')"><img src="${escHtml(f.src || '')}" alt="${escHtml(f.t)}" loading="lazy"><b>${i + 1}. ${escHtml(f.t)}</b><span>${cur === i + 1 ? '● Tampil' : '▶ Tampilkan'}</span></button>${f.repo ? '' : `<button class="scr-fl-del" title="Hapus flier" onclick="deleteFlier('${escHtml(f.path)}')">🗑</button>`}</div>`).join('')}</div>`}
     <div class="scr-note">🔒 Flier disimpan privat (tidak ikut situs publik). Menghapus flier menggeser nomor flier sesudahnya.</div>`; }
   else if (sel === 'opening') body = `<div class="scr-actions">${showBtn('Tampilkan susunan pembicara')}</div>
     <div class="scr-sub-k">Pembicara</div>
