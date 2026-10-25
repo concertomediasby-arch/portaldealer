@@ -3509,7 +3509,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-25T09:55:48Z';
+const LAST_UPDATE = '2026-10-25T09:56:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6822,16 +6822,19 @@ const GT_DRAFT_KEY = 'cai-gathering-draft';
 const GT_INFO = ['dealer', 'city', 'phone', 'pic'];
 // Daftar pilihan "Nama Dealer" (dari list_rank.xlsx pemilik: Distributor + Dealer). "Lainnya" = ketik manual.
 const GT_DISTRIBUTORS = ["[DIST] GARUDA BARAT", "[DIST] KG AAN", "[DIST] H2R - RONNY", "[DIST] CONCERTO MALANG", "[DIST] VIN AUDIOWORKS", "[DIST] HARVEST VARIASI"];   // daftar baru dari pemilik 25 Okt 2026
-const GT_DEALERS = ["AUTOSCHOON", "CENTRAL GARAGE", "DB AUTO", "PROJECT AUDIO", "AUTOSOUND GALLERY", "MM AUDIOWORKS", "SOUNDART", "ALTEPRO", "ANUGERAH AUDIO", "CAS AUDIO", "DR AUDIO", "DRESS UP AUTOSOUND", "GEMA AUDIO", "HS AUDIO", "MARS AUDIO", "SP AUDIO", "STERINDO AUTOSOUND", "VICTORY AUDIO", "XTREME CAR AUDIO MERUYA", "XTREME CAR AUDIO P.CABE", "NAI AUDIOWORKSHOP", "ZONA AUDIO", "ATMOS AUTOSOUND", "BLITZ CIREBON", "BLITZ PEKALONGAN", "BLITZ TEGAL", "CREATIVE VARIASI", "DREAMSOUND", "ICO AUDIOWORKS", "LINGGOM AUDIO", "KENZO AUDIO GARAGE", "OSCAR VARIASI", "OTOFINE GARAGE", "THE PEAK GARAGE", "MEVINA AUTOSOUNDPROOF", "WEST AUDIOWORKS"];   // daftar dealer dari pemilik 25 Okt 2026 (urutan sesuai tabel)
+// Daftar dealer resmi per distributor (dipakai Sertifikat Dealer videotron & Shopping Gathering — nama di sini acuan yang benar, pemilik 25 Okt 2026)
+const CERT_GROUPS = [
+  ['Agustinus', ['Autoschoon', 'Central Garage', 'DB Auto', 'Project Audio']],
+  ['CV. Concerto Malang', ['Autosound Gallery', 'MM Audioworks', 'Soundart']],
+  ['Garuda Barat', ['Altepro', 'Anugerah Audio', 'CAS Audio', 'Dr Audio Art', 'Dress Up', 'Gema Audio', 'HS Audio', 'Mars Audio', 'SP Audioworks', 'Sterindo Autosound', 'Victory Audio', 'Xtreme Car Audio Meruya', 'Xtreme Car Audio Pondok Cabe']],
+  ['Kevin Klise', ['NAI Audioworkshop', 'Zona Audio']],
+  ['Ronny Koesharyono', ['Atmos Autosound', 'Blitz Cirebon', 'Blitz Pekalongan', 'Blitz Tegal', 'Creative Variasi', 'Dreamsound', 'ICO Audioworks', 'Linggom Audio', 'Kenzo Audio Garage', 'Oscar Variasi', 'Otofine Garage', 'Terang Jaya', 'The Peak Garage', 'Mevina Autosoundproof', 'West Audioworks']],
+];
+const CERT_DEALERS = CERT_GROUPS.flatMap(([g, ds]) => ds.map(d => ({ d, g })));
+const GT_DEALERS = CERT_DEALERS.map(x => x.d);   // Shopping Gathering = nama dealer sama dengan Sertifikat Dealer (25 Okt 2026)
 const GT_OTHER = '__other';
-// Distributor tiap dealer (tabel "Daftar Dealer di luar HQ" pemilik, 25 Okt 2026) — kolom Distributor (dulu Sales PIC) terisi otomatis
-const GT_DEALER_DIST = Object.fromEntries([
-  ['Agustinus', ['AUTOSCHOON', 'CENTRAL GARAGE', 'DB AUTO', 'PROJECT AUDIO']],
-  ['CV. Concerto Malang', ['AUTOSOUND GALLERY', 'MM AUDIOWORKS', 'SOUNDART']],
-  ['Garuda Barat', ['ALTEPRO', 'ANUGERAH AUDIO', 'CAS AUDIO', 'DR AUDIO', 'DRESS UP AUTOSOUND', 'GEMA AUDIO', 'HS AUDIO', 'MARS AUDIO', 'SP AUDIO', 'STERINDO AUTOSOUND', 'VICTORY AUDIO', 'XTREME CAR AUDIO MERUYA', 'XTREME CAR AUDIO P.CABE']],
-  ['Kevin Klise', ['NAI AUDIOWORKSHOP', 'ZONA AUDIO']],
-  ['Ronny Koesharyono', ['ATMOS AUTOSOUND', 'BLITZ CIREBON', 'BLITZ PEKALONGAN', 'BLITZ TEGAL', 'CREATIVE VARIASI', 'DREAMSOUND', 'ICO AUDIOWORKS', 'LINGGOM AUDIO', 'KENZO AUDIO GARAGE', 'OSCAR VARIASI', 'OTOFINE GARAGE', 'THE PEAK GARAGE', 'MEVINA AUTOSOUNDPROOF', 'WEST AUDIOWORKS']],
-].flatMap(([d, ds]) => ds.map(n => [n, d])));
+// Distributor tiap dealer (dari CERT_GROUPS) — kolom Distributor (dulu Sales PIC) terisi otomatis
+const GT_DEALER_DIST = Object.fromEntries(CERT_DEALERS.map(x => [x.d, x.g]));
 // dealer terdaftar → distributornya; pilihan distributor ([DIST] X) → namanya sendiri; Lainnya → diketik manual
 const gtDistFor = v => GT_DEALER_DIST[v] || (GT_DISTRIBUTORS.includes(v) ? v.replace(/^\[DIST\]\s*/, '') : '');
 function gtFillDist() {
@@ -8053,14 +8056,6 @@ const QS_SCENES = {
 const PORTAL_POINTS = ['Katalog produk & harga SRP resmi', 'Stok produk real-time', 'Panduan Dealer & Concerto Academy', 'Paket Audio & Shopping Gathering'];
 const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitmen kerja sama', 'Program & dukungan untuk dealer'];
 // Penyerahan Sertifikat Dealer (21 Okt 2026, data dari tabel "Daftar Dealer" pemilik): judul → dealer satu per satu (clicker) → daftar semua.
-const CERT_GROUPS = [
-  ['Agustinus', ['Autoschoon', 'Central Garage', 'DB Auto', 'Project Audio']],
-  ['CV. Concerto Malang', ['Autosound Gallery', 'MM Audioworks', 'Soundart']],
-  ['Garuda Barat', ['Altepro', 'Anugerah Audio', 'CAS Audio', 'Dr Audio Art', 'Dress Up', 'Gema Audio', 'HS Audio', 'Mars Audio', 'SP Audioworks', 'Sterindo Autosound', 'Victory Audio', 'Xtreme Car Audio Meruya', 'Xtreme Car Audio Pondok Cabe']],
-  ['Kevin Klise', ['NAI Audioworkshop', 'Zona Audio']],
-  ['Ronny Koesharyono', ['Atmos Autosound', 'Blitz Cirebon', 'Blitz Pekalongan', 'Blitz Tegal', 'Creative Variasi', 'Dreamsound', 'ICO Audioworks', 'Linggom Audio', 'Kenzo Audio Garage', 'Oscar Variasi', 'Otofine Garage', 'Terang Jaya', 'The Peak Garage', 'Mevina Autosoundproof', 'West Audioworks']],
-];
-const CERT_DEALERS = CERT_GROUPS.flatMap(([g, ds]) => ds.map(d => ({ d, g })));
 const CERT_SEQ = ['sertifikat', ...CERT_DEALERS.map((_, i) => 'sertifikat:' + (i + 1)), 'sertifikat:list'];
 const certNum = k => { const m = /^sertifikat:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 // Kick Off 2027 · "Absen Dosa Dealer CAI" (permintaan pemilik): judul Kick Off → absen dosa (clicker membuka 1 per 1) → "semua jawabannya ada di portal" → video portal → PKS.
