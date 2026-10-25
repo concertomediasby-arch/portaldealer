@@ -749,6 +749,10 @@ body {
   box-shadow: 0 10px 40px rgba(200,147,58,.4);
 }
 .enter-btn svg { width: 17px; height: 17px; fill: #15100a; }
+.landing-ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.enter-btn.ghost { box-shadow: none; background: rgba(255,255,255,.04); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); }
+.enter-btn.ghost svg { fill: none; stroke: currentColor; }
+.enter-btn.ghost:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: none; }
 .landing-brands {
   position: relative;
   z-index: 2;
@@ -2829,6 +2833,7 @@ body {
       <a href="#" onclick="landingGo('paket'); return false;">Paket Audio</a>
       <a href="#" onclick="landingGo('academy'); return false;">Academy<span class="landing-star" id="landing-academy-star" title="Ada materi baru" hidden>★</span></a>
       <a href="#" onclick="landingGo('brands'); return false;" id="nav-landing-brands">Brand Resmi</a>
+      <a href="#" onclick="landingGo('authdealer'); return false;">Authorized Dealer</a>
     </div>
     <button class="nav-cta" onclick="enterPortal()">Masuk Portal</button>
   </nav>
@@ -2843,10 +2848,16 @@ body {
       <span class="line"><span>Build With <em>Confidence.</em></span></span>
     </h1>
     <p class="landing-sub">A centralized product database for Concerto Audio Indonesia dealers and partners — from specifications and technical data to visual assets and product resources.</p>
-    <button class="enter-btn" onclick="enterPortal()">
-      Masuk Portal
-      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg>
-    </button>
+    <div class="landing-ctas">
+      <button class="enter-btn" onclick="enterPortal()">
+        Masuk Portal
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg>
+      </button>
+      <button class="enter-btn ghost" onclick="landingGo('authdealer')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>
+        Cari Authorized Dealer
+      </button>
+    </div>
   </div>
 
   <div class="landing-brands">
@@ -3557,7 +3568,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-25T10:42:25Z';
+const LAST_UPDATE = '2026-10-25T10:44:52Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4729,6 +4740,8 @@ function landingGo(target) {
     openPaketAudio();
   } else if (target === 'academy') {
     openAcademy();
+  } else if (target === 'authdealer') {
+    openAuthDealers();
   } else {
     showView('dashboard');
   }
