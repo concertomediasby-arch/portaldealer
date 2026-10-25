@@ -3509,7 +3509,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-25T06:44:25Z';
+const LAST_UPDATE = '2026-10-25T06:45:38Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8247,9 +8247,10 @@ const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1]
 // Flier (layar tambahan, 25 Okt 2026): gambar diunggah admin ke Storage privat guides/gathering/flier/ (bukan repo — flier bisa memuat harga promo).
 // Nama file diawali stempel waktu → urutan tampil = urutan unggah. PDF diubah jadi gambar JPEG per halaman saat diunggah.
 const FLIER_DIR = 'gathering/flier';
-// flier bawaan (di repo, tampil paling depan, tanpa tombol hapus) — hanya flier tanpa harga
+// flier bawaan (di repo, tampil paling depan, tanpa tombol hapus) — hanya flier tanpa harga dealer/diskon (SRP & harga paket jual umum boleh)
 const FLIERS = [
   { t: 'Promo Beli 10 Gratis 1', src: 'assets/flier/beli10-gratis1.webp' },   // 25 Okt 2026, dari pemilik
+  { t: 'Audio System · Car Audio Upgrade Package', src: 'assets/flier/audiosystem-upgrade-package.webp' },   // 25 Okt 2026, dari pemilik — harga = SRP + harga paket jual umum
 ];
 const flNum = k => { const m = /^flier:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const flierTitle = n => n.replace(/^\d+-/, '').replace(/\.\w+$/, '').replace(/[_-]+/g, ' ').trim() || 'Flier';
