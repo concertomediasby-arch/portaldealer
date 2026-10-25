@@ -2298,6 +2298,10 @@ body {
   .scr-bd-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #e8ecf5; cursor: pointer; text-align: left; font: inherit; }
   .scr-bd-card img { width: 100%; aspect-ratio: 5/4; object-fit: cover; border-radius: 9px; }
   .scr-bd-card b { font-size: 13px; } .scr-bd-vid { font-style: normal; font-size: 11px; color: #e9c46a; margin-left: 4px; } .scr-bd-card span { font-size: 11.5px; color: #e9c46a; }
+  .scr-fl { position: relative; display: flex; } .scr-fl .scr-bd-card { flex: 1; min-width: 0; }
+  .scr-fl-card img { object-fit: contain; background: #0b0f18; }
+  .scr-fl-del { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.65); color: #fff; cursor: pointer; font-size: 14px; }
+  .scr-fl-del:hover { background: #b3261e; }
   .scr-bd-card.on { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; background: rgba(233,196,106,.1); }
   .paket-staff { display: none; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
   body.is-staff .paket-staff { display: flex; }
@@ -3505,7 +3509,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-24T14:48:26Z';
+const LAST_UPDATE = '2026-10-25T06:41:19Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8025,6 +8029,7 @@ const QS_SCENES = {
   kickoff: { label: 'Kick Off 2027', icon: '🏁', match: /kick ?off/i },
   testimoni: { label: 'Testimoni Partner CAI', icon: '💬', match: /testimoni/i },
   backdrop: { label: 'Backdrop', icon: '🖼', match: /backdrop/i },
+  flier: { label: 'Flier', icon: '📰', match: /fl[iy]er|brosur/i },
   sertifikat: { label: 'Penyerahan Sertifikat Dealer', icon: '📜', match: /sertifikat/i },
   paket: { label: 'Paket Audio', icon: '📦', match: /paket/i },
 };
@@ -8192,6 +8197,7 @@ const sceneInfo = k => {
   if (fmNum(k)) return { ...base, label: `Fun Marketing · Slide ${fmNum(k)}/${FM_SLIDES}` };
   if (sceneBase(k) === 'sertifikat') return { ...base, label: k === 'sertifikat:list' ? 'Sertifikat Dealer · Daftar semua' : certNum(k) ? `Sertifikat Dealer · ${certNum(k)}/${CERT_DEALERS.length} ${CERT_DEALERS[certNum(k) - 1]?.d || ''}` : base.label };
   if (sceneBase(k) === 'backdrop') return { ...base, label: bdNum(k) ? `Backdrop · ${BACKDROPS[bdNum(k) - 1]?.t}` : 'Backdrop · bergantian' };
+  if (sceneBase(k) === 'flier') { const n = flNum(k), t = flierAdmin?.[n - 1]?.t; return { ...base, label: n ? `Flier · ${n}${t ? ' ' + t : ''}` : 'Flier · bergantian' }; }
   if (k === 'cailaunch:full' || k === 'cailaunch:v') return { ...base, icon: '🎬', label: `Launching CAI · ${k === 'cailaunch:v' ? 'video' : 'hitung mundur + video'}` };
   if (k === 'newbrand:full' || k === 'newbrand:v') return { ...base, icon: '🎬', label: `Launching ${NEW_BRAND.name} · ${k === 'newbrand:v' ? 'video' : 'hitung mundur + video'}` };
   if (sceneBase(k) === 'paket') { const pk = paketParse(k); return { ...base, label: pk.pkg ? `Paket Audio · ${pk.pkg.title.split(' — ')[0]}${pk.pages ? ` (hal. ${pk.page}/${pk.pages})` : ` (hal. ${pk.page})`}` : 'Paket Audio · daftar' }; }
@@ -8238,11 +8244,90 @@ const qsFetchBlob = src => qsBlobJobs[src] || (qsBlobJobs[src] = fetch(src).then
   .then(b => (qsVidCache[src] = URL.createObjectURL(b))).catch(() => { delete qsBlobJobs[src]; return src; }));   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
 let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
+// Flier (layar tambahan, 25 Okt 2026): gambar diunggah admin ke Storage privat guides/gathering/flier/ (bukan repo — flier bisa memuat harga promo).
+// Nama file diawali stempel waktu → urutan tampil = urutan unggah. PDF diubah jadi gambar JPEG per halaman saat diunggah.
+const FLIER_DIR = 'gathering/flier';
+const flNum = k => { const m = /^flier:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
+const flierTitle = n => n.replace(/^\d+-/, '').replace(/\.\w+$/, '').replace(/[_-]+/g, ' ').trim() || 'Flier';
+const flierSafe = n => String(n).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\.\w+$/, '').replace(/[^\w]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'flier';
+let flierCache = null, flierAt = 0, flierJob = null, flierAdmin = null;   // flierAdmin = daftar di panel (null = belum dimuat)
+function flierList(force) {
+  if (!force && flierCache && Date.now() - flierAt < 60000) return Promise.resolve(flierCache);
+  if (flierJob && !force) return flierJob;
+  const job = flierJob = (async () => {
+    const store = supabase.storage.from(GUIDES_BUCKET);
+    const { data, error } = await store.list(FLIER_DIR, { limit: 200, sortBy: { column: 'name', order: 'asc' } });
+    if (error) throw error;
+    const files = (data || []).filter(f => /\.(jpe?g|png|webp)$/i.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
+    let urls = [];
+    if (files.length) { const r = await store.createSignedUrls(files.map(f => FLIER_DIR + '/' + f.name), 7200); if (r.error) throw r.error; urls = r.data || []; }
+    flierCache = files.map((f, i) => ({ id: f.name, path: FLIER_DIR + '/' + f.name, t: flierTitle(f.name), src: urls[i]?.signedUrl }));
+    flierAt = Date.now();
+    return flierCache;
+  })();
+  job.finally(() => { if (flierJob === job) flierJob = null; }).catch(() => {});
+  return job;
+}
+async function loadFlierAdmin(force) {
+  try { flierAdmin = await flierList(force); } catch (e) { flierAdmin = []; showToast('Daftar flier tidak bisa dibaca: ' + (e.message || e), 8000); }
+  if (scrSel === 'flier') renderScreenPanel();
+}
+// PDF → gambar JPEG per halaman (sisi terpanjang 2560 px, latar putih)
+async function flierPdfPages(f) {
+  const lib = await loadPdfJs();
+  const doc = await lib.getDocument({ data: await f.arrayBuffer() }).promise;
+  try {
+    const out = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i), v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: 2560 / Math.max(v1.width, v1.height) });
+      const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      const blob = await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('halaman kosong')), 'image/jpeg', 0.9));
+      out.push({ blob, ext: 'jpg', name: f.name.replace(/\.pdf$/i, '') + (doc.numPages > 1 ? ' hal ' + i : '') });
+    }
+    return out;
+  } finally { doc.destroy(); }
+}
+async function uploadFliers(input) {
+  const files = [...(input.files || [])]; input.value = ''; if (!files.length) return;
+  const store = supabase.storage.from(GUIDES_BUCKET);
+  let ok = 0, seq = 0;
+  for (const f of files) {
+    try {
+      const img = f.name.match(/\.(jpe?g|png|webp)$/i);
+      const parts = /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name) ? (showToast(`Mengubah PDF ${f.name} jadi gambar…`, 30000), await flierPdfPages(f))
+        : img ? [{ blob: f, ext: img[1].toLowerCase().replace('jpeg', 'jpg'), name: f.name }] : null;
+      if (!parts) { showToast(`${f.name}: pilih gambar JPG/PNG/WebP atau PDF.`, 6000); continue; }
+      for (const pt of parts) {
+        showToast(`Mengunggah flier ${ok + 1}…`, 30000);
+        const path = `${FLIER_DIR}/${Date.now()}${String(seq++ % 100).padStart(2, '0')}-${flierSafe(pt.name)}.${pt.ext}`;
+        const { error } = await store.upload(path, pt.blob, { upsert: true, contentType: pt.ext === 'jpg' ? 'image/jpeg' : 'image/' + pt.ext });
+        if (error) throw error;
+        ok++;
+      }
+    } catch (e) { showToast(`Gagal mengunggah ${f.name}: ${e.message || e}`, 9000); }
+  }
+  await loadFlierAdmin(true);
+  if (ok) showToast(`✓ ${ok} flier tersimpan.`);
+}
+async function deleteFlier(path) {
+  if (!confirm('Hapus flier ini?')) return;
+  const { data, error } = await supabase.storage.from(GUIDES_BUCKET).remove([path]);
+  if (error || !data?.length) { showToast('Gagal menghapus' + (error ? ': ' + error.message : ' (izin hapus belum diberikan).'), 9000); return; }
+  await loadFlierAdmin(true);
+  showToast('Flier dihapus.');
+}
+function flierStep(d) {
+  const N = flierAdmin?.length || 0, n = flNum(scrRow?.scene); if (!N) return;
+  const next = n ? Math.min(N, Math.max(1, n + d)) : (d > 0 ? 1 : N);
+  if (next !== n) setScene('flier:' + next);
+}
 const FREE_NAME = 'Free Time';
 // Panel Editor disusun mengikuti urutan acara: pagi (08:30–16:00), malam (18:00), lalu layar tambahan.
 const SCR_PAGI = ['welcome', 'anthem', 'qa', 'coffee', 'launch', 'newbrand', 'lunch', 'kickoff'];
 const SCR_MALAM = ['opening', 'awarding', 'dinner', 'healthy'];
-const SCR_EXTRA = ['sertifikat', 'testimoni', 'funmkt', 'backdrop', 'refresh', 'cailaunch'];
+const SCR_EXTRA = ['sertifikat', 'testimoni', 'funmkt', 'backdrop', 'flier', 'refresh', 'cailaunch'];
 const SCR_GROUPS = [['☀️ Acara Pagi · 08:30 – 16:00', SCR_PAGI], ['🌙 Acara Malam · mulai 18:00', SCR_MALAM], ['✨ Layar tambahan', SCR_EXTRA]];
 const SCR_LABEL = { qa: { icon: '🎤', label: 'Meeting Dealer', sub: 'Tanya Jawab Partner CAI' } };
 // Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
@@ -8264,6 +8349,7 @@ const SCR_DESC = {
   dinner: 'Layar makan malam (dinner) — isi hitung mundur bila perlu.',
   healthy: 'Layar Healthy Drink sebagai penutup acara.',
   testimoni: 'Judul sesi Testimoni Partner CAI, lalu putar video testimoni dari dealer (satu per satu atau semua berurutan). Teks tambahan = nama partner (opsional).',
+  flier: 'Flier promo / produk tampil layar penuh (latar blur). Unggah gambar JPG/PNG/WebP atau PDF (tiap halaman jadi satu flier) — tersimpan di penyimpanan privat portal, tidak ikut situs publik. Pilih satu, atau tampilkan bergantian (12 dtk per flier); panah / clicker di komputer videotron juga bisa berpindah flier.',
   backdrop: 'Backdrop acara tampil layar penuh — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah backdrop.',
   sertifikat: 'Penyerahan Sertifikat Dealer: layar judul → nama dealer muncul satu per satu (sesuai urutan maju ke panggung) → daftar semua dealer. Clicker / panah di komputer videotron menggeser ke dealer berikutnya.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
@@ -8305,6 +8391,17 @@ function renderScreenPanel(err) {
   else if (sel === 'backdrop') { const cur = bdNum(scrRow.scene), alt = scrRow.scene === 'backdrop';
     body = `<div class="scr-bd">${BACKDROPS.map((b, i) => `<button class="scr-bd-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('backdrop:${i + 1}')"><img src="${b.th}" alt="${escHtml(b.t)}"><b>${i + 1}. ${escHtml(b.t)}${b.video ? ' <em class="scr-bd-vid">🎬 video</em>' : ''}</b><span>${cur === i + 1 ? '● Tampil · klik untuk ulang' : '▶ Tampilkan'}</span></button>`).join('')}</div>
     <div class="scr-actions"><button class="gt-btn${alt ? ' confirm' : ' ghost'}" onclick="setScene('backdrop')">${alt ? '↻ Bergantian otomatis (aktif)' : '🔁 Tampilkan bergantian'}</button></div>`; }
+  else if (sel === 'flier') { if (flierAdmin === null) loadFlierAdmin();
+    const L = flierAdmin || [], N = L.length, cur = flNum(scrRow.scene), alt = scrRow.scene === 'flier';
+    body = `<div class="scr-actions"><label class="gt-btn confirm">⬆ Tambah Flier (gambar / PDF)<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" multiple hidden onchange="uploadFliers(this)"></label>${N ? `<button class="gt-btn${alt ? ' confirm' : ' ghost'}" onclick="setScene('flier')">${alt ? '↻ Bergantian otomatis (aktif)' : '🔁 Tampilkan bergantian'}</button>` : ''}</div>
+    ${flierAdmin === null ? '<div class="scr-note">Memuat daftar flier…</div>' : !N ? '<div class="scr-note">Belum ada flier. Klik <b>Tambah Flier</b> — boleh pilih banyak file sekaligus; urutan tampil = urutan unggah.</div>'
+      : `<div class="scr-fm-nav">
+          <button class="scr-lv-btn" onclick="flierStep(-1)" ${cur > 1 ? '' : 'disabled'}>◀ Sebelumnya</button>
+          <span class="scr-fm-now">${cur ? `Flier <b>${cur}</b> / ${N}` : alt ? 'Bergantian otomatis' : 'Belum tampil'}</span>
+          <button class="scr-lv-btn${cur ? '' : ' on'}" onclick="flierStep(1)" ${cur && cur >= N ? 'disabled' : ''}>${cur ? 'Berikutnya ▶' : '▶ Mulai dari flier 1'}</button>
+        </div>
+        <div class="scr-bd">${L.map((f, i) => `<div class="scr-fl"><button class="scr-bd-card scr-fl-card${cur === i + 1 ? ' on' : ''}" onclick="setScene('flier:${i + 1}')"><img src="${escHtml(f.src || '')}" alt="${escHtml(f.t)}" loading="lazy"><b>${i + 1}. ${escHtml(f.t)}</b><span>${cur === i + 1 ? '● Tampil' : '▶ Tampilkan'}</span></button><button class="scr-fl-del" title="Hapus flier" onclick="deleteFlier('${escHtml(f.path)}')">🗑</button></div>`).join('')}</div>`}
+    <div class="scr-note">🔒 Flier disimpan privat (tidak ikut situs publik). Menghapus flier menggeser nomor flier sesudahnya.</div>`; }
   else if (sel === 'opening') body = `<div class="scr-actions">${showBtn('Tampilkan susunan pembicara')}</div>
     <div class="scr-sub-k">Pembicara</div>
     <div class="scr-fm-nav">${OPENING_SPEAKERS.map((sp, i) => { const b = BRANDS.find(x => x.id === sp.id); const on = opNum(scrRow.scene) === i + 1 && !opVid(scrRow.scene);
@@ -8506,12 +8603,15 @@ const SC_MEGA = '<svg class="sc-svg sc-mega" viewBox="0 0 140 120" aria-hidden="
 const SC_QUOTE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><path d="M18 26h66a8 8 0 0 1 8 8v36a8 8 0 0 1-8 8H48l-16 14V78h-14a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="rgba(233,196,106,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M62 56h60a8 8 0 0 1 8 8v30a8 8 0 0 1-8 8h-10v12l-14-12H62a8 8 0 0 1-8-8V64a8 8 0 0 1 8-8z" fill="none" stroke="#e9c46a" stroke-width="4" stroke-linejoin="round"/><circle cx="74" cy="80" r="3.5" fill="#e9c46a"/><circle cx="90" cy="80" r="3.5" fill="#e9c46a"/><circle cx="106" cy="80" r="3.5" fill="#e9c46a"/></svg>';
 const SC_PLATE = '<svg class="sc-svg" viewBox="0 0 140 120" aria-hidden="true"><circle cx="70" cy="62" r="36" fill="rgba(233,196,106,.10)" stroke="#fff" stroke-width="5"/><circle cx="70" cy="62" r="22" fill="none" stroke="#e9c46a" stroke-width="3"/><path d="M16 28v22a7 7 0 0 0 14 0V28M23 28v74" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M122 28c-9 6-9 28 0 34v40" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+let qsSceneNow = null;   // scene yang sedang dirender (cek setelah muat asinkron, mis. daftar flier)
 function renderScene(s) {
+  qsSceneNow = s.scene;
   qsSetEventSub(sceneBase(s.scene));
   if (String(s.scene).startsWith('launch:')) return renderLaunchVideo(s);
   if (tmParts(s.scene)) return renderTestimoniVideo(s);
   if (fmNum(s.scene) && !FM_TITLE_SLIDES.includes(fmNum(s.scene))) return renderFmSlide(fmNum(s.scene));
   if (sceneBase(s.scene) === 'backdrop') return renderBackdrop(s);
+  if (sceneBase(s.scene) === 'flier') return renderFlier(s);
   if (s.scene === 'welcome' && WELCOME_BD) return renderBackdrop({ ...s, scene: 'backdrop:' + WELCOME_BD });   // kartu Partner Masuk = backdrop "Tidak Ada Zona Nyaman" (loop)
   if (sceneBase(s.scene) === 'sertifikat') return renderCert(s);
   if (sceneBase(s.scene) === 'paket') return renderPaket(s);
@@ -9269,6 +9369,15 @@ async function qsFmKey(d) {
     return;
   }
   if (sceneBase(s?.scene) === 'paket') return paketStep(d, true);
+  if (sceneBase(s?.scene) === 'flier') {   // Flier: panah = flier berikutnya / sebelumnya
+    const N = (await flierList().catch(() => [])).length; if (!N) return;
+    const cur = flNum(s.scene), next = cur === 0 ? (d > 0 ? 1 : N) : Math.min(N, Math.max(1, cur + d));
+    if (next === cur) return;
+    const scene = 'flier:' + next;
+    renderScene({ scene });
+    await supabase.from(QA_SCREEN).upsert({ id: 1, scene, scene_text: null, scene_until: null, updated_at: new Date().toISOString() });
+    return;
+  }
   if (sceneBase(s?.scene) === 'backdrop') {   // Backdrop: panah = ganti foto
     const cur = bdNum(s.scene) || 0, next = cur === 0 ? (d > 0 ? 1 : BACKDROPS.length) : Math.min(BACKDROPS.length, Math.max(1, cur + d));
     if (next === cur) return;
@@ -9787,9 +9896,11 @@ function qsSetStage(key, html) {
 }
 
 // Backdrop: foto/video layar penuh (latar blur). Satu backdrop = foto diam / video berulang; bergantian = foto 12 dtk, video sampai selesai.
-function renderBackdrop(s) {
-  const n = bdNum(s.scene), list = n ? [BACKDROPS[n - 1]] : BACKDROPS;
-  if (!qsSetStage(['bd', s.scene, n ? '' : s.updated_at].join('|'), '<div class="qs-idle"><p>Backdrop</p></div>')) return;
+// items = daftar lain dengan bentuk { t, src, id } (dipakai Flier: scene flier / flier:<n>)
+function renderBackdrop(s, items) {
+  const fl = !!items, all = items || BACKDROPS, n = fl ? flNum(s.scene) : bdNum(s.scene), list = (n ? [all[n - 1]] : all).filter(Boolean);
+  if (!list.length) { qsSetStage('fl|none', `<div class="qs-idle"><p>${fl ? 'Belum ada flier — unggah di panel Layar videotron' : 'Backdrop'}</p></div>`); return; }
+  if (!qsSetStage(['bd', s.scene, n ? '' : s.updated_at, fl ? list.map(b => b.id).join(',') : ''].join('|'), `<div class="qs-idle"><p>${fl ? 'Flier' : 'Backdrop'}</p></div>`)) return;
   clearTimeout(qsBdTimer);
   document.getElementById('qs-slide')?.remove();
   const ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide qs-bd';
@@ -9818,11 +9929,18 @@ function renderBackdrop(s) {
   };
   show(0);
 }
+// Flier: daftar dari Storage privat (di-cache 60 dtk), lalu tampil seperti backdrop
+function renderFlier(s) {
+  if (!flierCache) qsSetStage('fl|load', '<div class="qs-idle"><p>Memuat flier…</p></div>');
+  flierList().then(L => { if (qsSceneNow === s.scene) renderBackdrop(s, L); })
+    .catch(e => { if (qsSceneNow !== s.scene) return; qsSetStage('fl|err', `<div class="qs-idle"><p>Flier belum bisa dimuat (${escHtml(e.message || e)}).</p></div>`); qsKey = null; });
+}
 function qsSetEventSub(base) {
   const el = document.getElementById('qs-event-sub'); if (!el) return;
   el.textContent = !base || base === 'qa' ? 'Meeting Dealer · Tanya Jawab Partner CAI' : (QS_SCENES[base]?.label || '');
 }
 function renderQaScreen(q) {
+  qsSceneNow = null;
   qsSetEventSub(null);
   if (!q) {
     qsSetStage('idle', `<div class="qs-idle"><div class="qs-kicker">Tanya Jawab Partner CAI</div><h1>Meeting <em>Dealer</em></h1>
