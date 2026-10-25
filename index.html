@@ -3172,7 +3172,7 @@ body {
         </label>
         <label>Kota<input class="gt-input" id="gt-city" maxlength="40" oninput="gtSaveDraft()"></label>
         <label>No. HP<input class="gt-input" id="gt-phone" maxlength="20" inputmode="tel" oninput="gtSaveDraft()"></label>
-        <label>Sales PIC<input class="gt-input" id="gt-pic" maxlength="40" oninput="gtSaveDraft()"></label>
+        <label>Distributor<input class="gt-input" id="gt-pic" maxlength="40" oninput="gtSaveDraft()" placeholder="Otomatis sesuai dealer"></label>
       </div>
       <div class="gt-pay" id="gt-pay"></div>
       <div class="catalog-controls">
@@ -3509,7 +3509,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-25T09:47:11Z';
+const LAST_UPDATE = '2026-10-25T09:55:48Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6824,6 +6824,21 @@ const GT_INFO = ['dealer', 'city', 'phone', 'pic'];
 const GT_DISTRIBUTORS = ["[DIST] GARUDA BARAT", "[DIST] KG AAN", "[DIST] H2R - RONNY", "[DIST] CONCERTO MALANG", "[DIST] VIN AUDIOWORKS", "[DIST] HARVEST VARIASI"];   // daftar baru dari pemilik 25 Okt 2026
 const GT_DEALERS = ["AUTOSCHOON", "CENTRAL GARAGE", "DB AUTO", "PROJECT AUDIO", "AUTOSOUND GALLERY", "MM AUDIOWORKS", "SOUNDART", "ALTEPRO", "ANUGERAH AUDIO", "CAS AUDIO", "DR AUDIO", "DRESS UP AUTOSOUND", "GEMA AUDIO", "HS AUDIO", "MARS AUDIO", "SP AUDIO", "STERINDO AUTOSOUND", "VICTORY AUDIO", "XTREME CAR AUDIO MERUYA", "XTREME CAR AUDIO P.CABE", "NAI AUDIOWORKSHOP", "ZONA AUDIO", "ATMOS AUTOSOUND", "BLITZ CIREBON", "BLITZ PEKALONGAN", "BLITZ TEGAL", "CREATIVE VARIASI", "DREAMSOUND", "ICO AUDIOWORKS", "LINGGOM AUDIO", "KENZO AUDIO GARAGE", "OSCAR VARIASI", "OTOFINE GARAGE", "THE PEAK GARAGE", "MEVINA AUTOSOUNDPROOF", "WEST AUDIOWORKS"];   // daftar dealer dari pemilik 25 Okt 2026 (urutan sesuai tabel)
 const GT_OTHER = '__other';
+// Distributor tiap dealer (tabel "Daftar Dealer di luar HQ" pemilik, 25 Okt 2026) — kolom Distributor (dulu Sales PIC) terisi otomatis
+const GT_DEALER_DIST = Object.fromEntries([
+  ['Agustinus', ['AUTOSCHOON', 'CENTRAL GARAGE', 'DB AUTO', 'PROJECT AUDIO']],
+  ['CV. Concerto Malang', ['AUTOSOUND GALLERY', 'MM AUDIOWORKS', 'SOUNDART']],
+  ['Garuda Barat', ['ALTEPRO', 'ANUGERAH AUDIO', 'CAS AUDIO', 'DR AUDIO', 'DRESS UP AUTOSOUND', 'GEMA AUDIO', 'HS AUDIO', 'MARS AUDIO', 'SP AUDIO', 'STERINDO AUTOSOUND', 'VICTORY AUDIO', 'XTREME CAR AUDIO MERUYA', 'XTREME CAR AUDIO P.CABE']],
+  ['Kevin Klise', ['NAI AUDIOWORKSHOP', 'ZONA AUDIO']],
+  ['Ronny Koesharyono', ['ATMOS AUTOSOUND', 'BLITZ CIREBON', 'BLITZ PEKALONGAN', 'BLITZ TEGAL', 'CREATIVE VARIASI', 'DREAMSOUND', 'ICO AUDIOWORKS', 'LINGGOM AUDIO', 'KENZO AUDIO GARAGE', 'OSCAR VARIASI', 'OTOFINE GARAGE', 'THE PEAK GARAGE', 'MEVINA AUTOSOUNDPROOF', 'WEST AUDIOWORKS']],
+].flatMap(([d, ds]) => ds.map(n => [n, d])));
+// dealer terdaftar → distributornya; pilihan distributor ([DIST] X) → namanya sendiri; Lainnya → diketik manual
+const gtDistFor = v => GT_DEALER_DIST[v] || (GT_DISTRIBUTORS.includes(v) ? v.replace(/^\[DIST\]\s*/, '') : '');
+function gtFillDist() {
+  const v = document.getElementById('gt-dealer').value.trim(), pic = document.getElementById('gt-pic'), d = gtDistFor(v);
+  if (d) pic.value = d;
+  pic.readOnly = !!d;
+}
 function renderGtDealerSelect() {
   const sel = document.getElementById('gt-dealer-sel');
   if (!sel || sel.options.length) return;
@@ -6840,12 +6855,16 @@ function gtSyncDealerSelect() {
   const v = inp.value.trim(), known = [...GT_DISTRIBUTORS, ...GT_DEALERS].includes(v);
   sel.value = !v ? '' : known ? v : GT_OTHER;
   inp.hidden = sel.value !== GT_OTHER;
+  gtFillDist();
 }
 function gtDealerChanged() {
   const sel = document.getElementById('gt-dealer-sel'), inp = document.getElementById('gt-dealer');
   const other = sel.value === GT_OTHER;
   inp.hidden = !other;
   inp.value = other ? '' : sel.value;
+  const pic = document.getElementById('gt-pic');
+  if (!gtDistFor(inp.value)) pic.value = '';
+  gtFillDist();
   if (other) inp.focus();
   gtSaveDraft();
 }
@@ -7049,7 +7068,7 @@ async function gtSend() {
   }
   btn.disabled = false;
   const txt = ['*FORM BELANJA GATHERING CAI 2026*', `No. Invoice: *${invoice}*`,
-    `Nama Dealer: ${i.dealer}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Sales PIC: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
+    `Nama Dealer: ${i.dealer}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Distributor: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
     ...o.groups.flatMap(g => [`*${g.name.toUpperCase()}*`,
       ...g.lines.map(l => `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}`),
       `Subtotal: ${fmtRp(g.total)}`, '']),
@@ -7118,7 +7137,7 @@ function gtPrint() {
   const { o, i } = c;
   let el = document.getElementById('gt-print');
   if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
-  const info = [...(gtEditing ? [['No. Invoice', gtEditing.invoice]] : []), ['Nama Dealer', i.dealer], ['Kota', i.city], ['No. HP', i.phone], ['Sales PIC', i.pic], ['Tanggal', gtToday()]];
+  const info = [...(gtEditing ? [['No. Invoice', gtEditing.invoice]] : []), ['Nama Dealer', i.dealer], ['Kota', i.city], ['No. HP', i.phone], ['Distributor', i.pic], ['Tanggal', gtToday()]];
   el.innerHTML = `
     <div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>FORM BELANJA DEALER</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
     <table class="gp-info">${info.map(([a, b]) => `<tr><td>${a}</td><td>: ${escHtml(b || '')}</td></tr>`).join('')}</table>
@@ -7129,7 +7148,7 @@ function gtPrint() {
     <table class="gp-items gp-grand"><tr><td>GRAND TOTAL (${o.qty} item)</td><td>${fmtRp(o.total)}</td></tr></table>
     <p class="gp-terms"><b>Pembayaran (transfer ke salah satu):</b><br>${gtBankLines().map(escHtml).join('<br>')}</p>
     <p class="gp-terms">Harga Spesial Gathering hanya berlaku selama acara berlangsung. Clearance: harga clearance = harga normal − diskon 50% − cashback 10% × DPP (DPP = harga setelah diskon ÷ 1,11), stok terbatas.</p>
-    <div class="gp-sign"><div>Dealer<br><br><br>(______________________)</div><div>Sales / PIC CAI<br><br><br>(______________________)</div></div>`;
+    <div class="gp-sign"><div>Dealer<br><br><br>(______________________)</div><div>Distributor<br><br><br>(______________________)</div></div>`;
   window.print();
 }
 
@@ -7287,7 +7306,7 @@ function renderGtRekap() {
           <div class="gt-order-main">
             <div class="gt-order-inv">${escHtml(o.invoice || '—')}${o.updated_at ? ' <span>· diubah ' + fmtGtTime(o.updated_at) + '</span>' : ''}</div>
             <div class="gt-order-store">${escHtml(o.store || '-')}${o.city ? ` <span>· ${escHtml(o.city)}</span>` : ''}</div>
-            <div class="gt-order-sub">${fmtGtTime(o.created_at)} · ${escHtml([o.dealer && o.dealer !== o.store ? o.dealer : '', o.pic ? 'Sales: ' + o.pic : ''].filter(Boolean).join(' · ') || '—')}</div>
+            <div class="gt-order-sub">${fmtGtTime(o.created_at)} · ${escHtml([o.dealer && o.dealer !== o.store ? o.dealer : '', o.pic ? 'Distributor: ' + o.pic : ''].filter(Boolean).join(' · ') || '—')}</div>
           </div>
           <div class="gt-order-total"><b>${fmtRp(Number(o.total || 0))}</b><span>${o.total_qty} item</span></div>
         </div>
@@ -7386,7 +7405,7 @@ function downloadGtInvoice(id) {
   header();
   let y = 44;
   const lf = [['No. Invoice', o.invoice], ['Nama Dealer', o.store || o.dealer], ['Kota', o.city]];
-  const rf = [['Tanggal', date], ['No. HP', o.phone], ['Sales PIC', o.pic], ['Status', GT_STATUS[o.status] || o.status]];
+  const rf = [['Tanggal', date], ['No. HP', o.phone], ['Distributor', o.pic], ['Status', GT_STATUS[o.status] || o.status]];
   lf.forEach(([k, v], n) => field(k, v, L, y + n * 6.2, 100));
   rf.forEach(([k, v], n) => field(k, v, 108, y + n * 6.2, R));
   y += 4 * 6.2 + 6;
@@ -7463,7 +7482,7 @@ function downloadGtInvoice(id) {
   });
   y = ny + 6;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(20, 20, 30);
-  doc.text('Dealer', 60, y, { align: 'center' }); doc.text('Sales / PIC CAI', 150, y, { align: 'center' });
+  doc.text('Dealer', 60, y, { align: 'center' }); doc.text('Distributor', 150, y, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setDrawColor(40, 40, 50); doc.setLineWidth(0.3);
   [60, 150].forEach(cx => { doc.text('(', cx - 25, y + 22); doc.text(')', cx + 24, y + 22); doc.line(cx - 23, y + 22.6, cx + 23, y + 22.6); });
@@ -7503,7 +7522,7 @@ async function exportGtOrders() {
   if (!gtOrders?.length) { showToast('Belum ada pesanan untuk diekspor.'); return; }
   try {
     const XLSX = await loadXlsx();
-    const rows = [['No. Invoice', 'Waktu', 'Status', 'Nama Toko', 'Kota', 'Nama Dealer', 'No. HP', 'Sales PIC', 'Grup', 'Produk', 'Qty', 'Harga', 'Subtotal', 'Total Pesanan']];
+    const rows = [['No. Invoice', 'Waktu', 'Status', 'Nama Toko', 'Kota', 'Nama Dealer', 'No. HP', 'Distributor', 'Grup', 'Produk', 'Qty', 'Harga', 'Subtotal', 'Total Pesanan']];
     gtOrders.forEach(o => (o.items || []).forEach((it, n) => rows.push([o.invoice || '', fmtGtTime(o.created_at), GT_STATUS[o.status] || o.status, o.store, o.city, o.dealer, o.phone, o.pic,
       it.group, it.name, it.qty, it.price, it.total, n === 0 ? Number(o.total || 0) : ''])));
     const prod = [['Produk', 'Grup', 'Jumlah Pesanan', 'Total Qty', 'Total Nilai', 'Dibeli oleh (toko × qty)'], ...gtProductTotals().map(p => [p.name, p.group, p.orders, p.qty, p.total, p.stores.map(t => `${t.name} ×${t.qty}`).join(', ')])];
