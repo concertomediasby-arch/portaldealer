@@ -3509,7 +3509,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-25T07:00:43Z';
+const LAST_UPDATE = '2026-10-25T07:03:01Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5421,14 +5421,13 @@ function showProduct(brandId, productId) {
     mediaMain.style.background = `${brand.color}10`;
   }
 
-  // Thumbnails — one per photo, then video, then pdf, then spec sheet
+  // Thumbnails — one per photo, then video, then pdf
   const photos = product.photos || (product.photo ? [product.photo] : ['']);
   const thumbData = [
     ...photos.map((src, i) => ({label:'Foto ' + (i + 1), type:'photo', src})),
     ...(product.hasVideo ? [{label:'Video', type:'video'}] : []),
     ...(product.pdf ? [{label:'Panduan', type:'pdf', src: product.pdf}] : []),
-    {label:'Spek', type:'doc'},
-  ];
+  ];   // thumbnail 'Spek' (ikon grafik 📊) dihapus 25 Okt 2026 atas permintaan pemilik
   document.getElementById('media-thumbs').innerHTML = thumbData.map((t,i) => `
     <div class="media-thumb${i===0?' active':''}" onclick="selectMedia(this,'${t.type}','${product.emoji}','${brand.color}','${t.label}','${t.src || ''}')">
       ${t.type==='photo' && t.src ? `<img src="${t.src}" alt="" style="width:100%;height:100%;object-fit:cover">`
