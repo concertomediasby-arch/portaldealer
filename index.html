@@ -3578,7 +3578,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T09:32:55Z';
+const LAST_UPDATE = '2026-10-26T09:35:06Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7190,14 +7190,13 @@ const gtSoldOut = a => !!a && a.n === 0;
 const gtCanPo = r => !!r && r.section !== 'clearance';
 // Jumlah Pre Order untuk qty baris ini (memperhitungkan baris lain di form yang menunjuk stok yang sama)
 function gtPoQty(r, qty, av) {
-  if (!qty || !gtCanPo(r) || av?.n == null || gtEditing?.admin) return 0;
-  return Math.max(0, qty - Math.max(0, av.n - gtFormQtyFor(av.pid, gtKey(r))));
+  return qty && gtCanPo(r) && av?.n === 0 && !gtEditing?.admin ? qty : 0;   // Pre Order hanya bila stok benar-benar 0
 }
 // Label Pre Order di pesan WA, Rekap & invoice (item.po = jumlah unit Pre Order)
-const gtPoLabel = it => !it?.po ? '' : it.po >= it.qty ? ' (Pre Order)' : ` (${it.qty - it.po} ready + ${it.po} Pre Order)`;
+const gtPoLabel = it => it?.po ? ' (Pre Order)' : '';
 function gtPoText(r, qty, av) {
   const po = gtPoQty(r, qty, av);
-  return !po ? '' : po === qty ? `Pre Order ${po} unit` : `${qty - po} ready + ${po} Pre Order`;
+  return po ? `Pre Order ${po} unit` : '';
 }
 // qty di form untuk produk yang sama (baris gathering & clearance bisa menunjuk produk katalog yang sama)
 const gtFormQtyFor = (pid, exceptKey) => (gtItems || []).reduce((t, x) => t + (gtKey(x) !== exceptKey && gtStockKey(x) === pid ? (gtQty[gtKey(x)] || 0) : 0), 0);
@@ -7331,10 +7330,8 @@ function gtSetQty(input) {
   const r = gtItems.find(x => gtKey(x) === k);
   let n = Math.max(0, Math.min(9999, parseInt(input.value, 10) || 0));
   const av = gtAvail(r);
-  if (n && av?.n != null && !gtEditing?.admin && gtCanPo(r)) {   // barang gathering: kelebihan dari sisa stok = Pre Order
-    const max = Math.max(0, av.n - gtFormQtyFor(av.pid, k));
-    if (n > max) showToast(max ? `Stok ${r.name} tinggal ${max} — ${n - max} unit dipesan sebagai Pre Order.` : `${r.name} dipesan sebagai Pre Order (stok habis).`);
-  } else if (n && av?.n != null && !gtEditing?.admin) {   // Clearance: tidak boleh melebihi sisa stok katalog
+  if (n && av?.n === 0 && gtCanPo(r) && !gtEditing?.admin) {   // barang gathering stok 0 → Pre Order, tidak dibatasi
+  } else if (n && av?.n != null && !gtEditing?.admin) {   // tidak boleh melebihi sisa stok katalog
     const max = Math.max(0, av.n - gtFormQtyFor(av.pid, k));
     if (n > max) { n = max; input.value = n || ''; showToast(max ? `Stok ${r.name} tinggal ${max}.` : `Stok ${r.name} habis.`); }
   }
@@ -7417,7 +7414,7 @@ async function gtSend() {
   await Promise.all([loadStock(), loadGtReserved()]);
   const need = new Map();
   o.groups.forEach(g => g.lines.forEach(l => { const pid = gtStockKey(l.r); if (pid) need.set(pid, { r: l.r, q: (need.get(pid)?.q || 0) + l.qty }); }));
-  const short = [...need.values()].map(x => ({ ...x, a: gtAvail(x.r) })).filter(x => !gtCanPo(x.r) && x.a?.n != null && x.q > x.a.n);
+  const short = [...need.values()].map(x => ({ ...x, a: gtAvail(x.r) })).filter(x => x.a?.n != null && x.q > x.a.n && !(x.a.n === 0 && gtCanPo(x.r)));
   if (short.length) {
     renderGathering();
     showToast('Stok tidak cukup: ' + short.map(x => `${x.r.name} (${x.a.n ? 'sisa ' + x.a.n : 'habis'})`).join(', ') + '. Kurangi Qty lalu kirim lagi.', 10000);
@@ -7426,17 +7423,8 @@ async function gtSend() {
   const sig = JSON.stringify([i.store, o.groups.map(g => g.lines.map(l => [l.r.name, l.qty]))]);
   let last = ''; try { last = localStorage.getItem(GT_SENT_KEY) || ''; } catch (e) {}
   if (sig === last && !confirm('Pesanan yang sama sudah pernah dikirim. Kirim lagi sebagai pesanan baru?')) return;
-  // Pre Order: sisa stok terbaru dibagikan ke baris pesanan berurutan, kelebihannya = Pre Order (hanya barang gathering, bukan Clearance)
-  const left = new Map();
-  o.groups.forEach(g => g.lines.forEach(l => {
-    l.po = 0;
-    const a = gtCanPo(l.r) && gtAvail(l.r);
-    if (!a || a.n == null) return;
-    if (!left.has(a.pid)) left.set(a.pid, a.n);
-    const ready = Math.min(l.qty, left.get(a.pid));
-    left.set(a.pid, left.get(a.pid) - ready);
-    l.po = l.qty - ready;
-  }));
+  // Pre Order: barang gathering (bukan Clearance) yang stok terbarunya benar-benar 0
+  o.groups.forEach(g => g.lines.forEach(l => { l.po = gtPoQty(l.r, l.qty, gtAvail(l.r)); }));
   // Buka tab WA langsung di dalam klik (agar tidak diblokir popup), isi alamatnya setelah pesanan tersimpan
   const win = hasWa() ? window.open('', '_blank') : null;
   const btn = document.getElementById('gt-send'); btn.disabled = true;
