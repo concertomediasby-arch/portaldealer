@@ -2396,6 +2396,17 @@ body {
   .gt-p small { display: block; font-size: 10px; color: var(--fg-muted); }
   /* Edit harga Shopping Gathering (Admin/Editor) */
   .gt-pe-btn { margin-left: auto; align-self: center; }
+  /* Produk lain (ketik manual) */
+  .gt-manual { margin-top: 18px; }
+  .gt-man-hint { margin: 2px 0 10px; font-size: 12.5px; color: var(--fg-muted); }
+  .gt-man-form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) 90px auto; gap: 8px; align-items: center; }
+  .gt-man-list { margin-top: 10px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .gt-man-it { display: grid; grid-template-columns: minmax(0, 1fr) 90px auto; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--border); }
+  .gt-man-it:first-child { border-top: 0; }
+  .gt-man-n { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .gt-man-n small { color: var(--fg-muted); font-size: 11.5px; }
+  .gt-man-n em { font: 600 10.5px var(--f-mono); color: #3d7ee0; font-style: normal; }
+  @media (max-width: 760px) { .gt-man-form { grid-template-columns: minmax(0, 1fr) 80px; } .gt-man-form #gt-man-name { grid-column: 1 / -1; } .gt-man-form .gt-btn { grid-column: 1 / -1; } .gt-input#gt-man-name, .gt-input#gt-man-brand, .gt-input#gt-man-qty, .gt-man-q { font-size: 16px; } }
   .gt-pe-btn.on { background: var(--accent); color: #111; border-color: var(--accent); }
   .gt-pin { width: 118px; max-width: 100%; padding: 5px 7px; border-radius: 7px; border: 1px dashed var(--accent); background: var(--surface); color: var(--fg); font: 500 12px var(--f-mono); text-align: right; }
   .gt-pin.saving { opacity: .55; }
@@ -3587,7 +3598,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T11:09:16Z';
+const LAST_UPDATE = '2026-10-26T11:15:23Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7109,6 +7120,8 @@ function gtDealerChanged() {
   gtSaveDraft();
 }
 let gtItems = null, gtError = '', gtQty = {}, gtFilter = 'all';
+// Produk yang belum ada di daftar, diketik manual oleh dealer (26 Okt 2026, permintaan pemilik): [{ id, name, brand, qty }]
+let gtManual = [];
 const gtKey = r => `${r.section}|${r.brand}|${r.name}`;
 // Harga yang dipakai menghitung total: spesial gathering, atau (clearance) harga clearance
 // Harga yang dipakai untuk pesanan: harga spesial (clearance: harga clearance). Produk tanpa harga spesial tapi punya Harga Baru → dibeli di Harga Baru (tanpa promo). Tanpa keduanya → "Hubungi sales".
@@ -7119,7 +7132,9 @@ const gtClrCash = r => r.special_price == null ? null : Math.round(r.special_pri
 const gtNet = r => gtNoPromo(r) ? r.new_price : r.special_price == null ? null
   : r.section === 'clearance' ? r.special_price - gtClrCash(r) : r.special_price;
 const gtRp = n => n == null ? '—' : fmtRp(n);
-const gtGroup = r => r.section === 'clearance' ? 'Clearance Sale' : r.brand;
+const GT_MANUAL_GROUP = 'Produk Lain (ketik manual)';
+const gtGroup = r => r.manual ? GT_MANUAL_GROUP : r.section === 'clearance' ? 'Clearance Sale' : r.brand;
+const gtManualRow = m => ({ section: 'gathering', brand: m.brand || 'Lainnya', name: m.name, manual: true });
 
 /* Stok katalog ↔ Shopping Gathering (25 Okt 2026, permintaan pemilik): sisa = qty di tabel stock − qty pesanan gathering
    yang belum selesai (status selain batal/selesai). Sisa 0 / status Habis → Clearance: "Stok habis", tidak bisa dipesan; barang gathering lain: bisa Pre Order.
@@ -7145,6 +7160,7 @@ const GT_NAME_ALIASES = {
 };
 const GT_DISPLAY_NAMES = { ss16hiresdsp: 'XSS16 Hi-Res DSP' };   // 26 Okt 2026
 function gtProductId(r) {
+  if (r.manual) return null;   // produk ketik manual: tidak dicocokkan ke stok katalog
   if (r.pid) return r.pid;
   const na = GT_NAME_ALIASES[normKey(r.name)];
   if (na) return na;
@@ -7226,7 +7242,7 @@ function gtPoQty(r, qty, av) {
   return qty && gtCanPo(r) && av?.n === 0 && !gtEditing?.admin ? qty : 0;   // Pre Order hanya bila stok benar-benar 0
 }
 // Label Pre Order di pesan WA, Rekap & invoice (item.po = jumlah unit Pre Order)
-const gtPoLabel = it => (it?.po ? ' (Pre Order)' : '') + (it?.tbd ? ' (Harga menyusul)' : '');
+const gtPoLabel = it => (it?.manual ? ' (Ketik manual)' : '') + (it?.po ? ' (Pre Order)' : '') + (it?.tbd ? ' (Harga menyusul)' : '');
 // Barang tanpa harga yang tetap bisa dipesan di Form Belanja (26 Okt 2026, permintaan pemilik) — harga menyusul, Rp 0 di total
 const GT_TBD_PIDS = new Set(['st-ss16', 'st-qk2004', 'st-sa55w', 'st-ssaw8', 'st-sqw10']);   // XSS16, QK 200.4, SA-55W, SSAW8, SQW-10
 // Produk katalog ber-soon:true → label COMING SOON di Form Belanja (26 Okt 2026, permintaan pemilik)
@@ -7250,7 +7266,8 @@ async function loadGtReserved() {
   gtRerender();
 }
 function gtRerender() {
-  if (document.getElementById('view-gathering')?.classList.contains('active') && !document.activeElement?.classList?.contains('gt-qty')) renderGathering();
+  const ae = document.activeElement;
+  if (document.getElementById('view-gathering')?.classList.contains('active') && !ae?.classList?.contains('gt-qty') && !ae?.closest?.('.gt-manual')) renderGathering();
 }
 function gtCopyReservedSql() { (navigator.clipboard?.writeText(GT_RESERVED_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => { prompt('Salin SQL ini:', GT_RESERVED_SQL); }); }
 
@@ -7258,14 +7275,15 @@ function gtLoadDraft() {
   try {
     const d = JSON.parse(localStorage.getItem(GT_DRAFT_KEY) || '{}');
     gtQty = d.qty || {};
+    gtManual = Array.isArray(d.manual) ? d.manual.filter(m => m && m.name && m.qty > 0) : [];
     GT_INFO.forEach(k => { const el = document.getElementById('gt-' + k); if (el && !el.value) el.value = d.info?.[k] || ''; });
-  } catch (e) { gtQty = {}; }
+  } catch (e) { gtQty = {}; gtManual = []; }
   gtSyncDealerSelect();
 }
 function gtSaveDraft() {
   if (gtEditing?.admin) return;   // jangan timpa draf saat admin mengedit pesanan dealer
   const info = Object.fromEntries(GT_INFO.map(k => [k, document.getElementById('gt-' + k)?.value || '']));
-  try { localStorage.setItem(GT_DRAFT_KEY, JSON.stringify({ qty: gtQty, info })); } catch (e) {}
+  try { localStorage.setItem(GT_DRAFT_KEY, JSON.stringify({ qty: gtQty, manual: gtManual, info })); } catch (e) {}
 }
 
 function openGathering(tab) {
@@ -7423,9 +7441,10 @@ function renderGathering() {
     `<button class="filter-chip${gtFilter === g ? ' active' : ''}" onclick="setGtFilter('${escHtml(g)}')">${g === 'all' ? 'Semua' : escHtml(g)}</button>`).join('');
   const q = normKey(document.getElementById('gt-search')?.value || '');
   const rows = gtItems.filter(r => (gtFilter === 'all' || gtGroup(r) === gtFilter) && (!q || normKey(r.name).includes(q)));
-  if (!rows.length) { list.innerHTML = `<div class="stock-empty">${gtItems.length ? 'Tidak ada produk yang cocok.' : 'Belum ada data gathering.'}</div>`; gtUpdateBar(); return; }
+  if (!rows.length) { list.innerHTML = `<div class="stock-empty">${gtItems.length ? 'Tidak ada produk yang cocok — ketik manual di bawah.' : 'Belum ada data gathering.'}</div>` + gtManualHtml(); gtUpdateBar(); return; }
   const resWarn = gtReservedErr && isAdmin() ? `<div class="gt-res-warn">⚠ Pengurangan stok dari pesanan gathering belum aktif — sisa stok masih memakai angka katalog saja. Admin/editor: jalankan SQL fungsi <b>gathering_reserved</b> di Supabase. <button class="gt-btn ghost" onclick="gtCopyReservedSql()">📋 Salin SQL</button></div>` : '';
   const peNote = gtPriceEdit ? '<div class="gt-pe-note">✏️ <b>Mode Edit Harga</b> — ubah angka lalu tekan Enter / pindah kolom; langsung tersimpan ke database dan terlihat dealer. Kosongkan = tanpa harga. <b>Harga Baru</b> mengikuti SRP katalog (ubah di katalog); hanya barang tanpa SRP katalog yang Harga Barunya bisa diisi di sini. Klik <b>Selesai Edit</b> untuk kembali.</div>' : '';
+  const manualHtml = gtManualHtml();
   list.innerHTML = peNote + resWarn + groups.filter(g => rows.some(r => gtGroup(r) === g)).map(g => {
     const items = rows.filter(r => gtGroup(r) === g);
     const clear = items[0].section === 'clearance';
@@ -7478,9 +7497,50 @@ function renderGathering() {
           <span class="gt-p gt-line" data-l="Subtotal">${qty && net != null ? fmtRp(qty * net) : qty && gtTbd(r) ? 'Harga menyusul' : '—'}</span>
         </div>`;
       }).join('')}</div></div>`;
-  }).join('');
+  }).join('') + manualHtml;
   gtUpdateBar();
 }
+
+// ── Produk lain (ketik manual) ──
+const gtManualId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function gtManualHtml() {
+  const brands = BRANDS.map(b => `<option value="${escHtml(b.name)}">`).join('');
+  return `<div class="gt-group gt-manual">
+    <div class="line-header"><span class="line-name">➕ ${GT_MANUAL_GROUP}</span><span class="line-count">${gtManual.length}</span><span class="gt-sub" data-group="${escHtml(GT_MANUAL_GROUP)}"></span></div>
+    <p class="gt-man-hint">Produk yang Anda cari belum ada di daftar? Ketik nama produknya di sini — harga dikonfirmasi sales CAI (harga menyusul).</p>
+    <div class="gt-man-form">
+      <input class="gt-input" id="gt-man-name" maxlength="80" placeholder="Nama / tipe produk" onkeydown="if(event.key==='Enter')gtManualAdd()">
+      <input class="gt-input" id="gt-man-brand" maxlength="40" placeholder="Brand (opsional)" list="gt-man-brands" onkeydown="if(event.key==='Enter')gtManualAdd()">
+      <datalist id="gt-man-brands">${brands}</datalist>
+      <input class="gt-input" id="gt-man-qty" type="number" min="1" step="1" inputmode="numeric" placeholder="Qty" onkeydown="if(event.key==='Enter')gtManualAdd()">
+      <button class="gt-btn" onclick="gtManualAdd()">＋ Tambah</button>
+    </div>
+    ${gtManual.length ? `<div class="gt-man-list">${gtManual.map(m => `<div class="gt-man-it">
+      <span class="gt-man-n"><b>${escHtml(m.name)}</b>${m.brand ? `<small>${escHtml(m.brand)}</small>` : ''}<em>harga menyusul</em></span>
+      <input class="gt-input gt-man-q" type="number" min="1" step="1" inputmode="numeric" value="${m.qty}" aria-label="Qty ${escHtml(m.name)}" onchange="gtManualQty('${m.id}', this.value)">
+      <button class="gt-btn ghost" title="Hapus" onclick="gtManualDel('${m.id}')">🗑</button>
+    </div>`).join('')}</div>` : ''}
+  </div>`;
+}
+function gtManualAdd() {
+  const name = document.getElementById('gt-man-name')?.value.trim().replace(/\s+/g, ' ');
+  const brand = document.getElementById('gt-man-brand')?.value.trim();
+  const qty = Math.min(9999, parseInt(document.getElementById('gt-man-qty')?.value, 10) || 0);
+  if (!name) { showToast('Ketik nama produk dulu.'); document.getElementById('gt-man-name')?.focus(); return; }
+  if (qty < 1) { showToast('Isi Qty minimal 1.'); document.getElementById('gt-man-qty')?.focus(); return; }
+  const same = gtManual.find(m => normKey(m.name) === normKey(name) && normKey(m.brand) === normKey(brand));
+  if (same) same.qty = Math.min(9999, same.qty + qty); else gtManual.push({ id: gtManualId(), name, brand, qty });
+  gtSaveDraft(); renderGathering();
+  showToast(`✓ ${name} × ${qty} ditambahkan (harga menyusul).`);
+  document.getElementById('gt-man-name')?.focus();
+}
+function gtManualQty(id, v) {
+  const m = gtManual.find(x => x.id === id); if (!m) return;
+  const n = Math.min(9999, parseInt(v, 10) || 0);
+  if (n < 1) return gtManualDel(id);
+  m.qty = n; gtSaveDraft(); gtUpdateBar();
+}
+function gtManualDel(id) { gtManual = gtManual.filter(x => x.id !== id); gtSaveDraft(); renderGathering(); }
 
 // HP: saat mengetik Qty (keyboard terbuka) sembunyikan bar total melayang; muncul lagi setelah selesai mengetik
 document.addEventListener('focusin', e => { if (e.target.classList?.contains('gt-qty')) document.getElementById('gt-bar')?.classList.add('typing'); });
@@ -7510,7 +7570,8 @@ function gtSetQty(input) {
 function gtOrder() {
   const lines = (gtItems || []).filter(r => gtQty[gtKey(r)] && (gtNet(r) != null || gtTbd(r)))
     .map(r => gtTbd(r) ? { r, qty: gtQty[gtKey(r)], price: 0, total: 0, tbd: true }
-      : { r, qty: gtQty[gtKey(r)], price: gtNet(r), total: gtQty[gtKey(r)] * gtNet(r) });
+      : { r, qty: gtQty[gtKey(r)], price: gtNet(r), total: gtQty[gtKey(r)] * gtNet(r) })
+    .concat(gtManual.filter(m => m.qty > 0).map(m => ({ r: gtManualRow(m), qty: m.qty, price: 0, total: 0, tbd: true, manual: true })));
   const groups = [...new Set(lines.map(l => gtGroup(l.r)))].map(g => {
     const ls = lines.filter(l => gtGroup(l.r) === g);
     return { name: g, lines: ls, qty: ls.reduce((a, l) => a + l.qty, 0), total: ls.reduce((a, l) => a + l.total, 0) };
@@ -7564,7 +7625,7 @@ async function gtCopy(t) { try { await navigator.clipboard.writeText(t); showToa
 
 function gtOrderPayload(o, i) {
   return { dealer: i.dealer, store: i.store, city: i.city, phone: i.phone, pic: i.pic, total_qty: o.qty, total: o.total,
-    items: o.groups.flatMap(g => g.lines.map(l => ({ group: g.name, brand: l.r.brand, section: l.r.section, name: l.r.name, qty: l.qty, price: l.price, total: l.total, ...(l.po ? { po: l.po } : {}), ...(l.tbd ? { tbd: true } : {}) }))) };
+    items: o.groups.flatMap(g => g.lines.map(l => ({ group: g.name, brand: l.r.brand, section: l.r.section, name: l.r.name, qty: l.qty, price: l.price, total: l.total, ...(l.po ? { po: l.po } : {}), ...(l.tbd ? { tbd: true } : {}), ...(l.manual ? { manual: true } : {}) }))) };
 }
 
 async function gtSend() {
@@ -7607,7 +7668,7 @@ async function gtSend() {
   const txt = ['*FORM BELANJA GATHERING CAI 2026*', `No. Invoice: *${invoice}*`,
     `Nama Dealer: ${i.dealer}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Distributor: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
     ...o.groups.flatMap(g => [`*${g.name.toUpperCase()}*`,
-      ...g.lines.map(l => l.tbd ? `• ${l.r.name} × ${l.qty} — harga menyusul${l.po ? ' (Pre Order)' : ''}` : `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}${gtPoLabel(l)}`),
+      ...g.lines.map(l => l.tbd ? `• ${l.r.name}${l.manual && l.r.brand !== 'Lainnya' ? ' (' + l.r.brand + ')' : ''} × ${l.qty} — harga menyusul${l.po ? ' (Pre Order)' : ''}` : `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}${gtPoLabel(l)}`),
       `Subtotal: ${fmtRp(g.total)}`, '']),
     `*GRAND TOTAL: ${fmtRp(o.total)}* (${o.qty} item)`, '',
     '*Pembayaran (transfer ke salah satu):*', ...gtBankLines().map(b => '• ' + b), `Berita transfer: ${invoice}`, '', `(dari ${PORTAL_URL})`].join('\n');
@@ -7616,7 +7677,7 @@ async function gtSend() {
     if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
   }
   showToast(`✓ Pesanan ${invoice} terkirim. Silakan transfer & tunggu konfirmasi admin.`, 7000);
-  gtQty = {}; gtSaveDraft();
+  gtQty = {}; gtManual = []; gtSaveDraft();
   renderGathering();
   loadGtReserved();
 }
@@ -7626,13 +7687,14 @@ let gtDraftBackup = null;
 function adminEditGtOrder(id) {
   const o = gtOrders?.find(x => x.id === id);
   if (!o || !isAdmin() || !gtItems) return;
-  if (!gtEditing) gtDraftBackup = { qty: gtQty, info: gtInfo() };
+  if (!gtEditing) gtDraftBackup = { qty: gtQty, manual: gtManual, info: gtInfo() };
   const origByPid = {};
   if (!['batal', 'selesai'].includes(o.status)) (o.items || []).forEach(it => { const pid = gtStockKey(it); if (pid) origByPid[pid] = (origByPid[pid] || 0) + (it.qty || 0); });
   gtEditing = { admin: true, id: o.id, invoice: o.invoice || '#' + o.id, store: o.store, origByPid };
-  gtQty = {};
+  gtQty = {}; gtManual = [];
   const missing = [];
   (o.items || []).forEach(it => {
+    if (it.manual) { gtManual.push({ id: gtManualId(), name: it.name, brand: it.brand === 'Lainnya' ? '' : it.brand, qty: it.qty }); return; }
     const row = gtItems.find(x => x.section === it.section && x.brand === it.brand && x.name === it.name);
     if (row) gtQty[gtKey(row)] = it.qty; else missing.push(it.name);
   });
@@ -7647,6 +7709,7 @@ function gtEndEdit(backToRekap) {
   gtEditing = null;
   if (gtDraftBackup) {
     gtQty = gtDraftBackup.qty || {};
+    gtManual = gtDraftBackup.manual || [];
     Object.entries(gtDraftBackup.info || {}).forEach(([k, v]) => { const el = document.getElementById('gt-' + k); if (el) el.value = v; });
     gtSyncDealerSelect();
     gtDraftBackup = null;
@@ -8081,8 +8144,8 @@ async function exportGtOrders() {
 }
 
 function gtReset() {
-  if (!Object.keys(gtQty).length || !confirm('Kosongkan semua jumlah pesanan?')) return;
-  gtQty = {}; gtSaveDraft(); renderGathering();
+  if ((!Object.keys(gtQty).length && !gtManual.length) || !confirm('Kosongkan semua jumlah pesanan?')) return;
+  gtQty = {}; gtManual = []; gtSaveDraft(); renderGathering();
 }
 
 
