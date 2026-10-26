@@ -3587,7 +3587,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T10:16:50Z';
+const LAST_UPDATE = '2026-10-26T10:22:58Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7158,7 +7158,8 @@ function gtProductId(r) {
     // mis. "RCA Red Dragon Series 1M /Pair" → Red Dragon Series (OG) — semua panjang = satu stok
     if (!pid) {
       const nk = normKey(r.name); let best = 0;
-      gtBrandProducts(r.brand).forEach(p => { const pk = normKey(p.name); if (pk.length > 3 && pk.length > best && nk.includes(pk)) { best = pk.length; pid = p.id; } });
+      // juga tanpa kata "Series": "OG Red Dragon RCA 1M /Pair" → Red Dragon Series (26 Okt 2026, baris Clearance OG)
+      gtBrandProducts(r.brand).forEach(p => [p.name, p.name.replace(/\s*series\b/i, '')].forEach(n => { const pk = normKey(n); if (pk.length > 3 && pk.length > best && nk.includes(pk)) { best = pk.length; pid = p.id; } }));
     }
   }
   gtPidCache.set(ck, pid);
