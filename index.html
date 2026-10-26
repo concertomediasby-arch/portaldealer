@@ -3587,7 +3587,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T10:39:20Z';
+const LAST_UPDATE = '2026-10-26T10:44:15Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7217,7 +7217,10 @@ function gtPoQty(r, qty, av) {
   return qty && gtCanPo(r) && av?.n === 0 && !gtEditing?.admin ? qty : 0;   // Pre Order hanya bila stok benar-benar 0
 }
 // Label Pre Order di pesan WA, Rekap & invoice (item.po = jumlah unit Pre Order)
-const gtPoLabel = it => it?.po ? ' (Pre Order)' : '';
+const gtPoLabel = it => (it?.po ? ' (Pre Order)' : '') + (it?.tbd ? ' (Harga menyusul)' : '');
+// Barang tanpa harga yang tetap bisa dipesan di Form Belanja (26 Okt 2026, permintaan pemilik) — harga menyusul, Rp 0 di total
+const GT_TBD_PIDS = new Set(['st-ss16', 'st-qk2004', 'st-sa55w', 'st-ssaw8']);   // XSS16, QK 200.4, SA-55W, SSAW8
+const gtTbd = r => !!r && r.section !== 'clearance' && gtNet(r) == null && GT_TBD_PIDS.has(gtProductId(r));
 function gtPoText(r, qty, av) {
   const po = gtPoQty(r, qty, av);
   return po ? `Pre Order ${po} unit` : '';
@@ -7443,13 +7446,13 @@ function renderGathering() {
              <span class="gt-p gt-sp" data-l="Harga Clearance">${gtRp(net)}</span>`
           : `<span class="gt-p gt-old" data-l="Harga Lama">${r.old_price == null ? '—' : `<s>${fmtRp(r.old_price)}</s>`}</span>
              <span class="gt-p" data-l="Harga Baru">${gtRp(r.new_price)}</span>
-             <span class="gt-p gt-sp" data-l="Harga Spesial">${gtRp(net)}${gtNoPromo(r) ? '<small>tanpa promo</small>' : ''}</span>`;
+             <span class="gt-p gt-sp" data-l="Harga Spesial">${gtTbd(r) ? '—<small>harga menyusul</small>' : gtRp(net)}${gtNoPromo(r) ? '<small>tanpa promo</small>' : ''}</span>`;
         return `<div class="gt-row${qty ? ' has-qty' : ''}${out ? ' soldout' : ''}" data-k="${escHtml(k)}">
           <span class="gt-name">${escHtml(r.name)}${clear && r.special_price != null ? '<b class="gt-off">−50%</b>' : ''}${sub}</span>${cols}
-          <span class="gt-q">${net == null ? '<span class="gt-na">Hubungi sales</span>'
+          <span class="gt-q">${net == null && !gtTbd(r) ? '<span class="gt-na">Hubungi sales</span>'
             : out && !gtEditing?.admin ? '<span class="gt-na">Stok habis</span>'
             : `<input class="gt-qty" type="number" min="0" step="1" inputmode="numeric" value="${qty || ''}" placeholder="${po ? 'PO' : '0'}" aria-label="Qty ${escHtml(r.name)}" oninput="gtSetQty(this)">`}</span>
-          <span class="gt-p gt-line" data-l="Subtotal">${qty && net != null ? fmtRp(qty * net) : '—'}</span>
+          <span class="gt-p gt-line" data-l="Subtotal">${qty && net != null ? fmtRp(qty * net) : qty && gtTbd(r) ? 'Harga menyusul' : '—'}</span>
         </div>`;
       }).join('')}</div></div>`;
   }).join('');
@@ -7471,7 +7474,7 @@ function gtSetQty(input) {
   }
   if (n) gtQty[k] = n; else delete gtQty[k];
   row.classList.toggle('has-qty', !!n);
-  row.querySelector('.gt-line').textContent = n ? fmtRp(n * gtNet(r)) : '—';
+  row.querySelector('.gt-line').textContent = !n ? '—' : gtTbd(r) ? 'Harga menyusul' : fmtRp(n * gtNet(r));
   const pq = row.querySelector('.gt-po-q'), pt = gtPoText(r, n, av);
   if (pq && pt) pq.textContent = pt;
   else if (pq) pq.closest('.gt-note')?.remove();
@@ -7482,8 +7485,9 @@ function gtSetQty(input) {
 
 // Item yang dipesan (hanya yang masih ada di data & punya harga), dikelompokkan sesuai urutan data
 function gtOrder() {
-  const lines = (gtItems || []).filter(r => gtQty[gtKey(r)] && gtNet(r) != null)
-    .map(r => ({ r, qty: gtQty[gtKey(r)], price: gtNet(r), total: gtQty[gtKey(r)] * gtNet(r) }));
+  const lines = (gtItems || []).filter(r => gtQty[gtKey(r)] && (gtNet(r) != null || gtTbd(r)))
+    .map(r => gtTbd(r) ? { r, qty: gtQty[gtKey(r)], price: 0, total: 0, tbd: true }
+      : { r, qty: gtQty[gtKey(r)], price: gtNet(r), total: gtQty[gtKey(r)] * gtNet(r) });
   const groups = [...new Set(lines.map(l => gtGroup(l.r)))].map(g => {
     const ls = lines.filter(l => gtGroup(l.r) === g);
     return { name: g, lines: ls, qty: ls.reduce((a, l) => a + l.qty, 0), total: ls.reduce((a, l) => a + l.total, 0) };
@@ -7537,7 +7541,7 @@ async function gtCopy(t) { try { await navigator.clipboard.writeText(t); showToa
 
 function gtOrderPayload(o, i) {
   return { dealer: i.dealer, store: i.store, city: i.city, phone: i.phone, pic: i.pic, total_qty: o.qty, total: o.total,
-    items: o.groups.flatMap(g => g.lines.map(l => ({ group: g.name, brand: l.r.brand, section: l.r.section, name: l.r.name, qty: l.qty, price: l.price, total: l.total, ...(l.po ? { po: l.po } : {}) }))) };
+    items: o.groups.flatMap(g => g.lines.map(l => ({ group: g.name, brand: l.r.brand, section: l.r.section, name: l.r.name, qty: l.qty, price: l.price, total: l.total, ...(l.po ? { po: l.po } : {}), ...(l.tbd ? { tbd: true } : {}) }))) };
 }
 
 async function gtSend() {
@@ -7580,7 +7584,7 @@ async function gtSend() {
   const txt = ['*FORM BELANJA GATHERING CAI 2026*', `No. Invoice: *${invoice}*`,
     `Nama Dealer: ${i.dealer}`, `Kota: ${i.city || '-'}`, `No. HP: ${i.phone || '-'}`, `Distributor: ${i.pic || '-'}`, `Tanggal: ${gtToday()}`, '',
     ...o.groups.flatMap(g => [`*${g.name.toUpperCase()}*`,
-      ...g.lines.map(l => `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}${gtPoLabel(l)}`),
+      ...g.lines.map(l => l.tbd ? `• ${l.r.name} × ${l.qty} — harga menyusul${l.po ? ' (Pre Order)' : ''}` : `• ${l.r.name} × ${l.qty} @ ${fmtRp(l.price)} = ${fmtRp(l.total)}${gtPoLabel(l)}`),
       `Subtotal: ${fmtRp(g.total)}`, '']),
     `*GRAND TOTAL: ${fmtRp(o.total)}* (${o.qty} item)`, '',
     '*Pembayaran (transfer ke salah satu):*', ...gtBankLines().map(b => '• ' + b), `Berita transfer: ${invoice}`, '', `(dari ${PORTAL_URL})`].join('\n');
@@ -7656,7 +7660,7 @@ function gtPrint() {
     <table class="gp-info">${info.map(([a, b]) => `<tr><td>${a}</td><td>: ${escHtml(b || '')}</td></tr>`).join('')}</table>
     ${o.groups.map(g => `<h2>${escHtml(g.name)}</h2>
       <table class="gp-items"><thead><tr><th>No</th><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead><tbody>
-      ${g.lines.map((l, n) => `<tr><td>${n + 1}</td><td>${escHtml(l.r.name)}</td><td>${l.qty}</td><td>${fmtRp(l.price)}</td><td>${fmtRp(l.total)}</td></tr>`).join('')}
+      ${g.lines.map((l, n) => `<tr><td>${n + 1}</td><td>${escHtml(l.r.name + gtPoLabel(l))}</td><td>${l.qty}</td><td>${l.tbd ? 'menyusul' : fmtRp(l.price)}</td><td>${l.tbd ? '—' : fmtRp(l.total)}</td></tr>`).join('')}
       <tr class="gp-sub"><td colspan="4">Subtotal ${escHtml(g.name)}</td><td>${fmtRp(g.total)}</td></tr></tbody></table>`).join('')}
     <table class="gp-items gp-grand"><tr><td>GRAND TOTAL (${o.qty} item)</td><td>${fmtRp(o.total)}</td></tr></table>
     <p class="gp-terms"><b>Pembayaran (transfer ke salah satu):</b><br>${gtBankLines().map(escHtml).join('<br>')}</p>
@@ -7828,7 +7832,7 @@ function renderGtRekap() {
           : gtConfirmed(o) ? `<div class="gt-confirm-bar ok"><span>✅ Pembayaran dikonfirmasi${o.confirmed_at ? ' · ' + fmtGtTime(o.confirmed_at) : ''} — masuk Top Spender.</span></div>` : ''}
         ${gtOpenOrder === o.id ? `<div class="gt-order-body">
           <table class="gt-order-items"><thead><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead><tbody>
-          ${(o.items || []).map(it => `<tr><td>${escHtml(it.name)}${it.po ? `<b class="gt-po">${escHtml(gtPoLabel(it).trim())}</b>` : ''}<small>${escHtml(it.group)}</small></td><td>${it.qty}</td><td>${fmtRp(it.price)}</td><td>${fmtRp(it.total)}</td></tr>`).join('')}
+          ${(o.items || []).map(it => `<tr><td>${escHtml(it.name)}${gtPoLabel(it) ? `<b class="gt-po">${escHtml(gtPoLabel(it).trim())}</b>` : ''}<small>${escHtml(it.group)}</small></td><td>${it.qty}</td><td>${fmtRp(it.price)}</td><td>${fmtRp(it.total)}</td></tr>`).join('')}
           </tbody></table>
           <div class="gt-order-actions">
             ${o.phone ? `<a class="gt-btn ghost" href="https://wa.me/${o.phone.replace(/\D/g, '').replace(/^0/, '62')}" target="_blank" rel="noopener">💬 WA ${escHtml(o.phone)}</a>` : ''}
