@@ -3527,6 +3527,7 @@ body {
           <button class="admin-btn ghost editor-only" onclick="closeAdmin(); openDealers()">👥 Kelola Dealer</button>
         </div>
         <div class="sheet-link" id="sheet-link"></div>
+        <div class="sheet-link" id="auto-sync"></div>
         <div class="admin-import" id="admin-import" style="display:none">
           <div class="imp-help">
             Unggah file stok gudang CAI apa adanya (kolom <b>Kode Barang</b> + <b>Baru</b>), daftar <b>barang OTW</b>, atau <b>Template Excel</b>.
@@ -3569,7 +3570,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T04:03:20Z';
+const LAST_UPDATE = '2026-10-26T04:33:29Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6303,7 +6304,28 @@ function showAdminStockSection() {
   document.getElementById('admin-footer').style.display = 'block';
   document.getElementById('admin-user-email').textContent = authUser ? `${accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Dealer'}` : '';
   document.getElementById('admin-subtitle').textContent = admin ? 'Kelola ketersediaan produk' : 'Akun ini tidak punya akses admin';
-  if (admin) { renderAdminList(); renderSheetLink(); }
+  if (admin) { renderAdminList(); renderSheetLink(); loadAutoSync(); }
+}
+// Sinkron otomatis di server (Edge Function sync-stock-sheet + pg_cron, tiap 15 menit) — status terakhir dari tabel stock_sync
+async function loadAutoSync() {
+  const el = document.getElementById('auto-sync');
+  if (!el || !supabase) return;
+  const { data, error } = await supabase.from('stock_sync').select('*').eq('id', 1).maybeSingle();
+  if (error || !data) { el.innerHTML = ''; return; }   // belum dipasang
+  const t = data.ran_at ? fmtStockTime(data.ran_at) + ' WIB' : '—';
+  el.innerHTML = `${data.ok ? '🟢' : '🔴'} Sinkron otomatis terakhir: ${t}${data.source === 'manual' ? ' (manual)' : ''} — ${escHtml(data.message || '')}
+    · <a href="#" onclick="runAutoSync(); return false;">⚡ sinkron server sekarang</a>`;
+}
+async function runAutoSync() {
+  const el = document.getElementById('auto-sync');
+  if (el) el.innerHTML = '⏳ Menyinkronkan stok dari Google Sheet di server…';
+  try {
+    const { data, error } = await supabase.functions.invoke('sync-stock-sheet', { body: {} });
+    if (error) throw error;
+    showToast(data?.ok ? 'Stok tersinkron — ' + data.message : 'Sinkron gagal: ' + (data?.error || ''));
+    await loadStock();
+  } catch (e) { showToast('Sinkron gagal: ' + (e.message || e)); }
+  loadAutoSync();
 }
 
 function resetAdminLoginUI() {
