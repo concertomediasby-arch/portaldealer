@@ -3573,7 +3573,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T08:04:20Z';
+const LAST_UPDATE = '2026-10-26T08:30:44Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7228,12 +7228,14 @@ function openGathering(tab) {
   setGtTab(tab === 'rekap' && isAdmin() ? 'rekap' : 'form');
 }
 
+// Barang yang tidak dijual di Shopping Gathering walau masih ada di tabel gathering_items (normKey nama) — permintaan pemilik
+const GT_HIDDEN_ITEMS = new Set(['prom3pnextel', 'plm3pnextel']);   // PRO-M3P Nextel (26 Okt 2026)
 async function loadGathering() {
   if (!supabase || !authUser) return;
   try {
     const { data, error } = await supabase.from(GATHERING_TABLE).select('*').order('sort');
     if (error) throw error;
-    gtItems = data || []; gtError = '';
+    gtItems = (data || []).filter(r => !GT_HIDDEN_ITEMS.has(normKey(r.name))); gtError = '';
   } catch (e) {
     const m = String(e.message || e);
     gtItems = [];
