@@ -2593,6 +2593,12 @@ body {
   .sr-price { color: var(--accent); font-weight: 700; }
   .panel-price .pp-label { flex-basis: 100%; }
   .pp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; width: 100%; font-size: 15px; }
+  .pp-stk { margin-left: 8px; padding: 1px 7px; border-radius: 99px; font: 600 10px var(--f-mono); letter-spacing: .04em; text-transform: uppercase; vertical-align: middle; }
+  .pp-stk:empty { display: none; }
+  .pp-list:has(.pp-stk:not(:empty)) { grid-template-columns: 1fr; }
+  .pp-stk.ready { color: #2ea05a; border: 1px solid rgba(46,160,90,.45); }
+  .pp-stk.habis { color: #e04848; border: 1px solid rgba(220,60,60,.5); }
+  .pp-stk.indent { color: #d99a2b; border: 1px solid rgba(217,154,43,.5); }
   .pp-list b { display: inline-block; min-width: 34px; margin-right: 6px; font: 600 11px var(--f-mono); color: var(--fg-muted); }
 
 
@@ -3563,7 +3569,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T03:57:49Z';
+const LAST_UPDATE = '2026-10-26T04:03:20Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5565,7 +5571,7 @@ function showProduct(brandId, productId) {
   pp.innerHTML = !hasPrice(product) ? '' : product.price || !product.priceList
     ? `${srpText(product)}<span>Harga jual (SRP)</span>`
     : `<span class="pp-label">Harga jual (SRP)</span><div class="pp-list">${Object.entries(product.priceList)
-        .map(([k, v]) => `<div><b>${escHtml(k)}</b>${fmtRp(v)}${unitText(product)}</div>`).join('')}</div>`;
+        .map(([k, v]) => `<div><b>${escHtml(k)}</b>${fmtRp(v)}${unitText(product)}<span class="pp-stk" data-v="${escHtml(k)}"></span></div>`).join('')}</div>`;
 
   // Main media
   const mediaMain = document.getElementById('media-main');
@@ -6145,15 +6151,21 @@ function renderProductStockBadge(pid) {
   const el = document.getElementById('panel-stock-badge');
   if (!el) return;
   const s = stockMap[pid];
-  if (!s) { el.innerHTML = ''; return; }
+  if (!s) { el.innerHTML = ''; document.querySelectorAll('#panel-price .pp-stk').forEach(x => { x.textContent = ''; x.className = 'pp-stk'; }); return; }
   const base = STOCK_LABEL[s.status] || s.status;
   const label = s.status === 'ready' && s.qty != null ? `${base} — Sisa ${s.qty} unit` : base;
   const otw = s.incoming ? `<div class="stock-badge-note">🚚 Dalam perjalanan: ${escHtml(s.incoming)}</div>` : '';
   const dn = s.incoming ? '' : dealerNote(s.note);   // barang OTW: cukup tampilkan baris OTW, tanpa catatan di bawahnya
   const note = dn ? `<div class="stock-badge-note">📝 ${escHtml(dn)}</div>` : '';
-  const vl = variantLine(findProductById(pid));
-  const per = vl ? `<div class="stock-badge-note">📏 Per panjang: ${escHtml(vl)}</div>` : '';
-  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${label}</span></div>${per}${otw}${note}`;
+  // stok per panjang (kabel) tampil di samping tiap harga di daftar SRP; badge utama = total semua panjang
+  const vs = stockVariants(findProductById(pid));
+  document.querySelectorAll('#panel-price .pp-stk').forEach(x => {
+    const hit = vs.find(y => y.v === x.dataset.v), st = hit?.s;
+    x.className = 'pp-stk' + (st ? ' ' + st.status : '');
+    x.textContent = !st ? '' : st.qty != null ? (st.qty ? `Sisa ${st.qty}` : 'Habis') : (STOCK_LABEL[st.status] || st.status);
+  });
+  const lbl = vs.length && s.qty != null ? label.replace('Sisa', 'Total sisa') : label;
+  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${lbl}</span></div>${otw}${note}`;
 }
 
 /* ── Stok Produk view (publik, tanpa login) ── */
