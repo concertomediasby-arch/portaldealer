@@ -3601,7 +3601,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T11:17:55Z';
+const LAST_UPDATE = '2026-10-26T11:21:43Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7226,9 +7226,11 @@ function gtStockKey(r) {
   return pid;
 }
 // Ketersediaan: null = tidak ada data stok (tidak dibatasi); { n } = sisa (n null = tanpa angka, mis. Indent)
+// Stok tak terbatas khusus Clearance Sale (26 Okt 2026, permintaan pemilik) — katalog & form gathering tetap pakai stok biasa
+const GT_CLEAR_UNLIMITED = new Set(['og-reddragon', 'og-streamline'].map(pid => VARIANT_PREFIX + pid + ':2M'));   // OG Red Dragon & Stream Line RCA 2M
 function gtAvail(r) {
   const pid = gtStockKey(r), s = pid && stockAt(pid);
-  if (s?.inf) return { pid, n: null, status: 'ready', inf: true };
+  if (s?.inf || (r?.section === 'clearance' && GT_CLEAR_UNLIMITED.has(pid))) return { pid, n: null, status: 'ready', inf: true };
   if (!s) return null;
   if (s.qty == null) return { pid, n: s.status === 'habis' ? 0 : null, status: s.status };
   let used = gtReserved?.get(pid) || 0;
@@ -7648,7 +7650,7 @@ async function gtSend() {
   // cek ulang stok terbaru (bisa sudah dibeli dealer lain sejak halaman dibuka)
   await Promise.all([loadStock(), loadGtReserved()]);
   const need = new Map();
-  o.groups.forEach(g => g.lines.forEach(l => { const pid = gtStockKey(l.r); if (pid) need.set(pid, { r: l.r, q: (need.get(pid)?.q || 0) + l.qty }); }));
+  o.groups.forEach(g => g.lines.forEach(l => { const pid = gtStockKey(l.r); if (pid && !gtAvail(l.r)?.inf) need.set(pid, { r: l.r, q: (need.get(pid)?.q || 0) + l.qty }); }));
   const short = [...need.values()].map(x => ({ ...x, a: gtAvail(x.r) })).filter(x => x.a?.n != null && x.q > x.a.n && !(x.a.n === 0 && gtCanPo(x.r)));
   if (short.length) {
     renderGathering();
