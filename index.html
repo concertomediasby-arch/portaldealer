@@ -2397,7 +2397,7 @@ body {
   .gt-q { text-align: right; }
   .gt-qty { width: 72px; padding: 6px 8px; text-align: right; border-radius: 8px; border: 1px solid var(--border); background: var(--bg, transparent); color: var(--fg); font: 600 13px var(--f-mono); outline: none; }
   .gt-na { font-size: 11px; color: var(--fg-muted); font-style: italic; }
-  .gt-avail, .gt-soldout, .gt-indent { display: inline-block; padding: 1px 8px; border-radius: 99px; font: 600 10.5px var(--f-mono); }
+  .gt-avail, .gt-soldout, .gt-indent { display: inline-block; margin: 1px 0; padding: 1px 8px; border-radius: 99px; font: 600 10.5px var(--f-mono); }
   .gt-avail { border: 1px solid rgba(46, 160, 90, .5); color: #2ea05a; }
   .gt-indent { border: 1px solid rgba(214, 150, 40, .55); color: #d69628; }
   .gt-soldout { border: 1px solid rgba(220, 60, 60, .6); color: #e04848; background: rgba(220, 60, 60, .08); }
@@ -2644,6 +2644,7 @@ body {
   .stock-sum b { display: block; font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.1; }
   .stock-sum span { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
   .stock-sum.ready b { color: #52c38a; } .stock-sum.indent b { color: #c9a052; } .stock-sum.habis b { color: #e0675f; } .stock-sum.otw b { color: #5aa9e6; }
+  .sr-var { font-size: 11.5px; margin-bottom: 2px; }
   .sr-otw { color: #5aa9e6; font-weight: 600; font-size: 11.5px; }
   .stock-group { margin: 0 28px 18px; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: var(--surface); }
   .stock-group-title { padding: 10px 16px; font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); }
@@ -3562,7 +3563,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T03:46:56Z';
+const LAST_UPDATE = '2026-10-26T03:57:49Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5908,6 +5909,15 @@ const EXTRA_GROUP = { id: '_extra', name: 'Produk Lain (di luar katalog)' };
 const extraId = raw => EXTRA_PREFIX + String(raw).toUpperCase().replace(/[^A-Z0-9 .\-\/+]/g, '').replace(/\s+/g, ' ').trim();
 const extraProducts = () => Object.keys(stockMap).filter(k => k.startsWith(EXTRA_PREFIX)).sort()
   .map(id => ({ id, name: id.slice(EXTRA_PREFIX.length), model: 'Belum ada di katalog' }));
+// Stok per varian (kabel per panjang: OG-AE1M, DIOS2M, …) disimpan sebagai baris tambahan `v:<id produk>:<varian>`;
+// baris produk tetap memuat jumlah total semua varian
+const VARIANT_PREFIX = 'v:';
+const findProductById = id => { for (const b of BRANDS) { const p = brandProducts(b).find(x => x.id === id); if (p) return p; } return null; };
+const variantId = (pid, v) => VARIANT_PREFIX + pid + ':' + v;
+// varian dari kode gudang: kode berakhiran salah satu kunci priceList produk (ogae1m → 1M)
+const stockVariantOf = (code, p) => p?.priceList ? Object.keys(p.priceList).find(v => normKey(code).endsWith(normKey(v))) || null : null;
+const stockVariants = p => p?.priceList ? Object.keys(p.priceList).filter(v => stockMap[variantId(p.id, v)]).map(v => ({ v, s: stockMap[variantId(p.id, v)] })) : [];
+const variantLine = p => stockVariants(p).map(({ v, s }) => `${v} ${s.qty ?? (STOCK_LABEL[s.status] || s.status)}`).join(' · ');
 
 function initSupabase() {
   try {
@@ -6141,7 +6151,9 @@ function renderProductStockBadge(pid) {
   const otw = s.incoming ? `<div class="stock-badge-note">🚚 Dalam perjalanan: ${escHtml(s.incoming)}</div>` : '';
   const dn = s.incoming ? '' : dealerNote(s.note);   // barang OTW: cukup tampilkan baris OTW, tanpa catatan di bawahnya
   const note = dn ? `<div class="stock-badge-note">📝 ${escHtml(dn)}</div>` : '';
-  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${label}</span></div>${otw}${note}`;
+  const vl = variantLine(findProductById(pid));
+  const per = vl ? `<div class="stock-badge-note">📏 Per panjang: ${escHtml(vl)}</div>` : '';
+  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${label}</span></div>${per}${otw}${note}`;
 }
 
 /* ── Stok Produk view (publik, tanpa login) ── */
@@ -6214,7 +6226,7 @@ function renderStockView() {
         <div style="min-width:0"><div class="sr-name">${escHtml(p.name)}${eolTag(p)}</div><div class="sr-model">${escHtml(p.model)}${hasPrice(p) ? ` · <span class="sr-price">SRP ${srpText(p)}</span>` : ''}</div></div>
         <div><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}${mq}</span></div>
         <div class="sr-qty">${s.qty ?? ''}</div>
-        <div class="sr-note">${s.incoming ? `<div class="sr-otw">🚚 OTW ${escHtml(s.incoming)}</div>` : escHtml(dealerNote(s.note))}</div>
+        <div class="sr-note">${b !== EXTRA_GROUP && variantLine(p) ? `<div class="sr-var">📏 ${escHtml(variantLine(p))}</div>` : ''}${s.incoming ? `<div class="sr-otw">🚚 OTW ${escHtml(s.incoming)}</div>` : escHtml(dealerNote(s.note))}</div>
         <div class="sr-time">${fmtStockTime(s.updated_at)}<button class="sr-wa wa-only" title="Tanya / order via WhatsApp" onclick="event.stopPropagation(); contactProduct('${b.id}','${p.id}','order')"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>Tanya</button></div>
       </div>`;
     }).join('')}</div>`;
@@ -6650,14 +6662,17 @@ function renderImport() {
     if (!hit && pid === EXTRA_PREFIX) return;
 
     const prev = matched.get(pid);
+    const variant = !otw && qty !== null && hit ? stockVariantOf(k, hit.p) : null;
     // Different warehouse codes for one catalog product (e.g. cable lengths) are summed; a repeated identical code just overwrites
     if (prev && !prev.codes.has(k)) {
       prev.codes.add(k); prev.raw += ' + ' + raw;
+      if (variant) prev.variants[variant] = (prev.variants[variant] || 0) + qty;
       if (otw) prev.incoming.n += incoming.n;
       else if (qty !== null) { prev.qty = (prev.qty || 0) + qty; prev.status = prev.qty === 0 ? 'habis' : (prev.status === 'indent' ? 'indent' : 'ready'); }
       return;
     }
-    matched.set(pid, { pid, hit, key: k, raw, codes: new Set([k]), qty, status, note, incoming, otwNote: otw ? '' : otwFromNote(note) });
+    matched.set(pid, { pid, hit, key: k, raw, codes: new Set([k]), qty, status, note, incoming, otwNote: otw ? '' : otwFromNote(note),
+      variants: variant ? { ...(prev?.variants || {}), [variant]: qty } : {} });
   });
 
   importRows = [...matched.values()];
@@ -6674,7 +6689,8 @@ function renderImport() {
   const stOf = r => { const c = cur(r.pid); return otw ? (c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent') : r.status; };
   const amount = r => { const c = cur(r.pid);
     return (otw ? fmtIn(r.incoming) : (r.qty ?? '—')) + (!otw && c.qty != null && c.qty !== r.qty ? `<div class="muted">sebelumnya ${c.qty}</div>` : '')
-      + (r.otwNote ? `<div class="muted" style="color:#5aa9e6">🚚 OTW ${escHtml(r.otwNote)}</div>` : ''); };
+      + (r.otwNote ? `<div class="muted" style="color:#5aa9e6">🚚 OTW ${escHtml(r.otwNote)}</div>` : '')
+      + (!otw && Object.keys(r.variants || {}).length ? `<div class="muted">${Object.entries(r.variants).map(([v, n]) => `${escHtml(v)}: ${n}`).join(' · ')}</div>` : ''); };
 
   document.getElementById('imp-preview').innerHTML = `
     <div class="imp-ctrl">
@@ -6731,6 +6747,8 @@ async function saveImport() {
       if (fileHasOtw) row.incoming = r.otwNote || null;
       return row;
     });
+    importRows.forEach(r => Object.entries(r.variants || {}).forEach(([v, n]) =>
+      payload.push({ product_id: variantId(r.pid, v), status: n === 0 ? 'habis' : 'ready', qty: n, note: '' })));
   }
   try {
     const { error } = await supabase.from('stock').upsert(payload, { onConflict: 'product_id' });
@@ -7090,12 +7108,29 @@ function gtBrandProducts(brand) {
 // Baris "Semua kabel OG RCA" (clearance satu baris untuk seluruh brand) → stok tiap produk katalog brand itu
 function gtBrandWideAvail(r) {
   if (!/^semua\b/i.test(String(r.name || '').trim())) return null;
-  const list = gtBrandProducts(r.brand).map(p => ({ p, av: gtAvail({ brand: r.brand, name: p.name }) })).filter(x => x.av);
+  const list = gtBrandProducts(r.brand).flatMap(p => {
+    const vs = stockVariants(p);
+    return vs.length ? vs.map(({ v }) => ({ p, label: p.name.replace(/\s*Series$/i, '') + ' ' + v, av: gtAvail({ brand: r.brand, name: p.name + ' ' + v }) }))
+      : [{ p, label: p.name, av: gtAvail({ brand: r.brand, name: p.name }) }];
+  }).filter(x => x.av);
   return list.length ? list : null;
+}
+// Kunci stok barang gathering: varian per panjang bila ada barisnya ("RCA Azure Series 1M /Pair" → v:og-azure:1M), selain itu id produk
+function gtStockKey(r) {
+  const pid = gtProductId(r);
+  if (!pid) return null;
+  const p = findProductById(pid);
+  if (p?.priceList) {
+    const lens = (String(r.name || '').match(/\b\d+(?:[.,]\d+)?\s*m\b/gi) || []).map(normKey);   // "1M", "2 m"
+    const v = Object.keys(p.priceList).find(v => lens.includes(normKey(v)));
+    // produk sudah punya stok per panjang → pakai baris panjang itu (tak ada barisnya = belum ada data, bukan total produk)
+    if (v && stockVariants(p).length) return variantId(pid, v);
+  }
+  return pid;
 }
 // Ketersediaan: null = tidak ada data stok (tidak dibatasi); { n } = sisa (n null = tanpa angka, mis. Indent)
 function gtAvail(r) {
-  const pid = gtProductId(r), s = pid && stockMap[pid];
+  const pid = gtStockKey(r), s = pid && stockMap[pid];
   if (!s) return null;
   if (s.qty == null) return { pid, n: s.status === 'habis' ? 0 : null, status: s.status };
   let used = gtReserved?.get(pid) || 0;
@@ -7104,14 +7139,14 @@ function gtAvail(r) {
 }
 const gtSoldOut = a => !!a && a.n === 0;
 // qty di form untuk produk yang sama (baris gathering & clearance bisa menunjuk produk katalog yang sama)
-const gtFormQtyFor = (pid, exceptKey) => (gtItems || []).reduce((t, x) => t + (gtKey(x) !== exceptKey && gtProductId(x) === pid ? (gtQty[gtKey(x)] || 0) : 0), 0);
+const gtFormQtyFor = (pid, exceptKey) => (gtItems || []).reduce((t, x) => t + (gtKey(x) !== exceptKey && gtStockKey(x) === pid ? (gtQty[gtKey(x)] || 0) : 0), 0);
 async function loadGtReserved() {
   if (!supabase || !authUser) return;
   try {
     const { data, error } = await supabase.rpc('gathering_reserved');
     if (error) throw error;
     const m = new Map();
-    (data || []).forEach(x => { const pid = gtProductId(x); if (pid) m.set(pid, (m.get(pid) || 0) + (x.qty || 0)); });
+    (data || []).forEach(x => { const pid = gtStockKey(x); if (pid) m.set(pid, (m.get(pid) || 0) + (x.qty || 0)); });
     gtReserved = m; gtReservedErr = '';
   } catch (e) { gtReserved = null; gtReservedErr = String(e.message || e); }
   gtRerender();
@@ -7194,8 +7229,8 @@ function renderGathering() {
         if (out && gtQty[k] && !gtEditing?.admin) { delete gtQty[k]; gtSaveDraft(); }
         const qty = gtQty[k] || 0;
         const bw = !av && gtBrandWideAvail(r);
-        const stockChip = bw ? bw.map(({ p, av: a }) => gtSoldOut(a) ? `<span class="gt-soldout">${escHtml(p.name)} · habis</span>`
-              : a.n != null ? `<span class="gt-avail">${escHtml(p.name)} · sisa ${a.n}</span>` : `<span class="gt-indent">${escHtml(p.name)} · indent</span>`).join(' ')
+        const stockChip = bw ? bw.map(({ label, av: a }) => gtSoldOut(a) ? `<span class="gt-soldout">${escHtml(label)} · habis</span>`
+              : a.n != null ? `<span class="gt-avail">${escHtml(label)} · sisa ${a.n}</span>` : `<span class="gt-indent">${escHtml(label)} · indent</span>`).join(' ')
           : !av ? (clear && r.stock ? `<span class="gt-stock">Stok ${escHtml(r.stock)}</span>` : '')
           : out ? '<span class="gt-soldout">Stok habis</span>'
           : av.n != null ? `<span class="gt-avail">Sisa ${av.n}</span>`
@@ -7307,7 +7342,7 @@ async function gtSend() {
   // cek ulang stok terbaru (bisa sudah dibeli dealer lain sejak halaman dibuka)
   await Promise.all([loadStock(), loadGtReserved()]);
   const need = new Map();
-  o.groups.forEach(g => g.lines.forEach(l => { const pid = gtProductId(l.r); if (pid) need.set(pid, { r: l.r, q: (need.get(pid)?.q || 0) + l.qty }); }));
+  o.groups.forEach(g => g.lines.forEach(l => { const pid = gtStockKey(l.r); if (pid) need.set(pid, { r: l.r, q: (need.get(pid)?.q || 0) + l.qty }); }));
   const short = [...need.values()].map(x => ({ ...x, a: gtAvail(x.r) })).filter(x => x.a?.n != null && x.q > x.a.n);
   if (short.length) {
     renderGathering();
@@ -7359,7 +7394,7 @@ function adminEditGtOrder(id) {
   if (!o || !isAdmin() || !gtItems) return;
   if (!gtEditing) gtDraftBackup = { qty: gtQty, info: gtInfo() };
   const origByPid = {};
-  if (!['batal', 'selesai'].includes(o.status)) (o.items || []).forEach(it => { const pid = gtProductId(it); if (pid) origByPid[pid] = (origByPid[pid] || 0) + (it.qty || 0); });
+  if (!['batal', 'selesai'].includes(o.status)) (o.items || []).forEach(it => { const pid = gtStockKey(it); if (pid) origByPid[pid] = (origByPid[pid] || 0) + (it.qty || 0); });
   gtEditing = { admin: true, id: o.id, invoice: o.invoice || '#' + o.id, store: o.store, origByPid };
   gtQty = {};
   const missing = [];
