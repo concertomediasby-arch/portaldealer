@@ -3570,7 +3570,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T04:42:16Z';
+const LAST_UPDATE = '2026-10-26T04:54:13Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6311,7 +6311,8 @@ async function loadAutoSync() {
   const el = document.getElementById('auto-sync');
   if (!el || !supabase) return;
   const { data, error } = await supabase.from('stock_sync').select('*').eq('id', 1).maybeSingle();
-  if (error || !data) { el.innerHTML = ''; return; }   // belum dipasang
+  if (error) { el.innerHTML = ''; return; }   // tabel stock_sync belum dibuat = sinkron otomatis belum dipasang
+  if (!data) { el.innerHTML = `⏳ Sinkron otomatis terpasang, belum pernah berjalan · <a href="#" onclick="runAutoSync(); return false;">⚡ sinkron server sekarang</a>`; return; }
   const t = data.ran_at ? fmtStockTime(data.ran_at) + ' WIB' : '—';
   el.innerHTML = `${data.ok ? '🟢' : '🔴'} Sinkron otomatis terakhir: ${t}${data.source === 'manual' ? ' (manual)' : ''} — ${escHtml(data.message || '')}
     · <a href="#" onclick="runAutoSync(); return false;">⚡ sinkron server sekarang</a>`;
