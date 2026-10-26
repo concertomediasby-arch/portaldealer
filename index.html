@@ -2406,7 +2406,10 @@ body {
   .gt-man-n { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
   .gt-man-n small { color: var(--fg-muted); font-size: 11.5px; }
   .gt-man-n em { font: 600 10.5px var(--f-mono); color: #3d7ee0; font-style: normal; }
-  @media (max-width: 760px) { .gt-man-form { grid-template-columns: minmax(0, 1fr) 80px; } .gt-man-form #gt-man-name { grid-column: 1 / -1; } .gt-man-form .gt-btn { grid-column: 1 / -1; } .gt-input#gt-man-name, .gt-input#gt-man-brand, .gt-input#gt-man-qty, .gt-man-q { font-size: 16px; } }
+  .gt-man-n em.ok { color: var(--accent); }
+  .gt-man-it:has(.gt-man-p) { grid-template-columns: minmax(0, 1fr) 130px 90px auto; }
+  .gt-man-p { text-align: right; border-style: dashed; border-color: var(--accent); }
+  @media (max-width: 760px) { .gt-man-form { grid-template-columns: minmax(0, 1fr) 80px; } .gt-man-form #gt-man-name { grid-column: 1 / -1; } .gt-man-form .gt-btn { grid-column: 1 / -1; } .gt-input#gt-man-name, .gt-input#gt-man-brand, .gt-input#gt-man-qty, .gt-man-q, .gt-man-p { font-size: 16px; } .gt-man-it:has(.gt-man-p) { grid-template-columns: minmax(0, 1fr) 80px auto; } .gt-man-it:has(.gt-man-p) .gt-man-n { grid-column: 1 / -1; } }
   .gt-pe-btn.on { background: var(--accent); color: #111; border-color: var(--accent); }
   .gt-pin { width: 118px; max-width: 100%; padding: 5px 7px; border-radius: 7px; border: 1px dashed var(--accent); background: var(--surface); color: var(--fg); font: 500 12px var(--f-mono); text-align: right; }
   .gt-pin.saving { opacity: .55; }
@@ -3598,7 +3601,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T11:15:23Z';
+const LAST_UPDATE = '2026-10-26T11:17:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7516,7 +7519,8 @@ function gtManualHtml() {
       <button class="gt-btn" onclick="gtManualAdd()">＋ Tambah</button>
     </div>
     ${gtManual.length ? `<div class="gt-man-list">${gtManual.map(m => `<div class="gt-man-it">
-      <span class="gt-man-n"><b>${escHtml(m.name)}</b>${m.brand ? `<small>${escHtml(m.brand)}</small>` : ''}<em>harga menyusul</em></span>
+      <span class="gt-man-n"><b>${escHtml(m.name)}</b>${m.brand ? `<small>${escHtml(m.brand)}</small>` : ''}${m.price > 0 ? `<em class="ok">${fmtRp(m.price)} × ${m.qty} = ${fmtRp(m.price * m.qty)}</em>` : '<em>harga menyusul</em>'}</span>
+      ${gtEditing?.admin && isAdmin() ? `<input class="gt-input gt-man-p" inputmode="numeric" value="${m.price > 0 ? Number(m.price).toLocaleString('id-ID') : ''}" placeholder="Harga / unit" title="Harga per unit (Admin)" aria-label="Harga ${escHtml(m.name)}" onkeydown="if(event.key==='Enter')this.blur()" onchange="gtManualPrice('${m.id}', this.value)">` : ''}
       <input class="gt-input gt-man-q" type="number" min="1" step="1" inputmode="numeric" value="${m.qty}" aria-label="Qty ${escHtml(m.name)}" onchange="gtManualQty('${m.id}', this.value)">
       <button class="gt-btn ghost" title="Hapus" onclick="gtManualDel('${m.id}')">🗑</button>
     </div>`).join('')}</div>` : ''}
@@ -7538,7 +7542,15 @@ function gtManualQty(id, v) {
   const m = gtManual.find(x => x.id === id); if (!m) return;
   const n = Math.min(9999, parseInt(v, 10) || 0);
   if (n < 1) return gtManualDel(id);
-  m.qty = n; gtSaveDraft(); gtUpdateBar();
+  m.qty = n; gtSaveDraft(); renderGathering();
+}
+// Harga produk ketik manual — hanya Admin/Editor saat Edit Pesanan (kosong = harga menyusul)
+function gtManualPrice(id, v) {
+  if (!gtEditing?.admin || !isAdmin()) return;
+  const m = gtManual.find(x => x.id === id); if (!m) return;
+  const raw = String(v).replace(/[^\d]/g, '');
+  if (raw) m.price = parseInt(raw, 10); else delete m.price;
+  renderGathering();
 }
 function gtManualDel(id) { gtManual = gtManual.filter(x => x.id !== id); gtSaveDraft(); renderGathering(); }
 
@@ -7571,7 +7583,8 @@ function gtOrder() {
   const lines = (gtItems || []).filter(r => gtQty[gtKey(r)] && (gtNet(r) != null || gtTbd(r)))
     .map(r => gtTbd(r) ? { r, qty: gtQty[gtKey(r)], price: 0, total: 0, tbd: true }
       : { r, qty: gtQty[gtKey(r)], price: gtNet(r), total: gtQty[gtKey(r)] * gtNet(r) })
-    .concat(gtManual.filter(m => m.qty > 0).map(m => ({ r: gtManualRow(m), qty: m.qty, price: 0, total: 0, tbd: true, manual: true })));
+    .concat(gtManual.filter(m => m.qty > 0).map(m => m.price > 0 ? { r: gtManualRow(m), qty: m.qty, price: m.price, total: m.qty * m.price, manual: true }
+      : { r: gtManualRow(m), qty: m.qty, price: 0, total: 0, tbd: true, manual: true }));
   const groups = [...new Set(lines.map(l => gtGroup(l.r)))].map(g => {
     const ls = lines.filter(l => gtGroup(l.r) === g);
     return { name: g, lines: ls, qty: ls.reduce((a, l) => a + l.qty, 0), total: ls.reduce((a, l) => a + l.total, 0) };
@@ -7694,7 +7707,7 @@ function adminEditGtOrder(id) {
   gtQty = {}; gtManual = [];
   const missing = [];
   (o.items || []).forEach(it => {
-    if (it.manual) { gtManual.push({ id: gtManualId(), name: it.name, brand: it.brand === 'Lainnya' ? '' : it.brand, qty: it.qty }); return; }
+    if (it.manual) { gtManual.push({ id: gtManualId(), name: it.name, brand: it.brand === 'Lainnya' ? '' : it.brand, qty: it.qty, ...(it.tbd ? {} : { price: Number(it.price) || 0 }) }); return; }
     const row = gtItems.find(x => x.section === it.section && x.brand === it.brand && x.name === it.name);
     if (row) gtQty[gtKey(row)] = it.qty; else missing.push(it.name);
   });
@@ -7731,7 +7744,7 @@ async function gtAdminSave(o, i) {
 function renderGtEditing() {
   const el = document.getElementById('gt-editing'), btn = document.getElementById('gt-send');
   el.hidden = !gtEditing;
-  el.innerHTML = gtEditing ? `✏️ <b>Admin</b> mengedit pesanan <b>${escHtml(gtEditing.invoice)}</b> · ${escHtml(gtEditing.store || '')} — ubah Qty / data dealer lalu tekan <b>Simpan Perubahan</b>. <button class="gt-btn ghost" onclick="gtCancelEdit()">Batal edit</button>` : '';
+  el.innerHTML = gtEditing ? `✏️ <b>Admin</b> mengedit pesanan <b>${escHtml(gtEditing.invoice)}</b> · ${escHtml(gtEditing.store || '')} — ubah Qty / data dealer (harga produk ketik manual bisa diisi di bagian bawah) lalu tekan <b>Simpan Perubahan</b>. <button class="gt-btn ghost" onclick="gtCancelEdit()">Batal edit</button>` : '';
   if (btn) btn.lastChild.textContent = gtEditing ? 'Simpan Perubahan' : 'Kirim ke Sales';
 }
 
