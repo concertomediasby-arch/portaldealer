@@ -3587,7 +3587,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T10:22:58Z';
+const LAST_UPDATE = '2026-10-26T10:32:30Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7326,7 +7326,7 @@ function gtWithCatalog(rows) {
 async function loadGathering() {
   if (!supabase || !authUser) return;
   try {
-    const { data, error } = await supabase.from(GATHERING_TABLE).select('*').order('sort');
+    const { data, error } = await supabase.from(GATHERING_TABLE).select('*').order('sort').order('id');
     if (error) throw error;
     gtItems = gtWithCatalog((data || []).filter(r => !GT_HIDDEN_ITEMS.has(normKey(r.name)))); gtError = '';
   } catch (e) {
