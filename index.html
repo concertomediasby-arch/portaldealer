@@ -3587,7 +3587,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T09:53:57Z';
+const LAST_UPDATE = '2026-10-26T10:06:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7129,6 +7129,7 @@ let gtReserved = null, gtReservedErr = '', gtResTimer = null, gtPidIdx = null;
 const gtPidCache = new Map();
 // Nama barang gathering → id produk katalog (kode barang di depan nama, alias kode gudang, lalu model/nama katalog)
 function gtProductId(r) {
+  if (r.pid) return r.pid;
   const ck = (r.brand || '') + '|' + r.name;
   if (gtPidCache.has(ck)) return gtPidCache.get(ck);
   if (!gtPidIdx) {
@@ -7155,8 +7156,12 @@ function gtProductId(r) {
   gtPidCache.set(ck, pid);
   return pid;
 }
+function gtBrandOf(brand) {
+  const bk = normKey(brand);
+  return bk ? BRANDS.find(x => normKey(x.name) === bk || normKey(x.id) === bk || normKey(x.abbr) === bk) || null : null;
+}
 function gtBrandProducts(brand) {
-  const bk = normKey(brand), b = bk && BRANDS.find(x => normKey(x.name) === bk || normKey(x.id) === bk || normKey(x.abbr) === bk);
+  const b = gtBrandOf(brand);
   return b ? brandProducts(b) : [];
 }
 // Baris "Semua kabel OG RCA" (clearance satu baris untuk seluruh brand) → stok tiap produk katalog brand itu
@@ -7257,12 +7262,50 @@ function openGathering(tab) {
 
 // Barang yang tidak dijual di Shopping Gathering walau masih ada di tabel gathering_items (normKey nama) — permintaan pemilik
 const GT_HIDDEN_ITEMS = new Set(['prom3pnextel', 'plm3pnextel']);   // PRO-M3P Nextel (26 Okt 2026)
+// Daftar Form Belanja (selain Clearance) dilengkapi dari katalog (26 Okt 2026, permintaan pemilik): produk katalog yang belum
+// ada di tabel gathering_items ikut tampil per brand dengan Harga Baru = SRP katalog ("tanpa promo"; kabel per panjang = satu
+// baris per panjang). Diosdela Musica dikecualikan. Baris katalog bertanda `virtual` — saat Admin/Editor mengisi harga lewat
+// ✏️ Edit Harga, baris itu disimpan (insert) ke gathering_items.
+const GT_CATALOG_SKIP = new Set(['dios']);
+function gtWithCatalog(rows) {
+  const gath = rows.filter(r => r.section !== 'clearance'), clear = rows.filter(r => r.section === 'clearance');
+  // sudah ada di tabel: per produk, atau per panjang untuk produk ber-priceList ("RCA Red Dragon Series 1M /Pair" → hanya 1M)
+  const covered = new Set();
+  gath.forEach(r => {
+    const pid = gtProductId(r), p = pid && findProductById(pid);
+    if (!p) return;
+    const lens = p.priceList ? (String(r.name || '').match(/\b\d+(?:[.,]\d+)?\s*m\b/gi) || []).map(normKey) : [];
+    const hit = lens.length && Object.keys(p.priceList).filter(v => lens.includes(normKey(v)));
+    if (hit?.length) hit.forEach(v => covered.add(pid + ':' + v)); else covered.add(pid);
+  });
+  const brandLabel = new Map();   // nama brand seperti tertulis di tabel (agar satu grup dengan baris yang sudah ada)
+  gath.forEach(r => { const b = gtBrandOf(r.brand); if (b && !brandLabel.has(b.id)) brandLabel.set(b.id, r.brand); });
+  const maxSort = rows.reduce((m, r) => Math.max(m, Number(r.sort) || 0), 0);
+  let n = 0;
+  const extra = new Map();
+  BRANDS.filter(b => !GT_CATALOG_SKIP.has(b.id)).forEach(b => {
+    const brand = brandLabel.get(b.id) || b.name;
+    brandProducts(b).filter(p => !covered.has(p.id)).forEach(p => {
+      const base = { section: 'gathering', brand, old_price: null, special_price: null, virtual: true, pid: p.id };
+      const lens = p.priceList ? Object.keys(p.priceList).filter(v => !covered.has(p.id + ':' + v)) : [];
+      if (p.priceList && !lens.length) return;
+      const items = lens.length ? lens.map(v => ({ ...base, name: `${p.name} ${v}`, new_price: p.priceList[v] || null }))
+        : [{ ...base, name: p.name, new_price: p.price || null }];
+      items.forEach(it => { it.sort = maxSort + (++n); (extra.get(brand) || extra.set(brand, []).get(brand)).push(it); });
+    });
+  });
+  // urutan: tiap grup brand yang sudah ada + barang katalognya, lalu brand katalog lain, lalu Clearance Sale
+  const out = [], seen = new Set();
+  gath.forEach(r => { if (seen.has(r.brand)) return; seen.add(r.brand); out.push(...gath.filter(x => x.brand === r.brand), ...(extra.get(r.brand) || [])); });
+  extra.forEach((list, brand) => { if (!seen.has(brand)) out.push(...list); });
+  return [...out, ...clear];
+}
 async function loadGathering() {
   if (!supabase || !authUser) return;
   try {
     const { data, error } = await supabase.from(GATHERING_TABLE).select('*').order('sort');
     if (error) throw error;
-    gtItems = (data || []).filter(r => !GT_HIDDEN_ITEMS.has(normKey(r.name))); gtError = '';
+    gtItems = gtWithCatalog((data || []).filter(r => !GT_HIDDEN_ITEMS.has(normKey(r.name)))); gtError = '';
   } catch (e) {
     const m = String(e.message || e);
     gtItems = [];
@@ -7291,11 +7334,19 @@ async function gtSavePrice(input) {
   if (v === (r[f] == null ? null : Number(r[f]))) { input.value = v == null ? '' : v.toLocaleString('id-ID'); return; }
   input.classList.remove('ok', 'err'); input.classList.add('saving');
   try {
-    let q = supabase.from(GATHERING_TABLE).update({ [f]: v });
-    q = r.id != null ? q.eq('id', r.id) : q.eq('section', r.section).eq('brand', r.brand).eq('name', r.name);
-    const { data, error } = await q.select();
+    let res;
+    if (r.virtual) {   // barang dari katalog: baru disimpan ke tabel saat harganya diubah
+      res = await supabase.from(GATHERING_TABLE).insert({ section: r.section, brand: r.brand, name: r.name, sort: r.sort,
+        old_price: r.old_price, new_price: r.new_price, special_price: r.special_price, [f]: v }).select();
+    } else {
+      let q = supabase.from(GATHERING_TABLE).update({ [f]: v });
+      q = r.id != null ? q.eq('id', r.id) : q.eq('section', r.section).eq('brand', r.brand).eq('name', r.name);
+      res = await q.select();
+    }
+    const { data, error } = res;
     if (error) throw error;
     if (!data?.length) throw new Error('tidak ada baris yang berubah (cek hak akses)');
+    if (r.virtual) { r.virtual = false; if (data[0]?.id != null) r.id = data[0].id; }
     r[f] = v;
     input.value = v == null ? '' : v.toLocaleString('id-ID');
     input.classList.remove('saving'); input.classList.add('ok');
