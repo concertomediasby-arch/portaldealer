@@ -3587,7 +3587,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T10:09:19Z';
+const LAST_UPDATE = '2026-10-26T10:11:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7063,10 +7063,14 @@ const CERT_GROUPS = [
   ['Ronny Koesharyono', ['Atmos Autosound', 'Blitz Cirebon', 'Blitz Pekalongan', 'Blitz Tegal', 'Creative Variasi', 'Dreamsound', 'ICO Audioworks', 'Linggom Audio', 'Kenzo Audio Garage', 'Oscar Variasi', 'Otofine Garage', 'Terang Jaya', 'The Peak Garage', 'Mevina Autosoundproof', 'West Audioworks']],
 ];
 const CERT_DEALERS = CERT_GROUPS.flatMap(([g, ds]) => ds.map(d => ({ d, g })));
-const GT_DEALERS = CERT_DEALERS.map(x => x.d);   // Shopping Gathering = nama dealer sama dengan Sertifikat Dealer (25 Okt 2026)
+// Dealer per distributor khusus Shopping Gathering (tidak mengubah Sertifikat Dealer) — menimpa distributor di CERT_GROUPS
+const GT_EXTRA_GROUPS = [
+  ['KG Aan', ['Gema Audio', 'MCM', 'Mega Audio', 'Roda Mas']],   // dari pemilik 26 Okt 2026 (Gema Audio sebelumnya ikut Garuda Barat)
+];
+const GT_DEALERS = [...new Set([...CERT_DEALERS.map(x => x.d), ...GT_EXTRA_GROUPS.flatMap(([, ds]) => ds)])];   // Shopping Gathering = nama dealer Sertifikat Dealer (25 Okt 2026) + GT_EXTRA_GROUPS
 const GT_OTHER = '__other';
 // Distributor tiap dealer (dari CERT_GROUPS) — kolom Distributor (dulu Sales PIC) terisi otomatis
-const GT_DEALER_DIST = Object.fromEntries(CERT_DEALERS.map(x => [x.d, x.g]));
+const GT_DEALER_DIST = Object.fromEntries([...CERT_DEALERS.map(x => [x.d, x.g]), ...GT_EXTRA_GROUPS.flatMap(([g, ds]) => ds.map(d => [d, g]))]);
 // dealer terdaftar → distributornya; pilihan distributor ([DIST] X) → namanya sendiri; Lainnya → diketik manual
 const gtDistFor = v => GT_DEALER_DIST[v] || (GT_DISTRIBUTORS.includes(v) ? v.replace(/^\[DIST\]\s*/, '') : '');
 function gtFillDist() {
