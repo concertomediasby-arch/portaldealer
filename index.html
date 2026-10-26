@@ -3587,7 +3587,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T10:11:10Z';
+const LAST_UPDATE = '2026-10-26T10:16:50Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7269,7 +7269,9 @@ function openGathering(tab) {
 }
 
 // Barang yang tidak dijual di Shopping Gathering walau masih ada di tabel gathering_items (normKey nama) — permintaan pemilik
-const GT_HIDDEN_ITEMS = new Set(['prom3pnextel', 'plm3pnextel']);   // PRO-M3P Nextel (26 Okt 2026)
+const GT_HIDDEN_ITEMS = new Set(['prom3pnextel', 'plm3pnextel', 'q4ccoaxial', 'ms650coaxial']);   // PRO-M3P Nextel, Q4C Coaxial, MS650 Coaxial (26 Okt 2026)
+// Produk katalog yang tidak dijual di Form Belanja (selain Clearance): tidak ditambahkan dari katalog & baris tabelnya disembunyikan
+const GT_HIDDEN_PIDS = new Set(['st-q4c']);   // Q4C (26 Okt 2026) — tetap tampil di katalog
 // Daftar Form Belanja (selain Clearance) dilengkapi dari katalog (26 Okt 2026, permintaan pemilik): produk katalog yang belum
 // ada di tabel gathering_items ikut tampil per brand dengan Harga Baru = SRP katalog ("tanpa promo"; kabel per panjang = satu
 // baris per panjang). Diosdela Musica dikecualikan. Baris katalog bertanda `virtual` — saat Admin/Editor mengisi harga lewat
@@ -7287,7 +7289,7 @@ function gtCatalogPrice(r) {
   return p.price || null;
 }
 function gtWithCatalog(rows) {
-  const gath = rows.filter(r => r.section !== 'clearance'), clear = rows.filter(r => r.section === 'clearance');
+  const gath = rows.filter(r => r.section !== 'clearance' && !GT_HIDDEN_PIDS.has(gtProductId(r))), clear = rows.filter(r => r.section === 'clearance');
   gath.forEach(r => { const c = gtCatalogPrice(r); if (c != null) { r.db_new_price = r.new_price; r.new_price = c; r.cat_price = true; } });
   // sudah ada di tabel: per produk, atau per panjang untuk produk ber-priceList ("RCA Red Dragon Series 1M /Pair" → hanya 1M)
   const covered = new Set();
@@ -7305,7 +7307,7 @@ function gtWithCatalog(rows) {
   const extra = new Map();
   BRANDS.filter(b => !GT_CATALOG_SKIP.has(b.id)).forEach(b => {
     const brand = brandLabel.get(b.id) || b.name;
-    brandProducts(b).filter(p => !covered.has(p.id)).forEach(p => {
+    brandProducts(b).filter(p => !covered.has(p.id) && !GT_HIDDEN_PIDS.has(p.id)).forEach(p => {
       const base = { section: 'gathering', brand, old_price: null, special_price: null, virtual: true, pid: p.id };
       const lens = p.priceList ? Object.keys(p.priceList).filter(v => !covered.has(p.id + ':' + v)) : [];
       if (p.priceList && !lens.length) return;
