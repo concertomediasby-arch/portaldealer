@@ -43,7 +43,7 @@ function sheetCsvUrl(link: string) {
 }
 function parseCsv(text: string) {
   const rows: string[][] = []; let row: string[] = [], cell = '', q = false;
-  text = text.replace(/^﻿/, '');
+  text = text.replace(/^\uFEFF/, '');
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
