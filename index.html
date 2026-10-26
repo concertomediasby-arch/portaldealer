@@ -2394,6 +2394,14 @@ body {
   .gt-note { font: 400 11px var(--f-body); color: var(--fg-muted); margin-top: 2px; }
   .gt-p { text-align: right; font: 500 12.5px var(--f-mono); font-variant-numeric: tabular-nums; color: var(--fg); white-space: nowrap; }
   .gt-p small { display: block; font-size: 10px; color: var(--fg-muted); }
+  /* Edit harga Shopping Gathering (Admin/Editor) */
+  .gt-pe-btn { margin-left: auto; align-self: center; }
+  .gt-pe-btn.on { background: var(--accent); color: #111; border-color: var(--accent); }
+  .gt-pin { width: 118px; max-width: 100%; padding: 5px 7px; border-radius: 7px; border: 1px dashed var(--accent); background: var(--surface); color: var(--fg); font: 500 12px var(--f-mono); text-align: right; }
+  .gt-pin.saving { opacity: .55; }
+  .gt-pin.ok { border-style: solid; border-color: #2ea05a; }
+  .gt-pin.err { border-style: solid; border-color: #e04848; }
+  .gt-pe-note { margin: 0 0 10px; padding: 8px 12px; border-radius: 10px; border: 1px dashed var(--accent); font-size: 12.5px; color: var(--fg-muted); }
   .gt-old { color: var(--fg-muted); }
   .gt-sp { color: var(--accent); font-weight: 700; }
   .gt-line { font-weight: 700; }
@@ -3244,6 +3252,7 @@ body {
           <input id="gt-search" class="catalog-search" placeholder="Cari produk…" oninput="renderGathering()" autocomplete="off">
         </div>
         <div class="catalog-chips" id="gt-chips"></div>
+        <button class="gt-btn ghost staff-only gt-pe-btn" id="gt-pe-btn" onclick="gtTogglePriceEdit()">✏️ Edit Harga</button>
       </div>
       <div id="gt-list"><div class="stock-empty">Memuat…</div></div>
       <div class="gt-bar" id="gt-bar">
@@ -3578,7 +3587,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T09:35:06Z';
+const LAST_UPDATE = '2026-10-26T09:53:57Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7264,9 +7273,48 @@ async function loadGathering() {
 
 function setGtFilter(f) { gtFilter = f; renderGathering(); }
 
+// ── Edit harga Shopping Gathering langsung dari portal (Admin/Editor; RLS tabel = tulis admin/editor) ──
+let gtPriceEdit = false;
+function gtTogglePriceEdit() {
+  if (!isAdmin()) return;
+  gtPriceEdit = !gtPriceEdit;
+  const b = document.getElementById('gt-pe-btn');
+  if (b) { b.classList.toggle('on', gtPriceEdit); b.textContent = gtPriceEdit ? '✓ Selesai Edit' : '✏️ Edit Harga'; }
+  renderGathering();
+}
+async function gtSavePrice(input) {
+  const k = input.closest('.gt-row')?.dataset.k, f = input.dataset.f;
+  const r = gtItems?.find(x => gtKey(x) === k);
+  if (!r || !isAdmin() || !['old_price', 'new_price', 'special_price'].includes(f)) return;
+  const raw = input.value.replace(/[^\d]/g, '');
+  const v = raw ? parseInt(raw, 10) : null;
+  if (v === (r[f] == null ? null : Number(r[f]))) { input.value = v == null ? '' : v.toLocaleString('id-ID'); return; }
+  input.classList.remove('ok', 'err'); input.classList.add('saving');
+  try {
+    let q = supabase.from(GATHERING_TABLE).update({ [f]: v });
+    q = r.id != null ? q.eq('id', r.id) : q.eq('section', r.section).eq('brand', r.brand).eq('name', r.name);
+    const { data, error } = await q.select();
+    if (error) throw error;
+    if (!data?.length) throw new Error('tidak ada baris yang berubah (cek hak akses)');
+    r[f] = v;
+    input.value = v == null ? '' : v.toLocaleString('id-ID');
+    input.classList.remove('saving'); input.classList.add('ok');
+    showToast(`✓ ${r.name}: ${{ old_price: 'Harga Lama', new_price: 'Harga Baru', special_price: r.section === 'clearance' ? 'Diskon 50%' : 'Harga Spesial' }[f]} ${v == null ? 'dikosongkan' : fmtRp(v)}`);
+    const row = input.closest('.gt-row'), net = gtNet(r), qty = gtQty[k] || 0;
+    const sp = row.querySelector('.gt-sp'); if (sp && r.section === 'clearance') sp.textContent = gtRp(net);
+    const cb = row.querySelector('.gt-cb'); if (cb) cb.textContent = r.special_price == null ? '—' : '− ' + fmtRp(gtClrCash(r));
+    row.querySelector('.gt-line').textContent = qty && net != null ? fmtRp(qty * net) : '—';
+    gtUpdateBar();
+  } catch (e) {
+    input.classList.remove('saving'); input.classList.add('err');
+    showToast('Harga gagal disimpan: ' + (e.message || e), 8000);
+  }
+}
+
 function renderGathering() {
   const list = document.getElementById('gt-list');
   if (!list) return;
+  if (gtPriceEdit && !isAdmin()) gtPriceEdit = false;
   if (gtItems === null) { list.innerHTML = '<div class="stock-empty">Memuat…</div>'; gtUpdateBar(); return; }
   if (gtError) { list.innerHTML = `<div class="stock-empty">${escHtml(gtError)}</div>`; gtUpdateBar(); return; }
   const groups = [...new Set(gtItems.map(gtGroup))];
@@ -7276,7 +7324,8 @@ function renderGathering() {
   const rows = gtItems.filter(r => (gtFilter === 'all' || gtGroup(r) === gtFilter) && (!q || normKey(r.name).includes(q)));
   if (!rows.length) { list.innerHTML = `<div class="stock-empty">${gtItems.length ? 'Tidak ada produk yang cocok.' : 'Belum ada data gathering.'}</div>`; gtUpdateBar(); return; }
   const resWarn = gtReservedErr && isAdmin() ? `<div class="gt-res-warn">⚠ Pengurangan stok dari pesanan gathering belum aktif — sisa stok masih memakai angka katalog saja. Admin/editor: jalankan SQL fungsi <b>gathering_reserved</b> di Supabase. <button class="gt-btn ghost" onclick="gtCopyReservedSql()">📋 Salin SQL</button></div>` : '';
-  list.innerHTML = resWarn + groups.filter(g => rows.some(r => gtGroup(r) === g)).map(g => {
+  const peNote = gtPriceEdit ? '<div class="gt-pe-note">✏️ <b>Mode Edit Harga</b> — ubah angka lalu tekan Enter / pindah kolom; langsung tersimpan ke database dan terlihat dealer. Kosongkan = tanpa harga. Klik <b>Selesai Edit</b> untuk kembali.</div>' : '';
+  list.innerHTML = peNote + resWarn + groups.filter(g => rows.some(r => gtGroup(r) === g)).map(g => {
     const items = rows.filter(r => gtGroup(r) === g);
     const clear = items[0].section === 'clearance';
     const head = clear
@@ -7302,7 +7351,17 @@ function renderGathering() {
           : av.status === 'indent' ? '<span class="gt-indent">Indent</span>' : '';
         const poInfo = gtPoText(r, qty, av);
         const sub = [stockChip, poInfo ? `<span class="gt-po-q">${escHtml(poInfo)}</span>` : '', !clear && r.note ? escHtml(r.note) : ''].filter(Boolean).map(x => `<div class="gt-note">${x}</div>`).join('');
-        const cols = clear
+        const pe = f => `<input class="gt-pin" inputmode="numeric" data-f="${f}" value="${r[f] == null ? '' : Number(r[f]).toLocaleString('id-ID')}" placeholder="—" onkeydown="if(event.key==='Enter')this.blur()" onchange="gtSavePrice(this)">`;
+        const cols = gtPriceEdit && clear
+          ? `<span class="gt-p" data-l="Harga Normal">${pe('old_price')}</span>
+             <span class="gt-p" data-l="Diskon 50%">${pe('special_price')}</span>
+             <span class="gt-p gt-cb" data-l="Cashback 10% DPP">${r.special_price == null ? '—' : '− ' + fmtRp(gtClrCash(r))}</span>
+             <span class="gt-p gt-sp" data-l="Harga Clearance">${gtRp(net)}</span>`
+          : gtPriceEdit
+          ? `<span class="gt-p" data-l="Harga Lama">${pe('old_price')}</span>
+             <span class="gt-p" data-l="Harga Baru">${pe('new_price')}</span>
+             <span class="gt-p" data-l="Harga Spesial">${pe('special_price')}</span>`
+          : clear
           ? `<span class="gt-p gt-old" data-l="Harga Normal">${r.old_price == null ? '—' : `<s>${fmtRp(r.old_price)}</s>`}</span>
              <span class="gt-p" data-l="Diskon 50%">${gtRp(r.special_price)}</span>
              <span class="gt-p gt-cb" data-l="Cashback 10% DPP">${r.special_price == null ? '—' : '− ' + fmtRp(gtClrCash(r))}</span>
