@@ -3587,7 +3587,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T10:44:15Z';
+const LAST_UPDATE = '2026-10-26T10:53:12Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7137,8 +7137,14 @@ grant execute on function public.gathering_reserved() to authenticated;`;
 let gtReserved = null, gtReservedErr = '', gtResTimer = null, gtPidIdx = null;
 const gtPidCache = new Map();
 // Nama barang gathering → id produk katalog (kode barang di depan nama, alias kode gudang, lalu model/nama katalog)
+// Nama barang gathering yang tidak bisa dicocokkan otomatis ke katalog (normKey nama lengkap → id produk)
+const GT_NAME_ALIASES = {
+  x3sounddeadeninglembar: 'st-x3', s8sounddeadeninglembar: 'st-s8d', s15sounddeadeninglembar: 'st-s15',   // 26 Okt 2026
+};
 function gtProductId(r) {
   if (r.pid) return r.pid;
+  const na = GT_NAME_ALIASES[normKey(r.name)];
+  if (na) return na;
   const ck = (r.brand || '') + '|' + r.name;
   if (gtPidCache.has(ck)) return gtPidCache.get(ck);
   if (!gtPidIdx) {
@@ -7294,7 +7300,17 @@ function gtCatalogPrice(r) {
   return p.price || null;
 }
 function gtWithCatalog(rows) {
-  const gath = rows.filter(r => r.section !== 'clearance' && !GT_HIDDEN_PIDS.has(gtProductId(r))), clear = rows.filter(r => r.section === 'clearance');
+  // baris ganda untuk produk katalog yang sama (mis. "SS16 Hi-Res DSP" & "XSS16 - DSP") → hanya baris pertama yang tampil
+  const dup = new Set();
+  const gath = rows.filter(r => {
+    if (r.section === 'clearance') return false;
+    const pid = gtProductId(r);
+    if (GT_HIDDEN_PIDS.has(pid)) return false;
+    const k = pid && gtStockKey(r);
+    if (!k) return true;
+    if (dup.has(k)) return false;
+    dup.add(k); return true;
+  }), clear = rows.filter(r => r.section === 'clearance');
   gath.forEach(r => { const c = gtCatalogPrice(r); if (c != null) { r.db_new_price = r.new_price; r.new_price = c; r.cat_price = true; } });
   // sudah ada di tabel: per produk, atau per panjang untuk produk ber-priceList ("RCA Red Dragon Series 1M /Pair" → hanya 1M)
   const covered = new Set();
