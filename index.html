@@ -3570,7 +3570,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T05:34:35Z';
+const LAST_UPDATE = '2026-10-26T06:13:31Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5923,8 +5923,11 @@ const findProductById = id => { for (const b of BRANDS) { const p = brandProduct
 const variantId = (pid, v) => VARIANT_PREFIX + pid + ':' + v;
 // varian dari kode gudang: kode berakhiran salah satu kunci priceList produk (ogae1m → 1M)
 const stockVariantOf = (code, p) => p?.priceList ? Object.keys(p.priceList).find(v => normKey(code).endsWith(normKey(v))) || null : null;
-const stockVariants = p => p?.priceList ? Object.keys(p.priceList).filter(v => stockMap[variantId(p.id, v)]).map(v => ({ v, s: stockMap[variantId(p.id, v)] })) : [];
-const variantLine = p => stockVariants(p).map(({ v, s }) => `${v} ${s.qty ?? (STOCK_LABEL[s.status] || s.status)}`).join(' · ');
+// Stok tak terbatas (∞) — permintaan pemilik 26 Okt 2026: kabel OG 1M semua seri; berlaku apa pun angka di sheet
+const STOCK_UNLIMITED = new Set(['og-reddragon', 'og-streamline', 'og-reference', 'og-azure'].map(pid => VARIANT_PREFIX + pid + ':1M'));
+const stockAt = id => STOCK_UNLIMITED.has(id) ? { status: 'ready', qty: null, inf: true } : stockMap[id];
+const stockVariants = p => p?.priceList ? Object.keys(p.priceList).filter(v => stockAt(variantId(p.id, v))).map(v => ({ v, s: stockAt(variantId(p.id, v)) })) : [];
+const variantLine = p => stockVariants(p).map(({ v, s }) => `${v} ${s.inf ? '∞' : s.qty ?? (STOCK_LABEL[s.status] || s.status)}`).join(' · ');
 
 function initSupabase() {
   try {
@@ -6163,7 +6166,7 @@ function renderProductStockBadge(pid) {
   document.querySelectorAll('#panel-price .pp-stk').forEach(x => {
     const hit = vs.find(y => y.v === x.dataset.v), st = hit?.s;
     x.className = 'pp-stk' + (st ? ' ' + st.status : '');
-    x.textContent = !st ? '' : st.qty != null ? (st.qty ? `Sisa ${st.qty}` : 'Habis') : (STOCK_LABEL[st.status] || st.status);
+    x.textContent = !st ? '' : st.inf ? 'Stok ∞' : st.qty != null ? (st.qty ? `Sisa ${st.qty}` : 'Habis') : (STOCK_LABEL[st.status] || st.status);
   });
   const lbl = vs.length && s.qty != null ? label.replace('Sisa', 'Total sisa') : label;
   el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${lbl}</span></div>${otw}${note}`;
@@ -7165,7 +7168,8 @@ function gtStockKey(r) {
 }
 // Ketersediaan: null = tidak ada data stok (tidak dibatasi); { n } = sisa (n null = tanpa angka, mis. Indent)
 function gtAvail(r) {
-  const pid = gtStockKey(r), s = pid && stockMap[pid];
+  const pid = gtStockKey(r), s = pid && stockAt(pid);
+  if (s?.inf) return { pid, n: null, status: 'ready', inf: true };
   if (!s) return null;
   if (s.qty == null) return { pid, n: s.status === 'habis' ? 0 : null, status: s.status };
   let used = gtReserved?.get(pid) || 0;
@@ -7265,9 +7269,11 @@ function renderGathering() {
         const qty = gtQty[k] || 0;
         const bw = !av && gtBrandWideAvail(r);
         const stockChip = bw ? bw.map(({ label, av: a }) => gtSoldOut(a) ? `<span class="gt-soldout">${escHtml(label)} · habis</span>`
+              : a.inf ? `<span class="gt-avail">${escHtml(label)} · ∞</span>`
               : a.n != null ? `<span class="gt-avail">${escHtml(label)} · sisa ${a.n}</span>` : `<span class="gt-indent">${escHtml(label)} · indent</span>`).join(' ')
           : !av ? (clear && r.stock ? `<span class="gt-stock">Stok ${escHtml(r.stock)}</span>` : '')
           : out ? '<span class="gt-soldout">Stok habis</span>'
+          : av.inf ? '<span class="gt-avail">Stok ∞</span>'
           : av.n != null ? `<span class="gt-avail">Sisa ${av.n}</span>`
           : av.status === 'indent' ? '<span class="gt-indent">Indent</span>' : '';
         const sub = [stockChip, !clear && r.note ? escHtml(r.note) : ''].filter(Boolean).map(x => `<div class="gt-note">${x}</div>`).join('');
