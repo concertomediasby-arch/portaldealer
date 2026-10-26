@@ -3601,7 +3601,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T11:21:43Z';
+const LAST_UPDATE = '2026-10-26T13:23:34Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7128,6 +7128,16 @@ let gtManual = [];
 const gtKey = r => `${r.section}|${r.brand}|${r.name}`;
 // Harga yang dipakai menghitung total: spesial gathering, atau (clearance) harga clearance
 // Harga yang dipakai untuk pesanan: harga spesial (clearance: harga clearance). Produk tanpa harga spesial tapi punya Harga Baru → dibeli di Harga Baru (tanpa promo). Tanpa keduanya → "Hubungi sales".
+// Harga Spesial Gathering = Harga Lama − diskon 35% − cashback 10% DPP (DPP = harga setelah diskon ÷ 1,11) — dihitung otomatis
+// untuk semua barang gathering (bukan Clearance) yang punya Harga Lama (keputusan pemilik 26 Okt 2026; cocok dengan data tabel lama)
+const GT_DISC = 0.35;
+const gtSpecialFromOld = old => { const d = Math.round(Number(old) * (1 - GT_DISC)); return d - Math.round(d / 1.11 * 0.1); };
+function gtApplySpecial(r) {
+  if (r.section === 'clearance') return;
+  if (!('db_special_price' in r)) r.db_special_price = r.special_price;
+  if (Number(r.old_price) > 0) { r.special_price = gtSpecialFromOld(r.old_price); r.calc_special = true; }
+  else { r.special_price = r.db_special_price; r.calc_special = false; }
+}
 const gtNoPromo = r => r.section !== 'clearance' && r.special_price == null && r.new_price != null;
 // Clearance (rumus pemilik 21 Okt 2026): harga setelah diskon 50% (special_price) − cashback,
 // cashback = DPP × 10% (DPP = harga clearance ÷ 1,11), dibulatkan ke rupiah
@@ -7341,7 +7351,7 @@ function gtWithCatalog(rows) {
   }), clear = rows.filter(r => r.section === 'clearance');
   // nama tampilan baris tabel yang sudah berganti nama di katalog (normKey nama tabel → nama baru)
   gath.forEach(r => { const nn = GT_DISPLAY_NAMES[normKey(r.name)]; if (nn) r.name = nn; });
-  gath.forEach(r => { const c = gtCatalogPrice(r); if (c != null) { r.db_new_price = r.new_price; r.new_price = c; r.cat_price = true; } });
+  gath.forEach(r => { const c = gtCatalogPrice(r); if (c != null) { r.db_new_price = r.new_price; r.new_price = c; r.cat_price = true; } gtApplySpecial(r); });
   // sudah ada di tabel: per produk, atau per panjang untuk produk ber-priceList ("RCA Red Dragon Series 1M /Pair" → hanya 1M)
   const covered = new Set();
   gath.forEach(r => {
@@ -7421,6 +7431,8 @@ async function gtSavePrice(input) {
     if (!data?.length) throw new Error('tidak ada baris yang berubah (cek hak akses)');
     if (r.virtual) { r.virtual = false; if (data[0]?.id != null) r.id = data[0].id; }
     r[f] = v;
+    if (r.section !== 'clearance' && f === 'special_price') r.db_special_price = v;
+    if (r.section !== 'clearance' && f === 'old_price') { gtApplySpecial(r); renderGathering(); showToast(`✓ ${r.name}: Harga Lama ${v == null ? 'dikosongkan' : fmtRp(v) + ' → Harga Spesial ' + fmtRp(r.special_price)}`); gtUpdateBar(); return; }
     input.value = v == null ? '' : v.toLocaleString('id-ID');
     input.classList.remove('saving'); input.classList.add('ok');
     showToast(`✓ ${r.name}: ${{ old_price: 'Harga Lama', new_price: 'Harga Baru', special_price: r.section === 'clearance' ? 'Diskon 50%' : 'Harga Spesial' }[f]} ${v == null ? 'dikosongkan' : fmtRp(v)}`);
@@ -7485,7 +7497,7 @@ function renderGathering() {
           : gtPriceEdit
           ? `<span class="gt-p" data-l="Harga Lama">${pe('old_price')}</span>
              <span class="gt-p" data-l="Harga Baru">${r.cat_price ? `${gtRp(r.new_price)}<small>dari katalog</small>` : pe('new_price')}</span>
-             <span class="gt-p" data-l="Harga Spesial">${pe('special_price')}</span>`
+             <span class="gt-p" data-l="Harga Spesial">${r.calc_special ? `${gtRp(r.special_price)}<small>dari Harga Lama</small>` : pe('special_price')}</span>`
           : clear
           ? `<span class="gt-p gt-old" data-l="Harga Normal">${r.old_price == null ? '—' : `<s>${fmtRp(r.old_price)}</s>`}</span>
              <span class="gt-p" data-l="Diskon 50%">${gtRp(r.special_price)}</span>
