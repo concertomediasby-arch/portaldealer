@@ -2432,6 +2432,23 @@ body {
   td > .gt-po { margin-left: 6px; }
   .gt-po-q { font: 600 10.5px var(--f-mono); color: #3d7ee0; }
   .gt-row.soldout .gt-name, .gt-row.soldout .gt-p { opacity: .55; }
+  /* Clearance Sale stok habis: baris memudar (abu-abu), keterangan Stok habis tetap jelas */
+  .gt-row.soldout.clr-out { background: color-mix(in srgb, var(--fg-muted) 7%, transparent); }
+  .gt-row.soldout.clr-out .gt-name, .gt-row.soldout.clr-out .gt-p { opacity: .4; filter: grayscale(1); }
+  .gt-row.soldout.clr-out .gt-name s, .gt-row.soldout.clr-out .gt-sp { text-decoration: line-through; }
+  .gt-out-pill { display: inline-block; padding: 3px 10px; border-radius: 99px; font: 700 11px var(--f-mono); letter-spacing: .03em; color: #e04848; border: 1px solid rgba(220, 60, 60, .6); background: rgba(220, 60, 60, .1); white-space: nowrap; }
+  /* Shopping Gathering dikunci (belum dibuka untuk dealer) */
+  .gt-lock { margin: 4px 0 18px; padding: 28px 22px; border-radius: 16px; text-align: center; border: 1px solid var(--border); background: var(--surface); }
+  .gt-lock .ic { font-size: 40px; line-height: 1; }
+  .gt-lock b { display: block; margin: 10px 0 6px; font: 800 19px var(--f-display); color: var(--accent); }
+  .gt-lock p { margin: 0 auto; max-width: 520px; font-size: 13.5px; color: var(--fg-muted); line-height: 1.55; }
+  .gt-lock.staff { padding: 12px 16px; text-align: left; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-style: dashed; border-color: var(--accent); }
+  .gt-lock.staff .ic { font-size: 22px; }
+  .gt-lock.staff b { margin: 0; font-size: 14px; }
+  .gt-lock.staff p { margin: 0; max-width: none; font-size: 12.5px; flex: 1 1 260px; }
+  .gt-lock.staff.open { border-color: rgba(46, 160, 90, .6); }
+  .gt-lock.staff.open b { color: #2ea05a; }
+  #gt-form.locked > :not(#gt-lock) { display: none !important; }
   .gt-res-warn { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; border: 1px dashed rgba(214, 150, 40, .6); font-size: 12.5px; color: var(--fg-muted); }
   /* Clearance Sale: tampilan berbeda (aksen merah, banner, label −50%, chip stok) */
   .gt-group.clear { --clr: #e5484d; }
@@ -3251,6 +3268,7 @@ body {
       <div id="gt-top" class="gt-top" hidden></div>
       <div id="gt-rekap" class="gt-rekap" hidden></div>
       <div id="gt-form">
+      <div id="gt-lock" hidden></div>
       <div class="gt-editing" id="gt-editing" hidden></div>
       <div class="gt-info">
         <label class="gt-dealer-field">Nama Dealer
@@ -3603,7 +3621,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T12:58:51Z';
+const LAST_UPDATE = '2026-10-27T13:48:53Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7317,7 +7335,7 @@ function openGathering(tab) {
   if (!stockLoaded) loadStock();
   loadGtReserved();
   clearInterval(gtResTimer);
-  gtResTimer = setInterval(() => { if (document.getElementById('view-gathering')?.classList.contains('active')) loadGtReserved(); else clearInterval(gtResTimer); }, 30000);
+  gtResTimer = setInterval(() => { if (document.getElementById('view-gathering')?.classList.contains('active')) { loadGtReserved(); if (gtLockedForMe()) loadGathering(); } else clearInterval(gtResTimer); }, 30000);
   setGtTab(tab === 'rekap' && isAdmin() ? 'rekap' : 'form');
 }
 
@@ -7392,16 +7410,60 @@ async function loadGathering() {
   try {
     const { data, error } = await supabase.from(GATHERING_TABLE).select('*').order('sort').order('id');
     if (error) throw error;
-    gtItems = gtWithCatalog((data || []).filter(r => !GT_HIDDEN_ITEMS.has(normKey(r.name)))); gtError = '';
+    gtLockRow = (data || []).find(gtIsLockRow) || null;
+    gtLocked = gtLockRow?.note !== 'open';
+    gtItems = gtWithCatalog((data || []).filter(r => !gtIsLockRow(r) && !GT_HIDDEN_ITEMS.has(normKey(r.name)))); gtError = '';
   } catch (e) {
     const m = String(e.message || e);
-    gtItems = [];
+    gtItems = []; if (gtLocked == null) gtLocked = true;
     gtError = /does not exist|relation|schema cache/i.test(m) ? 'Data Shopping Gathering belum dipasang di database. Admin/editor: jalankan SQL setup gathering di Supabase.' : 'Data gathering tidak bisa dimuat: ' + m;
   }
   renderGathering();
 }
 
 function setGtFilter(f) { gtFilter = f; renderGathering(); }
+
+// ── Kunci Shopping Gathering (27 Okt 2026, permintaan pemilik): selama terkunci dealer tidak bisa belanja; Admin/Editor tetap
+// bisa membuka form & membuka kunci. Status disimpan sebagai baris khusus di gathering_items (brand '__config', name '__lock__',
+// note 'open' = dibuka; tanpa baris / note lain = TERKUNCI) — RLS: baca authenticated, tulis admin/editor; tanpa SQL baru.
+let gtLocked = null, gtLockRow = null;
+const gtIsLockRow = r => r.brand === '__config' && r.name === '__lock__';
+const gtLockedForMe = () => gtLocked !== false && !isAdmin();
+function renderGtLock() {
+  const el = document.getElementById('gt-lock'), form = document.getElementById('gt-form');
+  if (!el || !form) return;
+  const mine = gtLockedForMe() && !gtError;
+  form.classList.toggle('locked', mine);
+  if (mine) {
+    el.className = 'gt-lock'; el.hidden = false;
+    el.innerHTML = gtLocked == null ? '<div class="stock-empty">Memuat…</div>'
+      : '<div class="ic">🔒</div><b>Shopping Gathering belum dibuka</b><p>Form belanja Gathering CAI 2026 akan dibuka oleh tim CAI saat acara berlangsung. Halaman ini terbuka otomatis begitu belanja dimulai — silakan tunggu informasi dari panitia.</p>';
+    return;
+  }
+  if (isAdmin() && gtLocked != null) {
+    el.className = 'gt-lock staff' + (gtLocked ? '' : ' open'); el.hidden = false;
+    el.innerHTML = gtLocked
+      ? '<span class="ic">🔒</span><b>Terkunci untuk dealer</b><p>Dealer belum bisa melihat & mengisi form belanja. Admin/Editor tetap bisa mengakses form ini.</p><button class="gt-btn wa" onclick="gtSetLock(false)">🔓 Buka Shopping Gathering</button>'
+      : '<span class="ic">🔓</span><b>Dibuka untuk dealer</b><p>Dealer bisa berbelanja & mengirim pesanan sekarang.</p><button class="gt-btn ghost" onclick="gtSetLock(true)">🔒 Kunci lagi</button>';
+    return;
+  }
+  el.hidden = true; el.innerHTML = '';
+}
+async function gtSetLock(lock) {
+  if (!isAdmin()) return;
+  if (!confirm(lock ? 'Kunci Shopping Gathering? Dealer tidak bisa berbelanja sampai dibuka lagi.' : 'Buka Shopping Gathering sekarang? Semua dealer langsung bisa berbelanja & mengirim pesanan.')) return;
+  const note = lock ? 'locked' : 'open';
+  try {
+    const res = gtLockRow?.id != null
+      ? await supabase.from(GATHERING_TABLE).update({ note }).eq('id', gtLockRow.id).select()
+      : await supabase.from(GATHERING_TABLE).insert({ section: 'gathering', brand: '__config', name: '__lock__', sort: 0, note }).select();
+    if (res.error) throw res.error;
+    if (!res.data?.length) throw new Error('tidak ada baris yang berubah (cek hak akses)');
+    gtLockRow = res.data[0]; gtLocked = lock;
+    renderGtLock();
+    showToast(lock ? '🔒 Shopping Gathering dikunci untuk dealer.' : '🔓 Shopping Gathering dibuka — dealer bisa berbelanja.');
+  } catch (e) { showToast('Gagal mengubah kunci: ' + (e.message || e), 8000); }
+}
 
 // ── Edit harga Shopping Gathering langsung dari portal (Admin/Editor; RLS tabel = tulis admin/editor) ──
 let gtPriceEdit = false;
@@ -7455,6 +7517,7 @@ function renderGathering() {
   const list = document.getElementById('gt-list');
   if (!list) return;
   if (gtPriceEdit && !isAdmin()) gtPriceEdit = false;
+  renderGtLock();
   if (gtItems === null) { list.innerHTML = '<div class="stock-empty">Memuat…</div>'; gtUpdateBar(); return; }
   if (gtError) { list.innerHTML = `<div class="stock-empty">${escHtml(gtError)}</div>`; gtUpdateBar(); return; }
   const groups = [...new Set(gtItems.map(gtGroup))];
@@ -7510,10 +7573,10 @@ function renderGathering() {
           : `<span class="gt-p gt-old" data-l="Harga Lama">${r.old_price == null ? '—' : `<s>${fmtRp(r.old_price)}</s>`}</span>
              <span class="gt-p" data-l="Harga Baru">${gtRp(r.new_price)}</span>
              <span class="gt-p gt-sp" data-l="Harga Spesial">${gtTbd(r) ? '—<small>harga menyusul</small>' : gtRp(net)}${gtNoPromo(r) ? '<small>tanpa promo</small>' : ''}</span>`;
-        return `<div class="gt-row${qty ? ' has-qty' : ''}${out ? ' soldout' : ''}" data-k="${escHtml(k)}">
+        return `<div class="gt-row${qty ? ' has-qty' : ''}${out ? ' soldout' : ''}${out && clear ? ' clr-out' : ''}" data-k="${escHtml(k)}">
           <span class="gt-name">${escHtml(r.name)}${clear && r.special_price != null ? '<b class="gt-off">−50%</b>' : ''}${gtSoon(r) ? `<span class="eol-tag soon-tag" title="${SOON_TITLE}">COMING SOON</span>` : ''}${sub}</span>${cols}
           <span class="gt-q">${net == null && !gtTbd(r) ? '<span class="gt-na">Hubungi sales</span>'
-            : out && !gtEditing?.admin ? '<span class="gt-na">Stok habis</span>'
+            : out && !gtEditing?.admin ? (clear ? '<span class="gt-out-pill">Stok habis</span>' : '<span class="gt-na">Stok habis</span>')
             : `<input class="gt-qty" type="number" min="0" step="1" inputmode="numeric" value="${qty || ''}" placeholder="${po ? 'PO' : '0'}" aria-label="Qty ${escHtml(r.name)}" oninput="gtSetQty(this)">`}</span>
           <span class="gt-p gt-line" data-l="Subtotal">${qty && net != null ? fmtRp(qty * net) : qty && gtTbd(r) ? 'Harga menyusul' : '—'}</span>
         </div>`;
@@ -7576,6 +7639,7 @@ function gtManualDel(id) { gtManual = gtManual.filter(x => x.id !== id); gtSaveD
 document.addEventListener('focusin', e => { if (e.target.classList?.contains('gt-qty')) document.getElementById('gt-bar')?.classList.add('typing'); });
 document.addEventListener('focusout', e => { if (e.target.classList?.contains('gt-qty')) setTimeout(() => { if (!document.activeElement?.classList?.contains('gt-qty')) document.getElementById('gt-bar')?.classList.remove('typing'); }, 150); });
 function gtSetQty(input) {
+  if (gtLockedForMe()) { input.value = ''; return; }
   const row = input.closest('.gt-row'), k = row.dataset.k;
   const r = gtItems.find(x => gtKey(x) === k);
   let n = Math.max(0, Math.min(9999, parseInt(input.value, 10) || 0));
@@ -7660,6 +7724,7 @@ function gtOrderPayload(o, i) {
 }
 
 async function gtSend() {
+  if (gtLockedForMe()) { renderGathering(); showToast('🔒 Shopping Gathering belum dibuka.'); return; }
   const c = gtCheck(); if (!c) return;
   const { o, i } = c;
   if (gtEditing?.admin) return gtAdminSave(o, i);   // perubahan pesanan hanya oleh admin
