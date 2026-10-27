@@ -3603,7 +3603,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T12:32:05Z';
+const LAST_UPDATE = '2026-10-27T12:39:30Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -10180,21 +10180,32 @@ function qsAllVideoSrcs() {
   ];
   return [...new Set(list.filter(Boolean))];
 }
+// Progres unduhan TIDAK tampil di layar videotron (permintaan pemilik 27 Okt 2026) — dilaporkan ke panel Admin/Editor
+// lewat Realtime broadcast channel 'bgm-status' (event 'vid'), seperti status musik.
+let qsVidProg = { busy: false, cur: '' };
+function qsVidReport() {
+  if (!supabase) return;
+  const list = qsAllVideoSrcs(), done = list.filter(s => qsVidCache[s]).length;
+  try {
+    if (!bgmCh) { bgmCh = supabase.channel('bgm-status'); bgmCh.subscribe(); }
+    bgmCh.send({ type: 'broadcast', event: 'vid', payload: { done, total: list.length, busy: qsVidProg.busy, cur: qsVidProg.cur } });
+  } catch (e) { /* abaikan */ }
+}
 async function qsPrefetchAll() {
   if (qsAllPrefetching) return; qsAllPrefetching = true;
-  const el = document.getElementById('qs-prep'), list = qsAllVideoSrcs();
+  const list = qsAllVideoSrcs();
+  qsVidProg.busy = true; qsVidReport();
   try {
     for (let i = 0; i < list.length; i++) {
       if (qsVidCache[list[i]]) continue;
-      if (el) { el.textContent = `⬇ Menyiapkan video ${i + 1}/${list.length}`; el.hidden = false; }
+      qsVidProg.cur = decodeURIComponent(list[i].split('/').pop().replace(/\?.*$/, '')); qsVidReport();
       await qsFetchBlob(list[i]);
     }
-    if (el) { el.textContent = `✓ ${list.filter(s => qsVidCache[s]).length}/${list.length} video siap`; setTimeout(() => { el.hidden = true; }, 6000); }
-  } finally { qsAllPrefetching = false; }
+  } finally { qsAllPrefetching = false; qsVidProg = { busy: false, cur: '' }; qsVidReport(); }
 }
 async function qsPrefetchVideos(list, label) {
   if (qsPrefetching) return; qsPrefetching = true;
-  const el = qsAllPrefetching ? null : document.getElementById('qs-prep');   // indikator dipegang qsPrefetchAll
+  const el = null;   // progres unduhan tidak ditampilkan di layar videotron (dilaporkan ke panel lewat qsVidReport)
   try {
     for (let i = 0; i < list.length; i++) {
       const src = list[i].src; if (qsVidCache[src]) continue;
@@ -10315,7 +10326,7 @@ function qaScreenAuth() {
 function startQaScreen() {
   if (qsTimer) return;
   setTimeout(() => BACKDROPS.filter(b => b.welcome && b.video).forEach(b => qsFetchBlob(b.video)), 1500);   // video Partner Masuk disiapkan paling awal (dipakai pertama di acara pagi)
-  setTimeout(qsPrefetchAll, 8000);   // semua video acara diunduh ke memori di latar (anti buffering), urut sesuai susunan acara
+  setTimeout(qsPrefetchAll, 8000); setInterval(qsVidReport, 5000);   // semua video acara diunduh ke memori di latar (anti buffering), urut sesuai susunan acara
   qsLoad();
   qsTimer = setInterval(qsLoad, 4000);
   qsChannel = supabase.channel('qa-screen')
@@ -10483,7 +10494,8 @@ function bgmReport(st) {
 function bgmWatchStart() {   // dipanggil di panel Editor: dengarkan laporan dari layar videotron
   if (bgmWatch || !supabase) return;
   try {
-    bgmWatch = supabase.channel('bgm-status').on('broadcast', { event: 'status' }, m => { bgmRemote = { ...(m.payload || {}), at: Date.now() }; bgmShowStatus(); bgmRefreshBox(); }).subscribe();
+    bgmWatch = supabase.channel('bgm-status').on('broadcast', { event: 'status' }, m => { bgmRemote = { ...(m.payload || {}), at: Date.now() }; bgmShowStatus(); bgmRefreshBox(); })
+      .on('broadcast', { event: 'vid' }, m => { qsVidRemote = { ...(m.payload || {}), at: Date.now() }; bgmShowStatus(); }).subscribe();
     setInterval(bgmShowStatus, 3000);
   } catch (e) { bgmWatch = null; }
 }
@@ -10496,14 +10508,23 @@ function bgmShowStatus() {
     gagal: ['bad', '🔴 File musik gagal dimuat di layar videotron' + (r?.err ? ' (' + r.err + ')' : '') + ' — muat ulang tab layar videotron'] };
   const [cls, txt] = fresh ? (T[r.kind] || ['warn', r.kind]) : ['warn', '⚪ Layar videotron tidak terdeteksi — buka lewat tombol 🖥 Buka Layar Videotron'];
   el.className = 'scr-bgm-status ' + cls; el.textContent = txt;
+  const ve = document.getElementById('vid-status'); if (!ve) return;
+  const v = qsVidRemote, vf = v && Date.now() - v.at < 15000;
+  const [vc, vt] = !vf ? ['warn', '⚪ Unduhan video: layar videotron tidak terdeteksi']
+    : v.done >= v.total ? ['ok', `✅ Semua video siap di komputer videotron (${v.done}/${v.total}) — diputar tanpa buffering`]
+    : v.busy ? ['warn', `⬇ Mengunduh video ke komputer videotron… ${v.done}/${v.total} siap${v.cur ? ' · sedang: ' + v.cur : ''}`]
+    : ['bad', `🔴 ${v.done}/${v.total} video siap — sebagian gagal diunduh; muat ulang tab layar videotron untuk mencoba lagi`];
+  ve.className = 'scr-bgm-status ' + vc; ve.textContent = vt;
 }
+let qsVidRemote = null;
 function bgmPanelHtml() {
   const has = isEditor(), cfg = bgmDisplayCfg(), on = cfg.on, vol = cfg.vol, off = cfg.off;
-  if (isEditor()) setTimeout(() => { bgmWatchStart(); bgmShowStatus(); }, 0);
+  if (isAdmin()) setTimeout(() => { bgmWatchStart(); bgmShowStatus(); }, 0);
   return `<div class="scr-bgm"><div class="scr-bgm-row"><b>🎵 Musik latar videotron</b>
       <button class="gt-btn ${on ? 'confirm' : 'ghost'}" onclick="bgmSave({ bgm_on: ${!on} })" ${has ? '' : 'disabled'}>${on ? '● Menyala' : '○ Mati'}</button>
       <label>Volume <input type="range" min="0" max="100" value="${vol}" oninput="this.nextElementSibling.textContent = this.value + '%'" onchange="bgmSave({ bgm_vol: +this.value })" ${has ? '' : 'disabled'}><span>${vol}%</span></label></div>
     <div class="scr-bgm-status warn" id="bgm-status">…</div>
+    <div class="scr-bgm-status warn" id="vid-status">…</div>
     <div class="scr-bgm-k">🎼 <b>Backsound</b> — pilih lagu yang diputar (berganti dengan crossfade, mulai dari awal lagu):</div>
     <div class="scr-bgm-tracks">${BGM_TRACKS.map(t => `<button class="scr-bgm-track${cfg.track === t.id ? ' on' : ''}" onclick="bgmSave({ bgm_track: '${t.id}' })" ${has ? '' : 'disabled'}><b>${cfg.track === t.id ? '▶ ' : ''}${escHtml(t.name)}</b><span>${escHtml(t.sub)}</span></button>`).join('')}</div>
     <div class="scr-bgm-k">Musik tetap jalan saat layar berganti sesi; berhenti sementara hanya saat video layar penuh diputar.</div>
