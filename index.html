@@ -3603,7 +3603,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T12:41:21Z';
+const LAST_UPDATE = '2026-10-27T12:58:51Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5969,6 +5969,7 @@ const variantLine = p => stockVariants(p).map(({ v, s }) => `${v} ${s.inf ? '∞
 function initSupabase() {
   try {
     supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    qsLocalWrap();
     // Fires once on load (INITIAL_SESSION) and on every login/logout; defer so no Supabase call runs inside the callback
     supabase.auth.onAuthStateChange((_e, session) => {
       authUser = session?.user || null;
@@ -6112,6 +6113,7 @@ function updateAuthUI() {
   document.body.classList.toggle('logged-in', !!authUser);
   document.body.classList.toggle('is-editor', isEditor());
   document.body.classList.toggle('is-staff', isAdmin());
+  if (isAdmin()) qsRegisterSW();   // panel Admin/Editor juga bisa dibuka ulang tanpa internet (mode offline videotron)
   updateWaAccess();
   if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
   if (!isAdmin() && document.getElementById('view-rundown')?.classList.contains('active')) showView('dashboard');
@@ -10334,8 +10336,66 @@ function qaScreenAuth() {
   qsSetStage('login', `<div class="qs-idle"><div class="qs-kicker">Layar Videotron · Gathering CAI 2026</div><h1>Meeting <em>Dealer</em></h1>
     <p>Login sebagai Admin / Editor di browser ini untuk menampilkan pertanyaan.</p><button class="qs-login" onclick="openAdmin()">🔒 Login Admin</button></div>`);
 }
+/* ── Mode offline videotron (27 Okt 2026, permintaan pemilik) ──
+   Panel Editor & layar videotron di SATU komputer → perintah tampilan juga dikirim lewat BroadcastChannel antar-tab
+   (tanpa internet). Setiap upsert ke gathering_screen dari panel ikut disiarkan lokal; layar langsung menerapkannya.
+   Internet putus: upsert/select gathering_screen gagal → dianggap berhasil memakai baris lokal, jadi tombol panel &
+   clicker tetap jalan. Baris lokal yang lebih baru dari database dipakai layar (database tertinggal saat offline). */
+const QS_LOCAL = 'BroadcastChannel' in window ? new BroadcastChannel('cai-videotron') : null;
+let qsLocalRow = null;   // baris gathering_screen terakhir yang diketahui di tab ini (panel & layar)
+const qsNetErr = e => !navigator.onLine || /fetch|network|failed|timeout|load/i.test(String(e?.message || e || ''));
+function qsLocalWrap() {
+  if (!supabase || supabase._qsWrapped) return; supabase._qsWrapped = true;
+  const from = supabase.from.bind(supabase);
+  supabase.from = t => {
+    const q = from(t);
+    if (t !== QA_SCREEN) return q;
+    const up = q.upsert.bind(q), sel = q.select.bind(q);
+    q.upsert = (row, ...a) => {
+      const now = row?.updated_at ? row : { ...row };
+      qsLocalRow = { ...(qsLocalRow || {}), ...now, at: Date.now() };
+      if (!('scene' in qsLocalRow) && !('question_id' in qsLocalRow)) return up(row, ...a);   // keadaan layar belum diketahui → jangan siarkan
+      const qid = qsLocalRow.question_id, qq = qid && (qaItems || []).find(x => x.id === qid);
+      try { QS_LOCAL?.postMessage({ row: qsLocalRow, q: qq || null }); } catch (e) {}
+      return up(row, ...a).then(r => r.error && qsNetErr(r.error) ? { ...r, error: null } : r, e => ({ data: null, error: qsNetErr(e) ? null : e }));
+    };
+    q.select = (...a) => {
+      const b = sel(...a), eq = b.eq.bind(b);
+      b.eq = (...x) => {
+        const c = eq(...x), ms = c.maybeSingle.bind(c);
+        c.maybeSingle = () => ms().then(r => {
+          if (r.error) return qsLocalRow && qsNetErr(r.error) ? { data: qsLocalRow, error: null } : r;
+          if (r.data) qsLocalRow = { ...(qsLocalRow || {}), ...r.data };
+          return r;
+        }, e => ({ data: qsLocalRow, error: qsLocalRow ? null : e }));
+        return c;
+      };
+      return b;
+    };
+    return q;
+  };
+}
+// Layar videotron: terapkan baris dari panel di komputer yang sama
+let qsLocalQ = null, qsLocalAt = 0;
+if (QS_LOCAL) QS_LOCAL.onmessage = ev => {
+  if (!QA_SCREEN_MODE || !ev.data?.row || !('scene' in ev.data.row)) return;
+  qsLocalRow = ev.data.row; qsLocalQ = ev.data.q; qsLocalAt = Date.now();
+  qsRenderRow(qsLocalRow, qsLocalQ);
+};
+function qsRenderRow(s, q) {
+  bgmApply(s);
+  document.getElementById('qs-status')?.classList.remove('off');
+  if (s?.scene && sceneInfo(s.scene)) { renderScene(s); return; }
+  renderQaScreen(s?.question_id ? q : null);
+}
+// Service worker: halaman & aset tetap bisa dibuka ulang tanpa internet (khusus layar videotron & staf)
+function qsRegisterSW() {
+  if (!('serviceWorker' in navigator) || !/^https:|^http:\/\/localhost/.test(location.href)) return;
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 function startQaScreen() {
   if (qsTimer) return;
+  qsRegisterSW();
   setTimeout(() => BACKDROPS.filter(b => b.welcome && b.video).forEach(b => qsFetchBlob(b.video)), 1500);   // video Partner Masuk disiapkan paling awal (dipakai pertama di acara pagi)
   setTimeout(qsPrefetchAll, 8000); setInterval(qsVidReport, 5000);   // semua video acara diunduh ke memori di latar (anti buffering), urut sesuai susunan acara
   qsLoad();
@@ -10594,8 +10654,10 @@ function bgmToggleSession(k) {
 async function qsLoad() {
   const st = document.getElementById('qs-status');
   try {
-    const { data: s, error } = await supabase.from(QA_SCREEN).select('*').eq('id', 1).maybeSingle();
+    let { data: s, error } = await supabase.from(QA_SCREEN).select('*').eq('id', 1).maybeSingle();
     if (error) throw error;
+    // perintah lokal (offline) lebih baru dari database → tetap pakai yang lokal
+    if (qsLocalAt && qsLocalRow && (!s || new Date(qsLocalRow.updated_at || 0) > new Date(s.updated_at || 0))) { qsRenderRow(qsLocalRow, qsLocalQ); return; }
     bgmApply(s);
     if (s?.scene && sceneInfo(s.scene)) { st.classList.remove('off'); renderScene(s); return; }
     let q = null;
