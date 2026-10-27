@@ -3601,7 +3601,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T11:58:57Z';
+const LAST_UPDATE = '2026-10-27T12:00:49Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -9635,7 +9635,7 @@ async function qsPrefetchOpening(first = 0) {
     const sps = OPENING_SPEAKERS.map((sp, i) => ({ sp, i })), order = first ? [...sps.slice(first - 1), ...sps.slice(0, first - 1)] : sps;
     for (const { sp, i } of order) for (const src of i === first - 1 ? [sp.video, sp.intro] : [sp.intro, sp.video]) {   // pembicara saat ini: recap dulu (speech-nya sedang diputar)
       if (!src || qsVidCache[src]) continue;
-      try { const r = await fetch(src); if (!r.ok) throw new Error(r.status); qsVidCache[src] = URL.createObjectURL(await r.blob()); } catch (e) { /* gagal → tetap streaming */ }
+      await qsFetchBlob(src);   // gagal → tetap streaming
     }
   } finally { qsOpPrefetching = false; }
 }   // 'n'+'v' = recap ke-n sedang diputar langsung setelah speech (scene di tabel menyusul)
@@ -9835,7 +9835,7 @@ function playOverlayVideo(src, host, pickFn) {
   document.getElementById('qa-screen').appendChild(ov);
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute');
   qsVidFade(v);
-  v.src = src;
+  v.src = qsVidCache[src] || src;   // sudah diunduh ke memori (qsPrefetchAll) → diputar lokal tanpa buffering
   v.onended = () => { ov.classList.add('ending'); ov.style.transition = 'opacity .8s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 850); };
   v.onerror = () => {
     ov.remove();
@@ -10153,15 +10153,39 @@ function renderTestimoniVideo(s) {
   if (changed) qsLvTimer = setTimeout(() => playLaunchVideo('testimoni', idx, 0), 3000);
 }
 // Video testimoni diunduh ke memori (blob) sebelum diputar → tidak bergantung kecepatan internet saat tayang (patah-patah/buffering)
-const qsVidCache = {}; let qsPrefetching = false;
+const qsVidCache = {}; let qsPrefetching = false, qsAllPrefetching = false;
+// Anti buffering (27 Okt 2026): SEMUA video videotron diunduh ke memori satu per satu sejak layar dibuka, urut sesuai
+// susunan acara (± 600 MB; biarkan tab layar terbuka beberapa menit sebelum acara). Video yang sudah ada di memori
+// diputar lokal (playLaunchVideo, playOverlayVideo, backdrop, Opening Speech); yang belum selesai tetap streaming.
+function qsAllVideoSrcs() {
+  const list = [
+    ...BACKDROPS.filter(b => b.welcome && b.video).map(b => b.video), ANTHEM_VIDEO,
+    ...Object.values(LAUNCH_VIDEOS).flat().map(v => v.src), NEW_BRAND.video, PORTAL_INTRO_VIDEO,
+    ...OPENING_SPEAKERS.flatMap(sp => [sp.intro, sp.video]), CAI_LAUNCH_VIDEO,
+    ...TESTIMONI_VIDEOS.map(v => v.src), ...BACKDROPS.filter(b => b.video && !b.welcome).map(b => b.video),
+  ];
+  return [...new Set(list.filter(Boolean))];
+}
+async function qsPrefetchAll() {
+  if (qsAllPrefetching) return; qsAllPrefetching = true;
+  const el = document.getElementById('qs-prep'), list = qsAllVideoSrcs();
+  try {
+    for (let i = 0; i < list.length; i++) {
+      if (qsVidCache[list[i]]) continue;
+      if (el) { el.textContent = `⬇ Menyiapkan video ${i + 1}/${list.length}`; el.hidden = false; }
+      await qsFetchBlob(list[i]);
+    }
+    if (el) { el.textContent = `✓ ${list.filter(s => qsVidCache[s]).length}/${list.length} video siap`; setTimeout(() => { el.hidden = true; }, 6000); }
+  } finally { qsAllPrefetching = false; }
+}
 async function qsPrefetchVideos(list, label) {
   if (qsPrefetching) return; qsPrefetching = true;
-  const el = document.getElementById('qs-prep');
+  const el = qsAllPrefetching ? null : document.getElementById('qs-prep');   // indikator dipegang qsPrefetchAll
   try {
     for (let i = 0; i < list.length; i++) {
       const src = list[i].src; if (qsVidCache[src]) continue;
       if (el) { el.textContent = `⬇ Menyiapkan video ${label} ${i + 1}/${list.length}…`; el.hidden = false; }
-      try { const r = await fetch(src); if (!r.ok) throw new Error(r.status); qsVidCache[src] = URL.createObjectURL(await r.blob()); } catch (e) { /* gagal → tetap streaming dari server */ }
+      await qsFetchBlob(src);   // gagal → tetap streaming dari server
     }
   } finally { qsPrefetching = false; if (el) el.hidden = true; }
 }
@@ -10277,7 +10301,7 @@ function qaScreenAuth() {
 function startQaScreen() {
   if (qsTimer) return;
   setTimeout(() => BACKDROPS.filter(b => b.welcome && b.video).forEach(b => qsFetchBlob(b.video)), 1500);   // video Partner Masuk disiapkan paling awal (dipakai pertama di acara pagi)
-  setTimeout(() => qsPrefetchVideos(TESTIMONI_VIDEOS, 'testimoni'), 8000);   // siapkan video testimoni di latar saat layar menganggur
+  setTimeout(qsPrefetchAll, 8000);   // semua video acara diunduh ke memori di latar (anti buffering), urut sesuai susunan acara
   qsLoad();
   qsTimer = setInterval(qsLoad, 4000);
   qsChannel = supabase.channel('qa-screen')
