@@ -3624,7 +3624,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T14:40:49Z';
+const LAST_UPDATE = '2026-10-27T14:54:55Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7395,7 +7395,9 @@ const GT_HIDDEN_PIDS = new Set(['st-q4c']);   // Q4C (26 Okt 2026) — tetap tam
 // ada di tabel gathering_items ikut tampil per brand dengan Harga Baru = SRP katalog ("tanpa promo"; kabel per panjang = satu
 // baris per panjang). Diosdela Musica dikecualikan. Baris katalog bertanda `virtual` — saat Admin/Editor mengisi harga lewat
 // ✏️ Edit Harga, baris itu disimpan (insert) ke gathering_items.
-const GT_CATALOG_SKIP = new Set(['dios']);
+const GT_CATALOG_SKIP = new Set(['dios', 'audiosystem']);
+// Brand yang seluruh barangnya tidak dijual di Shopping Gathering (baris tabel ikut disembunyikan) — Audio System, 27 Okt 2026
+const GT_HIDDEN_BRANDS = new Set(['audiosystem']);
 // Harga Baru barang gathering (bukan Clearance) = SRP katalog (keputusan pemilik 26 Okt 2026); null = katalog tanpa harga
 function gtCatalogPrice(r) {
   const pid = gtProductId(r), p = pid && findProductById(pid);
@@ -7460,7 +7462,7 @@ async function loadGathering() {
     if (error) throw error;
     gtLockRow = (data || []).find(gtIsLockRow) || null;
     gtLocked = gtLockRow?.note !== 'open';
-    gtItems = gtWithCatalog((data || []).filter(r => !gtIsLockRow(r) && !GT_HIDDEN_ITEMS.has(normKey(r.name)))); gtError = '';
+    gtItems = gtWithCatalog((data || []).filter(r => !gtIsLockRow(r) && !GT_HIDDEN_ITEMS.has(normKey(r.name)) && !GT_HIDDEN_BRANDS.has(gtBrandOf(r.brand)?.id))); gtError = '';
   } catch (e) {
     const m = String(e.message || e);
     gtItems = []; if (gtLocked == null) gtLocked = true;
