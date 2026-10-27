@@ -3603,7 +3603,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T12:27:19Z';
+const LAST_UPDATE = '2026-10-27T12:32:05Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8888,7 +8888,19 @@ const playBd = v => { if (v) v.play().catch(() => { v.muted = true; v.dataset.am
 }, true));
 // unduh video ke memori (blob URL di qsVidCache) — sekali per file, dipakai backdrop bersuara agar tidak buffering
 const qsBlobJobs = {};
-const qsFetchBlob = src => qsBlobJobs[src] || (qsBlobJobs[src] = fetch(src).then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+// Simpanan permanen di disk komputer videotron (Cache Storage): video cukup diunduh SEKALI — tetap ada walau tab dimuat
+// ulang / browser ditutup (27 Okt 2026; sebelumnya hanya di memori tab sehingga hilang tiap tab memuat ulang versi baru)
+const QS_VCACHE = 'cai-videotron-v1';
+async function qsCachedBlob(src) {
+  let c = null; try { c = await caches.open(QS_VCACHE); } catch (e) {}
+  let r = c ? await c.match(src).catch(() => null) : null;
+  if (!r) {
+    r = await fetch(src); if (!r.ok) throw new Error(r.status);
+    if (c) { try { await c.put(src, r.clone()); r = (await c.match(src)) || r; } catch (e) { /* kuota disk penuh → tetap dipakai dari memori */ } }
+  }
+  return r.blob();
+}
+const qsFetchBlob = src => qsBlobJobs[src] || (qsBlobJobs[src] = qsCachedBlob(src)
   .then(b => (qsVidCache[src] = URL.createObjectURL(b))).catch(() => { delete qsBlobJobs[src]; return src; }));   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
 let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
