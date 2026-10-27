@@ -3621,7 +3621,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T13:48:53Z';
+const LAST_UPDATE = '2026-10-27T14:08:13Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7245,9 +7245,12 @@ function gtBrandWideAvail(r) {
   return list.length ? list : null;
 }
 // Kunci stok barang gathering: varian per panjang bila ada barisnya ("RCA Azure Series 1M /Pair" → v:og-azure:1M), selain itu id produk
+// Clearance Sale yang tidak tercocok ke katalog memakai angka kolom `stock` tabel (27 Okt 2026, permintaan pemilik): pesanan yang
+// belum selesai/batal ikut menahan stok — kunci 'c:<nama>'; dibatalkan admin → stok muncul lagi
+const gtClrStockN = r => r?.section === 'clearance' && /^\s*\d+\s*$/.test(String(r.stock ?? '')) ? parseInt(r.stock, 10) : null;
 function gtStockKey(r) {
   const pid = gtProductId(r);
-  if (!pid) return null;
+  if (!pid) return r?.section === 'clearance' && !/^semua/i.test(String(r.name || '').trim()) ? 'c:' + normKey(r.name) : null;
   const p = findProductById(pid);
   if (p?.priceList) {
     const lens = (String(r.name || '').match(/\b\d+(?:[.,]\d+)?\s*m\b/gi) || []).map(normKey);   // "1M", "2 m"
@@ -7263,11 +7266,12 @@ const GT_CLEAR_UNLIMITED = new Set(['og-reddragon', 'og-streamline'].map(pid => 
 function gtAvail(r) {
   const pid = gtStockKey(r), s = pid && stockAt(pid);
   if (s?.inf || (r?.section === 'clearance' && GT_CLEAR_UNLIMITED.has(pid))) return { pid, n: null, status: 'ready', inf: true };
-  if (!s) return null;
-  if (s.qty == null) return { pid, n: s.status === 'habis' ? 0 : null, status: s.status };
+  const clrN = !s && gtClrStockN(r);
+  if (!s && clrN == null) return null;
+  if (s && s.qty == null) return { pid, n: s.status === 'habis' ? 0 : null, status: s.status };
   let used = gtReserved?.get(pid) || 0;
   if (gtEditing?.admin) used -= gtEditing.origByPid?.[pid] || 0;   // admin mengedit: qty pesanan ini sendiri dikembalikan
-  return { pid, n: Math.max(0, s.qty - used), status: s.status };
+  return { pid, n: Math.max(0, (s ? s.qty : clrN) - used), status: s ? s.status : 'ready' };
 }
 const gtSoldOut = a => !!a && a.n === 0;
 // Pre Order (26 Okt 2026, permintaan pemilik): barang Form Belanja Gathering (bukan Clearance Sale) yang stoknya habis — termasuk
