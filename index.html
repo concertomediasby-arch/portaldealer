@@ -3603,7 +3603,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T12:39:30Z';
+const LAST_UPDATE = '2026-10-27T12:41:21Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8902,6 +8902,20 @@ async function qsCachedBlob(src) {
 }
 const qsFetchBlob = src => qsBlobJobs[src] || (qsBlobJobs[src] = qsCachedBlob(src)
   .then(b => (qsVidCache[src] = URL.createObjectURL(b))).catch(() => { delete qsBlobJobs[src]; return src; }));   // detik per foto saat bergantian (backdrop video: diputar sampai selesai)
+// Video baru diputar setelah file lengkap ada di komputer videotron (memori/Cache Storage) → tidak pernah buffering di
+// tengah tayangan (27 Okt 2026, permintaan pemilik). Belum terunduh → diunduh saat itu juga (didahulukan); layar tetap
+// gelap/poster sampai siap. Batas tunggu QS_VWAIT (mis. internet putus) → diputar streaming sebagai cadangan.
+const QS_VWAIT = 45000;
+async function qsReadySrc(src) {
+  if (!src || /^blob:/.test(src) || qsVidCache[src]) return qsVidCache[src] || src;
+  await Promise.race([qsFetchBlob(src), new Promise(r => setTimeout(r, QS_VWAIT))]);
+  return qsVidCache[src] || src;
+}
+// set src + putar hanya bila elemen video masih sama (operator bisa sudah pindah scene selama menunggu)
+function qsPlayWhenReady(v, raw, start) {
+  const tok = v._qsTok = {};
+  qsReadySrc(raw).then(u => { if (v._qsTok !== tok || !v.isConnected) return; v.src = u; start(); });
+}
 let qsBdTimer = null;
 const bdNum = k => { const m = /^backdrop:(\d)$/.exec(k || ''); return m ? +m[1] : 0; };
 // Flier (layar tambahan, 25 Okt 2026): gambar diunggah admin ke Storage privat guides/gathering/flier/ (bukan repo — flier bisa memuat harga promo).
@@ -9656,7 +9670,7 @@ async function qsPrefetchOpening(first = 0) {
 function playSpeakerVideo(n, kind = 'v', chain = false) {
   const sp = OPENING_SPEAKERS[n - 1]; if (!sp) return;
   const raw = kind === 'i' ? sp.intro : sp.video;
-  const src = qsLocalSpeaker[n + kind] || qsVidCache[raw] || raw;
+  const src = qsLocalSpeaker[n + kind] || raw;
   if (!src) return;
   let ov = chain && document.getElementById('qs-video');
   if (!ov) {
@@ -9668,7 +9682,6 @@ function playSpeakerVideo(n, kind = 'v', chain = false) {
   }
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute');
   qsVidFade(v);
-  v.src = src;
   const recap = qsLocalSpeaker[n + 'v'] || sp.video;
   v.onended = () => {
     if (kind === 'i' && recap) {   // Speech Ricky → Recap langsung, tanpa kembali ke kartu
@@ -9684,7 +9697,7 @@ function playSpeakerVideo(n, kind = 'v', chain = false) {
     document.querySelector('.og-sp')?.insertAdjacentHTML('beforeend', `<label class="op-pick">📁 Video belum tersedia — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="qsPickSpeakerVideo(${n}, this, '${kind}')"></label>`);
   };
   um.onclick = () => { v.muted = false; um.hidden = true; };
-  v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
+  qsPlayWhenReady(v, src, () => v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); }));
 }
 // Video perkenalan portal (Kick Off 2027): overlay layar penuh; file gagal → pilih file lokal
 let qsLocalPortal = null;
@@ -9849,14 +9862,13 @@ function playOverlayVideo(src, host, pickFn) {
   document.getElementById('qa-screen').appendChild(ov);
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute');
   qsVidFade(v);
-  v.src = qsVidCache[src] || src;   // sudah diunduh ke memori (qsPrefetchAll) → diputar lokal tanpa buffering
   v.onended = () => { ov.classList.add('ending'); ov.style.transition = 'opacity .8s'; ov.style.opacity = '0'; setTimeout(() => ov.remove(), 850); };
   v.onerror = () => {
     ov.remove();
     document.querySelector(host)?.insertAdjacentHTML('beforeend', `<label class="op-pick">📁 Video belum termuat — pilih file di komputer ini<input type="file" accept="video/*" hidden onchange="${pickFn}(this)"></label>`);
   };
   um.onclick = () => { v.muted = false; um.hidden = true; };
-  v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
+  qsPlayWhenReady(v, src, () => v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); }));   // diputar setelah file lengkap ada di komputer
 }
 function qsPickPortalVideo(input) {
   const f = input.files?.[0]; if (!f) return;
@@ -10229,7 +10241,6 @@ function playLaunchVideo(brand, idx, pos) {
   const v = ov.querySelector('video'), um = ov.querySelector('.qs-unmute'), cap = ov.querySelector('.qs-vcap');
   const wasMuted = v.muted;
   qsVidFade(v);
-  v.src = qsVidCache[item.src] || item.src;
   // keterangan kecil "2/3 · judul" di awal tiap video (hanya bila lebih dari satu)
   const tm = brand === 'testimoni', real = tm && idx != null ? idx : pos;
   cap.className = 'qs-vcap' + (tm ? ' tm-lt' : '');
@@ -10251,7 +10262,7 @@ function playLaunchVideo(brand, idx, pos) {
   um.onclick = () => { v.muted = false; um.hidden = true; };
   // Browser bisa menolak autoplay bersuara bila tab belum pernah diklik → putar tanpa suara + tombol suara
   v.muted = wasMuted;
-  v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); });
+  qsPlayWhenReady(v, item.src, () => v.play().catch(() => { v.muted = true; um.hidden = false; v.play().catch(() => {}); }));
 }
 // Nama file dicocokkan ke judul di LAUNCH_VIDEOS (mis. "AS500.1 (CAI).mp4" → AS500.1) → urutan & indeks ikut daftar;
 // file yang tak cocok ditaruh di akhir (urut nama).
@@ -10618,7 +10629,7 @@ function renderBackdrop(s, items) {
   const ov = document.createElement('div'); ov.id = 'qs-slide'; ov.className = 'qs-slide qs-bd';
   const vidTag = b => `<video class="bd-fg" src="${qsVidCache[b.video] || b.video}" poster="${b.src}"${b.sound ? '' : ' muted'} playsinline preload="auto"${list.length === 1 ? ' loop' : ''}></video>`;
   // video bersuara (Partner Masuk) belum ada di memori → tampilkan posternya dulu, video diputar setelah selesai diunduh (anti buffering)
-  const waiting = list.length === 1 && list[0].video && list[0].sound && !qsVidCache[list[0].video];
+  const waiting = list.length === 1 && list[0].video && !qsVidCache[list[0].video];
   ov.innerHTML = list.map((b, i) => `<div class="bd-s" data-i="${i}"><img class="bd-bg" src="${b.src}" alt="">${b.video && !waiting
     ? vidTag(b) : `<img class="bd-fg" src="${b.src}" alt="${escHtml(b.t)}">`}</div>`).join('');
   if (waiting) qsFetchBlob(list[0].video).then(() => {
