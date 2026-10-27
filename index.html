@@ -1737,6 +1737,8 @@ body {
   /* ── Awarding — motion graphic "award show TV" (megah, modern futuristik). Semua gerak memakai timeline: animation-delay = detik sejak scene mulai.
         Scene ditahan class .wait sampai SFX dijadwalkan di jam audio, lalu dilepas bersamaan → gerak & suara sinkron. Layar penuh (header disembunyikan). ── */
   .qa-screen:has(.ax) .qs-top, .qa-screen:has(.ax) .qs-foot { display: none; }
+  .qa-screen:has(.sc-lv-bare) .qs-top, .qa-screen:has(.sc-lv-bare) .qs-foot { display: none; }
+  .qa-screen:has(.sc-lv-bare) { background: #000; }
   .qs-stage > .ax { animation: none; }
   .ax { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff;
     background: radial-gradient(ellipse 80% 60% at 50% 42%, #15214a 0%, #080d1e 55%, #020308 100%); perspective: 80vh; }
@@ -2436,6 +2438,7 @@ body {
   .gt-row.soldout.clr-out { background: color-mix(in srgb, var(--fg-muted) 7%, transparent); }
   .gt-row.soldout.clr-out .gt-name, .gt-row.soldout.clr-out .gt-p { opacity: .4; filter: grayscale(1); }
   .gt-row.soldout.clr-out .gt-name s, .gt-row.soldout.clr-out .gt-sp { text-decoration: line-through; }
+  .sc-lv-bare { background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
   .gt-hold { display: inline-block; margin: 1px 0; padding: 1px 8px; border-radius: 99px; font: 600 10.5px var(--f-mono); border: 1px solid rgba(214, 150, 40, .6); color: #d69628; background: rgba(214, 150, 40, .1); }
   .gt-hold-pill { display: inline-block; padding: 3px 10px; border-radius: 99px; font: 700 11px var(--f-mono); color: #d69628; border: 1px solid rgba(214, 150, 40, .6); background: rgba(214, 150, 40, .12); white-space: nowrap; }
   .gt-row.held .gt-p { opacity: .7; }
@@ -3624,7 +3627,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T14:54:55Z';
+const LAST_UPDATE = '2026-10-27T15:26:09Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -10271,14 +10274,12 @@ function lhSparks() {
 function renderLaunchVideo(s) {
   const { brand, idx } = launchParts(s.scene), b = BRANDS.find(x => x.id === brand);
   const one = idx != null ? LAUNCH_VIDEOS[brand]?.[idx] : null;
-  const t = s.scene_text ? escHtml(s.scene_text) : one && one.title !== b?.name ? escHtml(one.title) : '';
-  const changed = qsSetStage(['launchv', s.scene, s.scene_text, s.updated_at].join('|'), `<div class="qs-scene sc-launch sc-lv"><div class="sc-rays"></div>
-    <div class="qs-kicker">Product Launch</div>
-    ${b?.logo ? `<img class="sc-lv-logo" src="${b.logo}" alt="${escHtml(b.name)}">` : `<h1 class="sc-title">${escHtml(b?.name || brand)}</h1>`}
-    ${t ? `<div class="sc-launch-name">${t}</div>` : ''}
-    <p class="sc-sub" id="sc-lv-msg">Concerto Audio Indonesia</p>
+  // Tanpa sampul/judul pembuka (27 Okt 2026, permintaan pemilik): layar hitam polos, video langsung diputar.
+  // Pesan & tombol pilih file hanya muncul bila video gagal dimuat.
+  const changed = qsSetStage(['launchv', s.scene, s.scene_text, s.updated_at].join('|'), `<div class="qs-scene sc-lv-bare">
+    <p class="sc-sub" id="sc-lv-msg" hidden></p>
     <div class="sc-lv-pick" id="sc-lv-pick" hidden><label class="qs-login">📁 Pilih file video di komputer ini (boleh lebih dari satu)<input type="file" accept="video/*" multiple hidden onchange="qsPickVideo('${brand}', ${idx == null ? 'null' : idx}, this)"></label></div></div>`);
-  if (changed) qsLvTimer = setTimeout(() => playLaunchVideo(brand, idx, 0), 3500);   // poll 4 dtk tidak memulai ulang video
+  if (changed) qsLvTimer = setTimeout(() => playLaunchVideo(brand, idx, 0), 0);   // langsung; poll 4 dtk tidak memulai ulang video
 }
 // Layar Testimoni Partner CAI: judul + (nama dealer / daftar partner) + titik progres video
 const tmSplit = t => { const [n, ...c] = String(t || '').split(/\s+[—–-]\s+/); return { name: (n || '').trim(), city: c.join(' — ').trim() }; };
@@ -10351,7 +10352,7 @@ async function qsPrefetchVideos(list, label) {
 function playLaunchVideo(brand, idx, pos) {
   const list = launchList(brand, idx), item = list[pos];
   const msg = document.getElementById('sc-lv-msg');
-  const fail = text => { stopLaunchVideo(); if (msg) msg.textContent = text; const pick = document.getElementById('sc-lv-pick'); if (pick) pick.hidden = false; };
+  const fail = text => { stopLaunchVideo(); if (msg) { msg.textContent = text; msg.hidden = false; } const pick = document.getElementById('sc-lv-pick'); if (pick) pick.hidden = false; };
   if (!item) return fail('Video belum diatur.');
   let ov = document.getElementById('qs-video');
   if (!ov) {
@@ -10368,11 +10369,11 @@ function playLaunchVideo(brand, idx, pos) {
   cap.className = 'qs-vcap' + (tm ? ' tm-lt' : '');
   if (tm) { const sp = tmSplit(item.title); cap.innerHTML = `<b>${escHtml(sp.name)}</b>${sp.city ? `<span>${escHtml(sp.city)}</span>` : ''}`;
     document.querySelectorAll('.sc-testi .tm-dots i').forEach((d, i) => { d.classList.toggle('done', i < real); d.classList.toggle('on', i === real); }); }
-  else cap.textContent = list.length > 1 ? `${pos + 1}/${list.length} · ${item.title}` : '';
+  else cap.textContent = '';   // Product Launch: tanpa keterangan judul (permintaan pemilik 27 Okt 2026)
   void cap.offsetWidth; if (cap.textContent) cap.classList.add('show');
   v.onended = () => {
     if (pos + 1 < list.length) return playLaunchVideo(brand, idx, pos + 1);
-    stopLaunchVideo(); if (msg) msg.textContent = tm ? 'Concerto Audio Indonesia' : 'Terima kasih — Concerto Audio Indonesia';
+    stopLaunchVideo(); if (msg && tm) msg.textContent = 'Concerto Audio Indonesia';   // Product Launch selesai: layar hitam polos
     if (tm) {   // selesai: ganti nama dealer dengan ucapan terima kasih
       const sc = document.querySelector('.sc-testi'); if (!sc) return;
       sc.querySelectorAll('.tm-who, .tm-chips').forEach(x => x.remove());
