@@ -3601,7 +3601,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-26T13:23:34Z';
+const LAST_UPDATE = '2026-10-27T11:58:57Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8878,7 +8878,12 @@ const BACKDROPS = [
 const WELCOME_BD = BACKDROPS.findIndex(b => b.welcome) + 1;   // nomor backdrop pembuka acara pagi (scene backdrop:<n>)
 const BACKDROP_SEC = 12;
 // putar video backdrop; bila browser menolak autoplay bersuara → diputar tanpa suara (operator klik layar sekali sebelum acara)
-const playBd = v => { if (v) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); };
+const playBd = v => { if (v) v.play().catch(() => { v.muted = true; v.dataset.am = '1'; v.play().catch(() => {}); }); };
+// Autoplay bersuara ditolak browser → video backdrop (Partner Masuk) diputar tanpa suara; begitu operator mengklik / menekan
+// tombol apa pun di layar videotron, suaranya dinyalakan kembali (27 Okt 2026 — sebelumnya tetap senyap sampai scene diulang)
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => {
+  document.querySelectorAll('video.bd-fg[data-am]').forEach(v => { v.muted = false; delete v.dataset.am; v.play().catch(() => {}); });
+}, true));
 // unduh video ke memori (blob URL di qsVidCache) — sekali per file, dipakai backdrop bersuara agar tidak buffering
 const qsBlobJobs = {};
 const qsFetchBlob = src => qsBlobJobs[src] || (qsBlobJobs[src] = fetch(src).then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); })
