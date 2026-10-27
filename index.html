@@ -2357,7 +2357,9 @@ body {
   .qs-yt { position: absolute; left: 18px; bottom: 80px; width: 200px; height: 200px; z-index: 6; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.5); opacity: 0; pointer-events: none; transform: translateY(12px); transition: opacity .6s, transform .6s; }
   .qs-yt.on { opacity: .95; transform: none; }
   .qs-yt iframe { width: 200px; height: 200px; border: 0; }
-  .qs-prep { position: absolute; left: 18px; bottom: 44px; font: 500 11px var(--f-mono); color: rgba(233,196,106,.8); letter-spacing: .04em; }
+  /* indikator unduhan video — di atas semua scene/overlay (dulu tertutup layar penuh scene & backdrop) */
+  .qs-prep { position: fixed; left: 14px; bottom: 14px; z-index: 2147483000; padding: 4px 10px; border-radius: 99px; background: rgba(0,0,0,.55); font: 500 11px var(--f-mono); color: rgba(233,196,106,.9); letter-spacing: .04em; pointer-events: none; }
+  .qs-prep[hidden] { display: none; }
   .scr-bgm { margin: 12px 0; padding: 12px 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(255,255,255,.03); }
   .scr-bgm-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; }
   .scr-bgm-row b { color: #e9c46a; } .scr-bgm-row label { display: inline-flex; align-items: center; gap: 8px; color: #dfe5f2; font-size: 13px; }
@@ -3601,7 +3603,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T12:00:49Z';
+const LAST_UPDATE = '2026-10-27T12:27:19Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
