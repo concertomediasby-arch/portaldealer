@@ -3634,7 +3634,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T03:40:20Z';
+const LAST_UPDATE = '2026-10-28T03:43:16Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7137,16 +7137,15 @@ const GT_DISTRIBUTORS = ["[DIST] GARUDA BARAT", "[DIST] KG AAN", "[DIST] H2R - R
 const CERT_GROUPS = [
   ['Agustinus', ['Autoschoon', 'Central Garage', 'DB Auto', 'Project Audio']],
   ['CV. Concerto Malang', ['Autosound Gallery', 'MM Audioworks', 'Soundart']],
-  ['Garuda Barat', ['Altepro', 'Anugerah Audio', 'CAS Audio', 'Dr Audio Art', 'Dress Up', 'Gema Audio', 'HS Audio', 'Mars Audio', 'SP Audioworks', 'Sterindo Autosound', 'Victory Audio', 'Xtreme Car Audio Meruya', 'Xtreme Car Audio Pondok Cabe']],
-  ['Kevin Klise', ['NAI Audioworkshop', 'Zona Audio']],
+  ['Garuda Barat', ['Altepro', 'Anugerah Audio', 'Bengkel Pelita', 'CAS Audio', 'Dr Audio Art', 'Dress Up', 'HS Audio', 'Mars Audio', 'SP Audioworks', 'Xtreme Car Audio Pondok Cabe']],
+  ['KG Aan', ['Gema Audio', 'Xtreme Car Audio Meruya']],   // 28 Okt 2026, dari pemilik (sebelumnya Garuda Barat)
+  ['Kevin Klise', ['NAI Audioworkshop', 'Sterindo Autosound', 'Victory Audio', 'Zona Audio']],   // Sterindo & Victory pindah dari Garuda Barat 28 Okt 2026
   ['Ronny Koesharyono', ['Atmos Autosound', 'Blitz Cirebon', 'Blitz Pekalongan', 'Blitz Tegal', 'Creative Variasi', 'Dreamsound', 'ICO Audioworks', 'Linggom Audio', 'Kenzo Audio Garage', 'Oscar Variasi', 'Otofine Garage', 'Terang Jaya', 'The Peak Garage', 'Mevina Autosoundproof', 'West Audioworks']],
 ];
 const CERT_DEALERS = CERT_GROUPS.flatMap(([g, ds]) => ds.map(d => ({ d, g })));
 // Dealer per distributor khusus Shopping Gathering (tidak mengubah Sertifikat Dealer) — menimpa distributor di CERT_GROUPS
 const GT_EXTRA_GROUPS = [
-  ['KG Aan', ['Gema Audio', 'MCM', 'Mega Audio', 'Roda Mas', 'Xtreme Car Audio Meruya']],   // dari pemilik 26 & 28 Okt 2026 (Gema Audio & Xtreme Meruya sebelumnya Garuda Barat)
-  ['Kevin Klise', ['Sterindo Autosound', 'Victory Audio']],   // 28 Okt 2026, dari pemilik (sebelumnya Garuda Barat)
-  ['Garuda Barat', ['Bengkel Pelita']],   // dealer baru, 28 Okt 2026
+  ['KG Aan', ['MCM', 'Mega Audio', 'Roda Mas']],   // dari pemilik 26 Okt 2026 (Gema Audio & Xtreme Meruya kini di CERT_GROUPS KG Aan)
 ];
 const GT_DEALERS = [...new Set([...CERT_DEALERS.map(x => x.d), ...GT_EXTRA_GROUPS.flatMap(([, ds]) => ds)])];   // Shopping Gathering = nama dealer Sertifikat Dealer (25 Okt 2026) + GT_EXTRA_GROUPS
 const GT_OTHER = '__other';
@@ -9009,7 +9008,7 @@ const BACKDROPS = [
   { t: 'Reset Button', src: 'assets/backdrop/reset-button.webp?v=2', th: 'assets/backdrop/reset-button-thumb.webp?v=2' },   // gambar 16:10 untuk layar 4 × 2,5 m (20 Okt 2026, menggantikan video 16:9)
   { t: '5th Annual Gathering · Dinner', src: 'assets/backdrop/gathering-dinner.webp', th: 'assets/backdrop/gathering-dinner-thumb.webp' },
   { t: 'Dinner · 16:10', src: 'assets/backdrop/dinner-1610.webp?v=2', th: 'assets/backdrop/dinner-1610-thumb.webp?v=2', video: 'assets/backdrop/dinner-1610.mp4?v=2' },   // opsi kedua backdrop dinner (20 Okt 2026, layar 4 × 2,5 m, tanpa foto): video loop 12 dtk motion graphic halus, gambar = cadangan
-  { t: 'Penyerahan Sertifikat Dealer', src: 'assets/backdrop/sertifikat-dealer.webp?v=3', th: 'assets/backdrop/sertifikat-dealer-thumb.webp?v=3' },   // 21 Okt 2026: 37 dealer dikelompokkan per distributor (data dari pemilik), 16:10
+  { t: 'Penyerahan Sertifikat Dealer', src: 'assets/backdrop/sertifikat-dealer.webp?v=4', th: 'assets/backdrop/sertifikat-dealer-thumb.webp?v=4' },   // 21 Okt 2026 (diperbarui 28 Okt 2026, v=4): 38 dealer dikelompokkan per distributor (data dari pemilik), 16:10
   { t: 'Partner Masuk · Tidak Ada Zona Nyaman', src: 'assets/backdrop/zona-nyaman.webp', th: 'assets/backdrop/zona-nyaman-thumb.webp', video: 'assets/backdrop/zona-nyaman.mp4', welcome: true, sound: true },   // 24 Okt 2026: video motion 48 dtk dari pemilik, diputar berulang dengan suara aslinya saat partner masuk ballroom, sebelum Indonesia Raya
 ];
 const WELCOME_BD = BACKDROPS.findIndex(b => b.welcome) + 1;   // nomor backdrop pembuka acara pagi (scene backdrop:<n>)
@@ -9924,7 +9923,7 @@ function ceSeal() {
 function renderCert(s) {
   const n = certNum(s.scene), N = CERT_DEALERS.length, t = s.scene_text ? escHtml(s.scene_text) : '';
   let html;
-  if (s.scene === 'sertifikat:list') html = `<div class="qs-scene ce ce-list"><img src="assets/backdrop/sertifikat-dealer.webp?v=3" alt="Daftar dealer penerima sertifikat"></div>`;
+  if (s.scene === 'sertifikat:list') html = `<div class="qs-scene ce ce-list"><img src="assets/backdrop/sertifikat-dealer.webp?v=4" alt="Daftar dealer penerima sertifikat"></div>`;
   else if (n) {
     const c = CERT_DEALERS[n - 1], L = c.d.length, fs = L > 20 ? 'min(6.4vw, 11vh)' : L > 13 ? 'min(8vw, 14vh)' : 'min(10vw, 17vh)';
     html = `<div class="qs-scene ce ce-one">${ceBg()}
