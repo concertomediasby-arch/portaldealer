@@ -3634,7 +3634,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T08:27:42Z';
+const LAST_UPDATE = '2026-10-28T08:44:23Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5227,7 +5227,7 @@ const AUTH_DEALERS = [
   {"r": "Bengkulu", "n": "Prima Variasi", "c": "Bengkulu", "ig": "primavariasi_bengkulu", "wa": "6281273214312", "a": "Jl. Mangga Raya (Depan SLB) Lingkar Timur"},
   {"r": "DKI Jakarta", "n": "CAS Audio", "c": "Jakarta Pusat", "ig": "casaudio.official", "wa": "628161146337", "a": "Mega Glodok Kemayoran Lantai 6 Blok G1 No.1"},
   {"r": "DKI Jakarta", "n": "Gema Audio", "c": "Jakarta Barat", "ig": "gemaaudio", "wa": "62816714555", "a": "Jln. Pluit Karang Indah Timur No.21"},
-  {"r": "DKI Jakarta", "n": "MCM Audiomobile", "c": "Jakarta Barat", "ig": "mcm_audiomobile", "wa": "6285692992779", "a": "Jln. Yos Sudarso. Kav 87-88"},
+  {"r": "DKI Jakarta", "n": "MCM Audiomobile", "c": "Jakarta Barat", "ig": "mcm_audiomobile", "wa": "6285692992779", "a": "Jln. Yos Sudarso. Kav 87-88", "map": "https://maps.app.goo.gl/YihQ5Rdw7WbeCNgv8"},
   {"r": "DKI Jakarta", "n": "Mega Audio", "c": "Jakarta Barat", "ig": "megaaudio_jakarta", "wa": "62817119886", "a": "Ruko Green Garden Blok Y3 No. 18-19"},
   {"r": "DKI Jakarta", "n": "Soundx Audioworks", "c": "Jakarta Barat"},
   {"r": "DKI Jakarta", "n": "Sterindo Autosound", "c": "Jakarta Selatan", "ig": "sterindoautosound.jakarta", "wa": "628129199298", "a": "Jln. Haji Nawi raya No.3E Gandaria Selatan"},
@@ -5274,7 +5274,7 @@ const AUTH_DEALERS = [
   {"r": "Sumatra Utara", "n": "Zona Audio", "c": "Medan", "ig": "zonaaudio_medan", "wa": "628116103838", "a": "Jln. Kapten Muslim, Helvetia Tengah"},
 ];
 let adRegion = 'all';
-const adMaps = d => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', '));
+const adMaps = d => d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', '));
 function openAuthDealers() {
   showView('authdealer');
   document.querySelector('.main')?.scrollTo(0, 0);
