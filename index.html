@@ -2501,6 +2501,16 @@ body {
   .gt-row.held .gt-p { opacity: .7; }
   .gt-out-pill { display: inline-block; padding: 3px 10px; border-radius: 99px; font: 700 11px var(--f-mono); letter-spacing: .03em; color: #e04848; border: 1px solid rgba(220, 60, 60, .6); background: rgba(220, 60, 60, .1); white-space: nowrap; }
   /* Shopping Gathering dikunci (belum dibuka untuk dealer) */
+  .gt-cd { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin: 10px 0 2px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); font-size: 13.5px; color: var(--fg); }
+  .gt-cd:empty { display: none; }
+  .gt-cd .ic { font-size: 16px; } .gt-cd b { font-weight: 700; } .gt-cd span { color: var(--fg-muted); }
+  .gt-cd em { font: 800 18px var(--f-mono); font-style: normal; color: var(--accent); letter-spacing: .04em; }
+  .gt-cd.warn { border-color: #ef4444; background: rgba(239,68,68,.12); animation: gtCdPulse 1.2s ease-in-out infinite; } .gt-cd.warn em { color: #ef4444; }
+  .gt-cd.done { border-color: #ef4444; background: rgba(239,68,68,.1); }
+  @keyframes gtCdPulse { 50% { box-shadow: 0 0 0 4px rgba(239,68,68,.18); } }
+  .tsp .tsp-cd { margin: 0; padding: .6vh 1.6vh; border-radius: 1.4vh; border-color: rgba(233,196,106,.6); background: rgba(233,196,106,.12); font-size: max(11px, 1.9vh); color: #fff; gap: 1.2vh; flex-wrap: nowrap; white-space: nowrap; }
+  .tsp .tsp-cd span { color: rgba(255,255,255,.65); } .tsp .tsp-cd .ic { font-size: max(12px, 2vh); }
+  .tsp .tsp-cd em { font-size: max(16px, 3.2vh); color: #e9c46a; } .tsp .tsp-cd.warn em, .tsp .tsp-cd.done b { color: #f87171; }
   .gt-lock { margin: 4px 0 18px; padding: 28px 22px; border-radius: 16px; text-align: center; border: 1px solid var(--border); background: var(--surface); }
   .gt-lock .ic { font-size: 40px; line-height: 1; }
   .gt-lock b { display: block; margin: 10px 0 6px; font: 800 19px var(--f-display); color: var(--accent); }
@@ -3337,6 +3347,7 @@ body {
           <button class="filter-chip" id="gt-tab-top" onclick="setGtTab('top')">🏆 Top Spender</button>
           <button class="filter-chip staff-only" id="gt-tab-rekap" onclick="setGtTab('rekap')">📋 Rekap Pesanan Dealer</button>
         </div>
+        <div class="gt-cd" data-gtcd></div>
         <div class="page-subtitle">Form belanja dealer <b>Gathering CAI 2026</b>. Isi jumlah pesanan, total dihitung otomatis, lalu kirim ke sales CAI lewat WhatsApp atau cetak sebagai PDF.</div>
         <div class="gt-terms">* Harga Spesial Gathering = harga lama − diskon 35% − cashback, hanya berlaku selama acara berlangsung. Produk yang tidak masuk promo memakai harga lama. Clearance Sale: harga clearance = harga normal − diskon 50% − cashback (10% × DPP, DPP = harga setelah diskon ÷ 1,11), stok terbatas.</div>
       </div>
@@ -3696,7 +3707,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T14:24:01Z';
+const LAST_UPDATE = '2026-10-28T14:29:45Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7551,7 +7562,25 @@ function setGtFilter(f) { gtFilter = f; renderGathering(); }
 // note 'open' = dibuka; tanpa baris / note lain = TERKUNCI) — RLS: baca authenticated, tulis admin/editor; tanpa SQL baru.
 let gtLocked = null, gtLockRow = null;
 const gtIsLockRow = r => r.brand === '__config' && r.name === '__lock__';
-const gtLockedForMe = () => gtLocked !== false && !isAdmin();
+// Penutupan Shopping Gathering (28 Okt 2026, permintaan pemilik): hitung mundur ke 22.00 WIB; lewat dari itu form otomatis tertutup untuk dealer
+const GT_CLOSE_AT = Date.parse('2026-10-28T22:00:00+07:00');
+const GT_CLOSE_LABEL = '22.00 WIB';
+const gtClosed = () => Date.now() >= GT_CLOSE_AT;
+const gtLockedForMe = () => (gtLocked !== false || gtClosed()) && !isAdmin();
+let gtWasClosed = gtClosed();
+function gtCdText(short) {   // short = versi ringkas untuk papan Top Spender videotron
+  const ms = GT_CLOSE_AT - Date.now();
+  if (ms <= 0) return { done: true, html: short ? `<b>Shopping ditutup</b><span>${GT_CLOSE_LABEL}</span>` : `<span class="ic">⛔</span><b>Shopping Gathering sudah ditutup</b><span>pukul ${GT_CLOSE_LABEL}</span>` };
+  const t = Math.ceil(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, sec = t % 60, p = n => String(n).padStart(2, '0');
+  const clock = `<em>${p(h)}:${p(m)}:${p(sec)}</em>`;
+  return { warn: ms <= 15 * 60000, html: short ? `<span>Ditutup ${GT_CLOSE_LABEL}</span>${clock}` : `<span class="ic">⏳</span><b>Shopping Gathering ditutup pukul ${GT_CLOSE_LABEL}</b><span>sisa waktu</span>${clock}` };
+}
+function gtCdTick() {
+  const c = gtCdText(), cs = gtCdText(true);
+  document.querySelectorAll('[data-gtcd]').forEach(el => { const x = el.dataset.gtcd === 'short' ? cs : c; el.innerHTML = x.html; el.classList.toggle('warn', !!x.warn); el.classList.toggle('done', !!x.done); });
+  if (c.done && !gtWasClosed) { gtWasClosed = true; if (document.getElementById('view-gathering')?.classList.contains('active') && !QA_SCREEN_MODE) renderGathering(); }
+}
+setInterval(gtCdTick, 1000);
 function renderGtLock() {
   const el = document.getElementById('gt-lock'), form = document.getElementById('gt-form');
   if (!el || !form) return;
@@ -7559,8 +7588,14 @@ function renderGtLock() {
   form.classList.toggle('locked', mine);
   if (mine) {
     el.className = 'gt-lock'; el.hidden = false;
-    el.innerHTML = gtLocked == null ? '<div class="stock-empty">Memuat…</div>'
+    el.innerHTML = gtClosed() ? `<div class="ic">⛔</div><b>Shopping Gathering sudah ditutup</b><p>Belanja Gathering CAI 2026 ditutup pukul ${GT_CLOSE_LABEL}. Terima kasih atas partisipasi Anda — untuk pertanyaan pesanan silakan hubungi sales CAI.</p>`
+      : gtLocked == null ? '<div class="stock-empty">Memuat…</div>'
       : '<div class="ic">🔒</div><b>Shopping Gathering belum dibuka</b><p>Form belanja Gathering CAI 2026 akan dibuka oleh tim CAI saat acara berlangsung. Halaman ini terbuka otomatis begitu belanja dimulai — silakan tunggu informasi dari panitia.</p>';
+    return;
+  }
+  if (isAdmin() && gtClosed()) {
+    el.className = 'gt-lock staff'; el.hidden = false;
+    el.innerHTML = `<span class="ic">⛔</span><b>Ditutup untuk dealer</b><p>Lewat pukul ${GT_CLOSE_LABEL}: form otomatis tertutup untuk dealer. Admin/Editor tetap bisa memakai form & Edit Pesanan.</p>`;
     return;
   }
   if (isAdmin() && gtLocked != null) {
@@ -7850,7 +7885,7 @@ function gtOrderPayload(o, i) {
 }
 
 async function gtSend() {
-  if (gtLockedForMe()) { renderGathering(); showToast('🔒 Shopping Gathering belum dibuka.'); return; }
+  if (gtLockedForMe()) { renderGathering(); showToast(gtClosed() ? `⛔ Shopping Gathering sudah ditutup (${GT_CLOSE_LABEL}).` : '🔒 Shopping Gathering belum dibuka.'); return; }
   const c = gtCheck(); if (!c) return;
   const { o, i } = c;
   if (gtEditing?.admin) return gtAdminSave(o, i);   // perubahan pesanan hanya oleh admin
@@ -11113,7 +11148,7 @@ function tspPaint(s) {
     <div class="tsp-head">
       <img src="${LOGO_WHITE}" alt="CAI">
       <div class="tsp-ttl"><div class="tsp-kick">Shopping Gathering CAI 2026</div><h1>Top <em>Spender</em></h1>${s.scene_text ? `<p>${escHtml(s.scene_text)}</p>` : ''}</div>
-      <div class="tsp-sum"><div class="tsp-live"><i></i>Live</div><b>${L.length} toko</b><span>Total ${fmtRp(all)}</span></div>
+      <div class="tsp-sum"><div class="tsp-cd gt-cd" data-gtcd="short">${gtCdText(true).html}</div><div class="tsp-live"><i></i>Live</div><b>${L.length} toko</b><span>Total ${fmtRp(all)}</span></div>
     </div>
     <div class="tsp-grid">${Array.from({ length: n }, (_, i) => row(i)).join('')}</div>
     <div class="tsp-foot"><div class="tsp-rest">Peringkat ${n + 1} dst. · hadiah <b>${escHtml(GT_TOP_PRIZE_REST)}</b></div>
