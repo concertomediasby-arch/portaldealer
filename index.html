@@ -3696,7 +3696,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T14:13:33Z';
+const LAST_UPDATE = '2026-10-28T14:24:01Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8020,13 +8020,19 @@ const gtPrizeHtml = i => { const z = GT_TOP_PRIZES[i]; return z ? `<div class="g
 const GT_TOP_HIGHLIGHT = 10;  // 10 besar ditonjolkan; toko lain tetap tampil di daftar bawahnya
 const GT_TOP_FETCH = 1000;
 const GT_TOP_FACTOR = 1 / 1.11;   // nilai di papan = subtotal pembelian ÷ 111% (subtotal dikurangi PPN 11%); fungsi SQL tetap mengembalikan subtotal
-let gtTop = null, gtTopErr = '';
+let gtTop = null, gtTopErr = '', gtTopAt = 0;
+// tombol Muat ulang: beri tanda sedang memuat + notifikasi, agar terlihat bekerja walau angkanya tidak berubah
+async function reloadGtTop(btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Memuat…'; }
+  await loadGtTop();
+  showToast(gtTopErr ? '⚠ ' + gtTopErr : '✓ Top Spender diperbarui');
+}
 async function loadGtTop() {
   if (!supabase || !authUser) return;
   try {
     const { data, error } = await supabase.rpc('gathering_top_spenders', { lim: GT_TOP_FETCH });
     if (error) throw error;
-    gtTop = (data || []).map(r => ({ ...r, total: Math.round(Number(r.total || 0) * GT_TOP_FACTOR) })); gtTopErr = '';
+    gtTop = (data || []).map(r => ({ ...r, total: Math.round(Number(r.total || 0) * GT_TOP_FACTOR) })); gtTopErr = ''; gtTopAt = Date.now();
   } catch (e) {
     const m = String(e.message || e);
     gtTop = [];
@@ -8038,8 +8044,8 @@ function renderGtTop() {
   const el = document.getElementById('gt-top');
   if (!el || gtTab !== 'top') return;
   const head = `<div class="gt-top-head"><div class="gt-top-title">🏆 Top Spender Gathering 2026</div>
-    <div class="gt-top-sub">Total belanja semua dealer selama Gathering CAI 2026 (termasuk PPN 11%) · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · dihitung dari pembelian yang sudah dikonfirmasi admin</div>
-    <button class="gt-btn ghost" onclick="loadGtTop()">↻ Muat ulang</button></div>`;
+    <div class="gt-top-sub">Total belanja semua dealer selama Gathering CAI 2026 (sebelum PPN 11%) · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · dihitung dari pembelian yang sudah dikonfirmasi admin${gtTopAt ? ` · diperbarui pukul ${new Date(gtTopAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' })}` : ''}</div>
+    <button class="gt-btn ghost" id="gt-top-reload" onclick="reloadGtTop(this)">↻ Muat ulang</button></div>`;
   if (gtTop === null) { el.innerHTML = head + '<div class="stock-empty">Memuat peringkat…</div>'; return; }
   if (gtTopErr) { el.innerHTML = head + `<div class="stock-empty">${escHtml(gtTopErr)}</div>`; return; }
   if (!gtTop.length) { el.innerHTML = head + '<div class="stock-empty">Belum ada pembelian yang dikonfirmasi. Jadilah toko pertama di papan Top Spender!</div>'; return; }
