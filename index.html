@@ -1737,6 +1737,56 @@ body {
   /* ── Awarding — motion graphic "award show TV" (megah, modern futuristik). Semua gerak memakai timeline: animation-delay = detik sejak scene mulai.
         Scene ditahan class .wait sampai SFX dijadwalkan di jam audio, lalu dilepas bersamaan → gerak & suara sinkron. Layar penuh (header disembunyikan). ── */
   .qa-screen:has(.ax) .qs-top, .qa-screen:has(.ax) .qs-foot { display: none; }
+  /* ── Top Spender di videotron (scene topspender) ── */
+  .qa-screen:has(.tsp) .qs-top, .qa-screen:has(.tsp) .qs-foot { display: none; }
+  .qs-stage > .tsp { animation: none; }
+  .tsp { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 2.2vh; padding: 4.5vh 4.5vw 3.5vh; color: #fff; text-align: left; overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #14244a 0%, #070c1a 62%, #03060d 100%); }
+  .tsp-bg { position: absolute; inset: 0; pointer-events: none; }
+  .tsp-bg i { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(9vw); opacity: .35; animation: tspOrb 14s ease-in-out infinite alternate; }
+  .tsp-bg i:first-child { left: -18vw; top: -25vw; background: #b8893a; }
+  .tsp-bg i:last-child { right: -22vw; bottom: -30vw; background: #2f5bd3; animation-delay: -7s; }
+  @keyframes tspOrb { to { transform: translate(6vw, 4vh) scale(1.1); } }
+  .tsp > :not(.tsp-bg) { position: relative; z-index: 1; }
+  .tsp-head { display: flex; align-items: center; gap: 2.4vw; animation: tspIn .8s both; }
+  .tsp-head > img { height: 7vh; }
+  .tsp-ttl { flex: 1; min-width: 0; }
+  .tsp-kick { font: 600 max(12px, 2vh) var(--f-display); letter-spacing: .32em; text-transform: uppercase; color: #e9c46a; }
+  .tsp-ttl h1 { margin: .4vh 0 0; font: 800 max(28px, 8.5vh)/1 var(--f-display); letter-spacing: -.01em; }
+  .tsp-ttl h1 em { font-style: normal; background: linear-gradient(100deg, #fff3d0, #e9c46a 40%, #b8893a 70%, #fff3d0); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: tspShine 5s linear infinite; }
+  @keyframes tspShine { to { background-position: -200% 0; } }
+  .tsp-ttl p { margin: .8vh 0 0; font: 500 max(13px, 2.3vh) var(--f-body); color: rgba(255,255,255,.75); }
+  .tsp-sum { text-align: right; display: grid; gap: .4vh; justify-items: end; }
+  .tsp-sum b { font: 700 max(16px, 3.4vh) var(--f-display); }
+  .tsp-sum span { font: 600 max(13px, 2.4vh) var(--f-mono); color: #e9c46a; }
+  .tsp-live { display: inline-flex; align-items: center; gap: .7vh; padding: .5vh 1.4vh; border-radius: 3vh; background: rgba(220,38,38,.18); border: 1px solid rgba(248,113,113,.6); font: 700 max(11px, 1.8vh) var(--f-display); letter-spacing: .2em; text-transform: uppercase; }
+  .tsp-live i { width: 1.2vh; height: 1.2vh; border-radius: 50%; background: #ef4444; animation: tspBlink 1.2s ease-in-out infinite; }
+  @keyframes tspBlink { 50% { opacity: .25; } }
+  .tsp-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, minmax(0, 1fr)); grid-auto-flow: column; gap: 1.6vh 2vw; }
+  .tsp-row { display: grid; grid-template-columns: 8vh minmax(0, 1fr) auto; grid-template-rows: auto auto; align-content: center; align-items: center; gap: .6vh 1.4vw; padding: 1.2vh 1.6vw; border-radius: 2vh; background: linear-gradient(100deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); border: 1px solid rgba(233,196,106,.35); backdrop-filter: blur(8px); animation: tspIn .7s var(--d) both; min-height: 0; }
+  .tsp.live .tsp-row { animation: none; }
+  .tsp-row.m1 { border-color: #e9c46a; background: linear-gradient(100deg, rgba(233,196,106,.32), rgba(233,196,106,.06)); box-shadow: 0 0 4vh rgba(233,196,106,.25); }
+  .tsp-row.m2 { border-color: #c8d0dc; background: linear-gradient(100deg, rgba(200,208,220,.22), rgba(255,255,255,.04)); }
+  .tsp-row.m3 { border-color: #d39a6a; background: linear-gradient(100deg, rgba(211,154,106,.22), rgba(255,255,255,.04)); }
+  .tsp-row.empty { opacity: .45; border-style: dashed; }
+  .tsp-row.chg { animation: tspChg 2.4s ease-out; }
+  @keyframes tspChg { 0% { box-shadow: 0 0 0 .5vh #e9c46a, 0 0 6vh rgba(233,196,106,.8); background: rgba(233,196,106,.45); } 100% { box-shadow: none; } }
+  .tsp-rk { grid-row: 1 / 3; font: 800 max(18px, 5vh)/1 var(--f-display); text-align: center; color: #e9c46a; }
+  .tsp-st { min-width: 0; display: flex; align-items: baseline; gap: 1vw; }
+  .tsp-st b { font: 700 max(15px, 2.9vh)/1.15 var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tsp-st span { font: 500 max(11px, 1.9vh) var(--f-body); color: rgba(255,255,255,.65); }
+  .tsp-pz > span { color: rgba(255,255,255,.55); margin-right: .8vw; padding-right: .8vw; border-right: 1px solid rgba(255,255,255,.25); }
+  .tsp-pz { grid-column: 2 / 4; font: 500 max(11px, 1.85vh) var(--f-body); color: rgba(255,255,255,.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tsp-pz em { font-style: normal; font-weight: 700; color: #e9c46a; }
+  .tsp-tot { font: 700 max(14px, 3vh) var(--f-display); color: #fff3d0; white-space: nowrap; }
+  .tsp-row.m1 .tsp-tot { color: #e9c46a; }
+  .tsp-foot { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2vw; padding: 1.2vh 1.6vw; border-radius: 2vh; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.12); animation: tspIn .7s 1.3s both; }
+  .tsp-rest { font: 600 max(12px, 2.1vh) var(--f-display); white-space: nowrap; } .tsp-rest b { color: #e9c46a; }
+  .tsp-tick { overflow: hidden; white-space: nowrap; mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); font: 500 max(12px, 2.1vh) var(--f-body); color: rgba(255,255,255,.85); }
+  .tsp-tick.empty { color: rgba(255,255,255,.45); mask-image: none; }
+  .tsp-tick > div { display: inline-block; animation: tspTick var(--t) linear infinite; }
+  .tsp-tick span { margin-right: 4vw; } .tsp-tick em { font-style: normal; color: #e9c46a; font-weight: 700; margin-right: .8vw; } .tsp-tick b { font-family: var(--f-mono); color: #fff3d0; margin-left: .6vw; }
+  @keyframes tspTick { to { transform: translateX(-50%); } }
+  @keyframes tspIn { from { opacity: 0; transform: translateY(2.5vh); } }
   .qa-screen:has(.sc-lv-bare) .qs-top, .qa-screen:has(.sc-lv-bare) .qs-foot { display: none; }
   .qa-screen:has(.sc-lv-bare) { background: #000; }
   .qs-stage > .ax { animation: none; }
@@ -3646,7 +3696,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T13:54:31Z';
+const LAST_UPDATE = '2026-10-28T14:13:33Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8925,6 +8975,7 @@ const QS_SCENES = {
   flier: { label: 'Flier', icon: '📰', match: /fl[iy]er|brosur/i },
   sertifikat: { label: 'Penyerahan Sertifikat Dealer', icon: '📜', match: /sertifikat/i },
   paket: { label: 'Paket Audio', icon: '📦', match: /paket/i },
+  topspender: { label: 'Top Spender', icon: '🏆', match: /top ?spender/i },
 };
 const PORTAL_POINTS = ['Katalog produk & harga SRP resmi', 'Stok produk real-time', 'Panduan Dealer & Concerto Academy', 'Paket Audio & Shopping Gathering'];
 const PKS_POINTS = ['Kemitraan dealer resmi CAI tahun 2027', 'Ketentuan & komitmen kerja sama', 'Program & dukungan untuk dealer'];
@@ -9253,7 +9304,7 @@ const FREE_NAME = 'Free Time';
 // Panel Editor disusun mengikuti urutan acara: pagi (08:30–16:00), malam (18:00), lalu layar tambahan.
 const SCR_PAGI = ['welcome', 'anthem', 'qa', 'coffee', 'launch', 'newbrand', 'lunch', 'kickoff'];
 const SCR_MALAM = ['opening', 'awarding', 'dinner', 'healthy'];
-const SCR_EXTRA = ['sertifikat', 'testimoni', 'funmkt', 'backdrop', 'flier', 'refresh', 'cailaunch'];
+const SCR_EXTRA = ['topspender', 'sertifikat', 'testimoni', 'funmkt', 'backdrop', 'flier', 'refresh', 'cailaunch'];
 const SCR_GROUPS = [['☀️ Acara Pagi · 08:30 – 16:00', SCR_PAGI], ['🌙 Acara Malam · mulai 18:00', SCR_MALAM], ['✨ Layar tambahan', SCR_EXTRA]];
 const SCR_LABEL = { qa: { icon: '🎤', label: 'Meeting Dealer', sub: 'Tanya Jawab Partner CAI' } };
 // Launching Brand Baru: isi default (bisa ditimpa teks tambahan "Nama Brand | tagline" di panel).
@@ -9276,6 +9327,7 @@ const SCR_DESC = {
   healthy: 'Layar Healthy Drink sebagai penutup acara.',
   testimoni: 'Judul sesi Testimoni Partner CAI, lalu putar video testimoni dari dealer (satu per satu atau semua berurutan). Teks tambahan = nama partner (opsional).',
   flier: 'Flier promo / produk tampil layar penuh (latar blur). Unggah gambar JPG/PNG/WebP atau PDF (tiap halaman jadi satu flier) — tersimpan di penyimpanan privat portal, tidak ikut situs publik. Pilih satu, atau tampilkan bergantian (12 dtk per flier); panah / clicker di komputer videotron juga bisa berpindah flier.',
+  topspender: 'Papan Top Spender Shopping Gathering secara langsung: 10 besar beserta hadiahnya, peringkat 11 dst. berjalan di bawah. Data diperbarui otomatis tiap ±5 detik dari pesanan yang dikonfirmasi / belum lunas — tidak perlu klik ulang. Teks tambahan = kalimat di bawah judul (opsional).',
   backdrop: 'Backdrop acara tampil layar penuh — pilih satu, atau biarkan bergantian otomatis. Panah di komputer videotron juga bisa berpindah backdrop.',
   sertifikat: 'Penyerahan Sertifikat Dealer: layar judul → nama dealer muncul satu per satu (sesuai urutan maju ke panggung) → daftar semua dealer. Clicker / panah di komputer videotron menggeser ke dealer berikutnya.',
   funmkt: 'Judul presentasi, lalu slide materi. Clicker / panah di komputer videotron juga bisa mengganti slide.',
@@ -9571,6 +9623,7 @@ function renderScene(s) {
   if (s.scene === 'welcome' && WELCOME_BD) return renderBackdrop({ ...s, scene: 'backdrop:' + WELCOME_BD });   // kartu Partner Masuk = backdrop "Tidak Ada Zona Nyaman" (loop)
   if (sceneBase(s.scene) === 'sertifikat') return renderCert(s);
   if (sceneBase(s.scene) === 'paket') return renderPaket(s);
+  if (sceneBase(s.scene) === 'topspender') return renderTopSpender(s);
   if (sceneBase(s.scene) === 'opening') qsPrefetchOpening(opNum(s.scene));
   if (opNum(s.scene)) return renderOpeningSpeaker(opNum(s.scene), opVid(s.scene), s.updated_at);
   if (s.scene === 'awarding') return renderAwardTitle(s);
@@ -11012,6 +11065,55 @@ function renderFlier(s) {
   if (!flierCache) qsSetStage('fl|load', '<div class="qs-idle"><p>Memuat flier…</p></div>');
   flierList().then(L => { if (qsSceneNow === s.scene) renderBackdrop(s, L); })
     .catch(e => { if (qsSceneNow !== s.scene) return; qsSetStage('fl|err', `<div class="qs-idle"><p>Flier belum bisa dimuat (${escHtml(e.message || e)}).</p></div>`); qsKey = null; });
+}
+// ── Top Spender di videotron (28 Okt 2026, permintaan pemilik): scene 'topspender' ──
+// Data = fungsi gathering_top_spenders (sama dengan tab Top Spender). renderScene() dipanggil tiap poll 4 dtk → data diambil ulang maks. tiap 5 dtk,
+// ditambah realtime perubahan gathering_orders bila tabel ada di publication. Layar hanya digambar ulang bila angka berubah; baris yang berubah berkilau.
+let tspData = null, tspAt = 0, tspBusy = false, tspCh = null, tspPrev = null, tspRow = null;
+function renderTopSpender(s) {
+  tspRow = s;
+  const fetchNow = () => {
+    if (tspBusy || !supabase) return; tspBusy = true; tspAt = Date.now();
+    supabase.rpc('gathering_top_spenders', { lim: GT_TOP_FETCH }).then(({ data, error }) => {
+      if (error) throw error;
+      tspData = (data || []).map(r => ({ store: r.store || '-', city: r.city || '', total: Math.round(Number(r.total || 0) * GT_TOP_FACTOR) }));
+      if (sceneBase(qsSceneNow) === 'topspender') tspPaint(tspRow || s);
+    }).catch(e => { if (sceneBase(qsSceneNow) === 'topspender' && !tspData) { qsSetStage('tsp|err', `<div class="qs-idle"><p>Top Spender belum bisa dimuat (${escHtml(e.message || e)}).</p></div>`); qsKey = null; } })
+      .finally(() => { tspBusy = false; });
+  };
+  if (!tspCh && supabase) {
+    try { tspCh = supabase.channel('tsp-orders').on('postgres_changes', { event: '*', schema: 'public', table: GATHERING_ORDERS }, () => { if (sceneBase(qsSceneNow) === 'topspender') setTimeout(fetchNow, 700); }).subscribe(); } catch (e) { tspCh = null; }
+  }
+  if (tspData) tspPaint(s); else qsSetStage('tsp|load', '<div class="qs-idle"><p>Memuat Top Spender…</p></div>');
+  if (!tspData || Date.now() - tspAt > 5000) fetchNow();
+}
+function tspPaint(s) {
+  const L = tspData || [], key = 'tsp|' + (s.scene_text || '') + '|' + L.map(r => r.store + '=' + r.total).join(';');
+  if (key === qsKey) return;
+  const live = String(qsKey || '').startsWith('tsp|') && !/^tsp\|(load|err)/.test(qsKey);
+  const prev = tspPrev || {}; tspPrev = Object.fromEntries(L.map((r, i) => [r.store, r.total + '#' + i]));
+  const all = L.reduce((a, r) => a + r.total, 0), medal = ['🥇', '🥈', '🥉'];
+  const n = Math.max(GT_TOP_PRIZES.length, Math.min(L.length, GT_TOP_HIGHLIGHT));
+  const row = i => {
+    const r = L[i], z = GT_TOP_PRIZES[i], chg = live && r && prev[r.store] !== r.total + '#' + i;
+    return `<div class="tsp-row${i < 3 ? ' m' + (i + 1) : ''}${r ? '' : ' empty'}${chg ? ' chg' : ''}" style="--d:${(0.5 + i * 0.07).toFixed(2)}s">
+      <div class="tsp-rk">${medal[i] || i + 1}</div>
+      <div class="tsp-st"><b>${r ? escHtml(r.store) : 'Belum terisi'}</b></div>
+      <div class="tsp-tot">${r ? fmtRp(r.total) : '–'}</div>
+      <small class="tsp-pz">${r && r.city ? `<span>${escHtml(r.city)}</span>` : ''}${z ? `Hadiah: <em>${escHtml(z.p)}</em> · ${escHtml(z.b)}${z.v ? ' · ' + escHtml(z.v) : ''}` : ''}</small></div>`;
+  };
+  const rest = L.slice(n), tick = rest.map((r, i) => `<span><em>${n + i + 1}</em>${escHtml(r.store)}${r.city ? ' · ' + escHtml(r.city) : ''} <b>${fmtRp(r.total)}</b></span>`).join('');
+  const html = `<div class="qs-scene tsp${live ? ' live' : ''}"><div class="tsp-bg"><i></i><i></i></div>
+    <div class="tsp-head">
+      <img src="${LOGO_WHITE}" alt="CAI">
+      <div class="tsp-ttl"><div class="tsp-kick">Shopping Gathering CAI 2026</div><h1>Top <em>Spender</em></h1>${s.scene_text ? `<p>${escHtml(s.scene_text)}</p>` : ''}</div>
+      <div class="tsp-sum"><div class="tsp-live"><i></i>Live</div><b>${L.length} toko</b><span>Total ${fmtRp(all)}</span></div>
+    </div>
+    <div class="tsp-grid">${Array.from({ length: n }, (_, i) => row(i)).join('')}</div>
+    <div class="tsp-foot"><div class="tsp-rest">Peringkat ${n + 1} dst. · hadiah <b>${escHtml(GT_TOP_PRIZE_REST)}</b></div>
+      ${rest.length ? `<div class="tsp-tick"><div style="--t:${Math.max(20, rest.length * 5)}s">${tick}${tick}</div></div>` : '<div class="tsp-tick empty">Belum ada peringkat 11 ke bawah</div>'}</div>
+  </div>`;
+  qsSetStage(key, html);
 }
 function qsSetEventSub(base) {
   const el = document.getElementById('qs-event-sub'); if (!el) return;
