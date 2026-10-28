@@ -3634,7 +3634,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T08:02:16Z';
+const LAST_UPDATE = '2026-10-28T08:03:18Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -9323,7 +9323,7 @@ function renderScreenPanel(err) {
         </div>
         ${cur ? `<div class="scr-pks-prev-wrap"><canvas id="scr-pks-prev" class="scr-pks-prev"></canvas><span>Pratinjau yang tampil di videotron · hal. ${cur}</span></div>` : ''}
         <div class="scr-pks-pages">${Array.from({ length: n }, (_, i) => `<button class="scr-lv-btn${cur === i + 1 ? ' on' : ''}" onclick="setScene('${pksKey(pksSel, i + 1)}')">${i + 1}</button>`).join('')}</div>`}
-    <div class="scr-actions"><label class="gt-btn ghost">⬆ ${M?.exists ? 'Ganti' : 'Unggah'} PDF ${D.label}<input type="file" accept="application/pdf" hidden onchange="uploadPks(this, '${pksSel}')"></label></div>`; }
+    <div class="scr-actions"><label class="gt-btn ghost">⬆ ${M?.exists ? 'Ganti' : 'Unggah'} PDF ${D.label}<input type="file" accept="application/pdf" hidden onchange="uploadPks(this, '${pksSel}')"></label>${M?.exists ? `<button class="gt-btn ghost gt-del" onclick="deletePks('${pksSel}')">🗑 Hapus PDF ${D.label}</button>` : ''}</div>`; }
   else body = `${opts(sel === 'coffee' || sel === 'lunch' || sel === 'dinner' || sel === 'healthy')}<div class="scr-actions">${showBtn()}</div>`;
   el.innerHTML = `<div class="scr-head"><span class="qa-dot on"></span><span>Layar videotron sekarang: <b>${sc ? sc.icon + ' ' + sc.label : '🎤 Meeting Dealer'}</b></span>
       <button class="gt-btn confirm" onclick="openQaScreen()">🖥 Buka Layar Videotron</button></div>
@@ -9391,14 +9391,15 @@ function pksFileStamps(force) {
   pksListAt = Date.now();
   return pksListP = supabase.storage.from(GUIDES_BUCKET).list('gathering', { limit: 100 })
     .then(({ data }) => Object.fromEntries((data || []).map(f => ['gathering/' + f.name, f.updated_at || f.created_at || ''])))
-    .catch(() => ({}));
+    .catch(() => null);   // null = gagal dibaca (jangan dianggap file terhapus)
 }
 function getPksDoc(d = 'dealer', fresh) {
   if (pksDocs[d] && !fresh) {
     // PDF diganti dari komputer lain? Cek di latar; bila berubah, buang cache & minta layar merender ulang
     pksFileStamps().then(st => {
-      const s = st[PKS_DOCS[d].path];
-      if (!s || !pksDocStamp[d] || s === pksDocStamp[d]) return;
+      if (!st || pksDocStamp[d] == null) return;
+      const s = st[PKS_DOCS[d].path] || '';   // '' = file dihapus
+      if (s === pksDocStamp[d]) return;
       delete pksDocs[d]; delete pksDocStamp[d];
       if (typeof qsPksPages !== 'undefined') delete qsPksPages[d];
       if (QA_SCREEN_MODE && String(qsKey || '').startsWith(`pks|${d}|`)) qsKey = null;
@@ -9407,7 +9408,7 @@ function getPksDoc(d = 'dealer', fresh) {
   }
   const p = pksDocs[d] = (async () => {
     const lib = await loadPdfJs();
-    pksDocStamp[d] = (await pksFileStamps(true))[PKS_DOCS[d].path] || '';
+    pksDocStamp[d] = (await pksFileStamps(true))?.[PKS_DOCS[d].path] || '';
     const { data, error } = await supabase.storage.from(GUIDES_BUCKET).createSignedUrl(PKS_DOCS[d].path, 3600);
     if (error) throw error;
     return lib.getDocument(data.signedUrl).promise;
@@ -9436,6 +9437,14 @@ async function uploadPks(input, d = 'dealer') {
   const { error } = await supabase.storage.from(GUIDES_BUCKET).upload(PKS_DOCS[d].path, f, { upsert: true, contentType: 'application/pdf', cacheControl: '10' });
   if (error) { showToast('Gagal mengunggah: ' + error.message, 9000); return; }
   delete pksDocs[d]; await loadPksMeta(); showToast(`✓ ${PKS_DOCS[d].label} tersimpan (${pksMeta?.[d]?.pages || '?'} halaman).`);
+}
+
+async function deletePks(d = 'dealer') {
+  if (!confirm(`Hapus PDF ${PKS_DOCS[d].label} yang sudah diunggah?\n\nLayar videotron tidak bisa menampilkan materi ini sampai PDF diunggah lagi.`)) return;
+  const { data, error } = await supabase.storage.from(GUIDES_BUCKET).remove([PKS_DOCS[d].path]);
+  if (error || !data?.length) { showToast('Gagal menghapus: ' + (error?.message || 'izin hapus Storage belum diatur.'), 9000); return; }
+  delete pksDocs[d]; delete pksDocStamp[d]; pksListAt = 0;
+  await loadPksMeta(); showToast(`🗑 PDF ${PKS_DOCS[d].label} dihapus.`);
 }
 
 function fmStep(d) {
