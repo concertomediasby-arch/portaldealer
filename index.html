@@ -2579,6 +2579,9 @@ body {
   .gt-order.st-dikonfirmasi { border-left-color: #3b82f6; }
   .gt-badge.st-belum_lunas { background: rgba(245,158,11,.16); color: #d97706; }
   .gt-order.st-belum_lunas { border-left-color: #f59e0b; }
+  .gt-order.st-terhapus { opacity: .85; border-left-color: #94a3b8; }
+  .gt-order.st-terhapus .gt-order-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .gt-trash-act { display: flex; gap: 8px; flex-wrap: wrap; }
   .gt-confirm-bar.warn { background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.35); }
   .gt-pay { margin: -6px 0 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
   .gt-pay-title { font-weight: 700; font-size: 13.5px; color: var(--fg); margin-bottom: 10px; }
@@ -3637,7 +3640,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T11:25:59Z';
+const LAST_UPDATE = '2026-10-28T12:00:14Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7225,7 +7228,7 @@ returns table(name text, brand text, section text, qty integer)
 language sql security definer set search_path = public as $$
   select i->>'name', i->>'brand', i->>'section', sum(coalesce((i->>'qty')::int, 0))::int
   from gathering_orders o cross join lateral jsonb_array_elements(o.items) i
-  where coalesce(o.status, 'baru') not in ('batal', 'selesai')
+  where coalesce(o.status, 'baru') not in ('batal', 'selesai', 'terhapus')
   group by 1, 2, 3;
 $$;
 revoke all on function public.gathering_reserved() from public, anon;
@@ -7926,6 +7929,7 @@ const GT_SENT_KEY = 'cai-gathering-sent';
 const GT_STATUS = { baru: 'Menunggu Konfirmasi', dikonfirmasi: 'Dikonfirmasi', belum_lunas: 'Belum Lunas', selesai: 'Selesai', batal: 'Batal' };
 // Belum Lunas (28 Okt 2026, permintaan pemilik) = pembelian disetujui tapi pembayaran belum penuh — tetap masuk Top Spender & mengurangi stok seperti Dikonfirmasi
 const gtConfirmed = o => o.status === 'dikonfirmasi' || o.status === 'belum_lunas' || o.status === 'selesai';
+let gtTrash = [];   // pesanan yang dipindah ke Terhapus (status 'terhapus', bisa dipulihkan)
 let gtOrders = null, gtOrdersErr = '', gtTab = 'form', gtOrderFilter = 'all', gtOpenOrder = null;
 
 function setGtTab(t) {
@@ -7990,10 +7994,11 @@ async function loadGtOrders() {
   try {
     const { data, error } = await supabase.from(GATHERING_ORDERS).select('*').order('created_at', { ascending: false });
     if (error) throw error;
-    gtOrders = data || []; gtOrdersErr = '';
+    gtTrash = (data || []).filter(o => o.status === 'terhapus');
+    gtOrders = (data || []).filter(o => o.status !== 'terhapus'); gtOrdersErr = '';
   } catch (e) {
     const m = String(e.message || e);
-    gtOrders = [];
+    gtOrders = []; gtTrash = [];
     gtOrdersErr = /does not exist|relation|schema cache/i.test(m) ? 'Tabel rekap pesanan belum dibuat. Jalankan SQL "gathering_orders" di Supabase.' : 'Rekap tidak bisa dimuat: ' + m;
   }
   renderGtRekap();
@@ -8061,13 +8066,14 @@ function renderGtRekap() {
     <div class="gt-rk-tools">
       <input id="gt-rk-search" class="catalog-search gt-rk-search" placeholder="Cari invoice, toko, kota, dealer, sales…" value="${escHtml(document.getElementById('gt-rk-search')?.value || '')}" oninput="renderGtRekap(); this.focus(); this.setSelectionRange(this.value.length, this.value.length)">
       <div class="catalog-chips">${['all', ...Object.keys(GT_STATUS)].map(st =>
-        `<button class="filter-chip${gtOrderFilter === st ? ' active' : ''}" onclick="setGtOrderFilter('${st}')">${st === 'all' ? 'Semua' : GT_STATUS[st]} (${st === 'all' ? gtOrders.length : count(st)})</button>`).join('')}</div>
+        `<button class="filter-chip${gtOrderFilter === st ? ' active' : ''}" onclick="setGtOrderFilter('${st}')">${st === 'all' ? 'Semua' : GT_STATUS[st]} (${st === 'all' ? gtOrders.length : count(st)})</button>`).join('')}
+        <button class="filter-chip gt-trash-chip${gtOrderFilter === 'trash' ? ' active' : ''}" onclick="setGtOrderFilter('trash')">🗑 Terhapus (${gtTrash.length})</button></div>
       <div class="gt-rk-actions">
         <button class="gt-btn ghost" onclick="loadGtOrders()">↻ Muat ulang</button>
         <button class="gt-btn ghost" onclick="exportGtOrders()">⬇ Excel</button>
       </div>
     </div>
-    <div class="gt-orders">${list.length ? list.map(o => `
+    ${gtOrderFilter === 'trash' ? gtTrashHtml() : ''}<div class="gt-orders"${gtOrderFilter === 'trash' ? ' hidden' : ''}>${list.length ? list.map(o => `
       <div class="gt-order st-${o.status}">
         <div class="gt-order-head" onclick="toggleGtOrder(${o.id})">
           <div class="gt-order-main">
@@ -8304,15 +8310,61 @@ async function setGtOrderStatus(id, status) {
   } catch (e) { showToast('Gagal mengubah status: ' + (e.message || e), 8000); }
 }
 
+// 🗑 Hapus = pindah ke "Terhapus" (28 Okt 2026, permintaan pemilik — sebelumnya langsung terhapus permanen):
+// status 'terhapus' + prev_status (status sebelum dihapus) → bisa dipulihkan; hapus permanen hanya dari daftar Terhapus.
+const GT_TRASH_SQL = `alter table public.gathering_orders drop constraint if exists gathering_orders_status_check;
+alter table public.gathering_orders add constraint gathering_orders_status_check
+  check (status in ('baru','diproses','dikonfirmasi','belum_lunas','selesai','batal','terhapus'));
+alter table public.gathering_orders add column if not exists prev_status text;`;
+const gtAfterOrderChange = () => { loadGtSold().then(refreshStockUI); loadGtReserved?.(); };
 async function deleteGtOrder(id) {
   const o = gtOrders.find(x => x.id === id);
-  if (!o || !confirm(`Hapus pesanan ${o.store} (${fmtGtTime(o.created_at)})?\n\nSaran: ubah status ke "Batal" jika ingin tetap tercatat.`)) return;
+  if (!o || !confirm(`Pindahkan pesanan ${o.invoice || ''} — ${o.store} (${fmtGtTime(o.created_at)}) ke Terhapus?\n\nPesanan bisa dipulihkan dari filter "🗑 Terhapus".`)) return;
   try {
-    const { error } = await supabase.from(GATHERING_ORDERS).delete().eq('id', id);
+    let { error } = await supabase.from(GATHERING_ORDERS).update({ status: 'terhapus', prev_status: o.status, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error && /prev_status/i.test(error.message)) ({ error } = await supabase.from(GATHERING_ORDERS).update({ status: 'terhapus', updated_at: new Date().toISOString() }).eq('id', id));
     if (error) throw error;
     gtOrders = gtOrders.filter(x => x.id !== id);
-    renderGtRekap(); showToast('Pesanan dihapus.');
-  } catch (e) { showToast('Gagal menghapus: ' + (e.message || e), 8000); }
+    gtTrash.unshift({ ...o, prev_status: o.status, status: 'terhapus' });
+    renderGtRekap(); gtAfterOrderChange(); showToast('Pesanan dipindah ke Terhapus — bisa dipulihkan.');
+  } catch (e) {
+    const m = String(e.message || e);
+    if (/check constraint|violates|status_check/i.test(m)) {
+      navigator.clipboard?.writeText(GT_TRASH_SQL).catch(() => {});
+      showToast('Fitur Terhapus belum aktif — SQL sudah disalin, jalankan di Supabase → SQL Editor lalu coba lagi. Pesanan TIDAK dihapus.', 12000);
+    } else showToast('Gagal menghapus: ' + m, 8000);
+  }
+}
+async function restoreGtOrder(id) {
+  const o = gtTrash.find(x => x.id === id);
+  if (!o) return;
+  const status = o.prev_status && o.prev_status !== 'terhapus' ? o.prev_status : 'baru';
+  let { error } = await supabase.from(GATHERING_ORDERS).update({ status, prev_status: null, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error && /prev_status/i.test(error.message)) ({ error } = await supabase.from(GATHERING_ORDERS).update({ status, updated_at: new Date().toISOString() }).eq('id', id));
+  if (error) { showToast('Gagal memulihkan: ' + error.message, 8000); return; }
+  gtTrash = gtTrash.filter(x => x.id !== id);
+  gtOrders.unshift({ ...o, status, prev_status: null });
+  gtOrders.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  renderGtRekap(); gtAfterOrderChange(); showToast(`↩ Pesanan dipulihkan (status: ${GT_STATUS[status] || status}).`);
+}
+async function purgeGtOrder(id) {
+  const o = gtTrash.find(x => x.id === id);
+  if (!o || !confirm(`Hapus PERMANEN pesanan ${o.invoice || ''} — ${o.store}?\n\nTidak bisa dikembalikan lagi.`)) return;
+  const { error } = await supabase.from(GATHERING_ORDERS).delete().eq('id', id);
+  if (error) { showToast('Gagal menghapus: ' + error.message, 8000); return; }
+  gtTrash = gtTrash.filter(x => x.id !== id);
+  renderGtRekap(); showToast('Pesanan dihapus permanen.');
+}
+function gtTrashHtml() {
+  if (!gtTrash.length) return '<div class="stock-empty">Tidak ada pesanan di Terhapus.</div>';
+  return `<div class="gt-orders gt-trash">${gtTrash.map(o => `
+    <div class="gt-order st-terhapus"><div class="gt-order-head">
+      <div class="gt-order-main"><b>${escHtml(o.invoice || '—')} · ${escHtml(o.store || '-')}</b>${o.city ? ` <span>· ${escHtml(o.city)}</span>` : ''}
+        <div class="gt-order-sub">${fmtGtTime(o.created_at)} · status sebelum dihapus: ${escHtml(GT_STATUS[o.prev_status] || o.prev_status || '—')} · ${o.total_qty || 0} item · ${fmtRp(Number(o.total || 0))}</div></div>
+      <div class="gt-trash-act">
+        <button class="gt-btn confirm" onclick="restoreGtOrder(${o.id})">↩ Pulihkan</button>
+        <button class="gt-btn ghost gt-del" onclick="purgeGtOrder(${o.id})">Hapus permanen</button>
+      </div></div></div>`).join('')}</div>`;
 }
 
 async function exportGtOrders() {
