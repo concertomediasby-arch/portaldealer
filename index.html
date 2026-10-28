@@ -2039,6 +2039,13 @@ body {
   .og-h1 { margin: 1.8vh 0 0; font: 800 min(9vw, 15vh)/1 var(--f-display); letter-spacing: -.01em; animation: ogUp 1s cubic-bezier(.2,.9,.25,1) .35s both; }
   .og-h1 em { font-style: normal; background: linear-gradient(180deg, #fff6dc, #e9c46a 55%, #b8893a); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .og-sub { margin: 1.6vh 0 0; font: 400 max(14px, 2.5vh) var(--f-body); color: #c3cbdc; animation: ogUp .8s ease .55s both; }
+  /* 7 pembicara (28 Okt 2026): 4 kolom, baris terakhir di tengah, logo & teks dirapatkan */
+  .og-grid.c4 { display: flex; flex-wrap: wrap; justify-content: center; width: min(94vw, 175vh); gap: 2vh 1.2vw; }
+  .og-grid.c4 .og-card { position: relative; flex: 0 0 calc((100% - 3.6vw) / 4); gap: 1vw; padding: 2.4vh 1.2vw; }
+  .og-grid.c4 .og-logo { width: min(6.6vw, 11vh); height: min(4.6vw, 7.5vh); padding: .8vh .5vw; }
+  .og-grid.c4 .og-txt { padding-right: 1.6vw; }
+  .og-grid.c4 .og-txt b { font-size: max(14px, 2.7vh); }
+  .og-grid.c4 .og-txt small { letter-spacing: .1em; font-size: max(9px, 1.45vh); }
   .og-grid { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2vh 1.6vw; width: min(86vw, 160vh); margin-top: 5vh; }
   .og-card { display: flex; align-items: center; gap: 1.6vw; padding: 2.2vh 1.8vw; animation: ogUp .8s cubic-bezier(.2,.9,.25,1) var(--d) both; }
   .og-card .og-no { position: absolute; right: 1.4vw; top: 1.2vh; font: 600 max(11px, 1.7vh) var(--f-mono); color: var(--ac); letter-spacing: .1em; }
@@ -3627,7 +3634,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-27T15:26:09Z';
+const LAST_UPDATE = '2026-10-28T01:41:30Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8909,6 +8916,7 @@ const OPENING_SPEAKERS = [
   { name: 'Mr. Marc', brand: 'Audiocircle', id: 'audiocircle', ac: '#ef3b36', intro: 'assets/opening/ricky-speech.mp4', introBy: 'Ricky Eko Widodo', video: 'assets/opening/audiocircle.mp4?v=4' },
   { name: 'Mr. Kelvin Lee', brand: 'STEG', id: 'steg', ac: '#22c476', intro: 'assets/opening/ricky-speech-steg.mp4', introBy: 'Ricky Eko Widodo', video: 'assets/opening/steg.mp4?v=2' },
   { name: 'Mr. David', brand: 'Zelos', id: 'zelos', ac: '#e3b94f' },
+  { name: 'Robert Adrianto', brand: 'Presiden EMMA Indonesia', logo: 'assets/brands/emma-indonesia.webp', ac: '#2f6bff' },   // 28 Okt 2026, permintaan pemilik
   { name: 'Juliar Candra', brand: 'Harrison Lab', logo: 'assets/brands/harrison-lab.webp', ac: '#4aa8ff' },
   { name: 'Arif', brand: 'Amo Plus', logo: 'assets/brands/amo-plus.webp', ac: '#b66cff' },
   { name: 'Yusak', brand: 'Sound Addict', logo: 'assets/brands/sound-addict.webp', ac: '#ff7a3d' },
@@ -9748,7 +9756,7 @@ function ogTitleHtml(t) {
   return `<div class="qs-scene og og-title">${ogBg(OPENING_SPEAKERS.map(s => s.ac))}
     <div class="og-head"><div class="og-kick"><i></i><span>Gathering CAI 2026</span><i></i></div>
       <h1 class="og-h1">Opening <em>Speech</em></h1><p class="og-sub">${t || 'Sambutan dari brand partner Concerto Audio Indonesia'}</p></div>
-    <div class="og-grid">${OPENING_SPEAKERS.map((sp, i) => `<div class="og-card og-glass" style="--ac:${sp.ac};--d:${(0.7 + i * 0.12).toFixed(2)}s;--sd:${(2 + i * 0.35).toFixed(2)}s">
+    <div class="og-grid${OPENING_SPEAKERS.length > 6 ? ' c4' : ''}">${OPENING_SPEAKERS.map((sp, i) => `<div class="og-card og-glass" style="--ac:${sp.ac};--d:${(0.7 + i * 0.12).toFixed(2)}s;--sd:${(2 + i * 0.35).toFixed(2)}s">
       <span class="og-no">${String(i + 1).padStart(2, '0')}</span><div class="og-logo">${ogMark(sp)}</div>
       <div class="og-txt"><b>${escHtml(sp.name)}</b><small>${escHtml(sp.brand)}</small></div></div>`).join('')}</div></div>`;
 }
