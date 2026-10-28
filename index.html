@@ -3634,7 +3634,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T01:41:30Z';
+const LAST_UPDATE = '2026-10-28T03:40:20Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7144,7 +7144,9 @@ const CERT_GROUPS = [
 const CERT_DEALERS = CERT_GROUPS.flatMap(([g, ds]) => ds.map(d => ({ d, g })));
 // Dealer per distributor khusus Shopping Gathering (tidak mengubah Sertifikat Dealer) — menimpa distributor di CERT_GROUPS
 const GT_EXTRA_GROUPS = [
-  ['KG Aan', ['Gema Audio', 'MCM', 'Mega Audio', 'Roda Mas']],   // dari pemilik 26 Okt 2026 (Gema Audio sebelumnya ikut Garuda Barat)
+  ['KG Aan', ['Gema Audio', 'MCM', 'Mega Audio', 'Roda Mas', 'Xtreme Car Audio Meruya']],   // dari pemilik 26 & 28 Okt 2026 (Gema Audio & Xtreme Meruya sebelumnya Garuda Barat)
+  ['Kevin Klise', ['Sterindo Autosound', 'Victory Audio']],   // 28 Okt 2026, dari pemilik (sebelumnya Garuda Barat)
+  ['Garuda Barat', ['Bengkel Pelita']],   // dealer baru, 28 Okt 2026
 ];
 const GT_DEALERS = [...new Set([...CERT_DEALERS.map(x => x.d), ...GT_EXTRA_GROUPS.flatMap(([, ds]) => ds)])];   // Shopping Gathering = nama dealer Sertifikat Dealer (25 Okt 2026) + GT_EXTRA_GROUPS
 const GT_OTHER = '__other';
