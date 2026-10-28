@@ -3634,7 +3634,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T06:49:13Z';
+const LAST_UPDATE = '2026-10-28T07:30:39Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8085,6 +8085,7 @@ function renderGtRekap() {
             <label class="gt-status">Status
               <select onchange="setGtOrderStatus(${o.id}, this.value)">${Object.entries(GT_STATUS).map(([k, v]) => `<option value="${k}"${o.status === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
             <button class="gt-btn ghost" onclick="downloadGtInvoice(${o.id})">⬇ Download Invoice</button>
+            ${CAI_WHATSAPP ? `<button class="gt-btn ghost" onclick="shareGtOrderWa(${o.id})" title="Kirim ringkasan pesanan ke WhatsApp CAI">📤 Bagikan ke WA CAI</button>` : ''}
             <button class="gt-btn ghost" onclick="adminEditGtOrder(${o.id})">✏️ Edit Pesanan</button>
             ${o.status === 'baru' ? `<button class="gt-btn confirm" onclick="confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button>` : ''}
             <button class="gt-btn ghost gt-del" onclick="deleteGtOrder(${o.id})">🗑 Hapus</button>
@@ -8256,6 +8257,31 @@ function downloadGtInvoice(id) {
   });
   footer();
   doc.save(`Invoice-${o.invoice || o.id}-${(o.store || '').replace(/[^\w]+/g, '_')}.pdf`);
+}
+
+// Bagikan ringkasan pesanan ke WhatsApp CAI (Rekap admin; bisa sebelum/sesudah konfirmasi pembayaran)
+function shareGtOrderWa(id) {
+  const o = gtOrders.find(x => x.id === id);
+  if (!o || !CAI_WHATSAPP) return;
+  const items = o.items || [];
+  const lines = [
+    `*PESANAN GATHERING CAI 2026*`,
+    `No. Invoice: ${o.invoice || '-'}`,
+    `Status: ${GT_STATUS[o.status] || o.status}${o.confirmed_at ? ` (${fmtGtTime(o.confirmed_at)})` : ''}`,
+    `Waktu pesan: ${fmtGtTime(o.created_at)}`,
+    '',
+    `Dealer: ${o.store || o.dealer || '-'}`,
+    ...(o.city ? [`Kota: ${o.city}`] : []),
+    ...(o.phone ? [`No. HP: ${o.phone}`] : []),
+    ...(o.pic ? [`Distributor: ${o.pic}`] : []),
+    '',
+    '*Rincian:*',
+    ...items.map((it, i) => `${i + 1}. ${it.name}${gtPoLabel(it)} — ${it.qty} x ${fmtRp(Number(it.price || 0))} = ${fmtRp(Number(it.total || 0))}`),
+    '',
+    `Total Qty: ${o.total_qty || items.reduce((a, it) => a + Number(it.qty || 0), 0)}`,
+    `*TOTAL: ${fmtRp(Number(o.total || 0))}*`
+  ];
+  window.open(`https://wa.me/${CAI_WHATSAPP}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener');
 }
 
 async function confirmGtOrder(id) {
