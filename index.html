@@ -3634,7 +3634,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T07:38:41Z';
+const LAST_UPDATE = '2026-10-28T08:02:16Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -9383,10 +9383,31 @@ function loadPdfJs() {
   return pdfLib;
 }
 const pksDocs = {};   // per dokumen PKS: promise dokumen pdf.js
+const pksDocStamp = {};   // waktu ubah file PKS saat dokumen di pksDocs dimuat
+let pksListAt = 0, pksListP = null;
+// Waktu ubah file di folder gathering/ (Storage) — dibatasi 1x per 8 dtk
+function pksFileStamps(force) {
+  if (!force && pksListP && Date.now() - pksListAt < 8000) return pksListP;
+  pksListAt = Date.now();
+  return pksListP = supabase.storage.from(GUIDES_BUCKET).list('gathering', { limit: 100 })
+    .then(({ data }) => Object.fromEntries((data || []).map(f => ['gathering/' + f.name, f.updated_at || f.created_at || ''])))
+    .catch(() => ({}));
+}
 function getPksDoc(d = 'dealer', fresh) {
-  if (pksDocs[d] && !fresh) return pksDocs[d];
+  if (pksDocs[d] && !fresh) {
+    // PDF diganti dari komputer lain? Cek di latar; bila berubah, buang cache & minta layar merender ulang
+    pksFileStamps().then(st => {
+      const s = st[PKS_DOCS[d].path];
+      if (!s || !pksDocStamp[d] || s === pksDocStamp[d]) return;
+      delete pksDocs[d]; delete pksDocStamp[d];
+      if (typeof qsPksPages !== 'undefined') delete qsPksPages[d];
+      if (QA_SCREEN_MODE && String(qsKey || '').startsWith(`pks|${d}|`)) qsKey = null;
+    });
+    return pksDocs[d];
+  }
   const p = pksDocs[d] = (async () => {
     const lib = await loadPdfJs();
+    pksDocStamp[d] = (await pksFileStamps(true))[PKS_DOCS[d].path] || '';
     const { data, error } = await supabase.storage.from(GUIDES_BUCKET).createSignedUrl(PKS_DOCS[d].path, 3600);
     if (error) throw error;
     return lib.getDocument(data.signedUrl).promise;
@@ -9412,7 +9433,7 @@ async function uploadPks(input, d = 'dealer') {
   const f = input.files?.[0]; input.value = ''; if (!f) return;
   if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { showToast('Pilih file PDF.'); return; }
   showToast(`Mengunggah ${PKS_DOCS[d].label}…`, 20000);
-  const { error } = await supabase.storage.from(GUIDES_BUCKET).upload(PKS_DOCS[d].path, f, { upsert: true, contentType: 'application/pdf' });
+  const { error } = await supabase.storage.from(GUIDES_BUCKET).upload(PKS_DOCS[d].path, f, { upsert: true, contentType: 'application/pdf', cacheControl: '10' });
   if (error) { showToast('Gagal mengunggah: ' + error.message, 9000); return; }
   delete pksDocs[d]; await loadPksMeta(); showToast(`✓ ${PKS_DOCS[d].label} tersimpan (${pksMeta?.[d]?.pages || '?'} halaman).`);
 }
