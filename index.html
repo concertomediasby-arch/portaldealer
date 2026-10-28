@@ -2536,10 +2536,13 @@ body {
   .gt-rest-store { min-width: 0; overflow-wrap: anywhere; } .gt-rest-store b { font-weight: 600; color: var(--fg); } .gt-rest-store span { color: var(--fg-muted); font-size: 12px; }
   .gt-rest-total { font: 600 13px var(--f-mono); color: var(--fg); white-space: nowrap; }
   .gt-top-row { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+  .gt-top-row.hl { border-color: rgba(216,178,106,.5); background: linear-gradient(100deg, rgba(216,178,106,.1), var(--surface) 70%); }
+  .gt-top-row.hl .gt-top-rank { color: var(--accent); }
   .gt-top-row.rank-1 { border-color: #d8b26a; background: linear-gradient(100deg, rgba(216,178,106,.22), var(--surface) 70%); box-shadow: 0 6px 22px rgba(216,178,106,.18); }
   .gt-top-row.rank-2 { border-color: #b8c0cc; background: linear-gradient(100deg, rgba(184,192,204,.2), var(--surface) 70%); }
   .gt-top-row.rank-3 { border-color: #c98a5a; background: linear-gradient(100deg, rgba(201,138,90,.18), var(--surface) 70%); }
   .gt-top-rank { font: 700 26px var(--f-display); text-align: center; color: var(--fg-muted); }
+  .gt-top-row.rank-1 .gt-top-rank, .gt-top-row.rank-2 .gt-top-rank, .gt-top-row.rank-3 .gt-top-rank { color: inherit; }
   .gt-top-row.rank-1 .gt-top-rank { font-size: 34px; }
   .gt-top-store { min-width: 0; } .gt-top-store b { display: block; font-size: 15px; color: var(--fg); overflow-wrap: anywhere; }
   .gt-top-store span { font-size: 12px; color: var(--fg-muted); }
@@ -3640,7 +3643,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T12:00:14Z';
+const LAST_UPDATE = '2026-10-28T12:57:18Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7946,7 +7949,7 @@ function setGtTab(t) {
 /* ── Top Spender Gathering 2026 ──
    Dealer (akun bersama) tidak boleh membaca gathering_orders, jadi peringkat diambil lewat fungsi
    Postgres `gathering_top_spenders(lim)` (SECURITY DEFINER) yang hanya mengembalikan agregat per toko. */
-const GT_TOP_HIGHLIGHT = 5;   // 5 besar ditonjolkan; toko lain tetap tampil di daftar bawahnya
+const GT_TOP_HIGHLIGHT = 10;  // 10 besar ditonjolkan; toko lain tetap tampil di daftar bawahnya
 const GT_TOP_FETCH = 1000;
 const GT_TOP_FACTOR = 1 / 1.11;   // nilai di papan = subtotal pembelian ÷ 111% (subtotal dikurangi PPN 11%); fungsi SQL tetap mengembalikan subtotal
 let gtTop = null, gtTopErr = '';
@@ -7977,7 +7980,7 @@ function renderGtTop() {
   const rest = gtTop.slice(GT_TOP_HIGHLIGHT);
   el.innerHTML = head + `<div class="gt-top-stats"><span><b>${gtTop.length}</b> toko</span><span>Total pembelian <b>${fmtRp(all)}</b></span></div>
     <div class="gt-top-list">${gtTop.slice(0, GT_TOP_HIGHLIGHT).map((r, i) => `
-    <div class="gt-top-row rank-${i + 1}">
+    <div class="gt-top-row hl rank-${i + 1}">
       <div class="gt-top-rank">${medal[i] || '#' + (i + 1)}</div>
       <div class="gt-top-store"><b>${escHtml(r.store || '-')}</b>${r.city ? `<span>${escHtml(r.city)}</span>` : ''}</div>
       <div class="gt-top-total">${fmtRp(Number(r.total || 0))}</div>
