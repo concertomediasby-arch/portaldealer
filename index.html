@@ -2538,6 +2538,9 @@ body {
   .gt-top-row { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
   .gt-top-row.hl { border-color: rgba(216,178,106,.5); background: linear-gradient(100deg, rgba(216,178,106,.1), var(--surface) 70%); }
   .gt-top-row.hl .gt-top-rank { color: var(--accent); }
+  .gt-top-row.empty { opacity: .6; border-style: dashed; }
+  .gt-top-prize { margin-top: 6px; font-size: 12.5px; color: var(--fg-muted); line-height: 1.45; } .gt-top-prize b { display: inline; font-size: inherit; color: var(--accent); }
+  .gt-top-note { margin: 0 0 12px; padding: 10px 14px; border: 1px solid rgba(216,178,106,.45); border-radius: 12px; background: rgba(216,178,106,.08); font-size: 13px; color: var(--fg); line-height: 1.5; } .gt-top-note b { color: var(--accent); }
   .gt-top-row.rank-1 { border-color: #d8b26a; background: linear-gradient(100deg, rgba(216,178,106,.22), var(--surface) 70%); box-shadow: 0 6px 22px rgba(216,178,106,.18); }
   .gt-top-row.rank-2 { border-color: #b8c0cc; background: linear-gradient(100deg, rgba(184,192,204,.2), var(--surface) 70%); }
   .gt-top-row.rank-3 { border-color: #c98a5a; background: linear-gradient(100deg, rgba(201,138,90,.18), var(--surface) 70%); }
@@ -3643,7 +3646,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T12:57:18Z';
+const LAST_UPDATE = '2026-10-28T12:59:12Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7949,6 +7952,21 @@ function setGtTab(t) {
 /* ── Top Spender Gathering 2026 ──
    Dealer (akun bersama) tidak boleh membaca gathering_orders, jadi peringkat diambil lewat fungsi
    Postgres `gathering_top_spenders(lim)` (SECURITY DEFINER) yang hanya mengembalikan agregat per toko. */
+// Hadiah ranking Top Spender (dari pemilik 28 Okt 2026; v = nilai hadiah, kosong = tidak ditampilkan)
+const GT_TOP_PRIZES = [
+  { p: 'Concerto Line 3 Way', b: 'Audiocircle', note: 'Seri terbaru', v: 'Rp 59,9 jt' },
+  { p: 'XSS16', b: 'STEG', v: 'Rp 50 jt+' },
+  { p: 'SSDSP16 II', b: 'STEG', v: 'Rp 43 jt' },
+  { p: 'SSDSP12 II', b: 'STEG', v: 'Rp 37 jt' },
+  { p: '2 Way Berlin (New)', b: 'Audiocircle', v: '' },
+  { p: 'DSP S12', b: 'STEG', v: 'Rp 8,6 jt' },
+  { p: 'IQ LES 10', b: 'Audiocircle', v: 'Rp 8 jt' },
+  { p: 'Köln 3 Way', b: 'Audiocircle', v: 'Rp 9 jt' },
+  { p: 'Berlin Tweeter AMT (New)', b: 'Audiocircle', v: 'Rp 6,6 jt' },
+  { p: 'DSP S6', b: 'STEG', v: 'Rp 4,2 jt' },
+];
+const GT_TOP_PRIZE_REST = 'SEC-650 Coaxial';   // hadiah ranking 11 dan seterusnya
+const gtPrizeHtml = i => { const z = GT_TOP_PRIZES[i]; return z ? `<div class="gt-top-prize">🎁 <b>${escHtml(z.p)}</b> · ${escHtml(z.b)}${z.note ? ' · ' + escHtml(z.note) : ''}${z.v ? ` · senilai <b>${escHtml(z.v)}</b>` : ''}</div>` : ''; };
 const GT_TOP_HIGHLIGHT = 10;  // 10 besar ditonjolkan; toko lain tetap tampil di daftar bawahnya
 const GT_TOP_FETCH = 1000;
 const GT_TOP_FACTOR = 1 / 1.11;   // nilai di papan = subtotal pembelian ÷ 111% (subtotal dikurangi PPN 11%); fungsi SQL tetap mengembalikan subtotal
@@ -7979,13 +7997,19 @@ function renderGtTop() {
   const all = gtTop.reduce((a, r) => a + Number(r.total || 0), 0);
   const rest = gtTop.slice(GT_TOP_HIGHLIGHT);
   el.innerHTML = head + `<div class="gt-top-stats"><span><b>${gtTop.length}</b> toko</span><span>Total pembelian <b>${fmtRp(all)}</b></span></div>
-    <div class="gt-top-list">${gtTop.slice(0, GT_TOP_HIGHLIGHT).map((r, i) => `
+    <div class="gt-top-note">🎁 <b>Hadiah ranking:</b> Juara 1–${GT_TOP_PRIZES.length} mendapatkan hadiah yang tertera di kartunya masing-masing · ranking ${GT_TOP_PRIZES.length + 1} dan seterusnya mendapatkan <b>${escHtml(GT_TOP_PRIZE_REST)}</b></div>
+    <div class="gt-top-list">${Array.from({ length: Math.max(Math.min(gtTop.length, GT_TOP_HIGHLIGHT), GT_TOP_PRIZES.length) }, (_, i) => gtTop[i] ? `
     <div class="gt-top-row hl rank-${i + 1}">
       <div class="gt-top-rank">${medal[i] || '#' + (i + 1)}</div>
-      <div class="gt-top-store"><b>${escHtml(r.store || '-')}</b>${r.city ? `<span>${escHtml(r.city)}</span>` : ''}</div>
-      <div class="gt-top-total">${fmtRp(Number(r.total || 0))}</div>
+      <div class="gt-top-store"><b>${escHtml(gtTop[i].store || '-')}</b>${gtTop[i].city ? `<span>${escHtml(gtTop[i].city)}</span>` : ''}${gtPrizeHtml(i)}</div>
+      <div class="gt-top-total">${fmtRp(Number(gtTop[i].total || 0))}</div>
+    </div>` : `
+    <div class="gt-top-row hl empty">
+      <div class="gt-top-rank">${medal[i] || '#' + (i + 1)}</div>
+      <div class="gt-top-store"><b>Belum terisi</b><span>Juara ${i + 1} — raih posisi ini!</span>${gtPrizeHtml(i)}</div>
+      <div class="gt-top-total">–</div>
     </div>`).join('')}</div>
-    ${rest.length ? `<div class="line-header gt-top-more"><span class="line-name">Peringkat lainnya</span><span class="line-count">${rest.length}</span></div>
+    ${rest.length ? `<div class="line-header gt-top-more"><span class="line-name">Peringkat lainnya · hadiah ${escHtml(GT_TOP_PRIZE_REST)}</span><span class="line-count">${rest.length}</span></div>
     <div class="gt-top-rest">${rest.map((r, i) => `
       <div class="gt-rest-row"><span class="gt-rest-rank">${GT_TOP_HIGHLIGHT + i + 1}</span>
         <span class="gt-rest-store"><b>${escHtml(r.store || '-')}</b>${r.city ? ` <span>· ${escHtml(r.city)}</span>` : ''}</span>
