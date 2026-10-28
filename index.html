@@ -3707,7 +3707,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T14:29:45Z';
+const LAST_UPDATE = '2026-10-28T14:52:38Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7563,8 +7563,8 @@ function setGtFilter(f) { gtFilter = f; renderGathering(); }
 let gtLocked = null, gtLockRow = null;
 const gtIsLockRow = r => r.brand === '__config' && r.name === '__lock__';
 // Penutupan Shopping Gathering (28 Okt 2026, permintaan pemilik): hitung mundur ke 22.00 WIB; lewat dari itu form otomatis tertutup untuk dealer
-const GT_CLOSE_AT = Date.parse('2026-10-28T22:00:00+07:00');
-const GT_CLOSE_LABEL = '22.00 WIB';
+const GT_CLOSE_AT = Date.parse('2026-10-28T22:30:00+07:00');
+const GT_CLOSE_LABEL = '22.30 WIB';
 const gtClosed = () => Date.now() >= GT_CLOSE_AT;
 const gtLockedForMe = () => (gtLocked !== false || gtClosed()) && !isAdmin();
 let gtWasClosed = gtClosed();
