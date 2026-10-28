@@ -3634,7 +3634,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T07:37:04Z';
+const LAST_UPDATE = '2026-10-28T07:38:41Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -8085,7 +8085,7 @@ function renderGtRekap() {
             <label class="gt-status">Status
               <select onchange="setGtOrderStatus(${o.id}, this.value)">${Object.entries(GT_STATUS).map(([k, v]) => `<option value="${k}"${o.status === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
             <button class="gt-btn ghost" onclick="downloadGtInvoice(${o.id})">⬇ Download Invoice</button>
-            <button class="gt-btn ghost" onclick="shareGtOrderWa(${o.id})" title="Bagikan ringkasan pesanan lewat WhatsApp (pilih kontak/grup)">📤 Bagikan ke WhatsApp</button>
+            <button class="gt-btn ghost" onclick="shareGtOrderWa(${o.id})" title="Bagikan PDF invoice lewat WhatsApp (pilih kontak/grup)">📤 Bagikan Invoice (WA)</button>
             <button class="gt-btn ghost" onclick="adminEditGtOrder(${o.id})">✏️ Edit Pesanan</button>
             ${o.status === 'baru' ? `<button class="gt-btn confirm" onclick="confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button>` : ''}
             <button class="gt-btn ghost gt-del" onclick="deleteGtOrder(${o.id})">🗑 Hapus</button>
@@ -8132,7 +8132,7 @@ function gtCode(name) {
   const k = t.findIndex((w, i) => i > 0 && (GT_DESC_WORD.test(w.replace(/[^\w-]/g, '')) || /\d+(\.\d+)?("|''|inch|in)$/i.test(w)));
   return k > 0 ? t.slice(0, k).join(' ') : nm;
 }
-function downloadGtInvoice(id) {
+function downloadGtInvoice(id, build) {   // build = true → kembalikan { doc, name } tanpa mengunduh (dipakai Bagikan)
   const o = gtOrders?.find(x => x.id === id);
   if (!o) return;
   if (!window.jspdf) { showToast('Komponen PDF belum termuat — periksa koneksi lalu coba lagi.'); return; }
@@ -8256,32 +8256,29 @@ function downloadGtInvoice(id) {
     if (nm) { doc.setFontSize(9); doc.text(nm, cx, y + 20.5, { align: 'center' }); }
   });
   footer();
-  doc.save(`Invoice-${o.invoice || o.id}-${(o.store || '').replace(/[^\w]+/g, '_')}.pdf`);
+  const name = `Invoice-${o.invoice || o.id}-${(o.store || '').replace(/[^\w]+/g, '_')}.pdf`;
+  if (build) return { doc, name };
+  doc.save(name);
 }
 
-// Bagikan ringkasan pesanan lewat WhatsApp — penerima dipilih sendiri (Rekap admin; bisa sebelum/sesudah konfirmasi pembayaran)
-function shareGtOrderWa(id) {
+// Bagikan PDF invoice lewat WhatsApp (Rekap admin; bisa sebelum/sesudah konfirmasi pembayaran).
+// Web Share API dengan file (HP & sebagian browser desktop) → pilih WhatsApp & penerima;
+// browser yang tidak mendukung → PDF diunduh lalu WhatsApp Web dibuka untuk dilampirkan manual.
+async function shareGtOrderWa(id) {
   const o = gtOrders.find(x => x.id === id);
   if (!o) return;
-  const items = o.items || [];
-  const lines = [
-    `*PESANAN GATHERING CAI 2026*`,
-    `No. Invoice: ${o.invoice || '-'}`,
-    `Status: ${GT_STATUS[o.status] || o.status}${o.confirmed_at ? ` (${fmtGtTime(o.confirmed_at)})` : ''}`,
-    `Waktu pesan: ${fmtGtTime(o.created_at)}`,
-    '',
-    `Dealer: ${o.store || o.dealer || '-'}`,
-    ...(o.city ? [`Kota: ${o.city}`] : []),
-    ...(o.phone ? [`No. HP: ${o.phone}`] : []),
-    ...(o.pic ? [`Distributor: ${o.pic}`] : []),
-    '',
-    '*Rincian:*',
-    ...items.map((it, i) => `${i + 1}. ${it.name}${gtPoLabel(it)} — ${it.qty} x ${fmtRp(Number(it.price || 0))} = ${fmtRp(Number(it.total || 0))}`),
-    '',
-    `Total Qty: ${o.total_qty || items.reduce((a, it) => a + Number(it.qty || 0), 0)}`,
-    `*TOTAL: ${fmtRp(Number(o.total || 0))}*`
-  ];
-  window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener');
+  const r = downloadGtInvoice(id, true);
+  if (!r) return;
+  const file = new File([r.doc.output('blob')], r.name, { type: 'application/pdf' });
+  const text = `Invoice Gathering CAI 2026 — ${o.invoice || ''} · ${o.store || o.dealer || ''}`;
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: r.name, text }); }
+    catch (e) { if (e?.name !== 'AbortError') showToast('Gagal membagikan: ' + (e?.message || e)); }
+    return;
+  }
+  r.doc.save(r.name);
+  showToast('Browser ini tidak bisa membagikan file langsung — PDF invoice diunduh, lampirkan di WhatsApp yang terbuka.', 6000);
+  window.open('https://web.whatsapp.com/', '_blank', 'noopener');
 }
 
 async function confirmGtOrder(id) {
