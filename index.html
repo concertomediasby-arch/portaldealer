@@ -2577,6 +2577,9 @@ body {
   .gt-btn.confirm { background: #16a34a; border-color: #16a34a; color: #fff; }
   .gt-badge.st-dikonfirmasi { background: rgba(59,130,246,.15); color: #3b82f6; }
   .gt-order.st-dikonfirmasi { border-left-color: #3b82f6; }
+  .gt-badge.st-belum_lunas { background: rgba(245,158,11,.16); color: #d97706; }
+  .gt-order.st-belum_lunas { border-left-color: #f59e0b; }
+  .gt-confirm-bar.warn { background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.35); }
   .gt-pay { margin: -6px 0 18px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
   .gt-pay-title { font-weight: 700; font-size: 13.5px; color: var(--fg); margin-bottom: 10px; }
   .gt-pay-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
@@ -3634,7 +3637,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T08:44:23Z';
+const LAST_UPDATE = '2026-10-28T11:25:59Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7232,7 +7235,7 @@ returns table(name text, brand text, section text, qty integer)
 language sql security definer set search_path = public as $$
   select i->>'name', i->>'brand', i->>'section', sum(coalesce((i->>'qty')::int, 0))::int
   from gathering_orders o cross join lateral jsonb_array_elements(o.items) i
-  where o.status = 'dikonfirmasi'
+  where o.status in ('dikonfirmasi', 'belum_lunas')
   group by 1, 2, 3;
 $$;
 revoke all on function public.gathering_sold() from public, anon;
@@ -7920,8 +7923,9 @@ function gtPrint() {
    Tabel `gathering_orders`: dealer (akun bersama) hanya boleh INSERT; baca/ubah/hapus hanya admin/editor. */
 const GATHERING_ORDERS = 'gathering_orders';
 const GT_SENT_KEY = 'cai-gathering-sent';
-const GT_STATUS = { baru: 'Menunggu Konfirmasi', dikonfirmasi: 'Dikonfirmasi', selesai: 'Selesai', batal: 'Batal' };
-const gtConfirmed = o => o.status === 'dikonfirmasi' || o.status === 'selesai';
+const GT_STATUS = { baru: 'Menunggu Konfirmasi', dikonfirmasi: 'Dikonfirmasi', belum_lunas: 'Belum Lunas', selesai: 'Selesai', batal: 'Batal' };
+// Belum Lunas (28 Okt 2026, permintaan pemilik) = pembelian disetujui tapi pembayaran belum penuh — tetap masuk Top Spender & mengurangi stok seperti Dikonfirmasi
+const gtConfirmed = o => o.status === 'dikonfirmasi' || o.status === 'belum_lunas' || o.status === 'selesai';
 let gtOrders = null, gtOrdersErr = '', gtTab = 'form', gtOrderFilter = 'all', gtOpenOrder = null;
 
 function setGtTab(t) {
@@ -8075,6 +8079,8 @@ function renderGtRekap() {
         </div>
         ${o.status === 'baru' ? `<div class="gt-confirm-bar"><span>⏳ Menunggu pembayaran. Setelah transfer${o.invoice ? ' (berita: ' + escHtml(o.invoice) + ')' : ''} diterima, klik konfirmasi — pembelian langsung masuk Top Spender.</span>
           <button class="gt-btn confirm" onclick="event.stopPropagation(); confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button></div>`
+          : o.status === 'belum_lunas' ? `<div class="gt-confirm-bar warn"><span>⚠ Belum lunas — tetap masuk Top Spender. Klik konfirmasi setelah pelunasan diterima.</span>
+          <button class="gt-btn confirm" onclick="event.stopPropagation(); confirmGtOrder(${o.id})">✓ Konfirmasi Pelunasan</button></div>`
           : gtConfirmed(o) ? `<div class="gt-confirm-bar ok"><span>✅ Pembayaran dikonfirmasi${o.confirmed_at ? ' · ' + fmtGtTime(o.confirmed_at) : ''} — masuk Top Spender.</span></div>` : ''}
         ${gtOpenOrder === o.id ? `<div class="gt-order-body">
           <table class="gt-order-items"><thead><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead><tbody>
@@ -8087,7 +8093,7 @@ function renderGtRekap() {
             <button class="gt-btn ghost" onclick="downloadGtInvoice(${o.id})">⬇ Download Invoice</button>
             <button class="gt-btn ghost" onclick="shareGtOrderWa(${o.id})" title="Bagikan PDF invoice lewat WhatsApp (pilih kontak/grup)">📤 Bagikan Invoice (WA)</button>
             <button class="gt-btn ghost" onclick="adminEditGtOrder(${o.id})">✏️ Edit Pesanan</button>
-            ${o.status === 'baru' ? `<button class="gt-btn confirm" onclick="confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button>` : ''}
+            ${o.status === 'baru' || o.status === 'belum_lunas' ? `<button class="gt-btn confirm" onclick="confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button>` : ''}
             <button class="gt-btn ghost gt-del" onclick="deleteGtOrder(${o.id})">🗑 Hapus</button>
           </div></div>` : ''}
         <span class="gt-badge st-${o.status}">${GT_STATUS[o.status] || o.status}</span>
@@ -8294,7 +8300,7 @@ async function setGtOrderStatus(id, status) {
     if (error) throw error;
     const o = gtOrders.find(x => x.id === id); if (o) o.status = status;
     loadGtSold().then(refreshStockUI);   // stok katalog ikut berubah (dikonfirmasi = berkurang, batal/selesai = tidak dihitung)
-    renderGtRekap(); showToast(status === 'dikonfirmasi' ? '✓ Pembelian dikonfirmasi — masuk Top Spender.' : 'Status pesanan diperbarui.');
+    renderGtRekap(); showToast(status === 'dikonfirmasi' ? '✓ Pembelian dikonfirmasi — masuk Top Spender.' : status === 'belum_lunas' ? 'Status Belum Lunas — tetap masuk Top Spender.' : 'Status pesanan diperbarui.');
   } catch (e) { showToast('Gagal mengubah status: ' + (e.message || e), 8000); }
 }
 
