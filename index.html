@@ -3646,7 +3646,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T13:06:09Z';
+const LAST_UPDATE = '2026-10-28T13:33:04Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -10694,7 +10694,15 @@ const BGM_TRACKS = [
   { id: 'awarding', name: 'Champions Anthem', sub: 'Awards Ceremony · cocok untuk Awarding', src: BGM_AWARD_SRC },
   // lagu panjang (12 mnt) → stream: diputar lewat elemen <audio> (tidak di-decode utuh ke memori ±280 MB), tetap lewat gain & crossfade yang sama
   { id: 'presentation', name: 'Background Presentation', sub: '12 menit · tenang untuk sesi presentasi', src: 'assets/audio/presentation.mp3?v=1', stream: true },
+  // lagu komersial berhak cipta → TIDAK di repo publik: file diunggah Editor ke Storage privat (store), diputar lewat signed URL
+  { id: 'champions', name: 'We Are The Champions', sub: 'Queen · file privat (unggah di bawah)', store: 'gathering/audio/we-are-the-champions' },
 ];
+const bgmTrackUrl = async def => {   // src publik, atau signed URL untuk lagu di Storage privat
+  if (!def.store) return def.src;
+  const { data, error } = await supabase.storage.from(GUIDES_BUCKET).createSignedUrl(def.store, 3600);
+  if (error || !data?.signedUrl) throw new Error(/not.?found|404/i.test(error?.message || '') || !error ? 'lagu belum diunggah' : error.message);
+  return data.signedUrl;
+};
 const bgmTrackOk = id => BGM_TRACKS.some(t => t.id === id) ? id : BGM_TRACKS[0].id;
 const BGM_YT_ID = '';   // musik latar dari YouTube (pemutar resmi YouTube IFrame; tidak diunduh / disalin ke repo). Kosongkan untuk memakai file di atas saja.
 const BGM_KEYS = [['anthem', '🇮🇩', 'Indonesia Raya'], ['qa', '🎤', 'Meeting Dealer'], ['opening', '🎙', 'Opening Speech'], ['coffee', '☕', 'Coffee Break'], ['refresh', '🔊', 'Refreshment Product'], ['launch', '🚀', 'Product Launch'],
@@ -10744,6 +10752,7 @@ function bgmInitFile() {   // musik file lokal lewat Web Audio (gapless); tiap b
 }
 function bgmTrackLoad(id) {
   const T = bgm.trk?.[id], def = BGM_TRACKS.find(t => t.id === id); if (!T || !def || T.buf || T.loading) return;
+  if (T.err && !(def.store && Date.now() > (T.retry || 0))) return;   // lagu privat yang belum diunggah dicoba lagi tiap 20 dtk
   T.loading = true; T.err = '';
   if (def.stream) {
     const el = new Audio(); el.loop = true; el.preload = 'auto'; el.src = def.src;
@@ -10752,14 +10761,15 @@ function bgmTrackLoad(id) {
     try { T.el = el; T.node = bgm.ctx.createMediaElementSource(el); T.node.connect(T.g); } catch (e) { T.err = String(e?.message || e); T.loading = false; }
     return;
   }
-  fetch(def.src).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+  bgmTrackUrl(def).then(u => fetch(u)).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
     .then(b => new Promise((ok, no) => bgm.ctx.decodeAudioData(b, ok, no))).then(buf => { T.buf = buf; })
-    .catch(e => { T.err = String(e?.message || e || 'gagal'); console.warn('Backsound tidak termuat:', def.name, e); })
+    .catch(e => { T.err = String(e?.message || e || 'gagal'); T.retry = Date.now() + 20000; console.warn('Backsound tidak termuat:', def.name, e); })
     .finally(() => { T.loading = false; bgmTick(); });
 }
 // Lagu aktif diputar dari awal saat dipilih (berulang); lagu lain di-fade out lalu dihentikan
 function bgmTrackSync(active, playing) {
   const ctx = bgm.ctx; if (!ctx || !bgm.trk) return;
+  if (playing && bgm.trk[active] && !bgm.trk[active].buf) bgmTrackLoad(active);
   Object.entries(bgm.trk).forEach(([id, T]) => {
     const want = playing && id === active && T.buf;
     if (T.el) {   // lagu stream: mulai dari awal saat dipilih, jeda 3 dtk setelah fade out
@@ -10869,6 +10879,7 @@ function bgmPanelHtml() {
     <div class="scr-bgm-status warn" id="vid-status">…</div>
     <div class="scr-bgm-k">🎼 <b>Backsound</b> — pilih lagu yang diputar (berganti dengan crossfade, mulai dari awal lagu):</div>
     <div class="scr-bgm-tracks">${BGM_TRACKS.map(t => `<button class="scr-bgm-track${cfg.track === t.id ? ' on' : ''}" onclick="bgmSave({ bgm_track: '${t.id}' })" ${has ? '' : 'disabled'}><b>${cfg.track === t.id ? '▶ ' : ''}${escHtml(t.name)}</b><span>${escHtml(t.sub)}</span></button>`).join('')}</div>
+    ${isEditor() ? BGM_TRACKS.filter(t => t.store).map(t => `<div class="scr-actions" style="margin-top:8px"><label class="gt-btn ghost" style="cursor:pointer">⬆ Unggah / ganti lagu ${escHtml(t.name)}<input type="file" accept="audio/*,.mp3,.m4a,.aac,.wav" hidden onchange="bgmUploadTrack('${t.id}', this)"></label><span class="scr-bgm-k" style="margin:0">disimpan privat (tidak di repo publik); layar videotron memuatnya otomatis ±20 dtk setelah diunggah</span></div>`).join('') : ''}
     <div class="scr-bgm-k">Musik tetap jalan saat layar berganti sesi; berhenti sementara hanya saat video layar penuh diputar.</div>
     ${isEditor() ? `<div class="scr-actions" style="margin-top:10px"><button class="gt-btn ghost" id="bgm-test-btn" onclick="bgmTestHere()">🔊 Tes musik di komputer ini</button><span class="scr-bgm-k" id="bgm-test-msg" style="margin:0"></span></div>` : ''}
     ${!isEditor() ? '<div class="scr-note">Hanya <b>Editor</b> yang bisa menyalakan / mematikan dan mengatur musik latar.</div>' : `<div class="scr-note">Musik <b>mati</b> sampai Editor menekan Menyala; setelah menyala, musik berbunyi di <b>semua sesi</b>. Pengaturan dikirim langsung ke layar videotron &amp; diingat di komputer itu. Opsional agar permanen lintas komputer: <button class="gt-btn ghost" onclick="bgmCopySql()">📋 Salin SQL</button></div>`}</div>`;
@@ -10880,7 +10891,18 @@ let bgmTestAudio = null;
 function bgmTestHere() {
   const msg = document.getElementById('bgm-test-msg'), btn = document.getElementById('bgm-test-btn');
   if (bgmTestAudio) { bgmTestAudio.pause(); bgmTestAudio = null; if (btn) btn.textContent = '🔊 Tes musik di komputer ini'; if (msg) msg.textContent = ''; return; }
-  const a = new Audio((BGM_TRACKS.find(t => t.id === bgmDisplayCfg().track) || BGM_TRACKS[0]).src); a.volume = 0.6; bgmTestAudio = a;
+  const def = BGM_TRACKS.find(t => t.id === bgmDisplayCfg().track) || BGM_TRACKS[0];
+  if (def.store) { bgmTrackUrl(def).then(u => { const a = new Audio(u); a.volume = 0.6; bgmTestAudio = a; bgmTestPlay(a, msg, btn); }, e => { if (msg) msg.textContent = '⚠ ' + (e?.message || e); }); return; }
+  const a = new Audio(def.src); a.volume = 0.6; bgmTestAudio = a; bgmTestPlay(a, msg, btn);
+}
+async function bgmUploadTrack(id, input) {
+  const f = input.files?.[0]; input.value = ''; const def = BGM_TRACKS.find(t => t.id === id); if (!f || !def?.store) return;
+  if (!/^audio\//i.test(f.type) && !/\.(mp3|m4a|aac|wav|ogg)$/i.test(f.name)) { showToast('Pilih file audio (MP3/M4A).'); return; }
+  showToast(`Mengunggah lagu ${def.name}…`, 20000);
+  const { error } = await supabase.storage.from(GUIDES_BUCKET).upload(def.store, f, { upsert: true, contentType: f.type || 'audio/mpeg', cacheControl: '10' });
+  showToast(error ? 'Gagal mengunggah: ' + error.message : `✓ Lagu ${def.name} tersimpan — pilih di daftar Backsound untuk memutarnya.`, 9000);
+}
+function bgmTestPlay(a, msg, btn) {
   a.onended = () => { bgmTestAudio = null; if (btn) btn.textContent = '🔊 Tes musik di komputer ini'; };
   a.onerror = () => { bgmTestAudio = null; if (btn) btn.textContent = '🔊 Tes musik di komputer ini'; if (msg) msg.textContent = '⚠ File musik tidak bisa dimuat (' + (a.error?.message || 'format/jaringan') + ').'; };
   a.play().then(() => { if (btn) btn.textContent = '⏹ Hentikan tes'; if (msg) msg.textContent = 'Terdengar? Berarti file musik & suara komputer ini baik.'; setTimeout(() => { if (bgmTestAudio === a) bgmTestHere(); }, 20000); })
