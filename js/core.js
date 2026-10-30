@@ -284,7 +284,7 @@ function enterPortal() {
    dibuka lewat link produk. Tombol 🔊/🔇 di topbar (toggleMusic), pilihan diingat di localStorage PORTAL_MUSIC_KEY ('off' = mati).
    Volume lewat Web Audio GainNode (iOS mengabaikan audio.volume); diam sementara saat video bersuara diputar & saat tab tidak aktif.
    Tidak berbunyi di layar videotron (?layar=qa). */
-const PORTAL_MUSIC_SRC = 'assets/audio/portal-music.mp3?v=1', PORTAL_MUSIC_VOL = 0.22, PORTAL_MUSIC_KEY = 'cai-music';
+const PORTAL_MUSIC_SRC = 'assets/audio/portal-music.mp3?v=2', PORTAL_MUSIC_VOL = 0.22, PORTAL_MUSIC_KEY = 'cai-music';
 const PM_ICON_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
 const PM_ICON_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>';
 let pm = null, pmWant = false, pmStopT = null, pmArmed = false;
