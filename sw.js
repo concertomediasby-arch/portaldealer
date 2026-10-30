@@ -1,4 +1,4 @@
-// Service worker Concerto Dealer Portal — mode offline layar videotron (27 Okt 2026).
+// Service worker CAI Hub (Concerto Audio Indonesia) — mode offline layar videotron (27 Okt 2026).
 // Halaman: jaringan dulu, cadangan salinan terakhir bila offline. Aset & pustaka CDN: salinan lokal dulu.
 // Video (.mp4) tidak disimpan di sini — sudah disimpan halaman videotron di Cache Storage 'cai-videotron-v1'.
 // Data Supabase selalu lewat jaringan.

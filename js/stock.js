@@ -1,4 +1,4 @@
-/* Concerto Dealer Portal — js/stock.js
+/* CAI Hub (Concerto Audio Indonesia) — js/stock.js
    Sistem stok (Supabase), login dealer/staff, menu Stok Produk, panel admin, import & sinkron Google Sheet.
    Dipisah dari index.html 30 Okt 2026 (tahap 3 pemecahan file). Semua file js/*.js adalah script klasik (bukan module):
    fungsi & const/let tingkat atas terbagi di satu lingkup global, URUTAN MUAT PENTING (lihat <script> di akhir index.html). */

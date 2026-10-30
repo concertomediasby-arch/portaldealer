@@ -1,4 +1,4 @@
-/* Concerto Dealer Portal — DATA KATALOG (dipisah dari index.html 30 Okt 2026, tahap 2 pemecahan file).
+/* CAI Hub (Concerto Audio Indonesia) — DATA KATALOG (dipisah dari index.html 30 Okt 2026, tahap 2 pemecahan file).
    Berisi data murni (tanpa fungsi/variabel/template string) — dibaca juga oleh Edge Function sync-stock-sheet sebagai JSON5,
    jadi pertahankan format: deklarasi BRANDS diawali kurung siku & ditutup baris "];", STOCK_ALIASES diawali kurung kurawal
    & ditutup baris "};" — dan jangan menulis teks deklarasinya persis di komentar (fungsi mencari kemunculan pertama).

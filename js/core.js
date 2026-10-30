@@ -1,4 +1,4 @@
-/* Concerto Dealer Portal — js/core.js
+/* CAI Hub (Concerto Audio Indonesia) — js/core.js
    Inti portal: data turunan, state, init, landing, Academy, navigasi, katalog, detail produk, spec sheet PDF, tema.
    Dipisah dari index.html 30 Okt 2026 (tahap 3 pemecahan file). Semua file js/*.js adalah script klasik (bukan module):
    fungsi & const/let tingkat atas terbagi di satu lingkup global, URUTAN MUAT PENTING (lihat <script> di akhir index.html). */
@@ -1173,7 +1173,7 @@ function renderAuthDealers() {
       <div class="ad-city">📍 ${escHtml(d.c || d.r)}</div>
       ${d.a ? `<div class="ad-addr">${escHtml(d.a)}</div>` : ''}
       <div class="ad-btns">
-        ${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari Concerto Dealer Portal. Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
+        ${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
         ${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}
         <a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>
       </div>

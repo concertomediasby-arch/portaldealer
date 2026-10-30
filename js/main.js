@@ -1,4 +1,4 @@
-/* Concerto Dealer Portal — js/main.js
+/* CAI Hub (Concerto Audio Indonesia) — js/main.js
    Hubungi CAI (WhatsApp), link berbagi produk, dan urutan start-up portal — dimuat PALING AKHIR.
    Dipisah dari index.html 30 Okt 2026 (tahap 3 pemecahan file). Semua file js/*.js adalah script klasik (bukan module):
    fungsi & const/let tingkat atas terbagi di satu lingkup global, URUTAN MUAT PENTING (lihat <script> di akhir index.html). */
@@ -50,7 +50,7 @@ function shareVideo() {
   const { brand, product } = currentProduct();
   if (!product) return;
   const text = `🎬 Video ${brand.name} *${product.model}*${product.name !== product.model ? ' — ' + product.name : ''}\n` +
-    `Tonton di Concerto Dealer Portal:\n${productLink(product.id, true)}`;
+    `Tonton di CAI Hub:\n${productLink(product.id, true)}`;
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
 }
 // Dibuka dari link berbagi → lewati landing, buka produknya (dan videonya bila &v=1)

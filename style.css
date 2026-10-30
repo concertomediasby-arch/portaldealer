@@ -1,4 +1,4 @@
-/* Concerto Dealer Portal — stylesheet utama (dipisah dari index.html 30 Okt 2026, tahap 1 pemecahan file).
+/* CAI Hub (Concerto Audio Indonesia) — stylesheet utama (dipisah dari index.html 30 Okt 2026, tahap 1 pemecahan file).
    Dimuat lewat <link href="style.css?b=…"> di <head>; ?b= diperbarui otomatis oleh hook pre-commit agar cache browser ikut terbarui. */
 /* ═══════════════════════════════════════════════════════
    DESIGN SYSTEM — Futuristic Luxe (single dark theme)
@@ -1101,7 +1101,7 @@ body {
   .topbar-text-info { padding-left: 10px !important; min-width: 0; white-space: nowrap; }
 }
 @media (max-width: 560px) {
-  /* Nama perusahaan sudah ada di logo — di HP cukup label "Dealer Portal" satu baris */
+  /* Nama perusahaan sudah ada di logo — di HP cukup label "CAI Hub" satu baris */
   .topbar-logo .logo-img { height: 28px; flex-shrink: 0; }
   .topbar-text-info .tb-kicker { font-size: 10px !important; letter-spacing: .1em !important; }
   .topbar-text-info .tb-name { display: none; }

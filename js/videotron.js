@@ -1,4 +1,4 @@
-/* Concerto Dealer Portal — js/videotron.js
+/* CAI Hub (Concerto Audio Indonesia) — js/videotron.js
    Tanya Jawab / Open Mic + layar videotron ?layar=qa (scene, video, musik latar, awarding, dll.).
    Dipisah dari index.html 30 Okt 2026 (tahap 3 pemecahan file). Semua file js/*.js adalah script klasik (bukan module):
    fungsi & const/let tingkat atas terbagi di satu lingkup global, URUTAN MUAT PENTING (lihat <script> di akhir index.html). */

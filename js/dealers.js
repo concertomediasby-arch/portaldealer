@@ -1,4 +1,4 @@
-/* Concerto Dealer Portal — js/dealers.js
+/* CAI Hub (Concerto Audio Indonesia) — js/dealers.js
    Kelola Dealer (khusus Editor, lewat Edge Function manage-dealers).
    Dipisah dari index.html 30 Okt 2026 (tahap 3 pemecahan file). Semua file js/*.js adalah script klasik (bukan module):
    fungsi & const/let tingkat atas terbagi di satu lingkup global, URUTAN MUAT PENTING (lihat <script> di akhir index.html). */
@@ -158,7 +158,7 @@ async function submitDealerForm() {
 }
 
 function credentialMessage(c) {
-  return `Halo ${c.store}, berikut akun Concerto Dealer Portal Anda:\n\n` +
+  return `Halo ${c.store}, berikut akun CAI Hub Anda:\n\n` +
     `🔗 ${PORTAL_URL}\n` +
     (codeFromEmail(c.email) ? `🏷️ Kode Dealer: ${codeFromEmail(c.email)}\n🔑 PIN: ${c.password}\n\n` : `📧 Email: ${c.email}\n🔑 Password: ${c.password}\n\n`) +
     `Login lewat ikon akun di kanan atas portal untuk membuka Stok Produk & Panduan Dealer. Mohon jaga kerahasiaan akun ini. Terima kasih — Concerto Audio Indonesia`;
