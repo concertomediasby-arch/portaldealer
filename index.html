@@ -3867,7 +3867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T05:19:00Z';
+const LAST_UPDATE = '2026-10-30T05:26:21Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3958,6 +3958,8 @@ const DSP_SOFTWARE = [
 ];
 
 const RECENT_UPDATES = [
+  { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-sq400', note:'Spesifikasi SQ 400 dilengkapi (dimensi, berat, idle current, dll.)' },
+  { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-sq200', note:'Spesifikasi SQ 200 dilengkapi (dimensi, berat, idle current, dll.)' },
   { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-mfa54', note:'Spesifikasi MFA5 EVO+ 4CH dilengkapi (output 4 × 150 W, dimensi, berat)' },
   { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-mfa52', note:'Spesifikasi MFA5 EVO+ 2CH dilengkapi (dimensi, berat, fuse)' },
   { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-mfa34', note:'Spesifikasi MFA3 EVO+ 4CH dilengkapi (dimensi, berat)' },
@@ -4639,11 +4641,11 @@ const BRANDS = [
           photos:['assets/zl-aurum-4.webp','assets/zl-aurum-1.webp','assets/zl-aurum-2.webp','assets/zl-aurum-3.webp','assets/zl-aurum-5.webp'] },
         { id:'zl-sq200', price:63175000, name:'SQ 200', model:'SQ 200', category:'Amplifier', emoji:'⚡', hasVideo:false,
           desc:'SQ Series Class A Power Amplifier.',
-          specs:{'Power Circuit':'Class A','Output (4Ω)':'2 × 130 W','Output (2Ω)':'2 × 190 W','Bridge (2Ω)':'1 × 360 W','Freq. Response':'10 Hz – 35 kHz','THD':'≤0.05%','Operating Voltage':'10 – 16 V','Input Impedance':'22 kΩ','SNR':'≥100 dB','Fuse Rating':'20 A × 3'},
+          specs:{'Power Circuit':'Class A','Output (4Ω)':'2 × 130 W','Output (2Ω)':'2 × 190 W','Bridge (4Ω)':'1 × 360 W','Operating Voltage':'10 – 16 V','Power Supply':'PWM Regulated','Idle Current':'2.5 A (tanpa beban)','Soft Start':'Ya','Freq. Response':'10 Hz – 35 kHz (@ −1 dB)','Damping Factor':'>350','SNR':'>100 dB (A-weighted)','THD':'<0.05% (A-weighted, 10 W)','Channel Separation':'>60 dB','Input Gain':'0.4 V – 10 V','Input Impedance':'22 kΩ','LED':'Power / Protect','Protection':'Short, Thermal, DC Offset','Fuse Rating':'20 A × 3 (ATC)','Dimensions':'203 × 463 × 75 mm','Weight':'6.5 kg'},
           photos:['assets/zl-sq200-3.webp','assets/zl-sq200-1.webp','assets/zl-sq200-2.webp'] },
         { id:'zl-sq400', price:64600000, name:'SQ 400', model:'SQ 400', category:'Amplifier', emoji:'⚡', hasVideo:false,
           desc:'SQ Series Class A Power Amplifier.',
-          specs:{'Power Circuit':'Class A','Output (4Ω)':'4 × 100 W','Output (2Ω)':'4 × 160 W','Bridge (2Ω)':'2 × 300 W','Freq. Response':'10 Hz – 35 kHz','THD':'≤0.05%','Operating Voltage':'10 – 16 V','Input Impedance':'22 kΩ','SNR':'≥100 dB','Fuse Rating':'30 A × 3'},
+          specs:{'Power Circuit':'Class A','Output (4Ω)':'4 × 100 W','Output (2Ω)':'4 × 160 W','Bridge (4Ω)':'2 × 300 W','Operating Voltage':'10 – 16 V','Power Supply':'PWM Regulated','Idle Current':'5.1 A (tanpa beban)','Soft Start':'Ya','Freq. Response':'10 Hz – 35 kHz (@ −1 dB)','Damping Factor':'>350','SNR':'>100 dB (A-weighted)','THD':'<0.05% (A-weighted, 10 W)','Channel Separation':'>60 dB','Input Gain':'0.4 V – 10 V','Input Impedance':'22 kΩ','LED':'Power / Protect','Protection':'Short, Thermal, DC Offset','Fuse Rating':'30 A × 3 (ATC)','Dimensions':'203 × 463 × 75 mm','Weight':'7.6 kg'},
           photos:['assets/zl-sq400-1.webp','assets/zl-sq400-2.webp','assets/zl-sq400-3.webp'] },
       ]},
       { name: 'Class AB Power Amplifier', products: [
