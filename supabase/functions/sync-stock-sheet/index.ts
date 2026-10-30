@@ -7,10 +7,11 @@
 // Secrets (Edge Functions → Secrets):
 //   STOCK_SHEET_URL = link Google Sheet stok (dibagikan "Siapa saja yang memiliki link — Pelihat"; gid tab dipakai bila ada)
 //   SYNC_SECRET     = kata sandi acak panjang, sama dengan yang ditulis di SQL jadwal
-//   CATALOG_URL     = (opsional) default https://dealer.concerto.id/index.html
+//   CATALOG_URL     = (opsional) URL file yang memuat BRANDS & STOCK_ALIASES. Default: coba https://dealer.concerto.id/katalog.js
+//                     (data katalog dipisah dari index.html, 30 Okt 2026), bila tidak ada → https://dealer.concerto.id/index.html
 // SUPABASE_URL & SUPABASE_SERVICE_ROLE_KEY sudah tersedia otomatis — jangan menaruh kunci di kode.
 //
-// Katalog (BRANDS) & STOCK_ALIASES dibaca dari index.html situs sebagai DATA (JSON5, tanpa menjalankan kode),
+// Katalog (BRANDS) & STOCK_ALIASES dibaca dari katalog.js (atau index.html, versi lama) situs sebagai DATA (JSON5, tanpa menjalankan kode),
 // jadi produk/alias baru di repo langsung ikut. Aturan pencocokan di bawah = salinan renderImport()/saveImport()
 // (mode "Stok gudang") di index.html — bila aturan import di portal diubah, ubah juga di sini.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
@@ -105,8 +106,15 @@ Deno.serve(async (req) => {
     if (!csvUrl) throw new Error('Secret STOCK_SHEET_URL belum diisi / tidak valid');
 
     // Katalog dari situs (cache-buster agar versi terbaru)
-    const catUrl = (Deno.env.get('CATALOG_URL') || 'https://dealer.concerto.id/index.html') + '?t=' + Date.now();
-    const html = await (await fetch(catUrl)).text();
+    const catUrls = Deno.env.get('CATALOG_URL') ? [Deno.env.get('CATALOG_URL')!]
+      : ['https://dealer.concerto.id/katalog.js', 'https://dealer.concerto.id/index.html'];
+    let html = '';
+    for (const u of catUrls) {
+      const r = await fetch(u + '?t=' + Date.now());
+      const t = r.ok ? await r.text() : '';
+      if (t.includes('const BRANDS = [') && t.includes('const STOCK_ALIASES = {')) { html = t; break; }
+    }
+    if (!html) throw new Error('Data katalog (BRANDS / STOCK_ALIASES) tidak ditemukan di ' + catUrls.join(' / '));
     const BRANDS = grabLiteral(html, 'const BRANDS = [', '\n];') as any[];
     const ALIASES = grabLiteral(html, 'const STOCK_ALIASES = {', '\n};') as Record<string, string>;
     const index = BRANDS.flatMap(b => b.lines.flatMap((l: any) => l.products.map((p: any) => ({ b, p,
