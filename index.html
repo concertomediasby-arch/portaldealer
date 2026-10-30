@@ -1420,6 +1420,8 @@ body {
   }
   .acad-title { font-family: var(--f-display); font-size: 15px; font-weight: 700; line-height: 1.35; margin: 6px 0 6px; }
   .acad-date { font-size: 11px; color: var(--fg-dim); font-family: var(--f-mono); }
+  .acad-views { color: var(--fg-muted); white-space: nowrap; }
+  .acad-views:empty { display: none; }
   .acad-viewer {
     position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center;
     background: rgba(0,0,0,.78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -3765,7 +3767,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T02:10:56Z';
+const LAST_UPDATE = '2026-10-30T02:17:10Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5277,17 +5279,18 @@ function openAcademy() {
   const list = acadReleased();
   const upcoming = ACADEMY.filter(a => a.date > todayWIB()).sort((x, y) => x.date.localeCompare(y.date))[0];
   document.getElementById('acad-next').innerHTML =
-    `<b>${list.length}</b> materi tersedia` + (upcoming ? ` · materi berikutnya rilis <b>${fmtAcadDate(upcoming.date)}</b>` : '');
+    `<b>${list.length}</b> materi tersedia` + (upcoming ? ` · materi berikutnya rilis <b>${fmtAcadDate(upcoming.date)}</b>` : '') + `<span class="acad-views" data-acadv="all">${acadViewsText('all', true)}</span>`;
   document.getElementById('acad-grid').innerHTML = list.map(a => `
     <button class="acad-card" onclick="openAcademyItem(${a.no})">
       <div class="acad-thumb"><img src="${acadImg(a, true)}" alt="" loading="lazy"></div>
       <div class="acad-body">
         <div class="acad-kicker">Fundamental #${a.no}${acadIsNew(a) ? '<span class="acad-star" title="Materi baru">★ Baru</span>' : ''}</div>
         <div class="acad-title">${escHtml(a.title)}</div>
-        <div class="acad-date">${fmtAcadDate(a.date)}</div>
+        <div class="acad-date">${fmtAcadDate(a.date)}<span class="acad-views" data-acadv="${a.no}">${acadViewsText(a.no, true)}</span></div>
       </div>
     </button>`).join('') || `<div class="stock-empty">Materi pertama segera hadir.</div>`;
   updateAcademyStar();
+  loadAcadViews();
 }
 
 function openAcademyItem(no) {
@@ -5295,7 +5298,8 @@ function openAcademyItem(no) {
   const a = acadReleased().find(x => x.no === no);
   if (!a) return;
   acadCurrent = no;
-  document.getElementById('acad-viewer-kicker').innerHTML = `Concerto Academy · Fundamental #${a.no}${acadIsNew(a) ? ' <span class="acad-star">★ Baru</span>' : ''}`;
+  document.getElementById('acad-viewer-kicker').innerHTML = `Concerto Academy · Fundamental #${a.no}${acadIsNew(a) ? ' <span class="acad-star">★ Baru</span>' : ''}<span class="acad-views" data-acadv="${a.no}"></span>`;
+  logAcadView(a.no);
   document.getElementById('acad-viewer-title').textContent = a.title;
   const img = document.getElementById('acad-viewer-img');
   img.src = acadImg(a); img.alt = a.title;
@@ -5307,6 +5311,94 @@ function openAcademyItem(no) {
   document.getElementById('acad-viewer-body').scrollTop = 0;
   document.getElementById('acad-viewer').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+/* Jumlah view materi Academy (30 Okt 2026, permintaan pemilik — tampil untuk semua dealer yang login):
+   tiap materi yang dibuka dicatat sekali per sesi tab (sessionStorage ACAD_SEEN_KEY) lewat RPC log_academy_view → tabel academy_views
+   (1 baris per materi per browser, ID dari visitId()); angka dibaca lewat academy_view_counts(). Akun Admin/Editor tidak dihitung.
+   Rekap per materi untuk Admin/Editor di menu Pengunjung Portal. SQL: ACAD_VIEW_SQL. */
+const ACAD_SEEN_KEY = 'cai-acad-seen';
+const ACAD_VIEW_SQL = `create table if not exists public.academy_views (
+  no int not null,
+  vid text not null,
+  views int not null default 1,
+  first_at timestamptz not null default now(),
+  last_at timestamptz not null default now(),
+  primary key (no, vid)
+);
+alter table public.academy_views enable row level security;
+
+create or replace function public.log_academy_view(p_no int, p_vid text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_no is null or p_no < 1 or p_no > 9999 or p_vid is null or length(p_vid) < 8 or length(p_vid) > 64 then return; end if;
+  insert into academy_views (no, vid) values (p_no, p_vid)
+  on conflict (no, vid) do update set views = academy_views.views + 1, last_at = now();
+end $$;
+grant execute on function public.log_academy_view(int, text) to authenticated;
+
+create or replace function public.academy_view_counts()
+returns table (no int, views bigint, viewers bigint) language sql security definer set search_path = public as $$
+  select no, sum(views)::bigint, count(*)::bigint from academy_views group by no;
+$$;
+grant execute on function public.academy_view_counts() to authenticated;`;
+let acadViews = null, acadViewsErr = '', acadViewsAt = 0;
+function acadViewsText(no, sep) {
+  if (!acadViews) return '';
+  const n = no === 'all' ? [...acadViews.values()].reduce((a, v) => a + v.views, 0) : (acadViews.get(no)?.views || 0);
+  return `${sep ? ' · ' : ''}👁 ${fmtNum(n)}× dilihat`;
+}
+function paintAcadViews() {
+  document.querySelectorAll('[data-acadv]').forEach(el => {
+    const k = el.dataset.acadv === 'all' ? 'all' : +el.dataset.acadv;
+    el.textContent = acadViewsText(k, true);
+  });
+}
+async function loadAcadViews(force) {
+  if (!supabase || !authUser) return;
+  if (!force && acadViews && Date.now() - acadViewsAt < 30000) { paintAcadViews(); return; }
+  try {
+    const { data, error } = await supabase.rpc('academy_view_counts');
+    if (error) throw error;
+    acadViews = new Map((data || []).map(r => [+r.no, { views: +r.views || 0, viewers: +r.viewers || 0 }]));
+    acadViewsErr = ''; acadViewsAt = Date.now();
+  } catch (e) {
+    const m = String(e.message || e);
+    acadViews = null;
+    acadViewsErr = /function|does not exist|schema cache|404|relation/i.test(m) ? 'setup' : m;
+  }
+  paintAcadViews();
+}
+async function logAcadView(no) {
+  paintAcadViews();
+  if (!supabase || !authUser || isAdmin()) return;
+  let seen = [];
+  try { seen = JSON.parse(sessionStorage.getItem(ACAD_SEEN_KEY) || '[]'); } catch (e) {}
+  if (seen.includes(no)) return;
+  const vid = visitId(); if (!vid) return;
+  try {
+    const { error } = await supabase.rpc('log_academy_view', { p_no: no, p_vid: vid });
+    if (error) return;
+    seen.push(no);
+    try { sessionStorage.setItem(ACAD_SEEN_KEY, JSON.stringify(seen)); } catch (e) {}
+    if (acadViews) {
+      const v = acadViews.get(no) || { views: 0, viewers: 0 };
+      acadViews.set(no, { views: v.views + 1, viewers: v.viewers });
+      paintAcadViews();
+    }
+  } catch (e) {}
+}
+function acadCopySql() { (navigator.clipboard?.writeText(ACAD_VIEW_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => { prompt('Salin SQL ini:', ACAD_VIEW_SQL); }); }
+// Rekap per materi untuk menu Pengunjung Portal (Admin & Editor)
+function acadRecapHtml() {
+  if (acadViewsErr === 'setup') return `<div class="vs-box"><h3>Concerto Academy</h3><div class="vs-note" style="margin-bottom:10px">Penghitung view materi Academy belum diaktifkan. Jalankan SQL ini sekali di Supabase → SQL Editor → Run.</div><button class="gt-btn" onclick="acadCopySql()">📋 Salin SQL Academy</button></div>`;
+  if (!acadViews) return '';
+  const list = acadReleased().map(a => ({ a, ...(acadViews.get(a.no) || { views: 0, viewers: 0 }) })).sort((x, y) => y.views - x.views || x.a.no - y.a.no);
+  const tot = list.reduce((s, r) => s + r.views, 0);
+  return `<div class="vs-box"><h3>Concerto Academy · view per materi</h3>
+    <div class="vs-legend"><span>${fmtNum(tot)} kali dilihat total</span><span>Orang = browser/perangkat berbeda</span></div>
+    <table class="vs-table"><thead><tr><th>Materi</th><th>Dilihat</th><th>Orang</th></tr></thead><tbody>
+    ${list.map(r => `<tr><td>#${r.a.no} · ${escHtml(r.a.title)}</td><td>${fmtNum(r.views)}</td><td>${fmtNum(r.viewers)}</td></tr>`).join('')}
+    </tbody></table></div>`;
 }
 function stepAcademy(d) { if (acadCurrent) openAcademyItem(acadCurrent + d); }
 function closeAcademyItem() {
@@ -8689,7 +8781,7 @@ async function loadVisitStats(quiet) {
     visitErr = /function|does not exist|schema cache|404|relation/i.test(m) ? 'setup' : 'Data pengunjung tidak bisa dimuat: ' + m;
   }
   renderVisitStat();
-  if (!quiet || document.getElementById('view-visitors')?.classList.contains('active')) renderVisitors();
+  if (!quiet || document.getElementById('view-visitors')?.classList.contains('active')) { renderVisitors(); loadAcadViews().then(() => { if (document.getElementById('view-visitors')?.classList.contains('active')) renderVisitors(); }); }
 }
 function visitToday() {
   const d = visitStats?.daily?.find(x => x.day === visitStats.today);
@@ -8744,6 +8836,7 @@ function renderVisitors() {
     <div class="vs-box"><h3>Rincian harian</h3>
       ${rows ? `<table class="vs-table"><thead><tr><th>Tanggal</th><th>Orang</th><th>Login dealer</th><th>Kunjungan</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="vs-note">Belum ada kunjungan tercatat di periode ini.</div>'}
     </div>
+    ${acadRecapHtml()}
     <div class="vs-note"><b>Orang</b> = browser/perangkat berbeda (satu orang yang membuka dari HP dan laptop terhitung 2; mode incognito / hapus data browser = orang baru). <b>Kunjungan</b> = berapa kali portal dibuka (sekali per tab). <b>Login dealer</b> = pengunjung yang masuk dengan Kode Akses hari itu. Akun Admin/Editor dan layar videotron tidak dihitung. Hari dihitung dalam WIB.</div>`;
 }
 
