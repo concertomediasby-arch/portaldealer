@@ -2783,6 +2783,34 @@ body {
   .stock-sum.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
   .stock-sum b { display: block; font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.1; }
   .stock-sum span { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  /* Pengunjung Portal (Admin & Editor) */
+  .stat-card.vs-stat { display: none; cursor: pointer; }
+  body.is-staff .stat-card.vs-stat { display: block; }
+  .stat-card.vs-stat:hover { border-color: var(--accent); }
+  .vs-sub { font-size: 11.5px; color: var(--fg-muted); margin-top: 4px; }
+  .vs-wrap { padding: 8px 28px 48px; }
+  .vs-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .vs-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; }
+  .vs-card b { display: block; font-family: var(--f-display); font-size: 26px; font-weight: 700; line-height: 1.1; color: var(--fg); }
+  .vs-card .vs-k { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; margin-bottom: 6px; }
+  .vs-card .vs-sub b { display: inline; font-size: inherit; font-family: inherit; }
+  .vs-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 18px; }
+  .vs-box h3 { font-family: var(--f-display); font-size: 15px; margin: 0 0 4px; color: var(--fg); }
+  .vs-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--fg-muted); margin-bottom: 12px; }
+  .vs-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .vs-chart { display: flex; align-items: flex-end; gap: 3px; height: 180px; border-bottom: 1px solid var(--border); }
+  .vs-bar { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; position: relative; }
+  .vs-bar .a { background: color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 3px 3px 0 0; }
+  .vs-bar .d { background: var(--accent); }
+  .vs-bar.today .a { outline: 1px solid var(--accent); }
+  .vs-axis { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--fg-muted); margin-top: 6px; font-family: var(--f-mono); }
+  .vs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .vs-table th, .vs-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: right; color: var(--fg); }
+  .vs-table th { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .vs-table th:first-child, .vs-table td:first-child { text-align: left; }
+  .vs-note { font-size: 12px; color: var(--fg-muted); line-height: 1.55; }
+  .vs-warn { padding: 14px 16px; border: 1px solid var(--accent); border-radius: var(--r); margin-bottom: 16px; font-size: 13px; line-height: 1.55; color: var(--fg); }
+  @media (max-width: 760px) { .vs-wrap { padding: 0 16px 90px; } .vs-cards { grid-template-columns: 1fr 1fr; } .vs-card b { font-size: 22px; } .vs-chart { height: 140px; gap: 2px; } }
   .stock-sum.ready b { color: #52c38a; } .stock-sum.indent b { color: #c9a052; } .stock-sum.habis b { color: #e0675f; } .stock-sum.otw b { color: #5aa9e6; }
   .sr-var { font-size: 11.5px; margin-bottom: 2px; }
   .sr-otw { color: #5aa9e6; font-weight: 600; font-size: 11.5px; }
@@ -3113,6 +3141,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
         Run Down Gathering
       </button>
+      <button class="sidebar-item staff-nav" id="nav-visitors" onclick="openVisitors()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        Pengunjung Portal
+      </button>
     </div>
   </aside>
 
@@ -3142,6 +3174,11 @@ body {
         <div class="stat-card">
           <div class="stat-label">Terakhir Update</div>
           <div class="stat-value" id="stat-lastupdate" style="font-size:18px">—</div>
+        </div>
+        <div class="stat-card vs-stat" onclick="openVisitors()" title="Pengunjung portal — khusus Admin &amp; Editor">
+          <div class="stat-label">Pengunjung Hari Ini</div>
+          <div class="stat-value" id="stat-visitors">—</div>
+          <div class="vs-sub" id="stat-visitors-sub">khusus Admin &amp; Editor</div>
         </div>
       </div>
 
@@ -3203,6 +3240,23 @@ body {
         <div class="page-subtitle">Perangkat lunak tuning &amp; konfigurasi untuk produk DSP Concerto Audio Indonesia.</div>
       </div>
       <div id="dsp-list" style="padding:0 0 48px"></div>
+    </div>
+
+    <!-- VIEW: Pengunjung Portal (Admin & Editor; tabel site_visits lewat fungsi log_visit / site_visit_stats) -->
+    <div class="view" id="view-visitors">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Pengunjung Portal</div>
+          <div class="page-subtitle" id="vs-subtitle">Jumlah orang yang membuka portal — khusus Admin &amp; Editor.</div>
+          <div class="gt-tabs">
+            <button class="filter-chip" data-vsdays="7" onclick="setVisitDays(7)">7 hari</button>
+            <button class="filter-chip active" data-vsdays="30" onclick="setVisitDays(30)">30 hari</button>
+            <button class="filter-chip" data-vsdays="90" onclick="setVisitDays(90)">90 hari</button>
+            <button class="filter-chip" onclick="loadVisitStats()">↻ Muat ulang</button>
+          </div>
+        </div>
+      </div>
+      <div class="vs-wrap" id="vs-body"></div>
     </div>
 
     <!-- VIEW: Kelola Dealer (khusus Editor) -->
@@ -3530,6 +3584,10 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
       <span>Sheet</span>
     </button>
+    <button class="mobile-nav-item staff-nav" id="mnav-visitors" onclick="openVisitors()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>Pengunjung</span>
+    </button>
     <button class="mobile-nav-item" id="mnav-dsp" onclick="openDspSoftware()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
       <span>DSP</span>
@@ -3707,7 +3765,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-28T15:15:50Z';
+const LAST_UPDATE = '2026-10-30T02:00:49Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5497,6 +5555,7 @@ function showView(viewId) {
   if (viewId === 'academy') document.getElementById('nav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('nav-dealers')?.classList.add('active');
   if (viewId === 'rundown') document.getElementById('nav-rundown')?.classList.add('active');
+  if (viewId === 'visitors') document.getElementById('nav-visitors')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('nav-stock')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
@@ -5512,6 +5571,7 @@ function showView(viewId) {
   if (viewId === 'academy') document.getElementById('mnav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('mnav-dealers')?.classList.add('active');
   if (viewId === 'rundown') document.getElementById('mnav-rundown')?.classList.add('active');
+  if (viewId === 'visitors') document.getElementById('mnav-visitors')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('mnav-stock')?.classList.add('active');
 }
 
@@ -6115,6 +6175,8 @@ function initSupabase() {
 
 function onAuthChanged() {
   updateAuthUI();
+  visitLog();
+  if (isAdmin()) loadVisitStats(true);
   if (authUser) {
     loadStock();
     subscribeStock();
@@ -6123,7 +6185,7 @@ function onAuthChanged() {
     stockMap = {}; stockLoaded = false; guideFiles = null; gtItems = null; gtOrders = null; gtTop = null; rdItems = null; qaItems = null;
     if (qaChannel) { supabase.removeChannel(qaChannel); qaChannel = null; }
     refreshStockUI();
-    if (['view-stock', 'view-guides', 'view-dealers', 'view-gathering', 'view-academy'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
+    if (['view-stock', 'view-guides', 'view-dealers', 'view-gathering', 'view-academy', 'view-visitors'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
   }
 }
 
@@ -8520,6 +8582,164 @@ function gtReset() {
 ══════════════════════════════════════════ */
 const RUNDOWN_TABLE = 'gathering_rundown';
 let rdItems = null, rdErr = '', rdEditId = null, rdTimer = null;
+
+/* ── Pengunjung Portal (khusus Admin & Editor) ──
+   Tiap browser diberi ID acak (localStorage VISIT_ID_KEY, tanpa data pribadi). Sekali per sesi tab dicatat lewat fungsi Postgres
+   log_visit (SECURITY DEFINER, execute = anon & authenticated) ke tabel site_visits (1 baris per hari WIB per browser: jumlah kunjungan
+   + tanda pernah login dealer). Angka dibaca lewat site_visit_stats (hanya role admin/editor). Akun Admin/Editor & layar videotron
+   tidak dihitung. SQL: VISIT_SQL (tombol 📋 Salin SQL di menu Pengunjung Portal bila belum dijalankan). */
+const VISIT_ID_KEY = 'cai-vid', VISIT_SES_KEY = 'cai-visit';
+const VISIT_SQL = `create table if not exists public.site_visits (
+  day date not null,
+  vid text not null,
+  visits int not null default 1,
+  logged boolean not null default false,
+  first_at timestamptz not null default now(),
+  last_at timestamptz not null default now(),
+  primary key (day, vid)
+);
+alter table public.site_visits enable row level security;
+
+create or replace function public.log_visit(p_vid text, p_logged boolean default false, p_inc int default 1)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_vid is null or length(p_vid) < 8 or length(p_vid) > 64 then return; end if;
+  insert into site_visits (day, vid, visits, logged)
+  values ((now() at time zone 'Asia/Jakarta')::date, p_vid, 1, coalesce(p_logged, false))
+  on conflict (day, vid) do update
+    set visits = site_visits.visits + case when p_inc > 0 then 1 else 0 end,
+        logged = site_visits.logged or coalesce(p_logged, false),
+        last_at = now();
+end $$;
+grant execute on function public.log_visit(text, boolean, int) to anon, authenticated;
+
+create or replace function public.site_visit_stats(p_days int default 30)
+returns json language plpgsql security definer set search_path = public as $$
+declare today date := (now() at time zone 'Asia/Jakarta')::date; n int := least(greatest(coalesce(p_days, 30), 1), 366);
+begin
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('admin', 'editor') then raise exception 'not allowed'; end if;
+  return json_build_object(
+    'today', today,
+    'daily', (select coalesce(json_agg(d order by d.day), '[]'::json) from (
+      select day, count(*) as visitors, sum(visits) as visits, count(*) filter (where logged) as logged
+      from site_visits where day > today - n group by day) d),
+    'v7', (select count(distinct vid) from site_visits where day > today - 7),
+    'v30', (select count(distinct vid) from site_visits where day > today - 30),
+    'total_visitors', (select count(distinct vid) from site_visits),
+    'total_visits', (select coalesce(sum(visits), 0) from site_visits),
+    'first_day', (select min(day) from site_visits));
+end $$;
+grant execute on function public.site_visit_stats(int) to authenticated;`;
+
+function visitId() {
+  try {
+    let v = localStorage.getItem(VISIT_ID_KEY);
+    if (!v || v.length < 8) { v = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); localStorage.setItem(VISIT_ID_KEY, v); }
+    return v;
+  } catch (e) { return null; }
+}
+// Dipanggil saat halaman dimuat dan tiap status login berubah: kunjungan dihitung sekali per sesi tab; login dealer di sesi yang sama hanya menandai "login".
+let visitBusy = false;
+async function visitLog() {
+  if (!supabase || QA_SCREEN_MODE || visitBusy || isAdmin()) return;
+  const vid = visitId(); if (!vid) return;
+  const logged = !!authUser;
+  let st = ''; try { st = sessionStorage.getItem(VISIT_SES_KEY) || ''; } catch (e) {}
+  const day = todayWIB();
+  const done = st.startsWith(day);
+  if (done && (!logged || st.endsWith(':L'))) return;
+  visitBusy = true;
+  try {
+    const { error } = await supabase.rpc('log_visit', { p_vid: vid, p_logged: logged, p_inc: done ? 0 : 1 });
+    if (!error) try { sessionStorage.setItem(VISIT_SES_KEY, day + (logged ? ':L' : '')); } catch (e) {}
+  } catch (e) {}
+  visitBusy = false;
+}
+
+let visitStats = null, visitErr = '', visitDays = 30, visitAt = null;
+const fmtNum = n => Number(n || 0).toLocaleString('id-ID');
+function openVisitors() {
+  if (!requireLogin(() => openVisitors())) return;
+  if (!isAdmin()) { showToast('Menu Pengunjung Portal khusus akun Admin & Editor.'); return; }
+  showView('visitors');
+  document.querySelector('.main')?.scrollTo(0, 0);
+  renderVisitors();
+  loadVisitStats();
+}
+function setVisitDays(n) {
+  visitDays = n;
+  document.querySelectorAll('[data-vsdays]').forEach(b => b.classList.toggle('active', +b.dataset.vsdays === n));
+  loadVisitStats();
+}
+async function loadVisitStats(quiet) {
+  if (!supabase || !isAdmin()) return;
+  try {
+    const { data, error } = await supabase.rpc('site_visit_stats', { p_days: visitDays });
+    if (error) throw error;
+    visitStats = typeof data === 'string' ? JSON.parse(data) : data; visitErr = ''; visitAt = new Date();
+  } catch (e) {
+    const m = String(e.message || e);
+    visitStats = null;
+    visitErr = /function|does not exist|schema cache|404|relation/i.test(m) ? 'setup' : 'Data pengunjung tidak bisa dimuat: ' + m;
+  }
+  renderVisitStat();
+  if (!quiet || document.getElementById('view-visitors')?.classList.contains('active')) renderVisitors();
+}
+function visitToday() {
+  const d = visitStats?.daily?.find(x => x.day === visitStats.today);
+  return { visitors: +(d?.visitors || 0), visits: +(d?.visits || 0), logged: +(d?.logged || 0) };
+}
+function renderVisitStat() {
+  const el = document.getElementById('stat-visitors'), sub = document.getElementById('stat-visitors-sub');
+  if (!el) return;
+  if (!visitStats) { el.textContent = '—'; sub.textContent = visitErr === 'setup' ? 'belum diaktifkan — buka untuk setup' : 'khusus Admin & Editor'; return; }
+  const t = visitToday();
+  el.textContent = fmtNum(t.visitors);
+  sub.textContent = `${fmtNum(t.visits)} kunjungan · 7 hari: ${fmtNum(visitStats.v7)} orang`;
+}
+function visitCopySql() { (navigator.clipboard?.writeText(VISIT_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => { prompt('Salin SQL ini:', VISIT_SQL); }); }
+function renderVisitors() {
+  const box = document.getElementById('vs-body'); if (!box) return;
+  const sub = document.getElementById('vs-subtitle');
+  if (sub) sub.textContent = 'Jumlah orang yang membuka portal — khusus Admin & Editor.' + (visitAt ? ` Diperbarui pukul ${visitAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })}.` : '');
+  if (visitErr === 'setup') {
+    box.innerHTML = `<div class="vs-warn">Penghitung pengunjung belum diaktifkan. Jalankan SQL ini sekali di Supabase → SQL Editor → Run, lalu tekan ↻ Muat ulang. Kunjungan mulai dihitung setelah SQL dijalankan.<br><br><button class="gt-btn" onclick="visitCopySql()">📋 Salin SQL</button></div>`;
+    return;
+  }
+  if (visitErr) { box.innerHTML = `<div class="vs-warn">${escHtml(visitErr)}</div>`; return; }
+  if (!visitStats) { box.innerHTML = '<div class="vs-note">⏳ Memuat…</div>'; return; }
+  const S = visitStats, t = visitToday();
+  // Isi hari tanpa kunjungan dengan 0 agar grafik berurutan
+  const map = new Map((S.daily || []).map(d => [d.day, d]));
+  const days = [];
+  const base = new Date(S.today + 'T00:00:00Z');
+  for (let i = visitDays - 1; i >= 0; i--) {
+    const k = new Date(base.getTime() - i * 864e5).toISOString().slice(0, 10);
+    const d = map.get(k);
+    days.push({ day: k, visitors: +(d?.visitors || 0), visits: +(d?.visits || 0), logged: +(d?.logged || 0) });
+  }
+  const max = Math.max(1, ...days.map(d => d.visitors));
+  const sumV = days.reduce((a, d) => a + d.visits, 0);
+  const fmtD = (k, o) => new Date(k + 'T00:00:00Z').toLocaleDateString('id-ID', Object.assign({ timeZone: 'UTC' }, o || { day: 'numeric', month: 'short' }));
+  const bars = days.map(d => `<div class="vs-bar${d.day === S.today ? ' today' : ''}" title="${fmtD(d.day, { weekday: 'short', day: 'numeric', month: 'short' })}: ${d.visitors} orang · ${d.visits} kunjungan · ${d.logged} login dealer">
+      <div class="a" style="height:${(d.visitors - d.logged) / max * 100}%"></div><div class="d" style="height:${d.logged / max * 100}%"></div></div>`).join('');
+  const rows = days.slice().reverse().filter(d => d.visits).map(d => `<tr><td>${fmtD(d.day, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</td><td>${fmtNum(d.visitors)}</td><td>${fmtNum(d.logged)}</td><td>${fmtNum(d.visits)}</td></tr>`).join('');
+  box.innerHTML = `<div class="vs-cards">
+      <div class="vs-card"><div class="vs-k">Hari ini</div><b>${fmtNum(t.visitors)}</b><div class="vs-sub">orang · ${fmtNum(t.visits)} kunjungan · ${fmtNum(t.logged)} login dealer</div></div>
+      <div class="vs-card"><div class="vs-k">7 hari terakhir</div><b>${fmtNum(S.v7)}</b><div class="vs-sub">orang berbeda</div></div>
+      <div class="vs-card"><div class="vs-k">30 hari terakhir</div><b>${fmtNum(S.v30)}</b><div class="vs-sub">orang berbeda</div></div>
+      <div class="vs-card"><div class="vs-k">Total</div><b>${fmtNum(S.total_visitors)}</b><div class="vs-sub">orang · ${fmtNum(S.total_visits)} kunjungan${S.first_day ? ' sejak ' + fmtD(S.first_day, { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</div></div>
+    </div>
+    <div class="vs-box"><h3>Pengunjung per hari · ${visitDays} hari terakhir</h3>
+      <div class="vs-legend"><span><i style="background:var(--accent)"></i>Login dealer</span><span><i style="background:color-mix(in srgb, var(--accent) 45%, transparent)"></i>Pengunjung umum</span><span>${fmtNum(sumV)} kunjungan dalam periode ini</span></div>
+      <div class="vs-chart">${bars}</div>
+      <div class="vs-axis"><span>${fmtD(days[0].day)}</span><span>${fmtD(days[days.length - 1].day)}</span></div>
+    </div>
+    <div class="vs-box"><h3>Rincian harian</h3>
+      ${rows ? `<table class="vs-table"><thead><tr><th>Tanggal</th><th>Orang</th><th>Login dealer</th><th>Kunjungan</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="vs-note">Belum ada kunjungan tercatat di periode ini.</div>'}
+    </div>
+    <div class="vs-note"><b>Orang</b> = browser/perangkat berbeda (satu orang yang membuka dari HP dan laptop terhitung 2; mode incognito / hapus data browser = orang baru). <b>Kunjungan</b> = berapa kali portal dibuka (sekali per tab). <b>Login dealer</b> = pengunjung yang masuk dengan Kode Akses hari itu. Akun Admin/Editor dan layar videotron tidak dihitung. Hari dihitung dalam WIB.</div>`;
+}
 
 function openRundown(tab) {
   if (!requireLogin(() => openRundown(tab))) return;
@@ -11252,6 +11472,7 @@ initQaScreen();
 if (!QA_SCREEN_MODE) openDeepLink();
 updateAcademyStar();
 initSupabase();
+setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui
 </script>
 </body>
 </html>
