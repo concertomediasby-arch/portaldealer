@@ -3867,7 +3867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T04:33:34Z';
+const LAST_UPDATE = '2026-10-30T05:19:00Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6810,7 +6810,7 @@ async function doLogout(msg) {
    Berlaku untuk semua akun (dealer, admin, editor) kecuali layar videotron. Waktu aktivitas terakhir disimpan di localStorage
    IDLE_KEY (bersama semua tab), jadi browser yang ditutup lalu dibuka lagi setelah lewat batas langsung keluar.
    1 menit sebelum keluar tampil peringatan + tombol "Tetap login". */
-const IDLE_LOGOUT_MIN = 30, IDLE_WARN_SEC = 60, IDLE_KEY = 'cai-last-active';
+const IDLE_LOGOUT_MIN = 15, IDLE_WARN_SEC = 60, IDLE_KEY = 'cai-last-active';
 let idleWritten = 0, idleOut = false;
 const idleLast = () => { try { return +localStorage.getItem(IDLE_KEY) || 0; } catch (e) { return 0; } };
 function idleTouch(force) {
