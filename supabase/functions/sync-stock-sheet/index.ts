@@ -13,7 +13,7 @@
 //
 // Katalog (BRANDS) & STOCK_ALIASES dibaca dari katalog.js (atau index.html, versi lama) situs sebagai DATA (JSON5, tanpa menjalankan kode),
 // jadi produk/alias baru di repo langsung ikut. Aturan pencocokan di bawah = salinan renderImport()/saveImport()
-// (mode "Stok gudang") di index.html — bila aturan import di portal diubah, ubah juga di sini.
+// (mode "Stok gudang") di js/stock.js — bila aturan import di portal diubah, ubah juga di sini.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import JSON5 from 'https://esm.sh/json5@2.2.3';
 
