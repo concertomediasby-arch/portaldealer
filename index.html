@@ -3865,7 +3865,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T04:11:34Z';
+const LAST_UPDATE = '2026-10-30T04:14:02Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -3956,6 +3956,10 @@ const DSP_SOFTWARE = [
 ];
 
 const RECENT_UPDATES = [
+  { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-mfa54', note:'Spesifikasi MFA5 EVO+ 4CH dilengkapi (output 4 × 150 W, dimensi, berat)' },
+  { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-mfa52', note:'Spesifikasi MFA5 EVO+ 2CH dilengkapi (dimensi, berat, fuse)' },
+  { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-mfa34', note:'Spesifikasi MFA3 EVO+ 4CH dilengkapi (dimensi, berat)' },
+  { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-mfa32', note:'Spesifikasi MFA3 EVO+ 2CH dilengkapi (dimensi, berat)' },
   { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-verdi4', note:'Spesifikasi Verdi EVO+ 4CH dilengkapi & output diperbaiki (4 × 175 W)' },
   { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-verdi2', note:'Spesifikasi Verdi EVO+ 2CH dilengkapi (dimensi, berat, dll.)' },
   { date:'2026-10-30', type:'data', brandId:'steg', productId:'st-s10', note:'Spesifikasi S10 Spare Tire Active Subwoofer dilengkapi' },
@@ -4659,23 +4663,23 @@ const BRANDS = [
           photos:['assets/zl-verdi-4.webp','assets/zl-verdi-1.webp','assets/zl-verdi-2.webp','assets/zl-verdi-3.webp','assets/zl-verdi-5.webp'] },
         { id:'zl-mfa52', price:58425000, name:'MFA5 EVO+ 2CH', model:'MFA5 EVO+ 2CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
           desc:'Class AB Power Amplifier — MFA5 EVO+ 2 Channel.',
-          specs:{'Power Circuit':'Class AB','Output (4Ω)':'2 × 230 W','Output (2Ω)':'2 × 380 W','Bridge (2Ω)':'1 × 560 W','Freq. Response':'5 Hz – 30 kHz','THD':'≤0.03%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>400'},
+          specs:{'Power Circuit':'MOSFET Class AB','Output (4Ω)':'2 × 230 W','Output (2Ω)':'2 × 380 W','Bridge (4Ω)':'1 × 560 W','Operating Voltage':'9 – 16 V','Power Supply':'PWM','Main PCB':'FR-4 D / 1 Oz','Soft Start':'Ya','Freq. Response':'5 Hz – 30 kHz (@ −1 dB)','Damping Factor':'>400','SNR':'>92 dB (A-weighted)','THD':'0.030% (A-weighted, 10 W)','Channel Separation':'>60 dB','Input Gain':'0.25 V – 8.0 V','Input Impedance':'20 kΩ','LED':'Power / Protect','Protection':'Short, Thermal, DC Offset','Fuse':'40 A × 2','Dimensions':'210 × 55 × 323 mm (L × T × P)','Weight':'3.8 kg'},
           photos:['assets/zl-mfa5-2.webp','assets/zl-mfa5-1.webp','assets/zl-mfa5-3.webp','assets/zl-mfa5-4.webp','assets/zl-mfa5-5.webp'] },
         { id:'zl-mfa54', price:61750000, name:'MFA5 EVO+ 4CH', model:'MFA5 EVO+ 4CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
           desc:'Class AB Power Amplifier — MFA5 EVO+ 4 Channel.',
-          specs:{'Power Circuit':'Class AB','Output (4Ω)':'4 × 140 W','Output (2Ω)':'4 × 230 W','Bridge (2Ω)':'2 × 450 W','Freq. Response':'5 Hz – 30 kHz','THD':'≤0.03%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>400'},
+          specs:{'Power Circuit':'MOSFET Class AB','Output (4Ω)':'4 × 150 W','Output (2Ω)':'4 × 230 W','Bridge (4Ω)':'2 × 450 W','Operating Voltage':'9 – 16 V','Power Supply':'PWM','Main PCB':'FR-4 D / 1 Oz','Soft Start':'Ya','Freq. Response':'5 Hz – 30 kHz (@ −1 dB)','Damping Factor':'>400','SNR':'>92 dB (A-weighted)','THD':'0.030% (A-weighted, 10 W)','Channel Separation':'>60 dB','Input Gain':'0.25 V – 8.0 V','Input Impedance':'20 kΩ','LED':'Power / Protect','Protection':'Short, Thermal, DC Offset','Fuse':'40 A × 3','Dimensions':'210 × 55 × 323 mm (L × T × P)','Weight':'3.8 kg'},
           photos:['assets/zl-mfa5-3.webp','assets/zl-mfa5-1.webp','assets/zl-mfa5-2.webp','assets/zl-mfa5-4.webp','assets/zl-mfa5-5.webp'] },
         { id:'zl-mfa32', price:32300000, name:'MFA3 EVO+ 2CH', model:'MFA3 EVO+ 2CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
           desc:'Class AB Power Amplifier — MFA3 EVO+ 2 Channel.',
-          specs:{'Power Circuit':'Class AB','Output (4Ω)':'2 × 120 W','Output (2Ω)':'2 × 200 W','Bridge (2Ω)':'1 × 400 W','Freq. Response':'20 Hz – 40 kHz','THD':'≤0.03%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>200'},
+          specs:{'Power Circuit':'MOSFET Class AB','Output (4Ω)':'2 × 120 W','Output (2Ω)':'2 × 200 W','Bridge (4Ω)':'1 × 400 W','Operating Voltage':'9 – 16 V','Power Supply':'PWM','Main PCB':'FR-4 D / 1 Oz','Soft Start':'Ya','Freq. Response':'20 Hz – 40 kHz (@ −1 dB)','Damping Factor':'>200','SNR':'>92 dB (A-weighted)','THD':'0.030% (A-weighted, 10 W)','Channel Separation':'>60 dB','Input Gain':'0.25 V – 8.0 V','Input Impedance':'20 kΩ','LED':'Power / Protect','Protection':'Short, Thermal, DC Offset','Residual Noise':'<0.5 mV (A-weighted)','Dimensions':'210 × 55 × 233 mm (L × T × P)','Weight':'2.6 kg'},
           photos:['assets/zl-mfa3-1.webp','assets/zl-mfa3-2.webp','assets/zl-mfa3-3.webp','assets/zl-mfa3-4.webp','assets/zl-mfa3-5.webp'] },
         { id:'zl-mfa34', price:33725000, name:'MFA3 EVO+ 4CH', model:'MFA3 EVO+ 4CH', category:'Amplifier', emoji:'⚡', hasVideo:false,
           desc:'Class AB Power Amplifier — MFA3 EVO+ 4 Channel.',
-          specs:{'Power Circuit':'Class AB','Output (4Ω)':'4 × 90 W','Output (2Ω)':'4 × 120 W','Bridge (2Ω)':'2 × 240 W','Freq. Response':'20 Hz – 40 kHz','THD':'≤0.03%','Operating Voltage':'9 – 16 V','Input Impedance':'20 kΩ','SNR':'≥92 dB','Damping Factor':'>200'},
+          specs:{'Power Circuit':'MOSFET Class AB','Output (4Ω)':'4 × 90 W','Output (2Ω)':'4 × 120 W','Bridge (4Ω)':'2 × 240 W','Operating Voltage':'9 – 16 V','Power Supply':'PWM','Main PCB':'FR-4 D / 1 Oz','Soft Start':'Ya','Freq. Response':'20 Hz – 40 kHz (@ −1 dB)','Damping Factor':'>200','SNR':'>92 dB (A-weighted)','THD':'0.030% (A-weighted, 10 W)','Channel Separation':'>60 dB','Input Gain':'0.25 V – 8.0 V','Input Impedance':'20 kΩ','LED':'Power / Protect','Protection':'Short, Thermal, DC Offset','Residual Noise':'<0.5 mV (A-weighted)','Dimensions':'210 × 55 × 233 mm (L × T × P)','Weight':'2.7 kg'},
           photos:['assets/zl-mfa3-2.webp','assets/zl-mfa3-1.webp','assets/zl-mfa3-3.webp','assets/zl-mfa3-4.webp','assets/zl-mfa3-5.webp'] },
         { id:'zl-mfa1', price:12350000, name:'MFA1 EVO+', model:'MFA1 EVO+', category:'Amplifier', emoji:'⚡', hasVideo:false,
           desc:'Class AB 4CH Power Amplifier — MFA1 EVO+.',
-          specs:{'Power Circuit':'Class AB','Output (4Ω)':'4 × 72 W','Output (2Ω)':'4 × 130 W','Freq. Response':'10 Hz – 40 kHz','THD':'≤0.03%','Input Sensitivity':'200 mV – 4 V','Input Impedance':'20 kΩ','SNR':'≥100 dB','Damping Factor':'>200','Fuse Rating':'40 A × 1'},
+          specs:{'Power Circuit':'Class AB','Output (4Ω)':'4 × 72 W','Output (2Ω)':'4 × 130 W','Freq. Response':'10 Hz – 40 kHz','THD':'≤0.03%','Input Sensitivity':'200 mV – 4 V','Input Impedance':'20 kΩ','SNR':'≥100 dB','Channel Separation':'60 dB','Damping Factor':'>200','Fuse Rating':'40 A × 1'},
           photos:['assets/zl-mfa1-3.webp','assets/zl-mfa1-1.webp','assets/zl-mfa1-2.webp'] },
       ]},
     ]
