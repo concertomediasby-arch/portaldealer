@@ -2976,3 +2976,7 @@ body {
   .admin-status-bar span { color: var(--accent); font-weight: 600; }
   .admin-logout-btn { font-size: 11px; color: var(--fg-muted); background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
   .admin-logout-btn:hover { color: var(--fg); }
+
+/* CAPTCHA login (Cloudflare Turnstile) — kosong/tak terlihat kecuali Cloudflare meminta centang */
+.cf-captcha:empty { display: none; }
+.cf-captcha { margin: 8px 0 4px; }

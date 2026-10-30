@@ -186,6 +186,41 @@ function randomPin(len = 6) {
   return Array.from(crypto.getRandomValues(new Uint32Array(len)), n => chars[n % chars.length]).join('');
 }
 
+/* ── CAPTCHA login (Cloudflare Turnstile, 30 Okt 2026 permintaan pemilik — menahan bot penebak kode akses) ──
+   Site Key bersifat publik (boleh di repo); Secret Key HANYA di Supabase → Authentication → Attack Protection → CAPTCHA.
+   Kosong = CAPTCHA mati (login seperti biasa). Urutan aktivasi: isi Site Key & deploy situs DULU, baru nyalakan CAPTCHA di Supabase
+   (bila Supabase dinyalakan lebih dulu, semua login gagal). Widget "interaction-only": biasanya tak terlihat, kotak centang hanya
+   muncul bila Cloudflare ragu. Token sekali pakai → widget dibuat ulang tiap percobaan login. */
+const TURNSTILE_SITE_KEY = '';
+let tsLoading = null;
+const tsWidgets = {};
+function tsLoad() {
+  if (window.turnstile) return Promise.resolve();
+  return tsLoading || (tsLoading = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    s.async = true; s.onload = () => res(); s.onerror = () => { tsLoading = null; rej(new Error('Verifikasi keamanan tidak bisa dimuat. Periksa koneksi internet.')); };
+    document.head.appendChild(s);
+  }));
+}
+async function captchaToken(hostId) {
+  if (!TURNSTILE_SITE_KEY) return undefined;
+  await tsLoad();
+  const host = document.getElementById(hostId);
+  if (tsWidgets[hostId] != null) { try { turnstile.remove(tsWidgets[hostId]); } catch (e) {} delete tsWidgets[hostId]; }
+  return new Promise((res, rej) => {
+    const fail = msg => () => rej(new Error(msg));
+    const t = setTimeout(fail('Verifikasi keamanan terlalu lama — coba lagi.'), 90000);
+    tsWidgets[hostId] = turnstile.render(host, {
+      sitekey: TURNSTILE_SITE_KEY, appearance: 'interaction-only', size: 'flexible', language: 'id',
+      callback: tok => { clearTimeout(t); res(tok); },
+      'error-callback': () => { clearTimeout(t); rej(new Error('Verifikasi keamanan gagal — coba lagi.')); },
+      'expired-callback': () => {}, 'timeout-callback': () => { clearTimeout(t); rej(new Error('Verifikasi keamanan kedaluwarsa — coba lagi.')); },
+    });
+  });
+}
+const signInOpts = tok => tok ? { options: { captchaToken: tok } } : {};
+
 async function dealerLogin() {
   const ident = loginStaffMode ? document.getElementById('login-email').value.trim() : SHARED_DEALER_CODE;
   const raw   = document.getElementById('login-password').value.trim();
@@ -198,7 +233,8 @@ async function dealerLogin() {
   btn.disabled = true; btn.textContent = 'Memverifikasi…'; err.textContent = '';
   try {
     idleTouch(true);   // login baru = aktivitas baru (sesi lama yang kedaluwarsa tidak ikut menendang)
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    const tok = await captchaToken('login-captcha');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass, ...signInOpts(tok) });
     if (error) throw error;
     authUser = data.user;
     const next = afterLogin;
@@ -496,7 +532,8 @@ async function adminLogin() {
   btn.disabled = true; btn.textContent = 'Memverifikasi...'; err.textContent = '';
   try {
     idleTouch(true);   // login baru = aktivitas baru (sesi lama yang kedaluwarsa tidak ikut menendang)
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    const tok = await captchaToken('admin-captcha');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass, ...signInOpts(tok) });
     if (error) throw error;
     authUser = data.user;
     showAdminStockSection();
