@@ -3093,7 +3093,7 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         Paket Audio
       </button>
-      <button class="sidebar-item login-only" id="nav-gathering" onclick="openGathering()">
+      <button class="sidebar-item staff-nav" id="nav-gathering" onclick="openGathering()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         Shopping Gathering<span class="nav-lock" title="Perlu login">🔒</span>
       </button>
@@ -3596,7 +3596,7 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
       <span>Paket</span>
     </button>
-    <button class="mobile-nav-item login-only" id="mnav-gathering" onclick="openGathering()">
+    <button class="mobile-nav-item staff-nav" id="mnav-gathering" onclick="openGathering()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       <span>Gathering</span>
     </button>
@@ -3765,7 +3765,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T02:00:49Z';
+const LAST_UPDATE = '2026-10-30T02:05:59Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6176,6 +6176,7 @@ function initSupabase() {
 function onAuthChanged() {
   updateAuthUI();
   visitLog();
+  if (!GT_DEALER_MENU && !isAdmin() && document.getElementById('view-gathering')?.classList.contains('active')) showView('dashboard');
   if (isAdmin()) loadVisitStats(true);
   if (authUser) {
     loadStock();
@@ -7517,8 +7518,12 @@ function gtSaveDraft() {
   try { localStorage.setItem(GT_DRAFT_KEY, JSON.stringify({ qty: gtQty, manual: gtManual, info })); } catch (e) {}
 }
 
+// 30 Okt 2026 (permintaan pemilik): menu Shopping Gathering dinonaktifkan untuk dealer — hanya Admin/Editor (menu ber-class staff-nav).
+// Aktifkan lagi untuk dealer: set true dan kembalikan class menu nav-gathering / mnav-gathering ke login-only.
+const GT_DEALER_MENU = false;
 function openGathering(tab) {
   if (!requireLogin(() => openGathering(tab))) return;
+  if (!GT_DEALER_MENU && !isAdmin()) { showToast('Shopping Gathering sudah selesai — menu ini tidak tersedia lagi.'); showView('dashboard'); return; }
   showView('gathering');
   document.querySelector('.main')?.scrollTo(0, 0);
   gtLoadDraft();
