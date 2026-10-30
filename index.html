@@ -3325,7 +3325,7 @@ body {
     <div class="view" id="view-rakit">
       <div class="page-header">
         <div class="page-title">Rakitan Audio</div>
-        <div class="page-subtitle">Susun sistem audio mobil dari produk resmi Concerto Audio Indonesia — pilih speaker, subwoofer, amplifier, DSP, kabel &amp; aksesoris. Total dihitung dari harga jual umum (SRP) — belum termasuk biaya instalasi, dll. — lalu unduh sebagai PDF penawaran.</div>
+        <div class="page-subtitle">Susun sistem audio mobil dari produk resmi Concerto Audio Indonesia — pilih speaker, subwoofer, amplifier, DSP, kabel &amp; aksesoris. Total dihitung dari harga jual umum (SRP) — belum termasuk biaya instalasi, custom box, dan biaya lain-lain — lalu unduh sebagai PDF penawaran.</div>
       </div>
       <div class="rk-wrap"><div id="rk-slots"></div><aside class="rk-side" id="rk-side"></aside></div>
       <div class="rk-pick" id="rk-pick" onclick="if (event.target === this) rkClosePick()">
@@ -3865,7 +3865,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T03:04:23Z';
+const LAST_UPDATE = '2026-10-30T03:13:32Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5400,6 +5400,7 @@ function openDspSoftware() {
    (price / priceList per panjang), peringatan sederhana kebutuhan channel amplifier, lalu unduh PDF penawaran (jsPDF).
    Rakitan disimpan di browser (localStorage RK_KEY). Hanya SRP — tidak ada harga dealer/diskon. Stok tampil bila login. */
 const RK_KEY = 'cai-rakit';
+const RK_EXCL = 'Harga belum termasuk biaya instalasi, custom box, dan biaya lain-lain.';   // tampil di bawah Total SRP & di PDF (permintaan pemilik)
 const RK_SLOTS = [
   { id: 'spk', title: 'Speaker', icon: '🔊', cats: ['Speaker', 'Midrange', 'Tweeter'], hint: 'Speaker set / coaxial, midrange & tweeter' },
   { id: 'sub', title: 'Subwoofer', icon: '🔈', cats: ['Subwoofer'], hint: 'Subwoofer pasif atau subwoofer aktif' },
@@ -5510,7 +5511,7 @@ function renderRakitSide() {
   const ic = { warn: '⚠', ok: '✓', info: 'ℹ' };
   const f = (k, label, ph) => `<label class="rk-f"><span>${label}</span><input value="${escHtml(rk[k] || '')}" placeholder="${ph}" oninput="rk['${k}']=this.value;rkSave()"></label>`;
   el.innerHTML = `<div class="rk-card">
-      <div class="rk-tot"><span>Total SRP</span><b>${fmtRp(a.total)}</b><small>${a.qty} item · ${rk.items.length} produk</small><div class="rk-excl">Harga belum termasuk biaya instalasi, dll.</div></div>
+      <div class="rk-tot"><span>Total SRP</span><b>${fmtRp(a.total)}</b><small>${a.qty} item · ${rk.items.length} produk</small><div class="rk-excl">${RK_EXCL}</div></div>
       ${a.notes.length ? `<div class="rk-notes">${a.notes.map(n => `<div class="rk-note ${n.t}"><i>${ic[n.t]}</i><span>${n.m}</span></div>`).join('')}</div>` : '<div class="rk-note info"><i>ℹ</i><span>Mulai dengan menambahkan speaker, subwoofer, amplifier, atau DSP.</span></div>'}
       <div class="rk-fine">Cek channel = perkiraan sederhana: 2 channel per set speaker/midrange/tweeter, 1 channel per subwoofer pasif. Konsultasikan konfigurasi final (crossover, bridge, impedansi) dengan installer / CAI.</div>
     </div>
@@ -5639,12 +5640,12 @@ function rkPdf() {
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...GOLD);
   doc.text('TOTAL', R - 78, y + 6); doc.text('Rp ' + nf(a.total), R - 3, y + 6, { align: 'right' });
   doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(90, 90, 100);
-  doc.text('Harga belum termasuk biaya instalasi, dll.', R, y + 13, { align: 'right' });
+  doc.text(RK_EXCL, R, y + 13, { align: 'right' });
   y += 19;
   const notes = [];
   if (rk.note) notes.push(clean(rk.note));
   notes.push('Harga = harga jual umum (SRP) Concerto Audio Indonesia saat dokumen dibuat dan dapat berubah sewaktu-waktu.');
-  notes.push('Harga belum termasuk biaya instalasi, dll. Ketersediaan stok mohon dikonfirmasi ke dealer / CAI.');
+  notes.push(RK_EXCL + ' Ketersediaan stok mohon dikonfirmasi ke dealer / CAI.');
   if (rows.some(r => !hasPrice(r.product))) notes.push('Produk bertanda "Hub. sales" belum memiliki SRP dan tidak masuk total.');
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...NAVY); doc.text('Catatan', L, y); y += 5;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.3); doc.setTextColor(60, 60, 70);
