@@ -3056,6 +3056,7 @@ body {
         <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
       </svg>
     </button>
+    <button class="theme-btn" id="music-btn" onclick="toggleMusic()" title="Musik latar" aria-label="Musik latar"></button>
     <button class="theme-btn" onclick="toggleTheme()" title="Ganti mode terang/gelap" aria-label="Ganti tema">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="theme-icon">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -3767,7 +3768,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T02:17:10Z';
+const LAST_UPDATE = '2026-10-30T02:41:48Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -4929,7 +4930,80 @@ function enterPortal() {
   app.classList.remove('app-hidden');
   landing.classList.add('hidden-landing');
   setTimeout(() => { landing.hidden = true; }, 600);
+  portalMusicStart();
 }
+
+/* ── Musik latar portal (30 Okt 2026, permintaan pemilik) ──
+   Lagu = assets/audio/portal-music.mp3: musik lounge sintetis buatan sendiri (tools/backsound.py, tanpa sampel pihak lain → bebas royalti).
+   Browser melarang suara sebelum ada klik, jadi musik mulai saat "Masuk Portal" ditekan (enterPortal) — atau klik pertama bila portal
+   dibuka lewat link produk. Tombol 🔊/🔇 di topbar (toggleMusic), pilihan diingat di localStorage PORTAL_MUSIC_KEY ('off' = mati).
+   Volume lewat Web Audio GainNode (iOS mengabaikan audio.volume); diam sementara saat video bersuara diputar & saat tab tidak aktif.
+   Tidak berbunyi di layar videotron (?layar=qa). */
+const PORTAL_MUSIC_SRC = 'assets/audio/portal-music.mp3?v=1', PORTAL_MUSIC_VOL = 0.22, PORTAL_MUSIC_KEY = 'cai-music';
+const PM_ICON_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+const PM_ICON_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>';
+let pm = null, pmWant = false, pmStopT = null, pmArmed = false;
+function pmPref() { try { return localStorage.getItem(PORTAL_MUSIC_KEY) !== 'off'; } catch (e) { return true; } }
+function pmIcon() {
+  const b = document.getElementById('music-btn'); if (!b) return;
+  const on = pmPref();
+  b.innerHTML = on ? PM_ICON_ON : PM_ICON_OFF;
+  b.title = b.ariaLabel = on ? 'Matikan musik latar' : 'Nyalakan musik latar';
+  b.classList.toggle('music-off', !on);
+}
+const pmVideoOn = () => [...document.querySelectorAll('video')].some(v => !v.paused && !v.ended && !v.muted);
+function pmSync() {
+  if (QA_SCREEN_MODE) return;
+  pmIcon();
+  const should = pmWant && pmPref() && !document.hidden && !pmVideoOn();
+  if (should) {
+    if (!pm) {
+      try {
+        const el = new Audio(PORTAL_MUSIC_SRC); el.loop = true; el.preload = 'auto';
+        const AC = window.AudioContext || window.webkitAudioContext;
+        const ctx = AC ? new AC() : null, gain = ctx ? ctx.createGain() : null;
+        if (ctx) { gain.gain.value = 0; ctx.createMediaElementSource(el).connect(gain).connect(ctx.destination); } else el.volume = PORTAL_MUSIC_VOL;
+        pm = { el, ctx, gain };
+      } catch (e) { return; }
+    }
+    clearTimeout(pmStopT);
+    pm.ctx?.resume?.();
+    pm.el.play().then(() => {
+      if (!pm.gain) return;
+      const g = pm.gain.gain, t = pm.ctx.currentTime;
+      g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(PORTAL_MUSIC_VOL, t + 1.8);
+    }).catch(() => pmArm());   // ditolak browser → tunggu klik berikutnya
+  } else if (pm && !pm.el.paused) {
+    clearTimeout(pmStopT);
+    if (pm.gain) {
+      const g = pm.gain.gain, t = pm.ctx.currentTime;
+      g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0, t + 0.7);
+      pmStopT = setTimeout(() => pm.el.pause(), 750);
+    } else pm.el.pause();
+  }
+}
+function portalMusicStart() { pmWant = true; pmSync(); }
+function toggleMusic() {
+  const on = !pmPref();
+  try { localStorage.setItem(PORTAL_MUSIC_KEY, on ? 'on' : 'off'); } catch (e) {}
+  pmWant = true; pmSync();
+  showToast(on ? '🎵 Musik latar menyala' : '🔇 Musik latar dimatikan');
+}
+// Portal dibuka tanpa landing (link produk) / play ditolak: mulai pada klik atau tombol pertama di dalam portal
+function pmArm() {
+  if (pmArmed || QA_SCREEN_MODE) return;
+  pmArmed = true;
+  const go = e => {
+    if (!document.getElementById('landing')?.hidden && !document.querySelector('.app:not(.app-hidden)')) return;
+    if (e.target?.closest?.('#music-btn')) return;
+    ['pointerdown', 'keydown'].forEach(ev => document.removeEventListener(ev, go, true));
+    pmArmed = false;
+    portalMusicStart();
+  };
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, go, true));
+}
+['play', 'pause', 'ended', 'volumechange'].forEach(ev => document.addEventListener(ev, e => { if (e.target?.tagName === 'VIDEO' && pmWant) pmSync(); }, true));
+document.addEventListener('visibilitychange', () => { if (pmWant) pmSync(); });
 
 // Landing nav links: enter the portal straight into a section
 function landingGo(target) {
@@ -11572,6 +11646,7 @@ if (!QA_SCREEN_MODE) openDeepLink();
 updateAcademyStar();
 initSupabase();
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui
+if (!QA_SCREEN_MODE) { pmIcon(); pmArm(); }   // musik latar portal: tunggu klik pertama
 </script>
 </body>
 </html>
