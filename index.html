@@ -3867,7 +3867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T07:11:48Z';
+const LAST_UPDATE = '2026-10-30T07:12:56Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -7186,12 +7186,12 @@ function renderAdminList() {
     products.forEach(p => {
       const s = stockMap[p.id] || {};
       const status = s.status || '';
-      const note   = adminNote(s.note);
+      const otw    = s.incoming || '';
       const qty    = s.qty ?? '';
       html += `<div class="admin-product-row">
         <div class="admin-prod-info">
           <div class="admin-prod-name">${escHtml(p.name)}</div>
-          <div class="admin-prod-model">${escHtml(p.model)}${s.incoming ? ` · 🚚 OTW ${escHtml(s.incoming)}` : ''}</div>
+          <div class="admin-prod-model">${escHtml(p.model)}</div>
         </div>
         <select class="admin-stock-select" data-pid="${p.id}" onchange="scheduleSave('${p.id}')">
           <option value=""       ${status===''      ?'selected':''}>— Belum diatur</option>
@@ -7201,8 +7201,8 @@ function renderAdminList() {
         </select>
         <input class="admin-qty-input" type="number" min="0" step="1" inputmode="numeric" placeholder="Qty"
           value="${qty}" data-pid="${p.id}" oninput="adminQtyChange('${p.id}',this)" title="Jumlah stok tersisa">
-        <input class="admin-note-input" type="text" placeholder="Catatan..." maxlength="80"
-          value="${escHtml(note)}" data-pid="${p.id}" oninput="scheduleSave('${p.id}')">
+        <input class="admin-note-input admin-otw-input" type="text" placeholder="🚚 OTW (mis. 20 pcs)" maxlength="40"
+          value="${escHtml(otw)}" data-pid="${p.id}" oninput="scheduleSave('${p.id}')" title="Barang OTW / belum datang — tampil ke dealer sebagai 🚚 OTW. Kosongkan bila tidak ada.">
         <div class="admin-save-row" id="saved-${p.id}"></div>
       </div>`;
     });
@@ -7233,11 +7233,14 @@ async function saveStock(pid) {
   const inp  = document.querySelector(`.admin-note-input[data-pid="${pid}"]`);
   const icon = document.getElementById('saved-' + pid);
   if (!sel || !supabase) return;
-  const note = inp ? inp.value.trim() : '';
+  // Kolom ketiga = status barang OTW (kolom `incoming`, 30 Okt 2026, permintaan pemilik — dulu kolom catatan).
+  // Catatan lama dipertahankan tanpa keterangan gudang FREE/PINJAM/2ND/PASANG & tanpa teks OTW (OTW kini dari kolom incoming).
+  const incoming = inp ? inp.value.trim() : (stockMap[pid]?.incoming || '');
+  const note = adminNote(stockMap[pid]?.note).replace(new RegExp(OTW_NOTE_RE.source, 'gi'), '').split('|').map(x => x.trim()).filter(Boolean).join(' | ');
   const n    = qin && qin.value !== '' ? parseInt(qin.value, 10) : null;
   const qty  = Number.isInteger(n) && n >= 0 ? n : null;
   let status = sel.value;
-  if (!status && (qty !== null || note)) { status = qty === 0 ? 'habis' : 'ready'; sel.value = status; }
+  if (!status && (qty !== null || incoming)) { status = qty === 0 ? (incoming ? 'indent' : 'habis') : 'ready'; sel.value = status; }
   if (icon) { icon.textContent = '⏳'; icon.style.color = '#a3aab8'; icon.title = ''; }
   try {
     if (!status) {
@@ -7245,9 +7248,9 @@ async function saveStock(pid) {
       if (error) throw error;
       delete stockMap[pid];
     } else {
-      const { error } = await supabase.from('stock').upsert({ product_id: pid, status, note, qty }, { onConflict: 'product_id' });
+      const { error } = await supabase.from('stock').upsert({ product_id: pid, status, note, qty, incoming: incoming || null }, { onConflict: 'product_id' });
       if (error) throw error;
-      stockMap[pid] = { ...stockMap[pid], status, note, qty, updated_at: new Date().toISOString() };
+      stockMap[pid] = { ...stockMap[pid], status, note, qty, incoming, updated_at: new Date().toISOString() };
     }
     refreshStockUI();
     if (icon) { icon.textContent = '✓'; icon.style.color = '#52c38a'; setTimeout(() => { if(icon) icon.textContent=''; }, 2000); }
