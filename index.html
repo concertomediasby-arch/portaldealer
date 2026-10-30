@@ -1409,6 +1409,8 @@ body {
   .rk-f input, .rk-f textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface2); color: var(--fg); font: 14px var(--f-body); resize: vertical; }
   .rk-pdf, .rk-clear { width: 100%; justify-content: center; margin-top: 6px; }
   .rk-pdf[disabled], .rk-clear[disabled] { opacity: .45; cursor: default; }
+  .idle-warn { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 9999; display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 16px; border-radius: 14px; background: #111a33; color: #fff; border: 1px solid #c6a048; box-shadow: 0 10px 30px rgba(0,0,0,.35); font: 600 13.5px var(--f-body); max-width: calc(100vw - 32px); }
+  @media (max-width: 760px) { .idle-warn { bottom: 84px; flex-direction: column; text-align: center; } }
   .rk-pick { position: fixed; inset: 0; z-index: 400; background: rgba(5,8,16,.62); display: none; align-items: center; justify-content: center; padding: 16px; }
   .rk-pick.open { display: flex; }
   .rk-pick-box { width: min(760px, 100%); max-height: min(86vh, 900px); display: flex; flex-direction: column; background: var(--bg, #0d1018); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
@@ -3865,7 +3867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T04:14:02Z';
+const LAST_UPDATE = '2026-10-30T04:33:34Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6681,6 +6683,7 @@ function initSupabase() {
 
 function onAuthChanged() {
   updateAuthUI();
+  idleCheck();   // sesi lama yang dipulihkan setelah lewat batas tidak aktif → langsung keluar
   visitLog();
   if (!GT_DEALER_MENU && !isAdmin() && document.getElementById('view-gathering')?.classList.contains('active')) showView('dashboard');
   if (isAdmin()) loadVisitStats(true);
@@ -6776,6 +6779,7 @@ async function dealerLogin() {
   if (!supabase) { err.textContent = 'Tidak dapat terhubung ke server. Periksa koneksi internet.'; return; }
   btn.disabled = true; btn.textContent = 'Memverifikasi…'; err.textContent = '';
   try {
+    idleTouch(true);   // login baru = aktivitas baru (sesi lama yang kedaluwarsa tidak ikut menendang)
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
     if (error) throw error;
     authUser = data.user;
@@ -6795,11 +6799,54 @@ async function authButton() {
   if (confirm(`Keluar dari akun ${authUser.user_metadata?.store || accountLabel(authUser)}?`)) await doLogout();
 }
 // Local sign-out always clears this browser's session, even if the server call fails (offline / expired session)
-async function doLogout() {
+async function doLogout(msg) {
   try { await supabase?.auth.signOut({ scope: 'local' }); } catch (e) { console.warn('signOut', e); }
   authUser = null; lastAuthId = undefined;
   onAuthChanged();
-  showToast('Anda telah keluar. Portal kini tampil sebagai pengunjung umum.');
+  showToast(msg || 'Anda telah keluar. Portal kini tampil sebagai pengunjung umum.', msg ? 6000 : 3500);
+}
+
+/* ── Keluar otomatis bila tidak ada aktivitas (30 Okt 2026, permintaan pemilik) ──
+   Berlaku untuk semua akun (dealer, admin, editor) kecuali layar videotron. Waktu aktivitas terakhir disimpan di localStorage
+   IDLE_KEY (bersama semua tab), jadi browser yang ditutup lalu dibuka lagi setelah lewat batas langsung keluar.
+   1 menit sebelum keluar tampil peringatan + tombol "Tetap login". */
+const IDLE_LOGOUT_MIN = 30, IDLE_WARN_SEC = 60, IDLE_KEY = 'cai-last-active';
+let idleWritten = 0, idleOut = false;
+const idleLast = () => { try { return +localStorage.getItem(IDLE_KEY) || 0; } catch (e) { return 0; } };
+function idleTouch(force) {
+  const now = Date.now();
+  if (!force && now - idleWritten < 15000) return;   // tulis paling sering tiap 15 dtk
+  idleWritten = now;
+  try { localStorage.setItem(IDLE_KEY, String(now)); } catch (e) {}
+  document.getElementById('idle-warn')?.remove();
+}
+function idleCheck() {
+  if (QA_SCREEN_MODE || !authUser) { document.getElementById('idle-warn')?.remove(); return; }
+  const last = idleLast();
+  if (!last) { idleTouch(true); return; }
+  const left = IDLE_LOGOUT_MIN * 60000 - (Date.now() - last);
+  if (left <= 0) {
+    document.getElementById('idle-warn')?.remove();
+    if (idleOut) return;
+    idleOut = true;
+    setTimeout(() => { idleOut = false; }, 5000);
+    doLogout(`Anda keluar otomatis karena tidak ada aktivitas selama ${IDLE_LOGOUT_MIN} menit.`);
+    return;
+  }
+  let w = document.getElementById('idle-warn');
+  if (left > IDLE_WARN_SEC * 1000) { w?.remove(); return; }
+  if (!w) {
+    w = document.createElement('div'); w.id = 'idle-warn'; w.className = 'idle-warn'; w.setAttribute('role', 'alert');
+    w.innerHTML = '<span></span><button class="gt-btn confirm" onclick="idleTouch(true)">Tetap login</button>';
+    document.body.appendChild(w);
+  }
+  w.querySelector('span').textContent = `Tidak ada aktivitas — Anda akan keluar otomatis dalam ${Math.ceil(left / 1000)} detik.`;
+}
+function idleInit() {
+  if (QA_SCREEN_MODE) return;
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { if (authUser) idleTouch(); }, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) idleCheck(); });
+  setInterval(idleCheck, 1000);
 }
 let toastTimer = null;
 function showToast(text, ms = 3500) {
@@ -7030,6 +7077,7 @@ async function adminLogin() {
   if (!email || !pass) { err.textContent = adminEmailMode ? 'Isi email dan password.' : 'Masukkan kode admin.'; return; }
   btn.disabled = true; btn.textContent = 'Memverifikasi...'; err.textContent = '';
   try {
+    idleTouch(true);   // login baru = aktivitas baru (sesi lama yang kedaluwarsa tidak ikut menendang)
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
     if (error) throw error;
     authUser = data.user;
@@ -11986,6 +12034,7 @@ updateAcademyStar();
 initSupabase();
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui
 if (!QA_SCREEN_MODE) { pmIcon(); pmArm(); }   // musik latar portal: tunggu klik pertama
+idleInit();   // keluar otomatis bila tidak ada aktivitas
 </script>
 </body>
 </html>
