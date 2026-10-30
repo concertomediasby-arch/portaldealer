@@ -191,7 +191,7 @@ function randomPin(len = 6) {
    Kosong = CAPTCHA mati (login seperti biasa). Urutan aktivasi: isi Site Key & deploy situs DULU, baru nyalakan CAPTCHA di Supabase
    (bila Supabase dinyalakan lebih dulu, semua login gagal). Widget "interaction-only": biasanya tak terlihat, kotak centang hanya
    muncul bila Cloudflare ragu. Token sekali pakai → widget dibuat ulang tiap percobaan login. */
-const TURNSTILE_SITE_KEY = '';
+const TURNSTILE_SITE_KEY = '0x4AAAAAAFsZqb8OVeHuLCXo';
 let tsLoading = null;
 const tsWidgets = {};
 function tsLoad() {
