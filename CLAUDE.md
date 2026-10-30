@@ -5,7 +5,7 @@ Menampilkan brand yang dinaungi beserta produk, spesifikasi, media, dan spec she
 
 ## Arsitektur
 
-- **Satu file statis: `index.html`** — berisi seluruh HTML, CSS, JavaScript, dan data katalog dalam satu dokumen. Tidak ada build step, tidak ada server sendiri, tidak ada dependency npm. Satu-satunya data dinamis adalah **stok produk** di Supabase (lihat bagian *Sistem stok*).
+- **File statis: `index.html` + `style.css`** — `index.html` berisi HTML, JavaScript, dan data katalog; **CSS dipindah ke `style.css`** (30 Okt 2026, tahap 1 pemecahan file bertahap atas persetujuan pemilik — tetap tanpa framework & tanpa build step; tahap berikutnya: data katalog `BRANDS` lalu JS per fitur). `style.css` dimuat lewat `<link href="style.css?b=<waktu>">`; nilai `?b=` (dan `LAST_UPDATE`) diperbarui otomatis oleh hook **`tools/git-hooks/pre-commit`** — aktifkan sekali per clone: `git config core.hooksPath tools/git-hooks`. Tanpa `?b=` baru, browser/service worker (`sw.js`, aset lokal = salinan lokal dulu) bisa memakai CSS lama. **Sebelum memindah `BRANDS`/`STOCK_ALIASES` keluar dari `index.html`**, Edge Function `sync-stock-sheet` (membaca keduanya dari `index.html`) harus diubah & di-deploy ulang pemilik dulu. Tidak ada build step, tidak ada server sendiri, tidak ada dependency npm. Satu-satunya data dinamis adalah **stok produk** di Supabase (lihat bagian *Sistem stok*).
 - Dependency eksternal via CDN (dimuat saat runtime di browser):
   - Google Fonts: **Sora**, **Inter**, **JetBrains Mono**
   - **jsPDF** (cdnjs) — untuk generate spec sheet PDF per produk.
@@ -162,7 +162,7 @@ Katalog tetap di `BRANDS` (GitHub); Supabase **hanya** menyimpan status stok per
 
 ## Design system (CSS)
 
-- Token di `:root` dalam `<style>`. Tema default **gelap** (hitam pekat + aksen **emas sampanye** `--accent`), dengan panel kaca (glassmorphism).
+- Token di `:root` di `style.css`. Tema default **gelap** (hitam pekat + aksen **emas sampanye** `--accent`), dengan panel kaca (glassmorphism).
 - **Mode terang** didefinisikan di blok `@media (prefers-color-scheme: light)` dan `:root[data-theme="light"]` (palet platinum + emas lebih pekat).
 - Token bar/panel: `--glass-bar`, `--surface`, `--border`, `--accent`, `--accent-hi`, dll.
 - Font role: `--f-display` (Sora), `--f-body` (Inter), `--f-mono` (JetBrains Mono).

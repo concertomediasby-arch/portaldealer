@@ -1,0 +1,8 @@
+#!/bin/sh
+# Hook pre-commit Concerto Dealer Portal (aktifkan sekali per clone: git config core.hooksPath tools/git-hooks)
+# 1) LAST_UPDATE di index.html = waktu commit (UTC)
+# 2) ?b=<waktu> di link file lokal (style.css, dst.) ikut diperbarui → browser & service worker memuat versi terbaru
+TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+sed -i "s/const LAST_UPDATE = '[^']*';/const LAST_UPDATE = '$TS';/" index.html
+sed -i "s/\(\.\(css\|js\)?b=\)[0-9TZ:-]*\"/\1$TS\"/g" index.html
+git add index.html
