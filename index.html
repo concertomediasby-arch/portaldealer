@@ -1360,6 +1360,77 @@ body {
   :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 
   /* ── Stock Badge ── */
+  /* Rakitan Audio (publik) */
+  .rk-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; padding: 8px 28px 48px; align-items: start; }
+  .rk-slot { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 14px; }
+  .rk-slot-h { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .rk-slot-h > div { flex: 1; min-width: 0; }
+  .rk-slot-h b { display: block; font-family: var(--f-display); font-size: 15px; color: var(--fg); }
+  .rk-slot-h small { color: var(--fg-muted); font-size: 12px; }
+  .rk-ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 19px; background: color-mix(in srgb, var(--accent) 14%, transparent); flex-shrink: 0; }
+  .rk-empty { padding: 14px; border: 1px dashed var(--border); border-radius: 10px; color: var(--fg-muted); font-size: 13px; text-align: center; cursor: pointer; }
+  .rk-empty:hover { border-color: var(--accent); color: var(--fg); }
+  .rk-item, .rk-opt { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto auto auto; gap: 12px; align-items: center; padding: 9px 0; border-top: 1px solid var(--border); }
+  .rk-opt { grid-template-columns: 52px minmax(0, 1fr) auto; padding: 9px 4px; }
+  .rk-item:first-of-type { border-top: none; }
+  .rk-th { width: 52px; height: 52px; border-radius: 9px; overflow: hidden; background: #fff; display: grid; place-items: center; cursor: pointer; }
+  .rk-th img { width: 100%; height: 100%; object-fit: contain; }
+  .rk-th span { width: 100%; height: 100%; display: grid; place-items: center; font-size: 24px; }
+  .rk-nm { min-width: 0; color: var(--fg); }
+  .rk-nm small { display: block; color: var(--fg-muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rk-nm b { font-size: 14px; cursor: pointer; margin-right: 6px; }
+  .rk-nm .eol-tag { vertical-align: 2px; }
+  .rk-sb { margin-left: 4px; vertical-align: 1px; transform: scale(.9); }
+  .rk-pr { font-size: 12.5px; color: var(--accent); font-weight: 600; margin-top: 2px; }
+  .rk-pr i { color: var(--fg-muted); font-weight: 500; }
+  .rk-var { margin-left: 6px; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--fg); font: 12px var(--f-body); }
+  .rk-qty { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+  .rk-qty button { width: 30px; height: 30px; border: none; background: var(--surface2); color: var(--fg); font-size: 15px; cursor: pointer; }
+  .rk-qty span { min-width: 28px; text-align: center; font-weight: 700; font-size: 13px; color: var(--fg); }
+  .rk-sub { min-width: 110px; text-align: right; font-weight: 700; font-size: 13.5px; color: var(--fg); font-family: var(--f-display); }
+  .rk-del { border: none; background: none; cursor: pointer; font-size: 15px; opacity: .6; }
+  .rk-del:hover { opacity: 1; }
+  .rk-side { position: sticky; top: 76px; }
+  .rk-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 14px; }
+  .rk-tot span { display: block; font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
+  .rk-tot b { display: block; font-family: var(--f-display); font-size: 28px; color: var(--accent); line-height: 1.2; margin: 2px 0; }
+  .rk-tot small { color: var(--fg-muted); font-size: 12px; }
+  .rk-notes { margin-top: 12px; display: grid; gap: 7px; }
+  .rk-note { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.45; padding: 8px 10px; border-radius: 9px; color: var(--fg); background: var(--surface2); }
+  .rk-note i { font-style: normal; font-weight: 700; }
+  .rk-note.warn { background: rgba(234,140,40,.13); } .rk-note.warn i { color: #e98a2c; }
+  .rk-note.ok { background: rgba(82,195,138,.13); } .rk-note.ok i { color: #3fae76; }
+  .rk-note.info i { color: var(--accent); }
+  .rk-fine { margin-top: 10px; font-size: 11px; color: var(--fg-muted); line-height: 1.5; }
+  .rk-ct { display: block; font-family: var(--f-display); font-size: 14px; color: var(--fg); margin-bottom: 8px; }
+  .rk-f { display: block; margin-bottom: 9px; }
+  .rk-f span { display: block; font-size: 11.5px; color: var(--fg-muted); margin-bottom: 3px; }
+  .rk-f input, .rk-f textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface2); color: var(--fg); font: 14px var(--f-body); resize: vertical; }
+  .rk-pdf, .rk-clear { width: 100%; justify-content: center; margin-top: 6px; }
+  .rk-pdf[disabled], .rk-clear[disabled] { opacity: .45; cursor: default; }
+  .rk-pick { position: fixed; inset: 0; z-index: 400; background: rgba(5,8,16,.62); display: none; align-items: center; justify-content: center; padding: 16px; }
+  .rk-pick.open { display: flex; }
+  .rk-pick-box { width: min(760px, 100%); max-height: min(86vh, 900px); display: flex; flex-direction: column; background: var(--bg, #0d1018); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .rk-pick-hd { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+  .rk-pick-t { flex: 1; font-family: var(--f-display); font-size: 17px; font-weight: 700; color: var(--fg); }
+  .rk-pick-x { border: none; background: var(--surface2); color: var(--fg); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+  .rk-pick-q { margin: 0 16px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--fg); font: 16px var(--f-body); }
+  .rk-pick-hd, .rk-pick-q, .rk-pick-brands { flex-shrink: 0; }
+  .rk-pick-brands { display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px; }
+  .rk-pick-brands .filter-chip { flex-shrink: 0; }
+  .rk-pick-list { overflow-y: auto; padding: 0 12px 14px; }
+  .rk-pick-list .gt-btn { padding: 8px 12px; white-space: nowrap; }
+  @media (max-width: 980px) { .rk-wrap { grid-template-columns: minmax(0, 1fr); } .rk-side { position: static; } }
+  @media (max-width: 760px) {
+    .rk-wrap { padding: 4px 16px 96px; }
+    .rk-item { grid-template-columns: 46px minmax(0, 1fr) auto; row-gap: 6px; }
+    .rk-th { width: 46px; height: 46px; }
+    .rk-item .rk-qty { grid-column: 2; justify-self: start; }
+    .rk-item .rk-sub { grid-column: 3; grid-row: 2; min-width: 0; }
+    .rk-item .rk-del { grid-column: 3; grid-row: 1; }
+    .rk-pick { padding: 0; align-items: flex-end; }
+    .rk-pick-box { max-height: 92vh; border-radius: 16px 16px 0 0; }
+  }
   .stock-badge {
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
@@ -3096,6 +3167,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         Paket Audio
       </button>
+      <button class="sidebar-item" id="nav-rakit" onclick="openRakit()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="8.5" cy="12.5" r="2.5"/><circle cx="15.5" cy="12.5" r="2.5"/><path d="M7 6V4h10v2"/></svg>
+        Rakitan Audio
+      </button>
       <button class="sidebar-item staff-nav" id="nav-gathering" onclick="openGathering()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         Shopping Gathering<span class="nav-lock" title="Perlu login">🔒</span>
@@ -3243,6 +3318,23 @@ body {
         <div class="page-subtitle">Perangkat lunak tuning &amp; konfigurasi untuk produk DSP Concerto Audio Indonesia.</div>
       </div>
       <div id="dsp-list" style="padding:0 0 48px"></div>
+    </div>
+
+    <!-- VIEW: Rakitan Audio (publik; produk dari BRANDS, harga SRP) -->
+    <div class="view" id="view-rakit">
+      <div class="page-header">
+        <div class="page-title">Rakitan Audio</div>
+        <div class="page-subtitle">Susun sistem audio mobil dari produk resmi Concerto Audio Indonesia — pilih speaker, subwoofer, amplifier, DSP, kabel &amp; aksesoris. Total dihitung dari harga jual umum (SRP), lalu unduh sebagai PDF penawaran.</div>
+      </div>
+      <div class="rk-wrap"><div id="rk-slots"></div><aside class="rk-side" id="rk-side"></aside></div>
+      <div class="rk-pick" id="rk-pick" onclick="if (event.target === this) rkClosePick()">
+        <div class="rk-pick-box" role="dialog" aria-modal="true">
+          <div class="rk-pick-hd"><div class="rk-pick-t">Pilih produk</div><button class="rk-pick-x" onclick="rkClosePick()" aria-label="Tutup">✕</button></div>
+          <input class="rk-pick-q" type="search" placeholder="Cari nama / model / brand…" oninput="rkPickQ=this.value;renderRkPick()">
+          <div class="rk-pick-brands"></div>
+          <div class="rk-pick-list"></div>
+        </div>
+      </div>
     </div>
 
     <!-- VIEW: Pengunjung Portal (Admin & Editor; tabel site_visits lewat fungsi log_visit / site_visit_stats) -->
@@ -3599,6 +3691,10 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
       <span>Paket</span>
     </button>
+    <button class="mobile-nav-item" id="mnav-rakit" onclick="openRakit()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="8.5" cy="12.5" r="2.5"/><circle cx="15.5" cy="12.5" r="2.5"/><path d="M7 6V4h10v2"/></svg>
+      <span>Rakitan</span>
+    </button>
     <button class="mobile-nav-item staff-nav" id="mnav-gathering" onclick="openGathering()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       <span>Gathering</span>
@@ -3768,7 +3864,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T02:41:48Z';
+const LAST_UPDATE = '2026-10-30T03:03:31Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -5298,6 +5394,263 @@ function openDspSoftware() {
   }).join('');
 }
 
+/* ── Rakitan Audio (30 Okt 2026, permintaan pemilik — publik, tanpa login) ──
+   Pengunjung menyusun sistem audio mobil dari produk katalog BRANDS per kelompok (RK_SLOTS), total dihitung dari SRP
+   (price / priceList per panjang), peringatan sederhana kebutuhan channel amplifier, lalu unduh PDF penawaran (jsPDF).
+   Rakitan disimpan di browser (localStorage RK_KEY). Hanya SRP — tidak ada harga dealer/diskon. Stok tampil bila login. */
+const RK_KEY = 'cai-rakit';
+const RK_SLOTS = [
+  { id: 'spk', title: 'Speaker', icon: '🔊', cats: ['Speaker', 'Midrange', 'Tweeter'], hint: 'Speaker set / coaxial, midrange & tweeter' },
+  { id: 'sub', title: 'Subwoofer', icon: '🔈', cats: ['Subwoofer'], hint: 'Subwoofer pasif atau subwoofer aktif' },
+  { id: 'amp', title: 'Power Amplifier', icon: '⚡', cats: ['Amplifier'], hint: 'Penguat untuk speaker & subwoofer pasif' },
+  { id: 'dsp', title: 'DSP & Sumber Audio', icon: '🎚', cats: ['DSP'], hint: 'DSP, DSP amplifier, modul Bluetooth' },
+  { id: 'cable', title: 'Kabel', icon: '🔌', cats: ['Cable'], hint: 'Kabel RCA, power & speaker' },
+  { id: 'acc', title: 'Aksesoris', icon: '🧰', cats: ['Accessories'], hint: 'Peredam, fuse, remote & lainnya' },
+];
+let rk = { items: [], cust: '', car: '', by: '', note: '' };
+let rkPickSlot = null, rkPickQ = '', rkPickBrand = '';
+function rkLoad() {
+  try { const d = JSON.parse(localStorage.getItem(RK_KEY) || 'null'); if (d && Array.isArray(d.items)) rk = Object.assign(rk, d); } catch (e) {}
+  rk.items = rk.items.filter(it => findProductAny(it.pid).product);
+}
+function rkSave() { try { localStorage.setItem(RK_KEY, JSON.stringify(rk)); } catch (e) {} }
+const rkSlotOf = p => RK_SLOTS.find(s => s.cats.includes(p.category)) || RK_SLOTS[RK_SLOTS.length - 1];
+function rkPrice(it) {
+  const { product: p } = findProductAny(it.pid);
+  if (!p) return 0;
+  if (p.priceList) return p.priceList[it.v] ?? srpAmount(p);
+  return p.price || 0;
+}
+const rkPhoto = p => p.photo || (p.photos && p.photos[0]) || '';
+const rkThumb = (p, brand) => rkPhoto(p) ? `<img src="${rkPhoto(p)}" alt="" loading="lazy">` : `<span style="background:${brand?.color || '#888'}18">${p.emoji || '🔊'}</span>`;
+
+// Perkiraan channel bertenaga: amplifier = nama "4CH" → spek Channel "4CH"/mono → angka pengali di spek output (4 × 100 W / 75 W × 4) → model ".4"
+function rkPowerCh(s) {
+  const k = Object.keys(s).find(k => /output|power/i.test(k) && !/max|peak|supply|circuit|terminal|separation|low-level/i.test(k) && /[×x]|mono/i.test(String(s[k])));
+  if (!k) return 0;
+  const v = String(s[k]);
+  if (/mono/i.test(v)) return 1;
+  let n = 0;
+  for (const m of v.matchAll(/(\d+)\s*[×x]\s*\d/g)) n += +m[1];
+  if (!n) for (const m of v.matchAll(/\d\s*W\s*[×x]\s*(\d+)/gi)) n += +m[1];
+  return n;
+}
+function rkChannels(p) {
+  const s = p.specs || {};
+  if (p.category === 'DSP') return /bluetooth/i.test(rkLine(p)) ? 0 : rkPowerCh(s);
+  if (p.category !== 'Amplifier') return 0;
+  let m = `${p.name} ${p.model}`.match(/(\d+)\s*CH\b/i); if (m) return +m[1];
+  const c = String(s.Channel || '');
+  m = c.match(/^(\d+)\s*CH/i); if (m) return +m[1];
+  if (/mono/i.test(c)) return 1;
+  return rkPowerCh(s) || +((p.model || '').match(/\.(\d)\b/) || [])[1] || 0;
+}
+const rkLine = p => { for (const b of BRANDS) for (const l of b.lines) if (l.products.includes(p)) return l.name; return ''; };
+const rkActiveSub = p => p.category === 'Subwoofer' && /active|aktif/i.test(rkLine(p) + ' ' + p.name);
+
+function rkAnalyze() {
+  let need = 0, have = 0, proc = false, sep = false, noPrice = 0, soon = 0, total = 0, qty = 0, spk = 0;
+  for (const it of rk.items) {
+    const { product: p } = findProductAny(it.pid); if (!p) continue;
+    qty += it.qty; total += rkPrice(it) * it.qty;
+    if (!hasPrice(p)) noPrice++;
+    if (p.soon) soon++;
+    if (['Speaker', 'Midrange', 'Tweeter'].includes(p.category)) { need += 2 * it.qty; spk++; }
+    if (p.category === 'Midrange' || p.category === 'Tweeter') sep = true;
+    if (p.category === 'Subwoofer' && !rkActiveSub(p)) { need += it.qty; spk++; }
+    if (p.category === 'Subwoofer' && rkActiveSub(p)) spk++;
+    have += rkChannels(p) * it.qty;
+    if (p.category === 'DSP' && !/bluetooth/i.test(rkLine(p))) proc = true;
+  }
+  const notes = [];
+  if (need && !have) notes.push({ t: 'warn', m: `Belum ada power amplifier / DSP amplifier. Speaker & subwoofer pasif di rakitan ini butuh ±${need} channel penguat.` });
+  else if (need > have) notes.push({ t: 'warn', m: `Perkiraan kebutuhan ${need} channel, tersedia ${have} channel dari amplifier/DSP amplifier. Tambah amplifier, atau gunakan crossover pasif / mode bridge.` });
+  else if (need) notes.push({ t: 'ok', m: `Channel penguat cukup: perkiraan butuh ${need}, tersedia ${have} channel.` });
+  if (have && !spk) notes.push({ t: 'info', m: 'Belum ada speaker atau subwoofer di rakitan ini.' });
+  if (sep && !proc) notes.push({ t: 'info', m: 'Rakitan memakai midrange/tweeter terpisah — disarankan menambah DSP untuk crossover & time alignment.' });
+  if (noPrice) notes.push({ t: 'info', m: `${noPrice} produk belum ada SRP — harga hubungi sales (tidak masuk total).` });
+  if (soon) notes.push({ t: 'info', m: `${soon} produk berstatus COMING SOON (belum rilis).` });
+  return { need, have, total, qty, notes };
+}
+
+function openRakit() {
+  rkLoad();
+  showView('rakit');
+  document.querySelector('.main')?.scrollTo(0, 0);
+  renderRakit();
+}
+function renderRakit() {
+  const box = document.getElementById('rk-slots'); if (!box) return;
+  box.innerHTML = RK_SLOTS.map(sl => {
+    const items = rk.items.map((it, i) => ({ it, i, ...findProductAny(it.pid) })).filter(r => r.product && rkSlotOf(r.product).id === sl.id);
+    const rows = items.map(({ it, i, brand, product: p }) => {
+      const pr = rkPrice(it), sb = stockBadgeSmall(p.id);
+      const vsel = p.priceList ? `<select class="rk-var" onchange="rkSetVar(${i}, this.value)">${Object.keys(p.priceList).map(k => `<option${k === it.v ? ' selected' : ''}>${escHtml(k)}</option>`).join('')}</select>` : '';
+      return `<div class="rk-item">
+        <div class="rk-th" onclick="showProduct('${brand.id}','${p.id}')">${rkThumb(p, brand)}</div>
+        <div class="rk-nm"><small>${escHtml(brand.name)} · ${escHtml(p.category)}</small><b onclick="showProduct('${brand.id}','${p.id}')">${escHtml(p.name)}</b>${eolTag(p)}${sb ? `<span class="stock-badge ${sb.cls} rk-sb">${sb.label}</span>` : ''}
+          <div class="rk-pr">${hasPrice(p) ? fmtRp(pr) + unitText(p) : '<i>Harga hubungi sales</i>'} ${vsel}</div></div>
+        <div class="rk-qty"><button onclick="rkQty(${i}, -1)" aria-label="Kurangi">−</button><span>${it.qty}</span><button onclick="rkQty(${i}, 1)" aria-label="Tambah">＋</button></div>
+        <div class="rk-sub">${hasPrice(p) ? fmtRp(pr * it.qty) : '—'}</div>
+        <button class="rk-del" onclick="rkDel(${i})" title="Hapus">🗑</button>
+      </div>`;
+    }).join('');
+    return `<section class="rk-slot">
+      <div class="rk-slot-h"><span class="rk-ic">${sl.icon}</span><div><b>${sl.title}</b><small>${sl.hint}</small></div>
+        <button class="gt-btn" onclick="rkOpenPick('${sl.id}')">＋ Tambah</button></div>
+      ${rows || `<div class="rk-empty" onclick="rkOpenPick('${sl.id}')">Belum ada ${sl.title.toLowerCase()} — klik untuk memilih dari katalog</div>`}
+    </section>`;
+  }).join('');
+  renderRakitSide();
+}
+function renderRakitSide() {
+  const el = document.getElementById('rk-side'); if (!el) return;
+  const a = rkAnalyze();
+  const ic = { warn: '⚠', ok: '✓', info: 'ℹ' };
+  const f = (k, label, ph) => `<label class="rk-f"><span>${label}</span><input value="${escHtml(rk[k] || '')}" placeholder="${ph}" oninput="rk['${k}']=this.value;rkSave()"></label>`;
+  el.innerHTML = `<div class="rk-card">
+      <div class="rk-tot"><span>Total SRP</span><b>${fmtRp(a.total)}</b><small>${a.qty} item · ${rk.items.length} produk</small></div>
+      ${a.notes.length ? `<div class="rk-notes">${a.notes.map(n => `<div class="rk-note ${n.t}"><i>${ic[n.t]}</i><span>${n.m}</span></div>`).join('')}</div>` : '<div class="rk-note info"><i>ℹ</i><span>Mulai dengan menambahkan speaker, subwoofer, amplifier, atau DSP.</span></div>'}
+      <div class="rk-fine">Cek channel = perkiraan sederhana: 2 channel per set speaker/midrange/tweeter, 1 channel per subwoofer pasif. Konsultasikan konfigurasi final (crossover, bridge, impedansi) dengan installer / CAI.</div>
+    </div>
+    <div class="rk-card">
+      <b class="rk-ct">Data penawaran (opsional)</b>
+      ${f('cust', 'Nama customer', 'mis. Bapak Andi')}${f('car', 'Mobil', 'mis. Toyota Fortuner 2024')}${f('by', 'Disiapkan oleh', 'nama toko / dealer')}
+      <label class="rk-f"><span>Catatan</span><textarea rows="2" placeholder="mis. termasuk pemasangan" oninput="rk.note=this.value;rkSave()">${escHtml(rk.note || '')}</textarea></label>
+      <button class="gt-btn confirm rk-pdf" onclick="rkPdf()" ${rk.items.length ? '' : 'disabled'}>⬇ Unduh PDF Penawaran</button>
+      <button class="gt-btn ghost rk-clear" onclick="rkClear()" ${rk.items.length ? '' : 'disabled'}>Kosongkan rakitan</button>
+    </div>`;
+}
+function rkAdd(pid) {
+  const { product: p } = findProductAny(pid); if (!p) return;
+  const v = p.priceList ? Object.keys(p.priceList)[0] : undefined;
+  const ex = rk.items.find(it => it.pid === pid && it.v === v);
+  if (ex) ex.qty++; else rk.items.push({ pid, qty: 1, ...(v ? { v } : {}) });
+  rkSave(); renderRakit(); renderRkPick();
+  showToast(`✓ ${p.name} ditambahkan`);
+}
+function rkQty(i, d) { const it = rk.items[i]; if (!it) return; it.qty = Math.max(1, Math.min(99, it.qty + d)); rkSave(); renderRakit(); }
+function rkDel(i) { rk.items.splice(i, 1); rkSave(); renderRakit(); }
+function rkSetVar(i, v) { if (rk.items[i]) { rk.items[i].v = v; rkSave(); renderRakit(); } }
+function rkClear() { if (!confirm('Kosongkan semua produk di rakitan ini?')) return; rk.items = []; rkSave(); renderRakit(); }
+
+function rkOpenPick(slot) {
+  rkPickSlot = RK_SLOTS.find(s => s.id === slot); rkPickQ = ''; rkPickBrand = '';
+  const ov = document.getElementById('rk-pick');
+  ov.querySelector('.rk-pick-t').textContent = `Pilih ${rkPickSlot.title}`;
+  ov.querySelector('input').value = '';
+  ov.classList.add('open'); document.body.style.overflow = 'hidden';
+  renderRkPick();
+  setTimeout(() => { if (matchMedia('(min-width: 761px)').matches) ov.querySelector('input').focus(); }, 60);
+}
+function rkClosePick() { document.getElementById('rk-pick').classList.remove('open'); document.body.style.overflow = ''; rkPickSlot = null; }
+function renderRkPick() {
+  if (!rkPickSlot) return;
+  const ov = document.getElementById('rk-pick');
+  const q = normKey(rkPickQ);
+  const all = [];
+  BRANDS.forEach(b => b.lines.forEach(l => l.products.forEach(p => { if (rkPickSlot.cats.includes(p.category)) all.push({ b, l, p }); })));
+  const brands = [...new Set(all.map(r => r.b))];
+  ov.querySelector('.rk-pick-brands').innerHTML = [`<button class="filter-chip${rkPickBrand ? '' : ' active'}" onclick="rkPickBrand='';renderRkPick()">Semua</button>`]
+    .concat(brands.map(b => `<button class="filter-chip${rkPickBrand === b.id ? ' active' : ''}" onclick="rkPickBrand='${b.id}';renderRkPick()">${escHtml(b.name)}</button>`)).join('');
+  const list = all.filter(r => (!rkPickBrand || r.b.id === rkPickBrand) && (!q || normKey(`${r.b.name} ${r.l.name} ${r.p.name} ${r.p.model} ${r.p.category}`).includes(q)));
+  ov.querySelector('.rk-pick-list').innerHTML = list.map(({ b, l, p }) => {
+    const n = rk.items.filter(it => it.pid === p.id).reduce((s, it) => s + it.qty, 0), sb = stockBadgeSmall(p.id);
+    return `<div class="rk-opt">
+      <div class="rk-th">${rkThumb(p, b)}</div>
+      <div class="rk-nm"><small>${escHtml(b.name)} · ${escHtml(l.name)}</small><b>${escHtml(p.name)}</b>${eolTag(p)}${sb ? `<span class="stock-badge ${sb.cls} rk-sb">${sb.label}</span>` : ''}
+        <div class="rk-pr">${hasPrice(p) ? srpText(p) : '<i>Harga hubungi sales</i>'}</div></div>
+      <button class="gt-btn${n ? ' confirm' : ''}" onclick="rkAdd('${p.id}')">${n ? `✓ ${n} · ＋1` : '＋ Tambah'}</button>
+    </div>`;
+  }).join('') || '<div class="rk-empty">Tidak ada produk yang cocok.</div>';
+}
+
+function rkPdf() {
+  if (!rk.items.length) return;
+  if (!window.jspdf) { showToast('Komponen PDF belum termuat — periksa koneksi lalu coba lagi.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const NAVY = [12, 22, 48], GOLD = [198, 160, 72], HEAD = [47, 58, 92], ZEBRA = [242, 243, 247];
+  const L = 14, R = 196, W = R - L;
+  const clean = t => String(t ?? '').replace(/Ω/g, 'Ohm').replace(/[×]/g, 'x').replace(/[″“”]/g, '"').replace(/[–—]/g, '-').replace(/[^\x20-\x7E -ÿ]/g, '');
+  const nf = n => Number(n || 0).toLocaleString('id-ID');
+  const date = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+  const a = rkAnalyze();
+  let page = 0, y;
+  const header = () => {
+    page++;
+    doc.setFillColor(...NAVY); doc.rect(L, 12, W, 22, 'F');
+    try { doc.addImage(LOGO_WHITE, 'PNG', L + 8, 15.5, 40, 40 * 156 / 431); } catch (e) {}
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+    doc.text('PENAWARAN SISTEM AUDIO', R - 4, 21, { align: 'right' });
+    doc.setTextColor(...GOLD); doc.setFontSize(10.5); doc.text('RAKITAN AUDIO MOBIL', R - 4, 26.5, { align: 'right' });
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.text('Produk resmi Concerto Audio Indonesia', R - 4, 31, { align: 'right' });
+    y = 42;
+  };
+  const footer = () => {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(140, 140, 150);
+    doc.text(`Concerto Audio Indonesia  |  dealer.concerto.id  |  Hal. ${page}`, 105, 288, { align: 'center' });
+  };
+  const field = (label, value, x, yy, end) => {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(20, 20, 30); doc.text(label, x, yy);
+    doc.setFont('helvetica', 'normal'); doc.text(':', x + 30, yy);
+    doc.text(clean(value || '-'), x + 33, yy, { maxWidth: end - x - 34 });
+  };
+  header();
+  field('Customer', rk.cust, L, y, 104); field('Tanggal', date, 110, y, R); y += 6.2;
+  field('Mobil', rk.car, L, y, 104); field('Disiapkan oleh', rk.by, 110, y, R); y += 10;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(...NAVY); doc.text('RINCIAN PRODUK', L, y);
+  doc.setDrawColor(...GOLD); doc.setLineWidth(0.8); doc.line(L, y + 2, R, y + 2); doc.setLineWidth(0.2);
+  y += 7;
+  const cols = [{ t: 'No', w: 9, a: 'center' }, { t: 'Brand', w: 27, a: 'left' }, { t: 'Produk', w: 62, a: 'left' }, { t: 'Kategori', w: 22, a: 'left' },
+                { t: 'Qty', w: 12, a: 'center' }, { t: 'SRP (Rp)', w: 25, a: 'right' }, { t: 'Subtotal (Rp)', w: 25, a: 'right' }];
+  const thead = () => {
+    doc.setFillColor(...HEAD); doc.rect(L, y, W, 7, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(255, 255, 255);
+    let x = L; cols.forEach(c => { doc.text(c.t, x + c.w / 2, y + 4.7, { align: 'center' }); x += c.w; });
+    y += 7;
+  };
+  thead();
+  const order = RK_SLOTS.map(s => s.id);
+  const rows = rk.items.map(it => ({ it, ...findProductAny(it.pid) })).filter(r => r.product)
+    .sort((x, z) => order.indexOf(rkSlotOf(x.product).id) - order.indexOf(rkSlotOf(z.product).id));
+  rows.forEach(({ it, brand, product: p }, n) => {
+    const name = clean(p.name + (it.v ? ` (${it.v})` : '') + (p.soon ? ' - Coming Soon' : ''));
+    const lines = doc.splitTextToSize(name, cols[2].w - 3);
+    const h = Math.max(6, lines.length * 3.8 + 2.4);
+    if (y + h > 262) { footer(); doc.addPage(); header(); thead(); }
+    if (n % 2) { doc.setFillColor(...ZEBRA); doc.rect(L, y, W, h, 'F'); }
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.3); doc.setTextColor(25, 25, 35);
+    const pr = rkPrice(it), has = hasPrice(p);
+    const vals = [n + 1, clean(brand.name), lines, clean(p.category), it.qty, has ? nf(pr) : 'Hub. sales', has ? nf(pr * it.qty) : '-'];
+    let x = L;
+    cols.forEach((c, k) => {
+      const tx = c.a === 'center' ? x + c.w / 2 : c.a === 'right' ? x + c.w - 2 : x + 2;
+      doc.text(Array.isArray(vals[k]) ? vals[k] : String(vals[k]), tx, y + 4, { align: c.a });
+      x += c.w;
+    });
+    y += h;
+  });
+  doc.setDrawColor(...HEAD); doc.line(L, y, R, y);
+  y += 2;
+  if (y > 250) { footer(); doc.addPage(); header(); }
+  doc.setFillColor(...NAVY); doc.rect(R - 82, y, 82, 9, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...GOLD);
+  doc.text('TOTAL', R - 78, y + 6); doc.text('Rp ' + nf(a.total), R - 3, y + 6, { align: 'right' });
+  y += 15;
+  const notes = [];
+  if (rk.note) notes.push(clean(rk.note));
+  notes.push('Harga = harga jual umum (SRP) Concerto Audio Indonesia saat dokumen dibuat dan dapat berubah sewaktu-waktu.');
+  notes.push('Belum termasuk biaya instalasi, kecuali disebutkan lain. Ketersediaan stok mohon dikonfirmasi ke dealer / CAI.');
+  if (rows.some(r => !hasPrice(r.product))) notes.push('Produk bertanda "Hub. sales" belum memiliki SRP dan tidak masuk total.');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...NAVY); doc.text('Catatan', L, y); y += 5;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.3); doc.setTextColor(60, 60, 70);
+  notes.forEach(t => { const ls = doc.splitTextToSize('- ' + t, W); if (y + ls.length * 4 > 280) { footer(); doc.addPage(); header(); } doc.text(ls, L, y); y += ls.length * 4 + 1; });
+  footer();
+  const nm = clean(rk.cust || rk.car || 'Rakitan').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').slice(0, 40) || 'Rakitan';
+  doc.save(`Penawaran-Audio-${nm}.pdf`);
+}
+
 function openPaketAudio() {
   showView('paket');
   const el = document.getElementById('paket-list');
@@ -5718,6 +6071,7 @@ function showView(viewId) {
   if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('nav-paket')?.classList.add('active');
+  if (viewId === 'rakit') document.getElementById('nav-rakit')?.classList.add('active');
   if (viewId === 'gathering') document.getElementById('nav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('nav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('nav-dealers')?.classList.add('active');
@@ -5734,6 +6088,7 @@ function showView(viewId) {
   if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('mnav-paket')?.classList.add('active');
+  if (viewId === 'rakit') document.getElementById('mnav-rakit')?.classList.add('active');
   if (viewId === 'gathering') document.getElementById('mnav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('mnav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('mnav-dealers')?.classList.add('active');
