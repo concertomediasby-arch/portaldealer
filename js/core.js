@@ -646,7 +646,8 @@ function openDspSoftware() {
 /* ── Rakitan Audio (30 Okt 2026, permintaan pemilik — publik, tanpa login) ──
    Pengunjung menyusun sistem audio mobil dari produk katalog BRANDS per kelompok (RK_SLOTS), total dihitung dari SRP
    (price / priceList per panjang), peringatan sederhana kebutuhan channel amplifier, lalu unduh PDF penawaran (jsPDF).
-   Rakitan disimpan di browser (localStorage RK_KEY). Hanya SRP — tidak ada harga dealer/diskon. Stok tampil bila login. */
+   Rakitan disimpan per sesi tab (sessionStorage RK_KEY, 30 Okt 2026 permintaan pemilik: pengunjung baru / tab baru selalu mulai kosong;
+   tetap ada saat pindah menu atau refresh di tab yang sama). Hanya SRP — tidak ada harga dealer/diskon. Stok tampil bila login. */
 const RK_KEY = 'cai-rakit';
 const RK_EXCL = 'Harga belum termasuk biaya instalasi, custom box, dan biaya lain-lain.';   // tampil di bawah Total SRP & di PDF (permintaan pemilik)
 const RK_SLOTS = [
@@ -660,10 +661,11 @@ const RK_SLOTS = [
 let rk = { items: [], cust: '', car: '', by: '', note: '' };
 let rkPickSlot = null, rkPickQ = '', rkPickBrand = '';
 function rkLoad() {
-  try { const d = JSON.parse(localStorage.getItem(RK_KEY) || 'null'); if (d && Array.isArray(d.items)) rk = Object.assign(rk, d); } catch (e) {}
+  try { const d = JSON.parse(sessionStorage.getItem(RK_KEY) || 'null'); if (d && Array.isArray(d.items)) rk = Object.assign(rk, d); } catch (e) {}
   rk.items = rk.items.filter(it => findProductAny(it.pid).product);
 }
-function rkSave() { try { localStorage.setItem(RK_KEY, JSON.stringify(rk)); } catch (e) {} }
+function rkSave() { try { sessionStorage.setItem(RK_KEY, JSON.stringify(rk)); } catch (e) {} }
+try { localStorage.removeItem(RK_KEY); } catch (e) {}   // buang rakitan lama yang dulu tersimpan permanen
 const rkSlotOf = p => RK_SLOTS.find(s => s.cats.includes(p.category)) || RK_SLOTS[RK_SLOTS.length - 1];
 function rkPrice(it) {
   const { product: p } = findProductAny(it.pid);
