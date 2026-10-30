@@ -3867,7 +3867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T07:08:25Z';
+const LAST_UPDATE = '2026-10-30T07:11:48Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6641,6 +6641,10 @@ const otwFromNote = note => { const m = String(note || '').match(OTW_NOTE_RE); r
 // No. invoice (INV0241, (INV-0237), INV 12/A) & FOC (barang bonus) hanya untuk internal → tidak tampil ke dealer
 const DEALER_HIDDEN_NOTE = [/\b(free|pinjam|2nd|pasang)\s*:?\s*\d+(\s*(pcs|set|unit))?/gi, /tidak ada di template\.?/gi, new RegExp(OTW_NOTE_RE.source, 'gi'),
   /(\(\s*)?\b(no\.?\s*)?inv(oice)?[\s.:#\-]*\d[\w\-\/]*(\s*\))?/gi, /\bfoc\s*:?\s*\d+(\s*(pcs|set|unit))?/gi, /(\(\s*)?\b[a-z]{1,6}[\-\s]?\d{2,4}\/[\w\/\-]+(\s*\))?/gi, /\(\s*\)/g];
+// Panel admin: keterangan gudang FREE / PINJAM / 2ND / PASANG + angka juga tidak ditampilkan (30 Okt 2026, permintaan pemilik);
+// OTW & catatan lain tetap. Catatan yang sudah dibersihkan ikut tersimpan saat baris itu disimpan lagi.
+const adminNote = n => String(n || '').replace(DEALER_HIDDEN_NOTE[0], '').replace(DEALER_HIDDEN_NOTE[1], '')
+  .split(/[|;]/).map(x => x.replace(/^[\s.,]+|[\s,]+$/g, '').replace(/\s{2,}/g, ' ')).filter(Boolean).join(' | ');
 const dealerNote = n => DEALER_HIDDEN_NOTE.reduce((s, re) => s.replace(re, ''), String(n || ''))
   .split(/[|;]/).map(x => x.replace(/^[\s.,]+|[\s,]+$/g, '').replace(/\s{2,}/g, ' ')).filter(Boolean).join(' | ');
 const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || otwFromNote(r.note), updated_at: r.updated_at || null });
@@ -7182,7 +7186,7 @@ function renderAdminList() {
     products.forEach(p => {
       const s = stockMap[p.id] || {};
       const status = s.status || '';
-      const note   = s.note   || '';
+      const note   = adminNote(s.note);
       const qty    = s.qty ?? '';
       html += `<div class="admin-product-row">
         <div class="admin-prod-info">
