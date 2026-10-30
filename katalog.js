@@ -9,6 +9,7 @@
      STOCK_ALIASES  — kode gudang → model katalog untuk import/sinkron stok ('-' = abaikan) */
 
 const RECENT_UPDATES = [
+  { date:'2026-10-30', type:'photo', brandId:'audiocircle', productId:'ac-iqc42bmwb', note:'Foto IQ-C4.2 BMW Ver.B diganti (4 foto baru)' },
   { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-sq400', note:'Spesifikasi SQ 400 dilengkapi (dimensi, berat, idle current, dll.)' },
   { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-sq200', note:'Spesifikasi SQ 200 dilengkapi (dimensi, berat, idle current, dll.)' },
   { date:'2026-10-30', type:'data', brandId:'zelos', productId:'zl-mfa54', note:'Spesifikasi MFA5 EVO+ 4CH dilengkapi (output 4 × 150 W, dimensi, berat)' },
@@ -371,7 +372,7 @@ const BRANDS = [
           specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'BMW Plug & Play'} },
         { id:'ac-iqc42bmwb', price:12000000, priceUnit:'set', name:'IQ-C4.2 BMW Ver.B', model:'IQ-C4.2 BMW Ver.B', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'4" Two Way Component — BMW Plug & Play (Ver.B), Carbon Fibre Cone Die Cast Basket, 25mm Silk Dome Tweeter.',
-          photos:['assets/ac-iqc42bmwb-1.png'],
+          photos:['assets/ac-iqc42bmwb-1.webp','assets/ac-iqc42bmwb-2.webp','assets/ac-iqc42bmwb-3.webp','assets/ac-iqc42bmwb-4.webp'],
           specs:{'Impedansi':'4 Ω','Rated Power':'40 – 100 W','SPL':'88 dB','Freq. Response':'100 Hz – 30 kHz','Fitment':'BMW Plug & Play'} },
         { id:'ac-iqx4bmw', price:10000000, priceUnit:'set', name:'IQ-X4 BMW', model:'IQ-X4 BMW', category:'Speaker', emoji:'🔊', hasVideo:false,
           desc:'4" Coaxial Speaker untuk rear door — BMW Plug & Play, Carbon Fibre Cone Die Cast Basket.',
