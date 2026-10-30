@@ -3867,7 +3867,7 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 /* ══════════════════════════════════════════
    DATA
 ══════════════════════════════════════════ */
-const LAST_UPDATE = '2026-10-30T07:04:56Z';
+const LAST_UPDATE = '2026-10-30T07:07:54Z';
 // Log semua perubahan konten: data, foto, video — terbaru di atas
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
@@ -6266,13 +6266,24 @@ function renderCatalog() {
   if (cnt) cnt.textContent = `${filtered.length} produk${q ? ' ditemukan untuk "' + q + '"' : (!filterBrand ? ' · diurutkan terbaru' : '')}`;
 }
 
+// Kembali dari detail produk ke halaman asal (katalog/brand/stok/…) di posisi scroll yang sama, tanpa merender ulang (30 Okt 2026, permintaan pemilik).
+// Tombol back HP / browser juga kembali ke halaman asal (history.pushState saat detail produk dibuka).
+let productFrom = null;
+const PRODUCT_FROM_LABEL = { catalog: 'Katalog', stock: 'Stok Produk', rakit: 'Rakitan Audio', updates: 'Update Terbaru', dashboard: 'Dashboard' };
 function showProduct(brandId, productId) {
+  const curView = document.querySelector('.view.active');
+  if (curView && curView.id !== 'view-product') {
+    const main = document.querySelector('.main');
+    productFrom = { el: curView, view: document.body.dataset.view, mainTop: main ? main.scrollTop : 0, winY: window.scrollY };
+    try { if (!history.state?.pd) history.pushState({ pd: 1 }, '', location.href); } catch (e) {}
+  }
   currentProductId = productId;
   currentBrandId = brandId;
   const { brand, line, product } = findProduct(brandId, productId);
   if (!brand || !product) return;
 
-  document.getElementById('product-back-label').textContent = brand.name;
+  const fromId = productFrom?.el?.id?.replace('view-', '');
+  document.getElementById('product-back-label').textContent = (fromId && fromId !== 'brand' && PRODUCT_FROM_LABEL[fromId]) || brand.name;
   document.getElementById('panel-brand').textContent = brand.name + (line ? ' · ' + line : '');
   document.getElementById('panel-name').innerHTML = escHtml(product.name) + eolTag(product)
     + (product.eol ? `<div class="eol-note">${EOL_TITLE}</div>` : '')
@@ -6366,8 +6377,21 @@ function selectMedia(el, type, emoji, color, label, photo) {
 }
 
 function backToBrand() {
-  if (currentBrandId) showBrand(currentBrandId);
+  if (history.state?.pd) { history.back(); return; }   // popstate → productGoBack()
+  productGoBack();
 }
+function productGoBack() {
+  const f = productFrom; productFrom = null;
+  if (!f || !document.body.contains(f.el)) { if (currentBrandId) showBrand(currentBrandId); return; }
+  hideViews();
+  f.el.classList.add('active');
+  if (f.view) document.body.dataset.view = f.view;
+  const main = document.querySelector('.main');
+  requestAnimationFrame(() => { if (main) main.scrollTop = f.mainTop; window.scrollTo(0, f.winY); });
+}
+addEventListener('popstate', () => {
+  if (document.getElementById('view-product')?.classList.contains('active')) productGoBack();
+});
 
 /* ══════════════════════════════════════════
    SPEC SHEET / PDF
@@ -12020,6 +12044,7 @@ function openDeepLink() {
   const { brand, product } = pid ? findProductAny(pid) : {};
   if (!product) return;
   enterPortal();
+  hideViews();   // link produk: tombol kembali → halaman brand (bukan dashboard)
   showProduct(brand.id, product.id);
   if (q.get('v') === '1' && product.video)
     [...document.querySelectorAll('#media-thumbs .media-thumb')].find(el => /'video'/.test(el.getAttribute('onclick')))?.click();
