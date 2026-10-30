@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tutorial — Pasang Portal Dealer di Layar Utama HP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Video tutorial vertikal 1080×1920 (dirender per frame lewat seek(t), lihat tools/tutorial-capture.js).
+     Tampilan iPhone/Android digambar sederhana (bukan salinan persis UI asli). */
+  :root { --gold:#e9c46a; --gold-hi:#f6dfa0; --f-d:'Sora','Inter',system-ui,sans-serif; --f-b:'Inter',system-ui,sans-serif; --f-m:'JetBrains Mono',ui-monospace,monospace; --ios-blue:#0a84ff; --and-blue:#8ab4f8; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:#000; overflow:hidden; color:#fff; font-family:var(--f-b); }
+  #stage { position:absolute; left:0; top:0; width:1080px; height:1920px; transform-origin:0 0; overflow:hidden;
+    background:radial-gradient(ellipse 90% 60% at 50% 58%, #15233f 0%, #0a1226 50%, #04060c 100%); }
+  .abs { position:absolute; }
+  .scene { position:absolute; inset:0; opacity:0; }
+  .gold { background:linear-gradient(100deg,#b98a3c,var(--gold-hi) 30%,#fff6dc 45%,var(--gold) 60%,#b98a3c); background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .mono { font-family:var(--f-m); letter-spacing:.4em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  #glow { inset:0; background:radial-gradient(ellipse 50% 35% at 50% 62%, rgba(233,196,106,.14), transparent 70%); }
+  .spark { position:absolute; border-radius:50%; background:radial-gradient(circle,#fff3d6,#e9c46a 55%,transparent 70%); opacity:0; }
+  #vig { inset:0; background:radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,.5) 100%); pointer-events:none; z-index:50; }
+
+  /* ── pembuka ── */
+  #logo1 { left:50%; top:470px; width:440px; margin-left:-220px; opacity:0; filter:drop-shadow(0 0 50px rgba(233,196,106,.35)); }
+  .ring { left:50%; top:560px; width:300px; height:300px; margin:-150px 0 0 -150px; border-radius:50%; border:2px solid rgba(233,196,106,.6); opacity:0; }
+  #k1 { left:0; right:0; top:760px; text-align:center; font-size:26px; opacity:0; }
+  #t1 { left:60px; right:60px; top:820px; text-align:center; font:800 104px/1.05 var(--f-d); letter-spacing:-.02em; }
+  #t1 span { display:inline-block; opacity:0; }
+  #s1 { left:90px; right:90px; top:1190px; text-align:center; font:500 40px/1.4 var(--f-b); color:#c3cbdc; opacity:0; }
+  #ic1 { left:50%; top:1390px; width:200px; height:200px; margin-left:-100px; border-radius:46px; opacity:0; box-shadow:0 30px 70px rgba(0,0,0,.6), 0 0 80px rgba(233,196,106,.25); }
+  #ic1l { left:0; right:0; top:1610px; text-align:center; font:600 34px var(--f-b); opacity:0; }
+
+  /* ── keterangan langkah ── */
+  .plat { left:50%; top:110px; transform:translateX(-50%); display:flex; align-items:center; gap:16px; padding:16px 34px; border-radius:999px; border:1.5px solid rgba(233,196,106,.6); background:rgba(233,196,106,.1); font:700 34px var(--f-d); color:var(--gold-hi); white-space:nowrap; opacity:0; }
+  .plat svg { width:38px; height:38px; }
+  .cap { left:70px; right:70px; top:220px; height:330px; display:flex; flex-direction:column; align-items:center; text-align:center; opacity:0; }
+  .cap .st { font:700 26px var(--f-m); letter-spacing:.3em; color:var(--gold); text-transform:uppercase; }
+  .cap h2 { font:800 64px/1.12 var(--f-d); letter-spacing:-.015em; margin-top:18px; }
+  .cap h2 b { color:var(--gold-hi); }
+  .cap p { font:500 32px/1.4 var(--f-b); color:#c3cbdc; margin-top:16px; }
+  .cap.ok h2 { color:#86efac; }
+
+  /* ── ponsel ── */
+  .phone { left:50%; top:570px; width:613px; height:1294px; margin-left:-306px; opacity:0; }
+  .pb { position:absolute; inset:0; background:#0b0d14; border-radius:78px; padding:14px; box-shadow:0 0 0 3px #2c3244, 0 50px 110px rgba(0,0,0,.7), 0 0 120px rgba(233,196,106,.16); }
+  .scr { position:absolute; left:14px; top:14px; width:390px; height:844px; transform:scale(1.5); transform-origin:0 0; overflow:hidden; border-radius:44px; background:#000; }
+  .scr .page,.scr .island,.scr .punch,.scr .sb,.scr .sfbar,.scr .url,.scr .tools,.scr .sheet,.scr .shd,.scr .apps,.scr .list,.scr .dlg,.scr .dnav,.scr .dcard,.scr .dnote,.scr .cbar,.scr .gbar,.scr .menu,.scr .dim,.scr .adlg,.scr .home,.scr .grid,.scr .dock,.scr .asearch,.scr .splash,.scr .fg,.scr .rp,.scr .hlring { position:absolute; }
+  .island { left:50%; top:11px; width:120px; height:34px; margin-left:-60px; background:#000; border-radius:20px; z-index:40; }
+  .punch { left:50%; top:10px; width:16px; height:16px; margin-left:-8px; background:#000; border-radius:50%; z-index:40; box-shadow:0 0 0 2px #222; }
+  .sb { left:0; right:0; top:0; height:47px; z-index:35; display:flex; justify-content:space-between; align-items:center; padding:6px 30px 0 34px; font:600 16px var(--f-b); color:#fff; }
+  .sb > * { position:static; }
+  .sb.and { height:32px; padding:0 18px; font-size:13px; background:#202124; }
+  .sbi { display:flex; gap:6px; align-items:center; }
+  .sbi i { display:block; position:static; }
+  .page { left:0; top:0; width:390px; height:844px; }
+
+  /* Safari */
+  .sfbar { left:0; right:0; bottom:0; height:126px; background:rgba(28,28,30,.96); border-top:1px solid rgba(255,255,255,.08); z-index:20; }
+  .url { left:12px; right:12px; top:10px; height:44px; border-radius:14px; background:#3a3a3c; display:flex; align-items:center; justify-content:center; gap:7px; font:500 16px var(--f-b); color:#fff; }
+  .url > * { position:static; }
+  .tools { left:0; right:0; top:62px; height:44px; display:flex; justify-content:space-around; align-items:center; }
+  .tools > * { position:static; }
+  .tools svg { width:26px; height:26px; }
+  .sheet { left:0; right:0; bottom:0; height:600px; background:#1c1c1e; border-radius:16px 16px 0 0; z-index:25; transform:translateY(105%); box-shadow:0 -10px 40px rgba(0,0,0,.5); }
+  .shd { left:16px; right:16px; top:16px; height:56px; display:flex; align-items:center; gap:12px; }
+  .shd > * { position:static; }
+  .shd img { width:52px; height:52px; border-radius:12px; }
+  .shd .tx { flex:1; }
+  .shd b { display:block; font:600 16px var(--f-b); }
+  .shd span { display:block; font:400 13px var(--f-b); color:#98989f; margin-top:2px; }
+  .xbtn { width:30px; height:30px; border-radius:50%; background:#3a3a3c; display:flex; align-items:center; justify-content:center; color:#aaa; font:600 15px var(--f-b); }
+  .apps { left:0; right:0; top:92px; height:96px; display:flex; justify-content:space-around; padding:0 10px; border-bottom:1px solid #2c2c2e; }
+  .apps > div { position:static; display:flex; flex-direction:column; align-items:center; gap:7px; font:400 11px var(--f-b); color:#ddd; }
+  .apps i { position:static; display:block; width:58px; height:58px; border-radius:50%; }
+  .list { left:14px; right:14px; top:204px; border-radius:12px; background:#2c2c2e; overflow:hidden; }
+  .list > div { position:relative; height:50px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font:400 16px var(--f-b); border-top:1px solid #3a3a3c; }
+  .list > div:first-child { border-top:0; }
+  .list > div > * { position:static; }
+  .list svg { width:22px; height:22px; }
+  .list .hl { background:#3a3a3c; }
+  .dlg { left:0; right:0; top:47px; bottom:0; background:#1c1c1e; border-radius:12px 12px 0 0; z-index:30; transform:translateY(105%); }
+  .dnav { left:0; right:0; top:0; height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font:400 17px var(--f-b); border-bottom:1px solid #2c2c2e; }
+  .dnav > * { position:static; }
+  .dnav .c { color:var(--ios-blue); }
+  .dnav .t { font-weight:600; font-size:16px; }
+  .dnav .a { color:var(--ios-blue); font-weight:600; }
+  .dcard { left:16px; right:16px; top:84px; height:100px; background:#2c2c2e; border-radius:12px; display:flex; align-items:center; gap:14px; padding:0 16px; }
+  .dcard > * { position:static; }
+  .dcard img { width:64px; height:64px; border-radius:14px; }
+  .dcard .f { flex:1; }
+  .dcard .f b { display:block; font:500 18px var(--f-b); padding-bottom:8px; border-bottom:1px solid #48484a; }
+  .dcard .f span { display:block; font:400 13px var(--f-b); color:#98989f; margin-top:8px; }
+  .dnote { left:22px; right:22px; top:196px; font:400 13px/1.45 var(--f-b); color:#98989f; }
+
+  /* Chrome Android */
+  .cbar { left:0; right:0; top:32px; height:60px; background:#202124; z-index:20; display:flex; align-items:center; gap:12px; padding:0 12px; }
+  .cbar > * { position:static; }
+  .cbar svg { width:24px; height:24px; flex:none; }
+  .curl { flex:1; height:42px; border-radius:21px; background:#303134; display:flex; align-items:center; gap:8px; padding:0 14px; font:400 16px var(--f-b); color:#e8eaed; }
+  .curl > * { position:static; }
+  .tabs { width:22px; height:22px; border:2px solid #e8eaed; border-radius:5px; display:flex; align-items:center; justify-content:center; font:600 12px var(--f-b); }
+  .gbar { left:50%; bottom:8px; width:120px; height:5px; margin-left:-60px; border-radius:3px; background:rgba(255,255,255,.7); z-index:36; }
+  .menu { right:6px; top:38px; width:262px; background:#2d2e31; border-radius:10px; z-index:25; box-shadow:0 12px 40px rgba(0,0,0,.6); transform-origin:100% 0; transform:scale(0); opacity:0; padding:6px 0; }
+  .micons { position:relative !important; height:46px; display:flex; justify-content:space-around; align-items:center; border-bottom:1px solid #3c4043; }
+  .micons svg { position:static; width:22px; height:22px; }
+  .mi { position:relative !important; height:41px; display:flex; align-items:center; gap:16px; padding:0 16px; font:400 15px var(--f-b); color:#e8eaed; }
+  .mi > * { position:static; }
+  .mi svg { width:20px; height:20px; flex:none; }
+  .mi.hl { background:#3c4043; }
+  .dim { inset:0; background:rgba(0,0,0,.55); z-index:28; opacity:0; }
+  .adlg { left:28px; right:28px; top:300px; background:#2d2e31; border-radius:26px; z-index:30; padding:24px; opacity:0; transform:scale(.85); }
+  .adlg > * { position:static; }
+  .adlg h4 { font:500 21px var(--f-b); }
+  .arow { display:flex; align-items:center; gap:14px; margin-top:22px; }
+  .arow > * { position:static; }
+  .arow img { width:48px; height:48px; border-radius:50%; }
+  .arow .in { flex:1; font:400 17px var(--f-b); padding-bottom:6px; border-bottom:2px solid var(--and-blue); }
+  .abtn { display:flex; justify-content:flex-end; gap:28px; margin-top:28px; font:600 15px var(--f-b); color:var(--and-blue); }
+  .abtn > * { position:static; }
+
+  /* layar utama */
+  .home { inset:0; z-index:32; opacity:0; }
+  .home.ios { background:linear-gradient(160deg,#1f3a68 0%,#3b2a6b 45%,#7a3b6b 100%); }
+  .home.and { background:linear-gradient(170deg,#0f3d3e 0%,#1d2a5b 60%,#2b1b45 100%); }
+  .grid { left:22px; right:22px; top:72px; display:grid; grid-template-columns:repeat(4,1fr); row-gap:22px; }
+  .grid > div { position:relative; height:86px; display:flex; flex-direction:column; align-items:center; gap:6px; font:500 11.5px var(--f-b); color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+  .grid > div > * { position:static; }
+  .grid i { display:block; width:62px; height:62px; border-radius:15px; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+  .home.and .grid i { border-radius:50%; width:56px; height:56px; }
+  .grid img { width:62px; height:62px; border-radius:15px; box-shadow:0 4px 14px rgba(0,0,0,.45); }
+  .home.and .grid img { border-radius:50%; width:56px; height:56px; }
+  .grid .new { opacity:0; }
+  .dock { left:14px; right:14px; bottom:14px; height:92px; border-radius:30px; background:rgba(255,255,255,.18); display:flex; justify-content:space-around; align-items:center; }
+  .dock i, .asearch i { position:static; display:block; width:62px; height:62px; border-radius:15px; }
+  .asearch { left:20px; right:20px; bottom:36px; height:52px; border-radius:26px; background:rgba(255,255,255,.88); display:flex; align-items:center; padding:0 18px; gap:10px; font:400 15px var(--f-b); color:#555; }
+  .asearch > * { position:static; }
+  .splash { inset:0; z-index:34; background:#070809; opacity:0; display:flex; align-items:center; justify-content:center; }
+  .splash img { position:static; width:150px; }
+  .app { inset:0; z-index:36; opacity:0; }
+
+  /* jari */
+  .fg { width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; background:rgba(255,255,255,.38); border:2.5px solid rgba(255,255,255,.95); box-shadow:0 0 0 6px rgba(233,196,106,.35), 0 6px 18px rgba(0,0,0,.45); z-index:60; opacity:0; }
+  .rp { width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; border:3px solid var(--gold-hi); z-index:59; opacity:0; }
+  .hlring { border-radius:14px; border:3px solid var(--gold); box-shadow:0 0 18px rgba(233,196,106,.8); z-index:58; opacity:0; }
+
+  /* penutup */
+  #logo7 { left:50%; top:420px; width:400px; margin-left:-200px; opacity:0; }
+  #t7 { left:60px; right:60px; top:640px; text-align:center; font:800 92px/1.08 var(--f-d); letter-spacing:-.02em; opacity:0; }
+  #q7 { left:50%; top:960px; width:440px; height:440px; margin-left:-220px; background:#fff; border-radius:30px; padding:26px; opacity:0; box-shadow:0 0 90px rgba(233,196,106,.35); }
+  #q7 img { width:100%; height:100%; }
+  #u7 { left:0; right:0; top:1450px; text-align:center; font:700 60px var(--f-d); color:var(--gold-hi); opacity:0; }
+  #s7 { left:0; right:0; top:1550px; text-align:center; font:500 34px var(--f-b); color:#c3cbdc; opacity:0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="abs" id="glow"></div>
+  <div class="abs" id="sparks" style="inset:0"></div>
+
+  <!-- S1 pembuka -->
+  <div class="scene" id="S1">
+    <div class="abs ring"></div><div class="abs ring"></div>
+    <img class="abs" id="logo1" src="assets/intro/logo-white.png" alt="">
+    <div class="abs mono" id="k1">Tutorial · 1 menit</div>
+    <div class="abs" id="t1"><span>Pasang</span> <span class="gold">Portal Dealer</span> <span>di</span> <span>Layar</span> <span>Utama</span> <span>HP</span></div>
+    <div class="abs" id="s1">Buka portal semudah membuka aplikasi — tanpa install dari Play Store / App Store.</div>
+    <img class="abs" id="ic1" src="assets/icons/icon-512.png" alt="">
+    <div class="abs" id="ic1l">CAI Dealer</div>
+  </div>
+
+  <!-- S2 iPhone -->
+  <div class="scene" id="S2">
+    <div class="abs plat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4"/></svg>iPhone · Safari</div>
+    <div class="abs cap" id="ci1"><div class="st">Langkah 1 / 4</div><h2>Buka <b>dealer.concerto.id</b> di Safari</h2><p>Ketik alamatnya di kolom alamat Safari.</p></div>
+    <div class="abs cap" id="ci2"><div class="st">Langkah 2 / 4</div><h2>Ketuk tombol <b>Bagikan</b></h2><p>Ikon kotak dengan panah ke atas di bawah layar.<br>iOS terbaru: ketuk <b style="color:#fff">⋯</b> lalu <b style="color:#fff">Bagikan</b>.</p></div>
+    <div class="abs cap" id="ci3"><div class="st">Langkah 3 / 4</div><h2>Pilih <b>Tambah ke Layar Utama</b></h2><p>Geser daftar ke bawah bila belum terlihat.</p></div>
+    <div class="abs cap" id="ci4"><div class="st">Langkah 4 / 4</div><h2>Ketuk <b>Tambah</b></h2><p>Nama ikon otomatis “CAI Dealer”.</p></div>
+    <div class="abs cap ok" id="ci5"><div class="st">Selesai</div><h2>✓ Ikon CAI Dealer sudah ada di layar utama</h2></div>
+    <div class="abs phone" id="ph1"><div class="pb"></div>
+      <div class="scr">
+        <img class="page" src="assets/intro/tut-land.webp" alt="" style="top:47px">
+        <div class="sb"><span>9:41</span><span class="sbi"><svg width="18" height="12" viewBox="0 0 18 12" fill="#fff"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="17" height="8" rx="2" fill="#fff"/></svg></span></div>
+        <div class="island"></div>
+        <div class="sfbar">
+          <div class="url" id="u1"><span style="font-size:13px;color:#ccc">AA</span><span>🔒 dealer.concerto.id</span></div>
+          <div class="tools">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5"/><path d="M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="2" stroke-linecap="round"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"/><path d="M12 6v14"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="2"><rect x="3" y="7" width="12" height="12" rx="2"/><path d="M8 4h11a2 2 0 0 1 2 2v11"/></svg>
+          </div>
+        </div>
+        <div class="sheet" id="sh1">
+          <div class="shd"><img src="assets/icons/apple-touch-icon.png" alt=""><div class="tx"><b>Concerto Dealer Portal</b><span>dealer.concerto.id</span></div><div class="xbtn">✕</div></div>
+          <div class="apps">
+            <div><i style="background:linear-gradient(#5ac8fa,#007aff)"></i>AirDrop</div>
+            <div><i style="background:linear-gradient(#65d36e,#2fb344)"></i>Pesan</div>
+            <div><i style="background:linear-gradient(#5ac8fa,#1a73e8)"></i>Mail</div>
+            <div><i style="background:linear-gradient(#ffd85a,#f5b400)"></i>Catatan</div>
+            <div><i style="background:#3a3a3c"></i>Lainnya</div>
+          </div>
+          <div class="list" id="ls1">
+            <div>Salin<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></div>
+            <div>Tambah ke Daftar Bacaan<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/></svg></div>
+            <div>Tambah Penanda<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"/></svg></div>
+            <div>Tambah ke Favorit<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></div>
+            <div>Cari di Halaman<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5"/></svg></div>
+            <div id="addrow">Tambah ke Layar Utama<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg></div>
+            <div>Markah<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg></div>
+          </div>
+        </div>
+        <div class="dlg" id="dl1">
+          <div class="dnav"><span class="c">Batal</span><span class="t">Tambah ke Layar Utama</span><span class="a" id="addbtn">Tambah</span></div>
+          <div class="dcard"><img src="assets/icons/apple-touch-icon.png" alt=""><div class="f"><b>CAI Dealer</b><span>https://dealer.concerto.id/</span></div></div>
+          <div class="dnote">Ikon akan ditambahkan ke Layar Utama Anda agar Anda dapat mengakses situs web ini dengan cepat.</div>
+        </div>
+        <div class="home ios" id="hm1">
+          <div class="grid">
+            <div><i style="background:linear-gradient(#ff6b6b,#e03131)"></i>Kalender</div><div><i style="background:linear-gradient(#ffd43b,#fab005)"></i>Foto</div><div><i style="background:linear-gradient(#69db7c,#2f9e44)"></i>Pesan</div><div><i style="background:linear-gradient(#74c0fc,#1c7ed6)"></i>Cuaca</div>
+            <div><i style="background:linear-gradient(#adb5bd,#495057)"></i>Kamera</div><div><i style="background:linear-gradient(#91a7ff,#4263eb)"></i>Peta</div><div><i style="background:linear-gradient(#ffa8a8,#f03e3e)"></i>Musik</div><div><i style="background:linear-gradient(#ffe066,#f59f00)"></i>Catatan</div>
+            <div><i style="background:linear-gradient(#63e6be,#0ca678)"></i>Dompet</div><div><i style="background:linear-gradient(#ced4da,#868e96)"></i>Setelan</div><div class="new" id="ni1"><img src="assets/icons/apple-touch-icon.png" alt="">CAI Dealer</div>
+          </div>
+          <div class="dock"><i style="background:linear-gradient(#69db7c,#2f9e44)"></i><i style="background:linear-gradient(#74c0fc,#1c7ed6)"></i><i style="background:linear-gradient(#ffd43b,#fab005)"></i><i style="background:linear-gradient(#ffa8a8,#f03e3e)"></i></div>
+        </div>
+        <div class="hlring" id="hr1a" style="left:12px;top:728px;width:366px;height:44px"></div>
+        <div class="hlring" id="hr1b" style="left:14px;top:698px;width:362px;height:50px"></div>
+        <div class="rp" id="rp1"></div><div class="fg" id="fg1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3 Android -->
+  <div class="scene" id="S3">
+    <div class="abs plat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 19h2"/></svg>Android · Chrome</div>
+    <div class="abs cap" id="ca1"><div class="st">Langkah 1 / 4</div><h2>Buka <b>dealer.concerto.id</b> di Chrome</h2><p>Ketik alamatnya di kolom alamat Chrome.</p></div>
+    <div class="abs cap" id="ca2"><div class="st">Langkah 2 / 4</div><h2>Ketuk menu <b>⋮</b> di kanan atas</h2><p>Tiga titik di samping kolom alamat.</p></div>
+    <div class="abs cap" id="ca3"><div class="st">Langkah 3 / 4</div><h2>Pilih <b>Tambahkan ke layar utama</b></h2><p>Di sebagian HP tertulis “Instal aplikasi”.</p></div>
+    <div class="abs cap" id="ca4"><div class="st">Langkah 4 / 4</div><h2>Ketuk <b>Tambahkan</b></h2><p>Bila muncul pilihan lagi, ketuk “Instal” / “Tambahkan”.</p></div>
+    <div class="abs cap ok" id="ca5"><div class="st">Selesai</div><h2>✓ Ikon CAI Dealer sudah ada di layar utama</h2></div>
+    <div class="abs phone" id="ph2"><div class="pb" style="border-radius:60px"></div>
+      <div class="scr" style="border-radius:34px">
+        <img class="page" src="assets/intro/tut-land.webp" alt="" style="top:92px">
+        <div class="sb and"><span>9:41</span><span class="sbi"><svg width="16" height="12" viewBox="0 0 16 12" fill="#fff"><path d="M8 12L0 3a11 11 0 0 1 16 0z"/></svg><svg width="12" height="16" viewBox="0 0 12 16"><rect x="1" y="2" width="10" height="14" rx="2" fill="#fff"/><rect x="4" y="0" width="4" height="2" fill="#fff"/></svg></span></div>
+        <div class="punch"></div>
+        <div class="cbar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>
+          <div class="curl" id="u2"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2" style="width:16px;height:16px"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>dealer.concerto.id</div>
+          <div class="tabs">2</div>
+          <svg viewBox="0 0 24 24" fill="#e8eaed"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+        </div>
+        <div class="menu" id="mn2">
+          <div class="micons">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>
+          </div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg>Tab baru</div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><circle cx="8" cy="15" r="3"/><circle cx="16" cy="15" r="3"/><path d="M3 10h18"/></svg>Tab Samaran baru</div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Histori</div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Bookmark</div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><path d="M18 8a3 3 0 1 0-3-3M6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0-3-3M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Bagikan…</div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5"/></svg>Cari di halaman</div>
+          <div class="mi" id="addmi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M12 8v6M9 11h6"/></svg>Tambahkan ke layar utama</div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/></svg>Situs desktop</div>
+          <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="#e8eaed" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>Setelan</div>
+        </div>
+        <div class="dim" id="dm2"></div>
+        <div class="adlg" id="ad2">
+          <h4>Tambahkan ke layar utama</h4>
+          <div class="arow"><img src="assets/icons/icon-192.png" alt=""><div class="in">CAI Dealer</div></div>
+          <div class="abtn"><span>Batal</span><span id="addbtn2">Tambahkan</span></div>
+        </div>
+        <div class="home and" id="hm2">
+          <div class="grid" style="top:90px">
+            <div><i style="background:linear-gradient(#ff8787,#e03131)"></i>Kalender</div><div><i style="background:linear-gradient(#ffd43b,#f08c00)"></i>Galeri</div><div><i style="background:linear-gradient(#69db7c,#2b8a3e)"></i>Pesan</div><div><i style="background:linear-gradient(#74c0fc,#1971c2)"></i>Cuaca</div>
+            <div><i style="background:linear-gradient(#adb5bd,#343a40)"></i>Kamera</div><div><i style="background:linear-gradient(#91a7ff,#3b5bdb)"></i>Peta</div><div><i style="background:linear-gradient(#f783ac,#c2255c)"></i>Musik</div><div><i style="background:linear-gradient(#ffe066,#e67700)"></i>Catatan</div>
+            <div><i style="background:linear-gradient(#63e6be,#087f5b)"></i>Kontak</div><div><i style="background:linear-gradient(#ced4da,#495057)"></i>Setelan</div><div class="new" id="ni2"><img src="assets/icons/icon-192.png" alt="">CAI Dealer</div>
+          </div>
+          <div class="asearch"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#555" stroke-width="2"><circle cx="10" cy="10" r="6"/><path d="M15 15l5 5"/></svg>Telusuri</div>
+        </div>
+        <div class="gbar"></div>
+        <div class="hlring" id="hr2a" style="left:48px;top:41px;width:260px;height:42px;border-radius:22px"></div>
+        <div class="hlring" id="hr2b" style="left:122px;top:378px;width:262px;height:41px;border-radius:6px"></div>
+        <div class="rp" id="rp2"></div><div class="fg" id="fg2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4 buka dari ikon -->
+  <div class="scene" id="S4">
+    <div class="abs cap" id="cb1" style="top:160px"><div class="st">Cara membuka</div><h2>Ketuk ikon <b>CAI Dealer</b></h2><p>Portal terbuka layar penuh seperti aplikasi —<br>tanpa mengetik alamat lagi.</p></div>
+    <div class="abs phone" id="ph3"><div class="pb"></div>
+      <div class="scr">
+        <div class="home ios" id="hm3" style="opacity:1">
+          <div class="grid">
+            <div><i style="background:linear-gradient(#ff6b6b,#e03131)"></i>Kalender</div><div><i style="background:linear-gradient(#ffd43b,#fab005)"></i>Foto</div><div><i style="background:linear-gradient(#69db7c,#2f9e44)"></i>Pesan</div><div><i style="background:linear-gradient(#74c0fc,#1c7ed6)"></i>Cuaca</div>
+            <div><i style="background:linear-gradient(#adb5bd,#495057)"></i>Kamera</div><div><i style="background:linear-gradient(#91a7ff,#4263eb)"></i>Peta</div><div><i style="background:linear-gradient(#ffa8a8,#f03e3e)"></i>Musik</div><div><i style="background:linear-gradient(#ffe066,#f59f00)"></i>Catatan</div>
+            <div><i style="background:linear-gradient(#63e6be,#0ca678)"></i>Dompet</div><div><i style="background:linear-gradient(#ced4da,#868e96)"></i>Setelan</div><div id="ni3"><img src="assets/icons/apple-touch-icon.png" alt="">CAI Dealer</div>
+          </div>
+          <div class="dock"><i style="background:linear-gradient(#69db7c,#2f9e44)"></i><i style="background:linear-gradient(#74c0fc,#1c7ed6)"></i><i style="background:linear-gradient(#ffd43b,#fab005)"></i><i style="background:linear-gradient(#ffa8a8,#f03e3e)"></i></div>
+        </div>
+        <div class="splash" id="sp3"><img src="assets/intro/logo-white.png" alt=""></div>
+        <img class="app page" id="ap3" src="assets/intro/tut-dash.webp" alt="" style="top:47px">
+        <div class="sb" style="z-index:45"><span>9:41</span><span class="sbi"><svg width="18" height="12" viewBox="0 0 18 12" fill="#fff"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="17" height="8" rx="2" fill="#fff"/></svg></span></div>
+        <div class="island" style="z-index:46"></div>
+        <div class="rp" id="rp3"></div><div class="fg" id="fg3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5 penutup -->
+  <div class="scene" id="S5">
+    <img class="abs" id="logo7" src="assets/intro/logo-white.png" alt="">
+    <div class="abs" id="t7">Selamat<br><span class="gold">mencoba!</span></div>
+    <div class="abs" id="q7"><img src="assets/qr-portal.svg" alt=""></div>
+    <div class="abs" id="u7">dealer.concerto.id</div>
+    <div class="abs" id="s7">Concerto Dealer Portal</div>
+  </div>
+
+  <div class="abs" id="vig"></div>
+</div>
+<script>
+const W = 1080, H = 1920, DUR = 56;
+const st = document.getElementById('stage');
+function fit() { const s = Math.min(innerWidth / W, innerHeight / H); st.style.transform = `translate(${(innerWidth - W * s) / 2}px, ${(innerHeight - H * s) / 2}px) scale(${s})`; }
+fit(); addEventListener('resize', fit);
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const ms = s => s * 1000;
+const EO = 'cubic-bezier(.16,1,.3,1)', EB = 'cubic-bezier(.34,1.56,.64,1)', EI = 'cubic-bezier(.7,0,.84,0)', EIO = 'cubic-bezier(.65,0,.35,1)';
+// semua animasi memakai delay absolut agar bisa di-seek per frame
+function A(el, kf, t0, d, easing = EO, fill = 'both') { return (typeof el === 'string' ? $(el) : el).animate(kf, { delay: ms(t0), duration: ms(d), easing, fill }); }
+// animasi keluar: hanya berlaku setelah mulai (fill 'forwards') agar tidak menimpa animasi masuk sebelumnya
+const OUT = (el, kf, t0, d) => A(el, kf, t0, d, 'linear', 'forwards');
+function scene(id, a, b, fin = .4, fout = .5) { const d = b - a; return A(id, [{ opacity: 0, offset: 0 }, { opacity: 1, offset: fin / d }, { opacity: 1, offset: 1 - fout / d }, { opacity: 0, offset: 1 }], a, d, 'linear'); }
+// tampil di [a,b] dengan geser naik
+function cap(id, a, b) { const d = b - a; A(id, [{ opacity: 0, transform: 'translateY(40px)', offset: 0 }, { opacity: 1, transform: 'none', offset: .45 / d }, { opacity: 1, transform: 'none', offset: 1 - .35 / d }, { opacity: 0, transform: 'translateY(-30px)', offset: 1 }], a, d, 'linear'); }
+function show(id, a, b, f = .3) { const d = b - a; A(id, [{ opacity: 0, offset: 0 }, { opacity: 1, offset: f / d }, { opacity: 1, offset: 1 - f / d }, { opacity: 0, offset: 1 }], a, d, 'linear'); }
+// jari: muncul dari (fx,fy), bergerak ke (x,y), ketuk di t
+const TAPS = [];
+function tap(n, fx, fy, x, y, t) {
+  TAPS.push(t);
+  const fg = '#fg' + n, rp = '#rp' + n;
+  $(fg).animate([
+    { opacity: 0, left: fx + 'px', top: fy + 'px', transform: 'scale(1)', offset: 0 },
+    { opacity: 1, left: fx + 'px', top: fy + 'px', transform: 'scale(1)', offset: .15 },
+    { opacity: 1, left: x + 'px', top: y + 'px', transform: 'scale(1)', offset: .7, easing: 'ease-in' },
+    { opacity: 1, left: x + 'px', top: y + 'px', transform: 'scale(.78)', offset: .8 },
+    { opacity: 1, left: x + 'px', top: y + 'px', transform: 'scale(1)', offset: .9 },
+    { opacity: 0, left: x + 'px', top: y + 'px', transform: 'scale(1)', offset: 1 }
+  ], { delay: ms(t - 1.12), duration: ms(1.6), easing: EIO, fill: 'forwards' });
+  $(rp).animate([{ opacity: 0, left: x + 'px', top: y + 'px', transform: 'scale(.6)' }, { opacity: .95, left: x + 'px', top: y + 'px', transform: 'scale(.8)', offset: .1 }, { opacity: 0, left: x + 'px', top: y + 'px', transform: 'scale(2.6)' }], { delay: ms(t), duration: ms(.7), easing: 'ease-out', fill: 'forwards' });
+}
+function phoneIn(id, t) { A(id, [{ opacity: 0, transform: 'translateY(160px) scale(.9)' }, { opacity: 1, transform: 'none' }], t, 1.0, EO); }
+function pop(id, t) { A(id, [{ opacity: 0, transform: 'scale(.2)' }, { opacity: 1, transform: 'scale(1.18)', offset: .6 }, { opacity: 1, transform: 'scale(1)' }], t, .7, 'ease-out'); }
+function glowRing(id, a, b) { const d = b - a; A(id, [{ opacity: 0, offset: 0 }, { opacity: 1, offset: .25 / d }, { opacity: .35, offset: .5 }, { opacity: 1, offset: .75 }, { opacity: 0, offset: 1 }], a, d, 'linear'); }
+
+// ── latar ──
+(function () { let r = 7; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  for (let i = 0; i < 40; i++) { const e = document.createElement('i'); e.className = 'spark'; const sz = 6 + rnd() * 12;
+    e.style.cssText = `left:${rnd() * 1080}px;top:${200 + rnd() * 1700}px;width:${sz}px;height:${sz}px`; $('#sparks').appendChild(e);
+    e.animate([{ opacity: 0, transform: 'translateY(30px) scale(.4)' }, { opacity: .8, offset: .3 }, { opacity: 0, transform: `translateY(${-180 - rnd() * 220}px) scale(1.2)` }], { duration: 5000 + rnd() * 4000, delay: -rnd() * 9000, iterations: Infinity, easing: 'ease-in-out' }); } })();
+$('#glow').animate([{ opacity: .7 }, { opacity: 1 }, { opacity: .7 }], { duration: 4000, iterations: Infinity, easing: 'ease-in-out' });
+
+/* ═══ S1 · 0 – 5.2 : pembuka ═══ */
+scene('#S1', 0, 5.2, .15, .5);
+A('#logo1', [{ opacity: 0, transform: 'translateY(40px) scale(.7)', filter: 'blur(14px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], .2, 1.0, EB);
+$$('#S1 .ring').forEach((r, i) => A(r, [{ opacity: .9, transform: 'scale(.4)' }, { opacity: 0, transform: 'scale(5)' }], .25 + i * .3, 1.8, 'ease-out'));
+A('#k1', [{ opacity: 0, letterSpacing: '1em' }, { opacity: 1, letterSpacing: '.4em' }], .8, .8);
+$$('#t1 span').forEach((s, i) => A(s, [{ opacity: 0, transform: 'translateY(80px) scale(1.3)', filter: 'blur(10px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], 1.15 + i * .12, .6, EB));
+$('#t1 .gold').animate([{ backgroundPosition: '0% 0' }, { backgroundPosition: '-220% 0' }], { duration: 4000, iterations: Infinity });
+A('#s1', [{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }], 2.2, .7);
+A('#ic1', [{ opacity: 0, transform: 'scale(.3) rotate(-10deg)' }, { opacity: 1, transform: 'none' }], 2.8, .8, EB);
+A('#ic1l', [{ opacity: 0 }, { opacity: 1 }], 3.3, .5);
+A('#S1', [{ transform: 'scale(1)', filter: 'blur(0)' }, { transform: 'scale(1.12)', filter: 'blur(12px)' }], 4.7, .5, EI);
+
+/* ═══ S2 · 5.0 – 25.0 : iPhone ═══ */
+scene('#S2', 5.0, 25.0, .3, .5);
+A('#S2 .plat', [{ opacity: 0, transform: 'translateX(-50%) translateY(-30px)' }, { opacity: 1, transform: 'translateX(-50%)' }], 5.2, .6);
+phoneIn('#ph1', 5.3);
+cap('#ci1', 5.6, 9.4); glowRing('#hr1a', 6.6, 9.2);
+cap('#ci2', 9.4, 13.4); tap(1, 300, 600, 195, 802, 11.0);
+A('#sh1', [{ transform: 'translateY(105%)' }, { transform: 'none' }], 11.25, .55, EO);
+cap('#ci3', 13.4, 17.4);
+A('#addrow', [{ background: 'transparent' }, { background: '#48484a' }], 14.4, .3);
+glowRing('#hr1b', 14.4, 15.4);
+tap(1, 320, 560, 160, 723, 15.4);
+A('#dl1', [{ transform: 'translateY(105%)' }, { transform: 'none' }], 15.7, .55, EO);
+cap('#ci4', 17.4, 21.0); tap(1, 260, 400, 352, 75, 19.0);
+OUT('#dl1', [{ opacity: 1 }, { opacity: 0 }], 19.3, .3);
+A('#hm1', [{ opacity: 0, transform: 'scale(1.15)' }, { opacity: 1, transform: 'none' }], 19.35, .55, EO);
+pop('#ni1', 20.2);
+cap('#ci5', 21.0, 25.0);
+A('#ni1 img', [{ boxShadow: '0 0 0 0 rgba(233,196,106,.9)' }, { boxShadow: '0 0 0 14px rgba(233,196,106,0)' }], 21.0, 1.2, 'ease-out');
+A('#ni1 img', [{ boxShadow: '0 0 0 0 rgba(233,196,106,.9)' }, { boxShadow: '0 0 0 14px rgba(233,196,106,0)' }], 22.4, 1.2, 'ease-out');
+
+/* ═══ S3 · 24.8 – 44.6 : Android ═══ */
+scene('#S3', 24.8, 44.6, .3, .5);
+A('#S3 .plat', [{ opacity: 0, transform: 'translateX(-50%) translateY(-30px)' }, { opacity: 1, transform: 'translateX(-50%)' }], 25.0, .6);
+phoneIn('#ph2', 25.1);
+cap('#ca1', 25.4, 29.2); glowRing('#hr2a', 26.4, 29.0);
+cap('#ca2', 29.2, 33.2); tap(2, 200, 420, 366, 62, 30.8);
+A('#mn2', [{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'none' }], 31.0, .35, EO);
+cap('#ca3', 33.2, 37.2);
+A('#addmi', [{ background: 'transparent' }, { background: '#3c4043' }], 34.2, .3);
+glowRing('#hr2b', 34.2, 35.2);
+tap(2, 220, 640, 250, 398, 35.2);
+OUT('#mn2', [{ opacity: 1 }, { opacity: 0 }], 35.45, .2);
+A('#dm2', [{ opacity: 0 }, { opacity: 1 }], 35.5, .3);
+A('#ad2', [{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'none' }], 35.55, .4, EO);
+cap('#ca4', 37.2, 40.8); tap(2, 150, 640, 298, 457, 38.8);
+OUT('#ad2', [{ opacity: 1 }, { opacity: 0 }], 39.1, .25);
+OUT('#dm2', [{ opacity: 1 }, { opacity: 0 }], 39.1, .25);
+A('#hm2', [{ opacity: 0, transform: 'scale(1.15)' }, { opacity: 1, transform: 'none' }], 39.2, .55, EO);
+pop('#ni2', 40.0);
+cap('#ca5', 40.8, 44.6);
+A('#ni2 img', [{ boxShadow: '0 0 0 0 rgba(233,196,106,.9)' }, { boxShadow: '0 0 0 14px rgba(233,196,106,0)' }], 40.8, 1.2, 'ease-out');
+A('#ni2 img', [{ boxShadow: '0 0 0 0 rgba(233,196,106,.9)' }, { boxShadow: '0 0 0 14px rgba(233,196,106,0)' }], 42.2, 1.2, 'ease-out');
+
+/* ═══ S4 · 44.4 – 51.2 : buka dari ikon ═══ */
+scene('#S4', 44.4, 51.2, .3, .5);
+phoneIn('#ph3', 44.5);
+cap('#cb1', 44.8, 51.2);
+tap(3, 300, 600, 238, 319, 46.6);
+A('#ni3', [{ transform: 'scale(1)' }, { transform: 'scale(.85)', offset: .4 }, { transform: 'scale(1)' }], 46.55, .35, 'ease-out');
+A('#sp3', [{ opacity: 0, transform: 'scale(.3)', transformOrigin: '238px 319px', borderRadius: '40px' }, { opacity: 1, transform: 'none', transformOrigin: '238px 319px', borderRadius: '0' }], 46.85, .5, EO);
+A('#sp3 img', [{ opacity: 0, transform: 'scale(.8)' }, { opacity: 1, transform: 'none' }], 47.1, .5, EO);
+A('#ap3', [{ opacity: 0 }, { opacity: 1 }], 48.1, .5, 'linear');
+A('#ap3', [{ transform: 'translateY(0)' }, { transform: 'translateY(-60px)' }], 49.0, 1.6, EIO, 'forwards');
+
+/* ═══ S5 · 51.0 – 56 : penutup ═══ */
+scene('#S5', 51.0, 56.01, .3, .01);
+A('#logo7', [{ opacity: 0, transform: 'translateY(40px) scale(.8)' }, { opacity: 1, transform: 'none' }], 51.2, .8, EB);
+A('#t7', [{ opacity: 0, transform: 'translateY(40px)', filter: 'blur(12px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], 51.5, .8, EO);
+$('#t7 .gold').animate([{ backgroundPosition: '0% 0' }, { backgroundPosition: '-220% 0' }], { duration: 3500, iterations: Infinity });
+A('#q7', [{ opacity: 0, transform: 'scale(.5) rotate(-8deg)' }, { opacity: 1, transform: 'none' }], 51.9, .8, EB);
+A('#u7', [{ opacity: 0, transform: 'translateY(30px)' }, { opacity: 1, transform: 'none' }], 52.5, .7, EO);
+A('#s7', [{ opacity: 0 }, { opacity: 1 }], 52.9, .6);
+OUT('#S5', [{ opacity: 1 }, { opacity: 0 }], 55.4, .6);
+
+/* ── kendali waktu ── */
+window.seek = t => { document.getAnimations().forEach(a => { a.pause(); a.currentTime = ms(t); }); };
+window.DUR = DUR; window.TAPS = TAPS; window.POPS = [20.2, 40.0];
+if (!location.search.includes('seek')) {   // pemutaran biasa (pratinjau)
+  const t0 = performance.now(); (function loop() { const t = (performance.now() - t0) / 1000 % (DUR + 1.5); if (t <= DUR) document.getAnimations().forEach(a => { a.currentTime = ms(t); }); requestAnimationFrame(loop); })();
+}
+</script>
+</body>
+</html>
