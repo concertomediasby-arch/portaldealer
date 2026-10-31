@@ -279,7 +279,15 @@ const GL_BODY_GROUPS = [
 ];
 const GL_BODIES = GL_BODY_GROUPS.flatMap(g => g[1]);
 const glIsEv = b => /listrik|hybrid|\bev\b/i.test(b || '');
-const GL_AREAS = ['Dasbor', 'Pintu', 'Tweeter', 'Midrange', 'Bagasi / Sub', 'Amplifier', 'DSP', 'Lainnya'];
+// Keterangan foto/video (31 Okt 2026, permintaan pemilik — ditambah peredam, midbass, coaxial, RCA, fuse, dll.)
+const GL_AREA_GROUPS = [
+  ['Mobil', ['Tampak Luar', 'Interior', 'Dasbor', 'Pintu', 'Bagasi / Sub']],
+  ['Speaker', ['Tweeter', 'Midrange', 'Midbass', 'Coaxial', 'Subwoofer', 'Box Subwoofer']],
+  ['Perangkat', ['Head Unit', 'DSP', 'Amplifier', 'Remote / Controller']],
+  ['Kabel & Instalasi', ['Kabel RCA', 'Kabel Power', 'Kabel Speaker', 'Fuse / Distribution Block', 'Aki / Kapasitor', 'Peredam', 'Rak / Panel Custom', 'Wiring / Kerapian']],
+  ['', ['Lainnya']],
+];
+const GL_AREAS = GL_AREA_GROUPS.flatMap(g => g[1]);
 const SHOWCASE_SQL = `-- Galeri Instalasi (Showcase) — jalankan sekali di Supabase → SQL Editor → Run
 create table if not exists public.showcase_installs (
   id uuid primary key default gen_random_uuid(),
@@ -599,7 +607,7 @@ async function glAddPhotos(input) {
   const files = [...input.files]; input.value = '';
   for (const f of files) {
     if (glEdit.submit && glCountMedia(false) >= GL_SUB_MAX_PHOTOS) { showToast(`⚠ Maksimal ${GL_SUB_MAX_PHOTOS} foto per kiriman.`); break; }
-    try { const blob = await glResize(f); glEdit.photos.push({ blob, url: URL.createObjectURL(blob), area: GL_AREAS[Math.min(glEdit.photos.length, GL_AREAS.length - 1)] }); }
+    try { const blob = await glResize(f); glEdit.photos.push({ blob, url: URL.createObjectURL(blob), area: '' }); }
     catch (e) { showToast('⚠ ' + e.message); }
   }
   renderGlPhotos();
@@ -611,7 +619,7 @@ function glAddVideos(input) {
     if (!/^video\//.test(f.type) && !/\.(mp4|m4v|mov|webm)$/i.test(f.name)) { showToast('⚠ Bukan file video: ' + f.name); continue; }
     const mb = f.size / 1048576;
     if (mb > GL_VIDEO_MAX_MB) { showToast(`⚠ ${f.name} ${mb.toFixed(1)} MB — maksimal ${GL_VIDEO_MAX_MB} MB per video. Kompres dulu lalu unggah lagi.`, 7000); continue; }
-    glEdit.photos.push({ blob: f, video: true, url: URL.createObjectURL(f), size: f.size, area: 'Lainnya' });
+    glEdit.photos.push({ blob: f, video: true, url: URL.createObjectURL(f), size: f.size, area: '' });
   }
   renderGlPhotos();
 }
@@ -622,7 +630,7 @@ function renderGlPhotos() {
   const el = document.getElementById('glf-photos'); if (!el) return;
   const first = glEdit.photos.findIndex(p => !(p.video || glIsVid(p)));
   el.innerHTML = glEdit.photos.map((p, i) => `<div class="gl-fph">${p.video || glIsVid(p) ? `<div class="gl-fvid"><video src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}</div>` : `<img src="${p.url}" alt="">`}
-      <select onchange="glPhotoArea(${i},this.value)">${GL_AREAS.map(a => `<option${a === p.area ? ' selected' : ''}>${a}</option>`).join('')}</select>
+      <select onchange="glPhotoArea(${i},this.value)"><option value=""${p.area ? '' : ' selected'}>— Keterangan —</option>${p.area && !GL_AREAS.includes(p.area) ? `<option selected>${escHtml(p.area)}</option>` : ''}${GL_AREA_GROUPS.map(([g, l]) => { const o = l.map(a => `<option${a === p.area ? ' selected' : ''}>${a}</option>`).join(''); return g ? `<optgroup label="${g}">${o}</optgroup>` : o; }).join('')}</select>
       <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === first ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button><button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`).join('')
     || '<span class="gl-hint">Belum ada foto/video. Foto pertama = foto utama. Pastikan plat nomor sudah diburamkan.</span>';
 }
