@@ -1153,17 +1153,21 @@ function openAuthDealers() {
   showView('authdealer');
   document.querySelector('.main')?.scrollTo(0, 0);
   renderAuthDealers();
+  adEnsure();
 }
 function setAdRegion(r) { adRegion = r; renderAuthDealers(); }
 function renderAuthDealers() {
-  const regions = [...new Set(AUTH_DEALERS.map(d => d.r))];
+  const ed = isEditor() && adRows;
+  const list = ed ? adRows : adPublic();
+  renderAdTools();
+  const regions = [...new Set(list.map(d => d.r))];
   document.getElementById('ad-chips').innerHTML = ['all', ...regions].map(r =>
     `<button class="filter-chip${adRegion === r ? ' active' : ''}" onclick="setAdRegion('${escHtml(r)}')">${r === 'all' ? 'Semua' : escHtml(r)}</button>`).join('');
   const q = normKey(document.getElementById('ad-search')?.value || '');
-  const rows = AUTH_DEALERS.filter(d => (adRegion === 'all' || d.r === adRegion) && (!q || normKey([d.n, d.c, d.r, d.a].join(' ')).includes(q)));
+  const rows = list.filter(d => (adRegion === 'all' || d.r === adRegion) && (!q || normKey([d.n, d.c, d.r, d.a].join(' ')).includes(q)));
   document.getElementById('ad-count').innerHTML = `<b>${rows.length}</b> dealer resmi${adRegion === 'all' && !q ? ` di <b>${regions.length}</b> provinsi` : ''}`;
-  const card = d => `<div class="ad-card">
-      <div class="ad-top"><div class="ad-name">${escHtml(d.n)}</div><span class="ad-badge">✓ Resmi</span></div>
+  const card = d => `<div class="ad-card${d.hidden ? ' ad-hid' : ''}">
+      <div class="ad-top"><div class="ad-name">${escHtml(d.n)}</div>${d.hidden ? '<span class="ad-badge hid">Disembunyikan</span>' : '<span class="ad-badge">✓ Resmi</span>'}</div>
       <div class="ad-city">📍 ${escHtml(d.c || d.r)}</div>
       ${d.a ? `<div class="ad-addr">${escHtml(d.a)}</div>` : ''}
       <div class="ad-btns">
@@ -1171,11 +1175,137 @@ function renderAuthDealers() {
         ${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}
         <a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>
       </div>
+      ${ed ? `<div class="ad-adm"><button class="gt-btn" onclick="openAdForm('${d.id}')">✏️ Edit</button><button class="gt-btn ghost gt-del" onclick="deleteAdDealer('${d.id}')">🗑 Hapus</button></div>` : ''}
     </div>`;
   document.getElementById('ad-list').innerHTML = rows.length ? regions.filter(r => rows.some(d => d.r === r)).map(r => {
     const ds = rows.filter(d => d.r === r);
     return `<div class="line-header"><span class="line-name">${escHtml(r)}</span><span class="line-count">${ds.length}</span></div><div class="ad-grid">${ds.map(card).join('')}</div>`;
   }).join('') : '<div class="stock-empty">Dealer tidak ditemukan. Coba kata kunci lain.</div>';
+}
+
+/* ── Authorized Dealer bisa diedit Editor dari portal (31 Okt 2026, permintaan pemilik) ──
+   Data dari tabel Supabase `auth_dealers` (baca publik, tulis admin/editor); AUTH_DEALERS di atas = cadangan
+   (bila tabel belum dibuat / database tak terjangkau) sekaligus isi awal SQL. Dipakai juga Hall of Fame & Galeri. */
+const AD_TABLE = 'auth_dealers';
+let adRows = null, adErr = '', adLoading = null, adTried = false, adEdit = null;
+const adFromRow = r => ({ id: r.id, r: r.region, n: r.name, c: r.city || '', a: r.address || '', wa: r.wa || '', ig: r.ig || '', map: r.map || '', hidden: !!r.hidden, sort: r.sort || 0 });
+const adPublic = () => adRows ? adRows.filter(d => !d.hidden) : AUTH_DEALERS;
+const adLit = v => v == null || v === '' ? 'null' : `'${String(v).replace(/'/g, "''")}'`;
+function adSql() {
+  const role = `(auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor')`;
+  const vals = AUTH_DEALERS.map((d, i) => `  (${[d.r, d.n, d.c, d.a, d.wa, d.ig, d.map].map(adLit).join(', ')}, ${(i + 1) * 10})`).join(',\n');
+  return `-- Authorized Dealer (bisa diedit dari portal) — jalankan sekali di Supabase → SQL Editor → Run
+create table if not exists public.auth_dealers (
+  id uuid primary key default gen_random_uuid(),
+  region text not null,
+  name text not null,
+  city text, address text, wa text, ig text, map text,
+  hidden boolean not null default false,
+  sort int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.auth_dealers enable row level security;
+drop policy if exists "auth dealers read" on public.auth_dealers;
+drop policy if exists "auth dealers write" on public.auth_dealers;
+create policy "auth dealers read" on public.auth_dealers for select using (not hidden or ${role});
+create policy "auth dealers write" on public.auth_dealers for all to authenticated using (${role}) with check (${role});
+grant select on public.auth_dealers to anon, authenticated;
+grant insert, update, delete on public.auth_dealers to authenticated;
+-- isi awal = ${AUTH_DEALERS.length} dealer yang tampil di portal saat ini
+insert into public.auth_dealers (region, name, city, address, wa, ig, map, sort)
+select * from (values
+${vals}
+) v(region, name, city, address, wa, ig, map, sort)
+where not exists (select 1 from public.auth_dealers);`;
+}
+function adCopySql() { const sql = adSql(); (navigator.clipboard?.writeText(sql) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => prompt('Salin SQL ini:', sql)); }
+function loadAuthDealers(force) {
+  if (typeof supabase === 'undefined' || !supabase) return Promise.resolve();
+  if (adLoading && !force) return adLoading;
+  adLoading = (async () => {
+    try {
+      const { data, error } = await supabase.from(AD_TABLE).select('*').order('region').order('sort').order('name');
+      if (error) throw error;
+      adRows = (data || []).map(adFromRow); adErr = '';
+      if (!adRows.length && !isEditor()) adRows = null;   // tabel kosong → pengunjung tetap melihat daftar bawaan
+    } catch (e) {
+      const m = String(e.message || e);
+      adRows = null;
+      adErr = /relation|does not exist|schema cache|404|PGRST205/i.test(m) ? 'setup' : 'Daftar dealer dari database tidak bisa dimuat: ' + m;
+    }
+    adTried = true; adLoading = null;
+  })();
+  return adLoading;
+}
+function adRerender() {
+  const on = id => document.getElementById(id)?.classList.contains('active');
+  if (on('view-authdealer')) renderAuthDealers();
+  if (on('view-halloffame') && typeof renderHallOfFame === 'function') renderHallOfFame();
+  if (on('view-galeri') && typeof renderGaleri === 'function') renderGaleri();
+}
+function adEnsure() { if (adTried || adLoading) return; loadAuthDealers().then(adRerender); }
+// Dipanggil scAuthChanged() tiap status login berubah — Editor juga melihat dealer yang disembunyikan
+function adAuthChanged() { adTried = false; adRows = null; if (document.getElementById('view-authdealer')?.classList.contains('active')) { renderAuthDealers(); adEnsure(); } }
+function renderAdTools() {
+  const el = document.getElementById('ad-tools'); if (!el) return;
+  if (!isEditor()) { el.innerHTML = ''; return; }
+  if (adErr === 'setup') el.innerHTML = `<div class="vs-warn">Daftar dealer belum bisa diedit dari portal: tabel <b>auth_dealers</b> belum dibuat. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (sekaligus memasukkan ${AUTH_DEALERS.length} dealer yang tampil sekarang), lalu buka menu ini lagi. Sementara itu pengunjung tetap melihat daftar bawaan.<br><br><button class="gt-btn" onclick="adCopySql()">📋 Salin SQL</button></div>`;
+  else if (adErr) el.innerHTML = `<div class="vs-warn">${escHtml(adErr)}</div>`;
+  else if (adRows) el.innerHTML = `<div class="ad-toolbar"><button class="gt-btn confirm" onclick="openAdForm()">＋ Tambah Dealer</button><span class="ad-hint">Mode Editor — perubahan langsung terlihat pengunjung.</span></div>`;
+  else el.innerHTML = '';
+}
+const adWa = v => { let d = String(v || '').replace(/\D/g, ''); if (d.startsWith('0')) d = '62' + d.slice(1); else if (d.startsWith('8')) d = '62' + d; return d; };
+const adIg = v => String(v || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[/?#].*$/, '').replace(/^@/, '');
+function openAdForm(id) {
+  if (!isEditor() || !adRows) return;
+  const d = id ? adRows.find(x => x.id === id) : null;
+  adEdit = d ? { ...d } : { id: null, r: adRegion !== 'all' ? adRegion : '', n: '', c: '', a: '', wa: '', ig: '', map: '', hidden: false, sort: (Math.max(0, ...adRows.map(x => x.sort || 0)) + 10) };
+  const e = adEdit, regions = [...new Set(adRows.map(x => x.r))].sort();
+  const f = (k, label, cls = '', ph = '', type = 'text') => `<label class="${cls}">${label}<input type="${type}" value="${escHtml(e[k] ?? '')}" placeholder="${escHtml(ph)}" oninput="adEdit.${k}=this.value"></label>`;
+  document.querySelector('#ad-form .gl-fbox').innerHTML = `
+    <div class="rk-pick-hd"><div class="rk-pick-t">${d ? 'Edit' : 'Tambah'} Dealer</div><button class="rk-pick-x" onclick="closeAdForm()" aria-label="Tutup">✕</button></div>
+    <div class="gl-fgrid">
+      <label class="w2">Nama dealer *<input value="${escHtml(e.n)}" placeholder="mis. Concerto Surabaya" oninput="adEdit.n=this.value"></label>
+      <label>Provinsi / wilayah *<input list="adf-regions" value="${escHtml(e.r)}" placeholder="Pilih / ketik baru" oninput="adEdit.r=this.value"><datalist id="adf-regions">${regions.map(r => `<option value="${escHtml(r)}"></option>`).join('')}</datalist></label>
+      ${f('c', 'Kota', '', 'mis. Surabaya')}
+      <label class="w4">Alamat<textarea rows="2" oninput="adEdit.a=this.value">${escHtml(e.a)}</textarea></label>
+      ${f('wa', 'WhatsApp', 'w2', 'mis. 0812… atau 62812…', 'tel')}
+      ${f('ig', 'Instagram', 'w2', 'username, tanpa @')}
+      ${f('map', 'Link Google Maps (opsional)', 'w4', 'kosong = dicari otomatis dari nama + alamat')}
+      ${f('sort', 'Urutan', '', 'angka kecil tampil lebih dulu', 'number')}
+      <label class="w2 gl-pub"><input type="checkbox"${e.hidden ? '' : ' checked'} onchange="adEdit.hidden=!this.checked"> Tampilkan di daftar (hilangkan centang = sembunyikan sementara)</label>
+    </div>
+    <div class="gl-factions"><button class="gt-btn ghost" onclick="closeAdForm()">Batal</button><button class="gt-btn confirm" id="adf-save" onclick="saveAdDealer()">💾 Simpan</button></div>`;
+  document.getElementById('ad-form').classList.add('open');
+}
+function closeAdForm() { document.getElementById('ad-form')?.classList.remove('open'); adEdit = null; }
+async function saveAdDealer() {
+  const e = adEdit; if (!e || !supabase) return;
+  const name = String(e.n || '').trim(), region = String(e.r || '').trim();
+  if (!name || !region) { showToast('⚠ Isi nama dealer & provinsi dulu.'); return; }
+  const row = { region, name, city: String(e.c || '').trim() || null, address: String(e.a || '').trim() || null,
+    wa: adWa(e.wa) || null, ig: adIg(e.ig) || null, map: String(e.map || '').trim() || null,
+    hidden: !!e.hidden, sort: +e.sort || 0, updated_at: new Date().toISOString() };
+  const btn = document.getElementById('adf-save'); btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
+  try {
+    const q = e.id ? supabase.from(AD_TABLE).update(row).eq('id', e.id) : supabase.from(AD_TABLE).insert(row);
+    const { error } = await q;
+    if (error) throw error;
+    closeAdForm(); showToast('✓ Dealer disimpan');
+    await loadAuthDealers(true); adRerender();
+  } catch (err) {
+    showToast('⚠ Gagal menyimpan: ' + (err.message || err), 6000);
+    btn.disabled = false; btn.textContent = '💾 Simpan';
+  }
+}
+async function deleteAdDealer(id) {
+  const d = adRows?.find(x => x.id === id); if (!d || !supabase) return;
+  if (!confirm(`Hapus dealer "${d.n}" dari daftar Authorized Dealer?\n\nTips: untuk menyembunyikan sementara, pakai ✏️ Edit lalu hilangkan centang "Tampilkan".`)) return;
+  const { error } = await supabase.from(AD_TABLE).delete().eq('id', id);
+  if (error) { showToast('⚠ Gagal menghapus: ' + error.message, 6000); return; }
+  showToast('✓ Dealer dihapus');
+  await loadAuthDealers(true); adRerender();
 }
 
 function openUpdates() {

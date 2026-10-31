@@ -76,7 +76,7 @@ const HOF_DEALER_ALIAS = { westaudioworks: 'West Garage', vinaudioworks: 'Vin Au
 function hofDealer(name) {
   const k = normKey(name || ''); if (!k) return null;
   const n = normKey(HOF_DEALER_ALIAS[k] || name);
-  return AUTH_DEALERS.find(d => normKey(d.n) === n) || null;
+  return adPublic().find(d => normKey(d.n) === n) || null;
 }
 const hofDlAttr = name => hofDealer(name) ? ` onclick="openHofDealer('${escHtml(name).replace(/'/g, '')}')"` : '';
 function openHofDealer(name) {
@@ -132,6 +132,7 @@ function openHallOfFame(focusKey) {
   if (!scOn()) return;
   showView('halloffame');
   renderHallOfFame();
+  adEnsure();
   const main = document.querySelector('.main');
   if (focusKey) {
     hofOpen[focusKey] = true; renderHallOfFame();
@@ -331,6 +332,7 @@ async function openGaleri() {
   if (!scOn()) return;
   showView('galeri');
   document.querySelector('.main')?.scrollTo(0, 0);
+  adEnsure();
   if (!glItems) { renderGaleri(); await loadGaleri(); }
   renderGaleri();
 }
@@ -384,7 +386,7 @@ function renderGaleri() {
 }
 
 /* ── Detail instalasi ── */
-function glDealer(name) { const n = normKey(name); return n ? AUTH_DEALERS.find(d => normKey(d.n) === n) : null; }
+function glDealer(name) { const n = normKey(name); return n ? adPublic().find(d => normKey(d.n) === n) : null; }
 function openGlDetail(id, photoIdx = 0) {
   const it = glItems?.find(x => x.id === id); if (!it) return;
   const ov = document.getElementById('gl-detail');
@@ -500,7 +502,7 @@ function renderGlForm() {
       <label>Model<input value="${escHtml(e.car_model)}" placeholder="mis. Fortuner VRZ" oninput="glField('car_model',this.value)"></label>
       <label>Tahun<input type="number" min="1980" max="2100" value="${escHtml(e.car_year ?? '')}" oninput="glField('car_year',this.value)"></label>
       <label>Tipe<select onchange="glField('body',this.value)"><option value="">—</option>${GL_BODY_GROUPS.map(([g, arr]) => g ? `<optgroup label="${g}">${opt(arr, e.body)}</optgroup>` : opt(arr, e.body)).join('')}</select></label>
-      <label class="w2">Dealer pemasang<input list="glf-dealers" value="${escHtml(e.dealer)}" placeholder="Ketik / pilih dealer resmi" oninput="glPickDealer(this.value)"><datalist id="glf-dealers">${[...new Set(AUTH_DEALERS.map(d => d.n))].map(n => `<option value="${escHtml(n)}"></option>`).join('')}</datalist></label>
+      <label class="w2">Dealer pemasang<input list="glf-dealers" value="${escHtml(e.dealer)}" placeholder="Ketik / pilih dealer resmi" oninput="glPickDealer(this.value)"><datalist id="glf-dealers">${[...new Set(adPublic().map(d => d.n))].map(n => `<option value="${escHtml(n)}"></option>`).join('')}</datalist></label>
       <label>Kota<input id="glf-city" value="${escHtml(e.city)}" oninput="glField('city',this.value)"></label>
       <label>Urutan<input type="number" value="${escHtml(e.sort ?? 0)}" title="Angka kecil tampil lebih dulu" oninput="glField('sort',this.value)"></label>
       <label class="w4">Catatan singkat<textarea rows="2" placeholder="mis. Upgrade full system dengan DSP — vokal jernih, bass rapi." oninput="glField('note',this.value)">${escHtml(e.note)}</textarea></label>
@@ -596,5 +598,6 @@ function refreshProductShowcase() {
 function scAuthChanged() {
   if (!scOn() && ['view-halloffame', 'view-galeri'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
   glItems = null;   // muat ulang sesuai hak akun baru (draf hanya untuk Admin/Editor)
+  if (typeof adAuthChanged === 'function') adAuthChanged();
   refreshProductShowcase();
 }
