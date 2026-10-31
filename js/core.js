@@ -1127,6 +1127,7 @@ const AUTH_DEALERS = [
   {"r": "Jawa Tengah", "n": "Blitz Tegal", "c": "Tegal", "ig": "concerto_tegal", "wa": "6285713474563", "a": "Jln. Kolonel Sudiarto No.21, Panggung"},
   {"r": "Jawa Tengah", "n": "Dreamsound", "c": "Solo", "ig": "dreamsound.soc", "wa": "6285700486294", "a": "Kapten Mulyadi N.50"},
   {"r": "Jawa Tengah", "n": "ICO Audioworks", "c": "Karanganyar", "ig": "concerto_karanganyar", "wa": "6281393672222", "a": "Jl. Raya Sragen - Solo Km 12, Kebak Jetis, Nangsri, Kec. Kebakkramat, Kabupaten Karanganyar, Jawa Tengah 57762", "map": "https://maps.app.goo.gl/AjDYusGj4nQcBVGV8"},   // 30 Okt 2026, dari pemilik
+  {"r": "Jawa Tengah", "n": "Mevina Autosoundproof", "c": "Semarang", "ig": "mevina_autosoundproof", "wa": "6287738353808", "a": "Jalan Petek Kampung Latuk No. 58, Kel. Dadapsari"},
   {"r": "Jawa Tengah", "n": "Terang Jaya", "c": "Purwokerto", "ig": "terang_jaya_purwokerto", "wa": "6282137528833", "a": "Jln. Gerilya No.789"},
   {"r": "Jawa Timur", "n": "Autoschoon", "c": "Surabaya", "ig": "autoschoon", "wa": "6282230303038", "a": "Jln. Meyjen Sungkono No. 89 Gn. Sari"},
   {"r": "Jawa Timur", "n": "Central Garage", "c": "Surabaya", "ig": "central_garage_surabaya", "wa": "6281935172779", "a": "Jln. Raya Kendangsari Industri No.18"},
@@ -1141,6 +1142,8 @@ const AUTH_DEALERS = [
   {"r": "Jawa Timur", "n": "Bos Audio dan Variasi", "c": "Nganjuk", "ig": "boss_audio_nganjuk", "wa": "6282230056463", "map": "https://maps.app.goo.gl/7HgU7xQWfuhohWMS7"},   // 30 Okt 2026, dari pemilik
   {"r": "Kalimantan Selatan", "n": "Oscar Variasi", "c": "Banjarbaru", "ig": "oscar_variasi", "wa": "6282154030304", "a": "Jln. Ayani KM 31 Guntung Payung"},
   {"r": "Kalimantan Tengah", "n": "Oscar Variasi", "c": "Pangkalan Bun", "ig": "concerto_banjar_pangkalanbun", "wa": "6282154030304", "a": "Jln. A Yani, guntungmanggis"},
+  {"r": "Kalimantan Tengah", "n": "Project Audio", "c": "Sampit", "ig": "projectaudio_sampit", "wa": "6282150859800", "a": "Jln. Pelita Timur No.69"},
+  {"r": "Sulawesi Selatan", "n": "Auto Sound Gallery", "c": "Makassar", "ig": "mr.cum_loud", "wa": "6282399455555", "a": "Jln. Masjid Raya No.39, Bontoala"},
   {"r": "Sumatra Selatan", "n": "DR Audio Art", "c": "Palembang", "ig": "dr_audio_art_concerto_plg", "wa": "6282213090962", "a": "Jl. Sukabangun II No.1527B"},
   {"r": "Sumatra Utara", "n": "Vin Audiowork", "c": "Medan", "ig": "vinaudioworks_medan", "wa": "628116119591", "a": "Jln. Danau Singkarak No.4C, Helvetia Timur"},
   {"r": "Sumatra Utara", "n": "Zona Audio", "c": "Medan", "ig": "zonaaudio_medan", "wa": "628116103838", "a": "Jln. Kapten Muslim, Helvetia Tengah"},
