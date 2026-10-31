@@ -113,7 +113,7 @@ function onAuthChanged() {
     stockMap = {}; stockLoaded = false; guideFiles = null; gtItems = null; gtOrders = null; gtTop = null; rdItems = null; qaItems = null;
     if (qaChannel) { supabase.removeChannel(qaChannel); qaChannel = null; }
     refreshStockUI();
-    if (['view-stock', 'view-guides', 'view-dealers', 'view-gathering', 'view-academy', 'view-visitors'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
+    if (['view-stock', 'view-guides', 'view-dealers', 'view-gathering', 'view-visitors'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');
   }
 }
 

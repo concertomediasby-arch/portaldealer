@@ -946,7 +946,7 @@ function updateAcademyStar() {
 }
 
 function openAcademy() {
-  if (!requireLogin(openAcademy)) return;   // dikunci Kode Akses dealer (25 Okt 2026, permintaan pemilik)
+  // Terbuka untuk umum tanpa Kode Akses (31 Okt 2026, permintaan pemilik — dulu dikunci sejak 25 Okt 2026)
   showView('academy');
   document.querySelector('.main')?.scrollTo(0, 0);
   const list = acadReleased();
@@ -967,7 +967,6 @@ function openAcademy() {
 }
 
 function openAcademyItem(no) {
-  if (!requireLogin(() => openAcademyItem(no))) return;
   const a = acadReleased().find(x => x.no === no);
   if (!a) return;
   acadCurrent = no;
