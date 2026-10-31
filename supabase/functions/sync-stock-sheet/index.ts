@@ -7,8 +7,8 @@
 // Secrets (Edge Functions → Secrets):
 //   STOCK_SHEET_URL = link Google Sheet stok (dibagikan "Siapa saja yang memiliki link — Pelihat"; gid tab dipakai bila ada)
 //   SYNC_SECRET     = kata sandi acak panjang, sama dengan yang ditulis di SQL jadwal
-//   CATALOG_URL     = (opsional) URL file yang memuat BRANDS & STOCK_ALIASES. Default: coba https://dealer.concerto.id/katalog.js
-//                     (data katalog dipisah dari index.html, 30 Okt 2026), bila tidak ada → https://dealer.concerto.id/index.html
+//   CATALOG_URL     = (opsional) URL file yang memuat BRANDS & STOCK_ALIASES. Default: coba https://hub.concerto.id/katalog.js (domain baru 31 Okt 2026)
+//                     (data katalog dipisah dari index.html, 30 Okt 2026), bila tidak ada → https://hub.concerto.id/index.html
 // SUPABASE_URL & SUPABASE_SERVICE_ROLE_KEY sudah tersedia otomatis — jangan menaruh kunci di kode.
 //
 // Katalog (BRANDS) & STOCK_ALIASES dibaca dari katalog.js (atau index.html, versi lama) situs sebagai DATA (JSON5, tanpa menjalankan kode),
@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
 
     // Katalog dari situs (cache-buster agar versi terbaru)
     const catUrls = Deno.env.get('CATALOG_URL') ? [Deno.env.get('CATALOG_URL')!]
-      : ['https://dealer.concerto.id/katalog.js', 'https://dealer.concerto.id/index.html'];
+      : ['https://hub.concerto.id/katalog.js', 'https://hub.concerto.id/index.html'];
     let html = '';
     for (const u of catUrls) {
       const r = await fetch(u + '?t=' + Date.now());

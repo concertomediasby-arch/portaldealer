@@ -8,7 +8,7 @@
    (kunci service role hanya ada di server Supabase, tidak pernah di situs)
 ══════════════════════════════════════════ */
 let dealerUsers = null, dealerEditId = null, dealerCodeTouched = false;
-const PORTAL_URL = 'https://dealer.concerto.id';
+const PORTAL_URL = 'https://hub.concerto.id';
 
 function randomPassword(len = 10) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';

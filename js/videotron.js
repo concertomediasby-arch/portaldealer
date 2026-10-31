@@ -1370,7 +1370,7 @@ function renderAbsen(s) {
         <div class="ab-nos">${nos.map(n => `<em>${pad2(n)}</em>`).join('')}</div></div><i class="ab-ok">✓</i></div>`; }).join('');
     html = `<div class="qs-scene ab ab-j"><div class="ab-kick">Kabar baiknya…</div><h1 class="ab-title">Semua <em>jawabannya</em> ada di Portal</h1>
       <div class="ab-grid">${tiles}</div>
-      <div class="ab-url"><img src="assets/qr-portal.svg" alt="QR dealer.concerto.id"><div><small>Portal Dealer CAI</small><b>dealer.concerto.id</b></div></div></div>`;
+      <div class="ab-url"><img src="assets/qr-portal.svg" alt="QR hub.concerto.id"><div><small>CAI Hub</small><b>hub.concerto.id</b></div></div></div>`;
   } else {
     const items = ABSEN_DOSA.map((x, i) => {
       const cls = i >= a.k ? '' : a.all ? 'on in' : i === a.k - 1 ? 'on in new' : 'on';

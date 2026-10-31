@@ -291,7 +291,7 @@ const RD_TEMPLATE = [
   { title: 'Perkenalan Caelum', start_time: '11:30', end_time: '12:00', segment: SEG_PAGI, notes: 'Muncul video Caelum (brand baru Power Amplifier) di videotron.' },
   { title: 'Presentasi Fun Marketing (Opsional)', start_time: '12:00', end_time: '12:30', segment: SEG_PAGI, flexible: true, notes: 'Opsional · 30 menit, menyesuaikan waktu. ISHOMA tetap dimulai 12:00.' },
   { title: 'ISHOMA (Istirahat, Sholat, Makan Siang)', start_time: '12:00', end_time: '13:00', segment: SEG_PAGI, notes: 'Lunch · 1 jam' },
-  { title: 'Kick Off 2027 & PKS', start_time: '13:00', end_time: '16:00', segment: SEG_PAGI, notes: 'Membahas Portal Dealer CAI (dealer.concerto.id) & PKS Dealer 2027. Penutup acara pagi, selesai 16:00.' },
+  { title: 'Kick Off 2027 & PKS', start_time: '13:00', end_time: '16:00', segment: SEG_PAGI, notes: 'Membahas Portal Dealer CAI (hub.concerto.id) & PKS Dealer 2027. Penutup acara pagi, selesai 16:00.' },
   { title: 'Coffee Break 2', start_time: '18:00', end_time: '18:20', segment: SEG_MALAM, notes: '20 menit · sebelum acara malam dimulai.' },
   { title: 'Opening Speech', start_time: '18:20', end_time: '19:00', segment: SEG_MALAM, notes: 'Brand partner: Audiocircle → STEG → Zelos → Harrison Lab → Amo Plus → Sound Addict.' },
   { title: 'Makan Malam (Dinner)', start_time: '19:00', end_time: '20:00', segment: SEG_MALAM },
@@ -371,7 +371,7 @@ function printRundown() {
       <table class="gp-items rd-print"><colgroup>${cols.map(c => `<col style="width:${c[1]}%">`).join('')}</colgroup><thead><tr>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
       ${items.filter(x => x.day === d).map((x, i, a) => `${x.segment && x.segment !== a[i - 1]?.segment ? `<tr class="gp-seg"><td colspan="${cols.length}">◆ ${escHtml(x.segment)}</td></tr>` : ''}${row(x)}`).join('')}
       </tbody></table>`).join('')}
-    <p class="rd-foot">Dicetak ${printed} WIB · dealer.concerto.id</p></div>`;
+    <p class="rd-foot">Dicetak ${printed} WIB · hub.concerto.id</p></div>`;
   const prevTitle = document.title;
   document.title = 'Run Down Gathering CAI 2026';   // nama file PDF bawaan
   window.addEventListener('afterprint', () => { document.title = prevTitle; }, { once: true });

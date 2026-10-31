@@ -841,7 +841,7 @@ function rkPdf() {
   };
   const footer = () => {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(140, 140, 150);
-    doc.text(`Concerto Audio Indonesia  |  dealer.concerto.id  |  Hal. ${page}`, 105, 288, { align: 'center' });
+    doc.text(`Concerto Audio Indonesia  |  hub.concerto.id  |  Hal. ${page}`, 105, 288, { align: 'center' });
   };
   const field = (label, value, x, yy, end) => {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(20, 20, 30); doc.text(label, x, yy);

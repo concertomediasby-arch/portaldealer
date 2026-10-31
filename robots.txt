@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dealer.concerto.id/sitemap.xml
+Sitemap: https://hub.concerto.id/sitemap.xml
