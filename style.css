@@ -3235,3 +3235,14 @@ div.hof-row { cursor: default; }
   .hof-dlhd .gl-dt { font-size: 22px; line-height: 1.2; }
   .hof-dlhd > .hof-lbl { line-height: 1.5; }
 }
+/* Galeri Instalasi — video (31 Okt 2026) */
+.gl-upr { display: flex; gap: 8px; flex-wrap: wrap; }
+.gl-upr .gl-up { flex: 1 1 160px; }
+.gl-vhint { display: block; margin-top: 6px; }
+.gl-fvid { position: relative; background: #000; }
+.gl-fvid video { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+.gl-vsz { position: absolute; left: 6px; top: 6px; font: 600 10px var(--f-mono); color: #fff; background: rgba(0,0,0,.6); border-radius: 5px; padding: 1px 6px; }
+.gl-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; font: 12px/1 sans-serif; font-style: normal; pointer-events: none; }
+.gl-th button video, .gl-ph video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gl-big video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.gl-area.top { top: 10px; bottom: auto; }

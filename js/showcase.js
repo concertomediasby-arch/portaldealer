@@ -300,6 +300,11 @@ create policy "showcase delete" on storage.objects for delete to authenticated
 let glItems = null, glErr = '', glLoading = null, glMake = 'all', glBody = 'all', glHofOnly = false, glQ = '';
 let glEdit = null;   // { id?, …field, photos:[{path?, area, blob?, url}], removed:[path] }
 
+// Video instalasi (31 Okt 2026, permintaan pemilik): disimpan di array photos yang sama dengan type:'video'.
+// File sudah dikonversi pemilik — tidak diolah di browser, hanya dibatasi ukurannya (batas unggah Supabase paket gratis 50 MB per file).
+const GL_VIDEO_MAX_MB = 50;
+const glIsVid = p => p?.type === 'video' || /\.(mp4|m4v|mov|webm)$/i.test(p?.path || '');
+const glVidTag = (src, cls = '') => `<video class="${cls}" src="${src}#t=0.5" muted playsinline preload="metadata"></video>`;
 const glUrl = path => supabase ? supabase.storage.from(GL_BUCKET).getPublicUrl(path).data.publicUrl : '';
 const glTitle = it => [it.car_make, it.car_model].filter(Boolean).join(' ');
 const glProd = pid => findProductAny(pid);
@@ -335,11 +340,12 @@ function setGlFilter(kind, v) {
 }
 const glCarSvg = '<svg class="gl-car" viewBox="0 0 200 80" fill="none"><path d="M14 58c0-8 4-12 12-13l26-4 22-17c4-3 9-4 14-4h44c6 0 11 2 15 6l18 17 18 3c7 1 11 6 11 12v4H14v-4Z" fill="rgba(255,255,255,.08)" stroke="currentColor" stroke-width="1.6"/><circle cx="54" cy="64" r="11" fill="#0b0c0e" stroke="currentColor" stroke-width="2"/><circle cx="150" cy="64" r="11" fill="#0b0c0e" stroke="currentColor" stroke-width="2"/></svg>';
 function glCard(it) {
-  const ph = it.photos?.[0];
+  const ph = (it.photos || []).find(p => !glIsVid(p)) || it.photos?.[0];
+  const nVid = (it.photos || []).filter(glIsVid).length, nImg = (it.photos || []).length - nVid;
   const prods = (it.products || []).map(pid => glProd(pid).product?.name).filter(Boolean);
   return `<button class="gl-card" onclick="openGlDetail('${it.id}')">
-    <span class="gl-ph">${ph ? `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy">` : glCarSvg}
-      ${it.photos?.length ? `<span class="gl-cnt">📷 ${it.photos.length}</span>` : ''}
+    <span class="gl-ph">${ph ? (glIsVid(ph) ? glVidTag(glUrl(ph.path)) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy">`) : glCarSvg}
+      ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? '<span class="gl-tro">🏆 Juara</span>' : ''}
       ${!it.published ? '<span class="gl-draft">DRAF</span>' : ''}</span>
     <span class="gl-bd"><span class="gl-mk">${escHtml(it.car_make || '')}</span>
@@ -390,8 +396,8 @@ function openGlDetail(id, photoIdx = 0) {
     <button class="rk-pick-x gl-x" onclick="closeGlDetail()" aria-label="Tutup">✕</button>
     <div class="gl-dgrid">
       <div>
-        <div class="gl-big">${cur ? `<img src="${glUrl(cur.path)}" alt="">` : glCarSvg}${cur?.area ? `<span class="gl-area">${escHtml(cur.area)}</span>` : ''}</div>
-        ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})"><img src="${glUrl(p.path)}" alt="" loading="lazy">${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
+        <div class="gl-big">${cur ? (glIsVid(cur) ? `<video src="${glUrl(cur.path)}" controls playsinline preload="metadata"></video>` : `<img src="${glUrl(cur.path)}" alt="">`) : glCarSvg}${cur?.area ? `<span class="gl-area${glIsVid(cur) ? ' top' : ''}">${escHtml(cur.area)}</span>` : ''}</div>
+        ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path)) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy">`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
       </div>
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
@@ -462,15 +468,26 @@ async function glAddPhotos(input) {
   }
   renderGlPhotos();
 }
+function glAddVideos(input) {
+  const files = [...input.files]; input.value = '';
+  for (const f of files) {
+    if (!/^video\//.test(f.type) && !/\.(mp4|m4v|mov|webm)$/i.test(f.name)) { showToast('⚠ Bukan file video: ' + f.name); continue; }
+    const mb = f.size / 1048576;
+    if (mb > GL_VIDEO_MAX_MB) { showToast(`⚠ ${f.name} ${mb.toFixed(1)} MB — maksimal ${GL_VIDEO_MAX_MB} MB per video. Kompres dulu lalu unggah lagi.`, 7000); continue; }
+    glEdit.photos.push({ blob: f, video: true, url: URL.createObjectURL(f), size: f.size, area: 'Lainnya' });
+  }
+  renderGlPhotos();
+}
 function glPhotoArea(i, v) { glEdit.photos[i].area = v; }
 function glPhotoMove(i, d) { const a = glEdit.photos, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; renderGlPhotos(); }
 function glPhotoDel(i) { const [p] = glEdit.photos.splice(i, 1); if (p.path) glEdit.removed.push(p.path); if (p.blob) URL.revokeObjectURL(p.url); renderGlPhotos(); }
 function renderGlPhotos() {
   const el = document.getElementById('glf-photos'); if (!el) return;
-  el.innerHTML = glEdit.photos.map((p, i) => `<div class="gl-fph"><img src="${p.url}" alt="">
+  const first = glEdit.photos.findIndex(p => !(p.video || glIsVid(p)));
+  el.innerHTML = glEdit.photos.map((p, i) => `<div class="gl-fph">${p.video || glIsVid(p) ? `<div class="gl-fvid"><video src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}</div>` : `<img src="${p.url}" alt="">`}
       <select onchange="glPhotoArea(${i},this.value)">${GL_AREAS.map(a => `<option${a === p.area ? ' selected' : ''}>${a}</option>`).join('')}</select>
-      <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === 0 ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button><button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`).join('')
-    || '<span class="gl-hint">Belum ada foto. Foto pertama = foto utama. Pastikan plat nomor sudah diburamkan.</span>';
+      <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === first ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button><button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`).join('')
+    || '<span class="gl-hint">Belum ada foto/video. Foto pertama = foto utama. Pastikan plat nomor sudah diburamkan.</span>';
 }
 function renderGlForm() {
   const e = glEdit, box = document.querySelector('#gl-form .gl-fbox');
@@ -492,8 +509,9 @@ function renderGlForm() {
         <div class="gl-pchips" id="glf-prods"></div></div>
       <label class="w2">Prestasi (Hall of Fame)<select onchange="glField('hof_id',this.value)"><option value="">— tidak ada —</option>${hofs.map(h => `<option value="${escHtml(h.id)}"${h.id === e.hof_id ? ' selected' : ''}>${escHtml([`${h.award} · ${h.cls || ''}`, h.name, h.car, `${h.event} ${h.year || ''}`].filter(Boolean).join(' · '))}</option>`).join('')}</select></label>
       <label class="w2 gl-pub"><input type="checkbox"${e.published ? ' checked' : ''} onchange="glField('published',this.checked)"> Tampilkan (bukan draf)</label>
-      <div class="w4"><div class="gl-flbl">Foto <small>(boleh banyak sekaligus; otomatis diperkecil)</small></div>
-        <label class="gt-btn gl-up">📷 Tambah Foto<input type="file" accept="image/*" multiple hidden onchange="glAddPhotos(this)"></label>
+      <div class="w4"><div class="gl-flbl">Foto & Video <small>(foto otomatis diperkecil; video diunggah apa adanya)</small></div>
+        <div class="gl-upr"><label class="gt-btn gl-up">📷 Tambah Foto<input type="file" accept="image/*" multiple hidden onchange="glAddPhotos(this)"></label><label class="gt-btn gl-up">🎬 Tambah Video<input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple hidden onchange="glAddVideos(this)"></label></div>
+        <div class="gl-hint gl-vhint">Video: MP4 (H.264), maksimal ${GL_VIDEO_MAX_MB} MB per file — disarankan ≤ 30 MB agar cepat diputar di HP. Video tidak dikompres ulang di sini.</div>
         <div class="gl-fphotos" id="glf-photos"></div></div>
     </div>
     <div class="gl-factions"><button class="gt-btn ghost" onclick="closeGlForm()">Batal</button><button class="gt-btn confirm" id="glf-save" onclick="saveGlItem()">💾 Simpan</button></div>`;
@@ -516,13 +534,14 @@ async function saveGlItem() {
     for (let i = 0; i < e.photos.length; i++) {
       const p = e.photos[i];
       if (p.blob) {
-        const ext = p.blob.type === 'image/webp' ? 'webp' : 'jpg';
+        const ext = p.video ? ((p.blob.name.match(/\.(mp4|m4v|mov|webm)$/i)?.[1] || 'mp4').toLowerCase()) : p.blob.type === 'image/webp' ? 'webp' : 'jpg';
         const path = `${id}/${Date.now()}-${i}.${ext}`;
-        btn.textContent = `⏳ Mengunggah foto ${i + 1}/${e.photos.length}…`;
-        const { error } = await supabase.storage.from(GL_BUCKET).upload(path, p.blob, { contentType: p.blob.type, cacheControl: '31536000', upsert: false });
-        if (error) throw error;
-        photos.push({ path, area: p.area || '' });
-      } else photos.push({ path: p.path, area: p.area || '' });
+        btn.textContent = `⏳ Mengunggah ${p.video ? 'video' : 'foto'} ${i + 1}/${e.photos.length}…`;
+        const type = p.blob.type || (ext === 'webm' ? 'video/webm' : ext === 'mov' ? 'video/quicktime' : 'video/mp4');
+        const { error } = await supabase.storage.from(GL_BUCKET).upload(path, p.blob, { contentType: type, cacheControl: '31536000', upsert: false });
+        if (error) throw new Error(/exceeded|too large|413|maximum/i.test(error.message || '') ? `${p.video ? 'Video' : 'Foto'} terlalu besar untuk batas unggah Supabase (${error.message})` : error.message);
+        photos.push(p.video ? { path, area: p.area || '', type: 'video' } : { path, area: p.area || '' });
+      } else photos.push(glIsVid(p) ? { path: p.path, area: p.area || '', type: 'video' } : { path: p.path, area: p.area || '' });
     }
     const { error } = await supabase.from(GL_TABLE).update({ ...row, photos }).eq('id', id);
     if (error) throw error;
