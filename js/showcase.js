@@ -107,7 +107,8 @@ function openHofWin(id) {
     <div class="hof-dlhd"><div class="hof-lbl">${escHtml([e.event, e.date || e.year, e.city].filter(Boolean).join(' · '))}</div>
       <div class="hof-wtop">${hofMedal(e.place)}<div><h3 class="gl-dt">${escHtml(e.car || e.cls || '')}</h3>
         <div class="gl-dc">${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}${e.name ? ' · ' + escHtml(e.name) : ''}</div></div></div>
-      ${hofGallery(e) ? `<button class="gt-btn hof-galwide" onclick="hofOpenGallery('${hofGallery(e).id}')">📷 Lihat foto pemasangan di Galeri Instalasi</button>` : ''}</div>
+      ${hofGallery(e) ? `<button class="gt-btn hof-galwide" onclick="hofOpenGallery('${hofGallery(e).id}')">📷 Lihat foto pemasangan di Galeri Instalasi</button>` : ''}
+      ${authUser && !isAdmin() ? `<button class="gt-btn confirm hof-galwide" onclick="openGlSubmit('${e.id}')">📤 Kirim foto / video mobil ini</button>` : ''}</div>
     ${prods.length || e.other?.length ? `<div class="hof-lbl" style="margin-top:16px">Perangkat yang dipakai</div>
       ${prods.map(r => { const p = r.product;
         return `<button class="gl-prod" onclick="closeHofDealer();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}
@@ -122,7 +123,7 @@ const hofCarKey = e => normKey([e.name, e.car, e.dealer].join('|'));
 function hofGallery(e) {
   if (!glItems?.length || !e) return null;
   const k = hofCarKey(e);
-  return glItems.find(it => it.hof_id && (it.hof_id === e.id || (() => { const h = hofData().find(x => x.id === it.hof_id); return h && hofCarKey(h) === k; })())) || null;
+  return glLive().find(it => it.hof_id && (it.hof_id === e.id || (() => { const h = hofData().find(x => x.id === it.hof_id); return h && hofCarKey(h) === k; })())) || null;
 }
 const hofGalBtn = e => { const it = hofGallery(e); return it ? `<button class="hof-galbtn" onclick="event.stopPropagation();hofOpenGallery('${it.id}')" title="Lihat foto pemasangan mobil ini di Galeri Instalasi">📷 Galeri</button>` : ''; };
 async function hofOpenGallery(id) { closeHofDealer(); await openGaleri(); openGlDetail(id); }
@@ -245,7 +246,9 @@ function renderHallOfFame() {
     <div class="hof-board"><div class="hof-row head"><span>#</span><span>Seri</span><span class="hof-thumbs"></span><span class="hof-c">${hofMedal(1)}</span><span class="hof-c">${hofMedal(2)}</span><span class="hof-c">${hofMedal(3)}</span><span class="hof-tot">Total</span></div>${board}</div>
     ${dealers.length ? `<div class="hof-h2">Dealer Pemasang Juara</div><div class="hof-sub">Dealer resmi yang memasang sistem pemenang — diurutkan dari jumlah Juara 1.</div>
     <div class="hof-board"><div class="hof-row head"><span>#</span><span>Dealer</span><span class="hof-thumbs"></span><span class="hof-c">${hofMedal(1)}</span><span class="hof-c">${hofMedal(2)}</span><span class="hof-c">${hofMedal(3)}</span><span class="hof-tot">Total</span></div>${dboard}</div>` : ''}
+    ${isAdmin() && glItems?.some(glPending) ? `<div class="gl-pbanner">📥 <b>${glItems.filter(glPending).length} kiriman dealer</b> menunggu persetujuan. <button class="gt-btn" onclick="openGaleri()">Tinjau di Galeri →</button></div>` : ''}
     <div class="hof-h2">Hasil per Kompetisi</div><div class="hof-sub">Daftar lengkap kelas yang dimenangkan.</div>
+    ${authUser && !isAdmin() ? `<div class="gl-pbanner sub">📸 Dealer: mobil juara Anda belum ada fotonya? <button class="gt-btn confirm" onclick="openGlSubmit()">📤 Kirim Foto / Video</button></div>` : ''}
     ${evCards}
     <div class="hof-h2">Prestasi per Seri</div>
     ${cards}` : '<div class="stock-empty">Tidak ada prestasi untuk filter ini.</div>'}`;
@@ -304,6 +307,29 @@ let glEdit = null;   // { id?, …field, photos:[{path?, area, blob?, url}], rem
 // Video instalasi (31 Okt 2026, permintaan pemilik): disimpan di array photos yang sama dengan type:'video'.
 // File sudah dikonversi pemilik — tidak diolah di browser, hanya dibatasi ukurannya (batas unggah Supabase paket gratis 50 MB per file).
 const GL_VIDEO_MAX_MB = 50;
+/* Kiriman dealer (31 Okt 2026, permintaan pemilik): dealer yang login mengirim foto/video instalasinya → masuk sebagai
+   baris source='dealer', published=false (file di Storage `pending/<id>/…`) → tampil hanya setelah Editor menyetujui. */
+const GL_SUB_MAX_PHOTOS = 20, GL_SUB_MAX_VIDEOS = 3;
+const glPending = it => it?.source === 'dealer' && !it.published;
+const glLive = () => (glItems || []).filter(it => !glPending(it));
+const GL_SUBMIT_SQL = `-- Kiriman foto/video dari dealer (menunggu persetujuan Editor) — jalankan sekali di Supabase → SQL Editor → Run
+alter table public.showcase_installs add column if not exists source text not null default 'editor';
+alter table public.showcase_installs add column if not exists submitter text;
+alter table public.showcase_installs add column if not exists submitted_at timestamptz;
+grant insert on public.showcase_installs to authenticated;
+drop policy if exists "showcase dealer submit" on public.showcase_installs;
+create policy "showcase dealer submit" on public.showcase_installs for insert to authenticated
+  with check (source = 'dealer' and published = false and jsonb_array_length(photos) between 1 and ${GL_SUB_MAX_PHOTOS + GL_SUB_MAX_VIDEOS});
+drop policy if exists "showcase dealer upload" on storage.objects;
+create policy "showcase dealer upload" on storage.objects for insert to authenticated
+  with check (bucket_id = 'showcase' and name like 'pending/%');`;
+let glSubmitReady = null;   // null = belum dicek, true/false = kolom kiriman dealer sudah/belum ada
+function glSubCopySql() { (navigator.clipboard?.writeText(GL_SUBMIT_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => prompt('Salin SQL ini:', GL_SUBMIT_SQL)); }
+async function glCheckSubmit() {
+  if (!supabase || glSubmitReady !== null) return;
+  const { error } = await supabase.from('showcase_installs').select('source').limit(1);
+  glSubmitReady = !error;
+}
 const glIsVid = p => p?.type === 'video' || /\.(mp4|m4v|mov|webm)$/i.test(p?.path || '');
 const glVidTag = (src, cls = '') => `<video class="${cls}" src="${src}#t=0.5" muted playsinline preload="metadata"></video>`;
 const glUrl = path => supabase ? supabase.storage.from(GL_BUCKET).getPublicUrl(path).data.publicUrl : '';
@@ -349,7 +375,7 @@ function glCard(it) {
     <span class="gl-ph">${ph ? (glIsVid(ph) ? glVidTag(glUrl(ph.path)) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy">`) : glCarSvg}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? '<span class="gl-tro">🏆 Juara</span>' : ''}
-      ${!it.published ? '<span class="gl-draft">DRAF</span>' : ''}</span>
+      ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : ''}</span>
     <span class="gl-bd"><span class="gl-mk">${escHtml(it.car_make || '')}</span>
       <b>${escHtml(it.car_model || '')}${it.car_year ? ` <small>${it.car_year}</small>` : ''}</b>
       ${it.dealer || it.city ? `<span class="gl-dl">🛠 ${escHtml([it.dealer, it.city].filter(Boolean).join(' · '))}</span>` : ''}
@@ -358,8 +384,10 @@ function glCard(it) {
 }
 function renderGaleri() {
   const box = document.getElementById('gl-body'); if (!box) return;
-  const add = isAdmin() ? `<button class="gt-btn confirm" onclick="openGlForm()">＋ Tambah Instalasi</button>` : '';
+  const add = isAdmin() ? `<button class="gt-btn confirm" onclick="openGlForm()">＋ Tambah Instalasi</button>`
+    : authUser ? `<button class="gt-btn confirm" onclick="openGlSubmit()">📤 Kirim Foto / Video Instalasi Anda</button>` : '';
   document.getElementById('gl-tools').innerHTML = add;
+  if (isAdmin() && glSubmitReady === null) glCheckSubmit().then(() => { if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri(); });
   if (!glItems) { box.innerHTML = '<div class="stock-empty">⏳ Memuat galeri…</div>'; return; }
   if (glErr === 'setup') {
     box.innerHTML = `<div class="vs-warn">Galeri Instalasi belum disiapkan di database. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (membuat tabel <b>showcase_installs</b> + folder foto publik <b>showcase</b>), lalu buka menu ini lagi.<br><br><button class="gt-btn" onclick="glCopySql()">📋 Salin SQL</button></div>`;
@@ -367,22 +395,29 @@ function renderGaleri() {
     return;
   }
   if (glErr) { box.innerHTML = `<div class="vs-warn">${escHtml(glErr)}</div>`; return; }
+  const pend = isAdmin() ? glItems.filter(glPending) : [];
+  const live = glLive();
   const q = normKey(glQ);
   const hay = it => normKey([it.car_make, it.car_model, it.car_year, it.body, it.dealer, it.city, ...(it.products || []).map(pid => glProd(pid).product?.name)].join(' '));
-  const base = glItems.filter(it => (!glHofOnly || it.hof_id) && (glBody === 'all' || (glBody === 'ev' ? glIsEv(it.body) : it.body === glBody)) && (!q || hay(it).includes(q)));
+  const base = live.filter(it => (!glHofOnly || it.hof_id) && (glBody === 'all' || (glBody === 'ev' ? glIsEv(it.body) : it.body === glBody)) && (!q || hay(it).includes(q)));
   const rows = base.filter(it => glMake === 'all' || it.car_make === glMake);
-  const makes = [...new Set(glItems.map(it => it.car_make).filter(Boolean))].sort();
-  const bodies = [...new Set(glItems.map(it => it.body).filter(Boolean))];
+  const makes = [...new Set(live.map(it => it.car_make).filter(Boolean))].sort();
+  const bodies = [...new Set(live.map(it => it.body).filter(Boolean))];
   const cnt = m => base.filter(it => m === 'all' || it.car_make === m).length;
   box.innerHTML = `
     ${!SHOWCASE_PUBLIC ? '<div class="sc-demo">PRATINJAU EDITOR — menu Showcase belum tampil untuk publik.</div>' : ''}
+    ${isAdmin() && glSubmitReady === false ? `<div class="vs-warn">Kiriman foto/video dari dealer belum aktif. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (menambah kolom kiriman + izin unggah dealer ke folder <b>pending/</b>).<br><br><button class="gt-btn" onclick="glSubCopySql()">📋 Salin SQL Kiriman Dealer</button></div>` : ''}
+    ${pend.length ? `<div class="gl-pend"><div class="hof-h2">📥 Kiriman dealer menunggu persetujuan <span class="gl-pcount">${pend.length}</span></div>
+      <div class="hof-sub">Belum terlihat oleh pengunjung. Periksa foto (plat nomor harus diburamkan), lalu setujui atau tolak.</div>
+      <div class="gl-grid">${pend.map(it => `<div class="gl-pitem">${glCard(it)}<div class="gl-pby">Dikirim oleh <b>${escHtml(it.submitter || it.dealer || '—')}</b>${it.submitted_at ? ' · ' + escHtml(new Date(it.submitted_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) : ''}</div>
+        <div class="gl-pact"><button class="gt-btn confirm" onclick="approveGlItem('${it.id}')">✓ Setujui</button><button class="gt-btn" onclick="openGlForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost gt-del" onclick="deleteGlItem('${it.id}', true)">✕ Tolak</button></div></div>`).join('')}</div></div>` : ''}
     <div class="gl-search"><span>🔎</span><input type="search" placeholder="Cari mobil Anda — mis. Fortuner, HR-V, Pajero…" value="${escHtml(glQ)}" oninput="glQ=this.value;clearTimeout(window.glQt);window.glQt=setTimeout(()=>{renderGaleri();const i=document.querySelector('.gl-search input');i?.focus();i?.setSelectionRange(i.value.length,i.value.length)},250)"></div>
-    ${glItems.length ? `<div class="gl-makes">${['all', ...makes].map(m => `<button class="gl-make${glMake === m ? ' on' : ''}" onclick="setGlFilter('make','${escHtml(m)}')">${m === 'all' ? 'SEMUA' : escHtml(m.toUpperCase())}<small>${cnt(m)} mobil</small></button>`).join('')}</div>
+    ${live.length ? `<div class="gl-makes">${['all', ...makes].map(m => `<button class="gl-make${glMake === m ? ' on' : ''}" onclick="setGlFilter('make','${escHtml(m)}')">${m === 'all' ? 'SEMUA' : escHtml(m.toUpperCase())}<small>${cnt(m)} mobil</small></button>`).join('')}</div>
     <div class="hof-filters">${bodies.length > 1 ? `<button class="filter-chip${glBody === 'all' ? ' active' : ''}" onclick="setGlFilter('body','all')">Semua tipe</button>${bodies.map(b => `<button class="filter-chip${glBody === b ? ' active' : ''}" onclick="setGlFilter('body','${escHtml(b)}')">${escHtml(b)}</button>`).join('')}` : ''}
-      ${glItems.some(it => glIsEv(it.body)) ? `<button class="filter-chip${glBody === 'ev' ? ' active' : ''}" onclick="setGlFilter('body','ev')">⚡ Mobil listrik &amp; hybrid</button>` : ''}
-      ${glItems.some(it => it.hof_id) ? `<button class="filter-chip${glHofOnly ? ' active' : ''}" onclick="setGlFilter('hof')">🏆 Mobil juara</button>` : ''}</div>` : ''}
+      ${live.some(it => glIsEv(it.body)) ? `<button class="filter-chip${glBody === 'ev' ? ' active' : ''}" onclick="setGlFilter('body','ev')">⚡ Mobil listrik &amp; hybrid</button>` : ''}
+      ${live.some(it => it.hof_id) ? `<button class="filter-chip${glHofOnly ? ' active' : ''}" onclick="setGlFilter('hof')">🏆 Mobil juara</button>` : ''}</div>` : ''}
     ${rows.length ? `<div class="gl-grid">${rows.map(glCard).join('')}</div>`
-      : `<div class="stock-empty">${glItems.length ? 'Tidak ada instalasi yang cocok. Coba kata kunci lain.' : 'Belum ada instalasi. ' + (isAdmin() ? 'Tekan <b>＋ Tambah Instalasi</b> untuk menambahkan yang pertama.' : '')}</div>`}`;
+      : `<div class="stock-empty">${live.length ? 'Tidak ada instalasi yang cocok. Coba kata kunci lain.' : 'Belum ada instalasi. ' + (isAdmin() ? 'Tekan <b>＋ Tambah Instalasi</b> untuk menambahkan yang pertama.' : '')}</div>`}`;
 }
 
 /* ── Detail instalasi ── */
@@ -404,7 +439,7 @@ function openGlDetail(id, photoIdx = 0) {
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
         <h3 class="gl-dt">${escHtml(it.car_model || '')}${it.car_year ? ' ' + it.car_year : ''}</h3>
-        <div class="gl-tags">${hof ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofGroupKey(hof)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${!it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : ''}</div>
+        <div class="gl-tags">${hof ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofGroupKey(hof)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${glPending(it) ? `<span class="gl-tag dr">Kiriman ${escHtml(it.submitter || 'dealer')} — menunggu persetujuan</span>` : !it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : ''}</div>
         ${it.note ? `<p class="gl-note">${escHtml(it.note)}</p>` : ''}
         ${(it.products || []).length ? `<div class="hof-lbl">Produk yang dipasang</div>${it.products.map(pid => { const r = glProd(pid); if (!r.product) return ''; const p = r.product;
           return `<button class="gl-prod" onclick="closeGlDetail();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}` : ''}
@@ -425,6 +460,55 @@ function openGlForm(id) {
     : { car_make: '', car_model: '', car_year: '', body: '', dealer: '', city: '', note: '', products: [], photos: [], hof_id: '', published: false, sort: 0, removed: [] };
   renderGlForm();
   document.getElementById('gl-form').classList.add('open');
+}
+// Dealer: buka form kiriman (hofId = prestasi yang dipilih dari Hall of Fame, diisi otomatis)
+function openGlSubmit(hofId) {
+  if (!authUser) { requireLogin(() => openGlSubmit(hofId)); return; }
+  const h = hofId ? hofData().find(e => e.id === hofId) : null;
+  let make = '', model = '';
+  if (h?.car) {
+    const m = GL_MAKES.find(x => normKey(h.car).startsWith(normKey(x)) && x !== 'Lainnya');
+    make = m || ''; model = m ? h.car.slice(m.length).trim() : h.car;
+  }
+  const d = h ? hofDealer(h.dealer) : null;
+  glEdit = { submit: true, agree: false, car_make: make, car_model: model, car_year: '', body: '', dealer: d?.n || '', city: d?.c || '', note: '', products: [...(h?.products || [])], photos: [], hof_id: h?.id || '', published: false, sort: 0, removed: [] };
+  closeHofDealer?.();
+  renderGlForm();
+  document.getElementById('gl-form').classList.add('open');
+}
+async function submitGlItem() {
+  const e = glEdit; if (!e?.submit || !supabase) return;
+  if (!e.dealer) { showToast('⚠ Pilih nama dealer Anda dulu.'); return; }
+  if (!e.car_make || !String(e.car_model || '').trim()) { showToast('⚠ Isi merek & model mobil.'); return; }
+  if (!e.photos.length) { showToast('⚠ Tambahkan minimal 1 foto atau video.'); return; }
+  if (!e.agree) { showToast('⚠ Centang pernyataan di bawah (plat nomor diburamkan) dulu.'); return; }
+  const btn = document.getElementById('glf-save'); btn.disabled = true;
+  const id = crypto.randomUUID(), photos = [];
+  try {
+    for (let i = 0; i < e.photos.length; i++) {
+      const p = e.photos[i];
+      const ext = p.video ? ((p.blob.name?.match(/\.(mp4|m4v|mov|webm)$/i)?.[1] || 'mp4').toLowerCase()) : p.blob.type === 'image/webp' ? 'webp' : 'jpg';
+      const path = `pending/${id}/${Date.now()}-${i}.${ext}`;
+      btn.textContent = `⏳ Mengunggah ${i + 1}/${e.photos.length}…`;
+      const type = p.blob.type || (ext === 'webm' ? 'video/webm' : ext === 'mov' ? 'video/quicktime' : 'video/mp4');
+      const { error } = await supabase.storage.from(GL_BUCKET).upload(path, p.blob, { contentType: type, cacheControl: '31536000', upsert: false });
+      if (error) throw error;
+      photos.push(p.video ? { path, area: p.area || '', type: 'video' } : { path, area: p.area || '' });
+    }
+    btn.textContent = '⏳ Mengirim…';
+    const row = { id, car_make: e.car_make, car_model: String(e.car_model).trim(), car_year: e.car_year ? +e.car_year : null, body: e.body || null,
+      dealer: e.dealer, city: (e.city || '').trim() || null, note: (e.note || '').trim() || null, products: e.products, photos,
+      hof_id: e.hof_id || null, published: false, sort: 0, source: 'dealer', submitter: e.dealer, submitted_at: new Date().toISOString() };
+    const { error } = await supabase.from(GL_TABLE).insert(row);   // tanpa .select(): dealer tidak boleh membaca baris yang belum disetujui
+    if (error) throw error;
+    closeGlForm();
+    showToast('✓ Terima kasih! Kiriman Anda diterima & akan tampil setelah disetujui tim CAI.', 7000);
+    if (isAdmin()) { await loadGaleri(true); renderGaleri(); }
+  } catch (err) {
+    const m = String(err.message || err);
+    showToast(/row-level|policy|permission|column|schema cache|403|42501|PGRST/i.test(m) ? '⚠ Fitur kiriman dealer belum aktif. Mohon hubungi tim CAI.' : '⚠ Gagal mengirim: ' + m, 7000);
+    btn.disabled = false; btn.textContent = '📤 Kirim untuk Ditinjau';
+  }
 }
 function closeGlForm() { document.getElementById('gl-form')?.classList.remove('open'); glEdit?.photos.forEach(p => p.blob && URL.revokeObjectURL(p.url)); glEdit = null; }
 const glProdLabel = r => `${r.brand.name} · ${r.product.name}`;
@@ -462,9 +546,11 @@ function glResize(file, max = 1600) {
     img.src = url;
   });
 }
+const glCountMedia = vid => glEdit.photos.filter(p => !!(p.video || glIsVid(p)) === vid).length;
 async function glAddPhotos(input) {
   const files = [...input.files]; input.value = '';
   for (const f of files) {
+    if (glEdit.submit && glCountMedia(false) >= GL_SUB_MAX_PHOTOS) { showToast(`⚠ Maksimal ${GL_SUB_MAX_PHOTOS} foto per kiriman.`); break; }
     try { const blob = await glResize(f); glEdit.photos.push({ blob, url: URL.createObjectURL(blob), area: GL_AREAS[Math.min(glEdit.photos.length, GL_AREAS.length - 1)] }); }
     catch (e) { showToast('⚠ ' + e.message); }
   }
@@ -473,6 +559,7 @@ async function glAddPhotos(input) {
 function glAddVideos(input) {
   const files = [...input.files]; input.value = '';
   for (const f of files) {
+    if (glEdit.submit && glCountMedia(true) >= GL_SUB_MAX_VIDEOS) { showToast(`⚠ Maksimal ${GL_SUB_MAX_VIDEOS} video per kiriman.`); break; }
     if (!/^video\//.test(f.type) && !/\.(mp4|m4v|mov|webm)$/i.test(f.name)) { showToast('⚠ Bukan file video: ' + f.name); continue; }
     const mb = f.size / 1048576;
     if (mb > GL_VIDEO_MAX_MB) { showToast(`⚠ ${f.name} ${mb.toFixed(1)} MB — maksimal ${GL_VIDEO_MAX_MB} MB per video. Kompres dulu lalu unggah lagi.`, 7000); continue; }
@@ -496,27 +583,30 @@ function renderGlForm() {
   const opt = (arr, v) => arr.map(a => `<option${a === v ? ' selected' : ''}>${escHtml(a)}</option>`).join('');
   const hofs = HALL_OF_FAME;
   box.innerHTML = `
-    <div class="rk-pick-hd"><div class="rk-pick-t">${e.id ? 'Edit' : 'Tambah'} Instalasi</div><button class="rk-pick-x" onclick="closeGlForm()" aria-label="Tutup">✕</button></div>
+    <div class="rk-pick-hd"><div class="rk-pick-t">${e.submit ? '📤 Kirim Foto / Video Instalasi' : (e.id ? 'Edit' : 'Tambah') + ' Instalasi'}</div><button class="rk-pick-x" onclick="closeGlForm()" aria-label="Tutup">✕</button></div>
+    ${e.submit ? `<div class="gl-subnote">Kiriman Anda <b>ditinjau dulu oleh tim CAI</b> sebelum tampil di Galeri Instalasi${hofs.length ? ' & Hall of Fame' : ''}. Maksimal ${GL_SUB_MAX_PHOTOS} foto + ${GL_SUB_MAX_VIDEOS} video.</div>` : ''}
     <div class="gl-fgrid">
       <label>Merek mobil<select onchange="glField('car_make',this.value)"><option value="">— pilih —</option>${opt(GL_MAKES, e.car_make)}</select></label>
       <label>Model<input value="${escHtml(e.car_model)}" placeholder="mis. Fortuner VRZ" oninput="glField('car_model',this.value)"></label>
       <label>Tahun<input type="number" min="1980" max="2100" value="${escHtml(e.car_year ?? '')}" oninput="glField('car_year',this.value)"></label>
       <label>Tipe<select onchange="glField('body',this.value)"><option value="">—</option>${GL_BODY_GROUPS.map(([g, arr]) => g ? `<optgroup label="${g}">${opt(arr, e.body)}</optgroup>` : opt(arr, e.body)).join('')}</select></label>
-      <label class="w2">Dealer pemasang<input list="glf-dealers" value="${escHtml(e.dealer)}" placeholder="Ketik / pilih dealer resmi" oninput="glPickDealer(this.value)"><datalist id="glf-dealers">${[...new Set(adPublic().map(d => d.n))].map(n => `<option value="${escHtml(n)}"></option>`).join('')}</datalist></label>
-      <label>Kota<input id="glf-city" value="${escHtml(e.city)}" oninput="glField('city',this.value)"></label>
-      <label>Urutan<input type="number" value="${escHtml(e.sort ?? 0)}" title="Angka kecil tampil lebih dulu" oninput="glField('sort',this.value)"></label>
+      ${e.submit ? `<label class="w2">Nama dealer Anda *<select onchange="glPickDealer(this.value)"><option value="">— pilih dealer —</option>${opt([...new Set(adPublic().map(d => d.n))].sort(), e.dealer)}</select></label>`
+        : `<label class="w2">Dealer pemasang<input list="glf-dealers" value="${escHtml(e.dealer)}" placeholder="Ketik / pilih dealer resmi" oninput="glPickDealer(this.value)"><datalist id="glf-dealers">${[...new Set(adPublic().map(d => d.n))].map(n => `<option value="${escHtml(n)}"></option>`).join('')}</datalist></label>`}
+      <label${e.submit ? ' class="w2"' : ''}>Kota<input id="glf-city" value="${escHtml(e.city)}" oninput="glField('city',this.value)"></label>
+      ${e.submit ? '' : `<label>Urutan<input type="number" value="${escHtml(e.sort ?? 0)}" title="Angka kecil tampil lebih dulu" oninput="glField('sort',this.value)"></label>`}
       <label class="w4">Catatan singkat<textarea rows="2" placeholder="mis. Upgrade full system dengan DSP — vokal jernih, bass rapi." oninput="glField('note',this.value)">${escHtml(e.note)}</textarea></label>
       <div class="w4"><div class="gl-flbl">Produk yang dipasang</div>
         <input list="glf-plist" placeholder="Ketik nama produk lalu pilih…" onchange="glAddProduct(this)"><datalist id="glf-plist">${glProdOptions()}</datalist>
         <div class="gl-pchips" id="glf-prods"></div></div>
       <label class="w2">Prestasi (Hall of Fame)<select onchange="glField('hof_id',this.value)"><option value="">— tidak ada —</option>${hofs.map(h => `<option value="${escHtml(h.id)}"${h.id === e.hof_id ? ' selected' : ''}>${escHtml([`${h.award} · ${h.cls || ''}`, h.name, h.car, `${h.event} ${h.year || ''}`].filter(Boolean).join(' · '))}</option>`).join('')}</select></label>
-      <label class="w2 gl-pub"><input type="checkbox"${e.published ? ' checked' : ''} onchange="glField('published',this.checked)"> Tampilkan (bukan draf)</label>
+      ${e.submit ? '' : `<label class="w2 gl-pub"><input type="checkbox"${e.published ? ' checked' : ''} onchange="glField('published',this.checked)"> ${glPending(e) ? 'Setujui &amp; tampilkan' : 'Tampilkan (bukan draf)'}</label>`}
       <div class="w4"><div class="gl-flbl">Foto & Video <small>(foto otomatis diperkecil; video diunggah apa adanya)</small></div>
         <div class="gl-upr"><label class="gt-btn gl-up">📷 Tambah Foto<input type="file" accept="image/*" multiple hidden onchange="glAddPhotos(this)"></label><label class="gt-btn gl-up">🎬 Tambah Video<input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple hidden onchange="glAddVideos(this)"></label></div>
         <div class="gl-hint gl-vhint">Video: MP4 (H.264), maksimal ${GL_VIDEO_MAX_MB} MB per file — disarankan ≤ 30 MB agar cepat diputar di HP. Video tidak dikompres ulang di sini.</div>
         <div class="gl-fphotos" id="glf-photos"></div></div>
+      ${e.submit ? `<label class="w4 gl-pub gl-agree"><input type="checkbox"${e.agree ? ' checked' : ''} onchange="glField('agree',this.checked)"> Foto/video ini milik dealer kami, <b>plat nomor sudah diburamkan</b>, dan pemilik mobil tidak keberatan ditampilkan.</label>` : ''}
     </div>
-    <div class="gl-factions"><button class="gt-btn ghost" onclick="closeGlForm()">Batal</button><button class="gt-btn confirm" id="glf-save" onclick="saveGlItem()">💾 Simpan</button></div>`;
+    <div class="gl-factions"><button class="gt-btn ghost" onclick="closeGlForm()">Batal</button>${e.submit ? '<button class="gt-btn confirm" id="glf-save" onclick="submitGlItem()">📤 Kirim untuk Ditinjau</button>' : '<button class="gt-btn confirm" id="glf-save" onclick="saveGlItem()">💾 Simpan</button>'}</div>`;
   renderGlProducts(); renderGlPhotos();
 }
 async function saveGlItem() {
@@ -556,15 +646,22 @@ async function saveGlItem() {
     btn.disabled = false; btn.textContent = '💾 Simpan';
   }
 }
-async function deleteGlItem(id) {
+async function approveGlItem(id) {
   const it = glItems?.find(x => x.id === id); if (!it || !isAdmin()) return;
-  if (!confirm(`Hapus instalasi ${glTitle(it)}${it.car_year ? ' ' + it.car_year : ''} beserta fotonya?`)) return;
+  const { error } = await supabase.from(GL_TABLE).update({ published: true, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) { showToast('⚠ Gagal menyetujui: ' + error.message, 6000); return; }
+  showToast(`✓ ${glTitle(it)} disetujui — kini tampil di Galeri${it.hof_id ? ' & Hall of Fame' : ''}`);
+  await loadGaleri(true); renderGaleri(); refreshProductShowcase();
+}
+async function deleteGlItem(id, reject) {
+  const it = glItems?.find(x => x.id === id); if (!it || !isAdmin()) return;
+  if (!confirm(reject ? `Tolak kiriman ${glTitle(it)} dari ${it.submitter || 'dealer'}?\n\nKiriman & semua foto/videonya dihapus permanen.` : `Hapus instalasi ${glTitle(it)}${it.car_year ? ' ' + it.car_year : ''} beserta fotonya?`)) return;
   try {
     const { error } = await supabase.from(GL_TABLE).delete().eq('id', id);
     if (error) throw error;
     const paths = (it.photos || []).map(p => p.path).filter(Boolean);
     if (paths.length) await supabase.storage.from(GL_BUCKET).remove(paths);
-    closeGlDetail(); showToast('✓ Instalasi dihapus');
+    closeGlDetail(); showToast(reject ? '✓ Kiriman ditolak & dihapus' : '✓ Instalasi dihapus');
     await loadGaleri(true); renderGaleri(); refreshProductShowcase();
   } catch (err) { showToast('⚠ Gagal menghapus: ' + (err.message || err), 6000); }
 }
@@ -585,7 +682,7 @@ function renderProductShowcase(product, lineName, brand) {
       <ul>${hof.slice(0, 3).map(e => `<li${e.products?.length ? ` class="link" onclick="openHallOfFame();openHofWin('${e.id}')"` : ''}>${hofMedal(e.place)}<span><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b> — ${escHtml([e.event, e.city, e.year].filter(Boolean).join(' '))}${e.car ? ` · ${escHtml(e.car)}` : ''}</span></li>`).join('')}</ul>
       <button class="psc-link" onclick="openHallOfFame('${key}')">Lihat semua prestasi di Hall of Fame →</button></div>` : '';
   if (!glItems && !glLoading && supabase) loadGaleri().then(() => { if (scProduct?.product === product) renderProductShowcase(product, lineName, brand); });
-  const inst = (glItems || []).filter(it => (it.products || []).includes(product.id));
+  const inst = glLive().filter(it => (it.products || []).includes(product.id));
   const gal = inst.length ? `<div class="psc-gal"><div class="psc-t">🚗 Contoh pemasangan <span>— ${inst.length} mobil memakai produk ini</span></div>
       <div class="gl-grid psc-grid">${inst.slice(0, 4).map(glCard).join('')}</div>
       ${inst.length > 4 ? `<button class="psc-link" onclick="glQ='${escHtml(product.name).replace(/'/g, '')}';openGaleri()">Lihat semua di Galeri Instalasi →</button>` : ''}</div>` : '';

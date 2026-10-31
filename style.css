@@ -3258,3 +3258,16 @@ div.hof-row { cursor: default; }
 .ad-badge.hid { border-color: var(--fg-muted); color: var(--fg-muted); }
 .gl-ov .ad-fbox { width: min(720px, 100%); }
 @media (max-width: 760px) { #ad-tools { padding: 0 16px; } }
+/* Galeri — kiriman dealer menunggu persetujuan (31 Okt 2026) */
+.gl-draft.pend { background: #c77d12; color: #fff; }
+.gl-pend { margin: 4px 0 26px; padding: 16px; border: 1px dashed rgba(216,178,106,.55); border-radius: 16px; background: rgba(216,178,106,.06); }
+.gl-pcount { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 99px; background: var(--accent); color: #111; font: 700 12px var(--f-display); vertical-align: middle; }
+.gl-pitem { display: flex; flex-direction: column; gap: 6px; }
+.gl-pby { font-size: 12px; color: var(--fg-muted); }
+.gl-pact { display: flex; gap: 6px; flex-wrap: wrap; }
+.gl-pact .gt-btn { padding: 7px 12px; font-size: 12.5px; }
+.gl-subnote { margin: 0 18px 10px; padding: 10px 12px; border-radius: 10px; background: rgba(216,178,106,.1); border: 1px solid rgba(216,178,106,.35); font-size: 13px; color: var(--fg); }
+.gl-agree { align-items: flex-start; font-size: 13px; line-height: 1.45; }
+.gl-pbanner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: rgba(216,178,106,.1); border: 1px solid rgba(216,178,106,.35); font-size: 13.5px; color: var(--fg); }
+.gl-pbanner .gt-btn { padding: 6px 12px; font-size: 12.5px; }
+@media (max-width: 760px) { .gl-subnote { margin: 0 14px 10px; } }
