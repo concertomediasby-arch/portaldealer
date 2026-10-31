@@ -161,14 +161,6 @@ function init() {
     '<br><span style="font-size:13px;opacity:.7">' +
     _lu.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}) + ' WIB</span>';
 
-  // Brand nav in sidebar
-  const navList = document.getElementById('brand-nav-list');
-  navList.innerHTML = BRANDS.map(b => `
-    <button class="brand-nav-item" id="nav-brand-${b.id}" onclick="showBrand('${b.id}')">
-      ${b.name}
-    </button>
-  `).join('');
-
   // Brand logos
   document.getElementById('logo-landing').src = LOGO_WHITE;
   updateTopbarLogo();
@@ -1291,7 +1283,6 @@ function showView(viewId) {
 
   // Sidebar active
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.brand-nav-item').forEach(el => el.classList.remove('active'));
   if (viewId === 'dashboard') document.getElementById('nav-dashboard')?.classList.add('active');
   if (viewId === 'catalog') document.getElementById('nav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('nav-brandresmi')?.classList.add('active');
@@ -1346,8 +1337,8 @@ function showBrand(brandId) {
   document.getElementById('brand-hero-tagline').textContent = brand.tagline;
 
   // Sidebar active
-  document.querySelectorAll('.sidebar-item, .brand-nav-item').forEach(el => el.classList.remove('active'));
-  document.getElementById('nav-brand-' + brandId)?.classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-brands')?.classList.add('active');   // daftar brand di sidebar dihapus 31 Okt 2026 → tandai "Semua Brand"
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('mnav-brands')?.classList.add('active');
