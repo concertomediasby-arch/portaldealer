@@ -72,7 +72,7 @@ function hofCardBadge(brandId, p) {
 }
 
 // Nama dealer di data kompetisi → kartu Authorized Dealer (nama di daftar resmi bisa berbeda)
-const HOF_DEALER_ALIAS = { westaudioworks: 'West Garage' };
+const HOF_DEALER_ALIAS = { westaudioworks: 'West Garage', vinaudioworks: 'Vin Audiowork' };   // VIN Audioworks = Vin Audiowork (konfirmasi pemilik 31 Okt 2026)
 function hofDealer(name) {
   const k = normKey(name || ''); if (!k) return null;
   const n = normKey(HOF_DEALER_ALIAS[k] || name);
