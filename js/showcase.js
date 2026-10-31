@@ -71,6 +71,33 @@ function hofCardBadge(brandId, p) {
   return n ? `<span class="hof-cbadge" title="${n} prestasi kompetisi">🏆 ${n}</span>` : '';
 }
 
+// Nama dealer di data kompetisi → kartu Authorized Dealer (nama di daftar resmi bisa berbeda)
+const HOF_DEALER_ALIAS = { westaudioworks: 'West Garage' };
+function hofDealer(name) {
+  const k = normKey(name || ''); if (!k) return null;
+  const n = normKey(HOF_DEALER_ALIAS[k] || name);
+  return AUTH_DEALERS.find(d => normKey(d.n) === n) || null;
+}
+const hofDlAttr = name => hofDealer(name) ? ` onclick="openHofDealer('${escHtml(name).replace(/'/g, '')}')"` : '';
+function openHofDealer(name) {
+  const d = hofDealer(name); if (!d) return;
+  const wins = hofData().filter(e => normKey(e.dealer || '') === normKey(name)).sort((a, b) => (a.place || 9) - (b.place || 9));
+  const cnt = pl => wins.filter(e => e.place === pl).length;
+  document.querySelector('#hof-dealer .gl-dbox').innerHTML = `
+    <button class="rk-pick-x gl-x" onclick="closeHofDealer()" aria-label="Tutup">✕</button>
+    <div class="hof-dlhd"><div class="hof-lbl">Dealer pemasang juara</div>
+      <h3 class="gl-dt">${escHtml(d.n)} <span class="ad-badge">✓ Resmi</span></h3>
+      <div class="gl-dc">📍 ${escHtml([d.c, d.r].filter(Boolean).join(', '))}</div>
+      ${d.a ? `<div class="ad-addr">${escHtml(d.a)}</div>` : ''}
+      <div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat prestasi kompetisi Anda di Hall of Fame CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a></div></div>
+    <div class="hof-lbl" style="margin-top:18px">${wins.length} prestasi <span class="hof-ms">${[1, 2, 3].map(pl => cnt(pl) ? hofMedal(pl, cnt(pl)) : '').join('')}</span></div>
+    ${wins.map(e => `<div class="hof-win">${hofMedal(e.place)}<div><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b>
+      <div class="hof-meta">${escHtml([e.event, e.city].filter(Boolean).join(' · '))}</div>
+      ${e.name || e.car ? `<div class="hof-car">${escHtml([e.name, e.car].filter(Boolean).join(' · '))}</div>` : ''}</div>${e.year ? `<span class="hof-yr">${e.year}</span>` : ''}</div>`).join('')}`;
+  document.getElementById('hof-dealer').classList.add('open');
+}
+function closeHofDealer() { document.getElementById('hof-dealer')?.classList.remove('open'); }
+
 function openHallOfFame(focusKey) {
   if (!scOn()) return;
   showView('halloffame');
@@ -155,9 +182,9 @@ function renderHallOfFame() {
   });
   const dealers = [...dmap.values()].sort((a, b) => b.g - a.g || b.n - a.n || b.s - a.s);
   const dmax = Math.max(1, ...dealers.map(d => d.n));
-  const dboard = dealers.map((d, i) => `<div class="hof-row${i === 0 ? ' top' : ''}">
+  const dboard = dealers.map((d, i) => `<div class="hof-row${i === 0 ? ' top' : ''}${hofDealer(d.name) ? ' link' : ''}"${hofDlAttr(d.name)}>
       <span class="hof-rk">${String(i + 1).padStart(2, '0')}</span>
-      <span class="hof-ser"><b>${escHtml(d.name)}</b><small>${d.n} prestasi</small></span><span class="hof-thumbs"></span>
+      <span class="hof-ser"><b>${escHtml(d.name)}</b><small>${hofDealer(d.name) ? `✓ Resmi · ${escHtml(hofDealer(d.name).c)} · kontak ›` : `${d.n} prestasi`}</small></span><span class="hof-thumbs"></span>
       <span class="hof-c">${d.g}</span><span class="hof-c">${d.s}</span><span class="hof-c">${d.b}</span>
       <span class="hof-tot"><b>${d.n}</b><i class="hof-bar"><i style="width:${Math.round(d.n / dmax * 100)}%"></i></i></span></div>`).join('');
   // Hasil per kompetisi
@@ -169,7 +196,7 @@ function renderHallOfFame() {
       <div class="hof-hd"><div class="hof-ttl"><h3>${escHtml(e0.event)}</h3><div class="hof-note">${escHtml([e0.date || e0.year, e0.venue, e0.city].filter(Boolean).join(' · '))}</div></div>
         <div class="hof-pill"><b>${items.length}</b><span>PRESTASI</span><span class="hof-ms">${[1, 2, 3].map(pl => cnt(pl) ? hofMedal(pl, cnt(pl)) : '').join('')}</span></div></div>
       <div class="hof-tblw"><table class="hof-tbl"><thead><tr><th>Kelas</th><th>Juara</th><th>Peserta</th><th>Mobil</th><th>Dealer pemasang</th></tr></thead>
-        <tbody>${items.map(e => `<tr><td>${escHtml(e.cls || '')}</td><td>${hofMedal(e.place)}</td><td>${escHtml(e.name || '—')}</td><td>${escHtml(e.car || '—')}</td><td>${escHtml(e.dealer || '—')}</td><td class="hof-mob">${escHtml([e.name, e.car, e.dealer].filter(Boolean).join(' · '))}</td></tr>`).join('')}</tbody></table></div>
+        <tbody>${items.map(e => `<tr${hofDlAttr(e.dealer)}${hofDealer(e.dealer) ? ' class="link"' : ''}><td>${escHtml(e.cls || '')}</td><td>${hofMedal(e.place)}</td><td>${escHtml(e.name || '—')}</td><td>${escHtml(e.car || '—')}</td><td>${hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer || '—')}</td><td class="hof-mob">${escHtml([e.name, e.car].filter(Boolean).join(' · '))}${e.dealer ? ' · ' + (hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer)) : ''}</td></tr>`).join('')}</tbody></table></div>
     </section>`;
   }).join('');
   const firsts = list.filter(e => e.place === 1).length;
@@ -338,7 +365,7 @@ function openGlDetail(id, photoIdx = 0) {
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
         <h3 class="gl-dt">${escHtml(it.car_model || '')}${it.car_year ? ' ' + it.car_year : ''}</h3>
-        <div class="gl-tags">${hof ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofKey(hof.brand, hof.line)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${!it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : ''}</div>
+        <div class="gl-tags">${hof ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofGroupKey(hof)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${!it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : ''}</div>
         ${it.note ? `<p class="gl-note">${escHtml(it.note)}</p>` : ''}
         ${(it.products || []).length ? `<div class="hof-lbl">Produk yang dipasang</div>${it.products.map(pid => { const r = glProd(pid); if (!r.product) return ''; const p = r.product;
           return `<button class="gl-prod" onclick="closeGlDetail();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}` : ''}

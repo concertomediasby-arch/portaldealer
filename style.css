@@ -3189,3 +3189,12 @@ div.hof-row { cursor: default; }
   .hof-tbl td.hof-mob { display: block; grid-column: 2; grid-row: 2; font-size: 12.5px; color: var(--fg-muted); }
   .hof-tbl tbody tr:hover td { background: none; }
 }
+/* Hall of Fame — nama dealer bisa diklik → kartu Authorized Dealer */
+.hof-row.link, .hof-tbl tr.link { cursor: pointer; }
+.hof-row.link small { color: var(--accent); }
+.hof-dl { color: var(--accent); font-weight: 600; }
+.hof-tbl tr.link:hover .hof-dl { text-decoration: underline; }
+.gl-ov .hof-dlbox { width: min(560px, 100%); padding: 24px 24px 18px; }
+.hof-dlbox .hof-lbl .hof-ms { margin-left: 8px; vertical-align: middle; }
+.hof-dlhd .ad-btns { margin-top: 12px; }
+.hof-dlhd .ad-addr { margin-top: 6px; }
