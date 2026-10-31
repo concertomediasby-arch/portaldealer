@@ -707,11 +707,11 @@ function rkAnalyze() {
     if (p.category === 'DSP' && !/bluetooth/i.test(rkLine(p))) proc = true;
   }
   const notes = [];
-  if (need && !have) notes.push({ t: 'warn', m: `Belum ada power amplifier / DSP amplifier. Speaker & subwoofer pasif di rakitan ini butuh ±${need} channel penguat.` });
+  if (need && !have) notes.push({ t: 'warn', m: `Belum ada power amplifier / DSP amplifier. Speaker & subwoofer pasif di sistem ini butuh ±${need} channel penguat.` });
   else if (need > have) notes.push({ t: 'warn', m: `Perkiraan kebutuhan ${need} channel, tersedia ${have} channel dari amplifier/DSP amplifier. Tambah amplifier, atau gunakan crossover pasif / mode bridge.` });
   else if (need) notes.push({ t: 'ok', m: `Channel penguat cukup: perkiraan butuh ${need}, tersedia ${have} channel.` });
-  if (have && !spk) notes.push({ t: 'info', m: 'Belum ada speaker atau subwoofer di rakitan ini.' });
-  if (sep && !proc) notes.push({ t: 'info', m: 'Rakitan memakai midrange/tweeter terpisah — disarankan menambah DSP untuk crossover & time alignment.' });
+  if (have && !spk) notes.push({ t: 'info', m: 'Belum ada speaker atau subwoofer di sistem ini.' });
+  if (sep && !proc) notes.push({ t: 'info', m: 'Sistem ini memakai midrange/tweeter terpisah — disarankan menambah DSP untuk crossover & time alignment.' });
   if (noPrice) notes.push({ t: 'info', m: `${noPrice} produk belum ada SRP — harga hubungi sales (tidak masuk total).` });
   if (soon) notes.push({ t: 'info', m: `${soon} produk berstatus COMING SOON (belum rilis).` });
   return { need, have, total, qty, notes };
@@ -762,7 +762,7 @@ function renderRakitSide() {
       ${f('cust', 'Nama customer', 'mis. Bapak Andi')}${f('car', 'Mobil', 'mis. Toyota Fortuner 2024')}${f('by', 'Disiapkan oleh', 'nama toko / dealer')}
       <label class="rk-f"><span>Catatan</span><textarea rows="2" placeholder="mis. termasuk pemasangan" oninput="rk.note=this.value;rkSave()">${escHtml(rk.note || '')}</textarea></label>
       <button class="gt-btn confirm rk-pdf" onclick="rkPdf()" ${rk.items.length ? '' : 'disabled'}>⬇ Unduh PDF Penawaran</button>
-      <button class="gt-btn ghost rk-clear" onclick="rkClear()" ${rk.items.length ? '' : 'disabled'}>Kosongkan rakitan</button>
+      <button class="gt-btn ghost rk-clear" onclick="rkClear()" ${rk.items.length ? '' : 'disabled'}>Kosongkan sistem</button>
     </div>`;
 }
 function rkAdd(pid) {
@@ -776,7 +776,7 @@ function rkAdd(pid) {
 function rkQty(i, d) { const it = rk.items[i]; if (!it) return; it.qty = Math.max(1, Math.min(99, it.qty + d)); rkSave(); renderRakit(); }
 function rkDel(i) { rk.items.splice(i, 1); rkSave(); renderRakit(); }
 function rkSetVar(i, v) { if (rk.items[i]) { rk.items[i].v = v; rkSave(); renderRakit(); } }
-function rkClear() { if (!confirm('Kosongkan semua produk di rakitan ini?')) return; rk.items = []; rkSave(); renderRakit(); }
+function rkClear() { if (!confirm('Kosongkan semua produk di sistem ini?')) return; rk.items = []; rkSave(); renderRakit(); }
 
 function rkOpenPick(slot) {
   rkPickSlot = RK_SLOTS.find(s => s.id === slot); rkPickQ = ''; rkPickBrand = '';
@@ -893,7 +893,7 @@ function rkPdf() {
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.3); doc.setTextColor(60, 60, 70);
   notes.forEach(t => { const ls = doc.splitTextToSize('- ' + t, W); if (y + ls.length * 4 > 280) { footer(); doc.addPage(); header(); } doc.text(ls, L, y); y += ls.length * 4 + 1; });
   footer();
-  const nm = clean(rk.cust || rk.car || 'Rakitan').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').slice(0, 40) || 'Rakitan';
+  const nm = clean(rk.cust || rk.car || 'System-Simulator').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').slice(0, 40) || 'System-Simulator';
   doc.save(`Penawaran-Audio-${nm}.pdf`);
 }
 
@@ -1638,7 +1638,7 @@ function renderCatalog() {
 // Kembali dari detail produk ke halaman asal (katalog/brand/stok/…) di posisi scroll yang sama, tanpa merender ulang (30 Okt 2026, permintaan pemilik).
 // Tombol back HP / browser juga kembali ke halaman asal (history.pushState saat detail produk dibuka).
 let productFrom = null;
-const PRODUCT_FROM_LABEL = { halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'Rakitan Audio', updates: 'Update Terbaru', dashboard: 'Dashboard' };
+const PRODUCT_FROM_LABEL = { halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'System Simulator', updates: 'Update Terbaru', dashboard: 'Dashboard' };
 function showProduct(brandId, productId) {
   const curView = document.querySelector('.view.active');
   if (curView && curView.id !== 'view-product') {
