@@ -190,7 +190,7 @@ function renderHallOfFame() {
         <div class="hof-pill"><b>${s.items.length}</b><span>PRESTASI</span><span class="hof-ms">${s.g ? hofMedal(1, s.g) : ''}${s.s ? hofMedal(2, s.s) : ''}${s.b ? hofMedal(3, s.b) : ''}${special ? hofMedal(0, special) : ''}</span></div>
       </div>
       <div class="hof-bd">
-        <div class="hof-prods"><div class="hof-lbl">${s.line ? 'Produk di seri ini' : 'Brand yang dipakai'}</div>
+        <div class="hof-prods${s.line ? '' : ' team'}"><div class="hof-lbl">${s.line ? 'Produk di seri ini' : 'Brand yang dipakai'}</div>
           ${!s.line ? logos.map(b => `<button class="hof-prod" onclick="showBrand('${b.id}')"><span class="hof-ph">🏷️</span><span><b>${escHtml(b.name)}</b><small>Lihat produk brand →</small></span></button>`).join('') + '<div class="hof-meta hof-pend">Seri speaker yang dipakai tiap mobil menyusul.</div>' : ''}
           ${prods.map(p => `<button class="hof-prod" onclick="showProduct('${s.brand}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="" loading="lazy">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>Lihat produk →</small></span></button>`).join('') || (s.line ? '<div class="hof-meta">—</div>' : '')}
         </div>

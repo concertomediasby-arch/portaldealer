@@ -3213,3 +3213,25 @@ div.hof-row { cursor: default; }
 .hof-mob .hof-gear + .hof-galbtn, .hof-mob .hof-galbtn:first-child { margin-left: 0; }
 .hof-mob .hof-gear + .hof-galbtn { margin-left: 6px; }
 .hof-galwide { margin-top: 14px; width: 100%; }
+/* Showcase — perbaikan tampilan HP (31 Okt 2026) */
+.hof-dl { white-space: nowrap; }
+.hof-dlhd > .hof-lbl, .hof-dlhd > .gl-dt, .hof-dlhd .hof-wtop { padding-right: 46px; }
+.hof-galwide { display: flex; justify-content: center; }
+.hof-dlhd .gl-dt .ad-badge { white-space: nowrap; vertical-align: middle; font-size: 10px; }
+@media (max-width: 760px) {
+  .hof-ttl { min-width: 0; flex: 1 1 160px; }
+  .hof-ttl .hof-note { white-space: normal; }
+  .hof-logos { gap: 10px; }
+  .hof-logos .hof-logo { height: 15px; max-width: 86px; }
+  .hof-prods.team { flex-wrap: wrap; overflow: visible; }
+  .hof-prods.team .hof-prod { min-width: 0; width: auto; padding: 6px 12px; }
+  .hof-prods.team .hof-prod .hof-ph { display: none; }
+  .hof-prods.team .hof-prod b { display: inline; margin-right: 6px; }
+  .hof-prods.team .hof-pend { flex-basis: 100%; margin: 2px 0 0; }
+  .hof-row .hof-ser small { line-height: 1.35; }
+  .hof-row .hof-tot { text-align: center; }
+  .hof-row .hof-tot .hof-bar { display: none; }
+  .gl-ov .hof-dlbox { padding: 20px 18px 16px; }
+  .hof-dlhd .gl-dt { font-size: 22px; line-height: 1.2; }
+  .hof-dlhd > .hof-lbl { line-height: 1.5; }
+}
