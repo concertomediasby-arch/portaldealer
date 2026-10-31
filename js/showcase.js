@@ -25,6 +25,11 @@ let hofBrand = 'all', hofYear = 'all', hofOpen = {};
 const hofIsDemo = () => !HALL_OF_FAME.length && isEditor();
 const hofData = () => HALL_OF_FAME.length ? HALL_OF_FAME : (hofIsDemo() ? HOF_DEMO : []);
 const hofKey = (b, l) => b + '|' + normKey(l);
+// Brand yang dipakai: entri seri (brand+line) atau entri tim (team:[…], seri per mobil belum dicatat)
+const hofBrands = e => e.team?.length ? e.team : [e.brand];
+const hofGroupKey = e => e.line ? hofKey(e.brand, e.line) : 'team|' + hofBrands(e).join('-');
+const hofBrandName = id => BRANDS.find(b => b.id === id)?.name || id;
+const hofTeamLabel = s => s.line || 'Tim ' + s.team.map(hofBrandName).join(' · ');
 const hofDomId = k => 'hof-' + k.replace(/[^a-z0-9]/gi, '-');
 const hofMedal = (pl, n) => pl >= 1 && pl <= 3
   ? `<i class="hof-m ${['g', 's', 'b'][pl - 1]}">${n ?? pl}</i>`
@@ -44,8 +49,8 @@ function hofForProduct(brandId, lineName, pid) {
 function hofSeries(list) {
   const map = new Map();
   list.forEach(e => {
-    const k = hofKey(e.brand, e.line);
-    if (!map.has(k)) map.set(k, { key: k, brand: e.brand, line: e.line, items: [], g: 0, s: 0, b: 0 });
+    const k = hofGroupKey(e);
+    if (!map.has(k)) map.set(k, { key: k, brand: e.brand, line: e.line || '', team: hofBrands(e), items: [], g: 0, s: 0, b: 0 });
     const s = map.get(k);
     s.items.push(e);
     if (e.place === 1) s.g++; else if (e.place === 2) s.s++; else if (e.place === 3) s.b++;
@@ -81,9 +86,9 @@ function hofToggle(k) { hofOpen[k] = !hofOpen[k]; renderHallOfFame(); }
 function renderHallOfFame() {
   const box = document.getElementById('hof-body'); if (!box) return;
   const all = hofData();
-  const list = all.filter(e => (hofBrand === 'all' || e.brand === hofBrand) && (hofYear === 'all' || String(e.year) === hofYear));
+  const list = all.filter(e => (hofBrand === 'all' || hofBrands(e).includes(hofBrand)) && (hofYear === 'all' || String(e.year) === hofYear));
   const series = hofSeries(list);
-  const brands = [...new Set(all.map(e => e.brand))];
+  const brands = [...new Set(all.flatMap(hofBrands))].filter(id => BRANDS.some(b => b.id === id));
   const years = [...new Set(all.map(e => e.year).filter(Boolean))].sort((a, b) => b - a);
   const brandName = id => BRANDS.find(b => b.id === id)?.name || id;
   const events = new Set(list.map(e => [e.event, e.city, e.year].join('|'))).size;
@@ -94,12 +99,12 @@ function renderHallOfFame() {
     return;
   }
   const max = Math.max(1, ...series.map(s => s.items.length));
-  const thumbs = s => hofProducts({ brand: s.brand, line: s.line }).slice(0, 3)
+  const thumbs = s => (s.line ? hofProducts({ brand: s.brand, line: s.line }) : []).slice(0, 3)
     .map(p => p.photo ? `<img src="${p.photo}" alt="" loading="lazy">` : `<span class="hof-ph">${p.emoji}</span>`).join('');
   const board = series.map((s, i) => `
     <button class="hof-row${i === 0 ? ' top' : ''}" onclick="openHallOfFame('${s.key}')">
       <span class="hof-rk">${String(i + 1).padStart(2, '0')}</span>
-      <span class="hof-ser"><b>${escHtml(s.line)}${i === 0 && series.length > 1 ? '<span class="hof-flag">PALING BANYAK JUARA</span>' : ''}</b><small>${escHtml(brandName(s.brand))}</small></span>
+      <span class="hof-ser"><b>${escHtml(hofTeamLabel(s))}${i === 0 && series.length > 1 ? '<span class="hof-flag">PALING BANYAK JUARA</span>' : ''}</b><small>${s.line ? escHtml(brandName(s.brand)) : 'Seri speaker per mobil menyusul'}</small></span>
       <span class="hof-thumbs">${thumbs(s)}</span>
       <span class="hof-c">${s.g}</span><span class="hof-c">${s.s}</span><span class="hof-c">${s.b}</span>
       <span class="hof-tot"><b>${s.items.length}</b><i class="hof-bar"><i style="width:${Math.round(s.items.length / max * 100)}%"></i></i></span>
@@ -108,11 +113,12 @@ function renderHallOfFame() {
   const winRow = e => `<div class="hof-win">${hofMedal(e.place)}
       <div><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b>
       <div class="hof-meta">${escHtml(e.event)}${e.city ? ' · ' + escHtml(e.city) : ''}</div>
-      ${e.car || e.dealer ? `<div class="hof-car">${escHtml([e.car, e.dealer ? 'dipasang oleh ' + e.dealer : ''].filter(Boolean).join(' · '))}</div>` : ''}</div>
+      ${e.name || e.car || e.dealer ? `<div class="hof-car">${escHtml([e.name, e.car, e.dealer ? 'dipasang oleh ' + e.dealer : ''].filter(Boolean).join(' · '))}</div>` : ''}</div>
       ${e.year ? `<span class="hof-yr">${e.year}</span>` : ''}</div>`;
   const cards = series.map(s => {
     const brand = BRANDS.find(b => b.id === s.brand);
-    const prods = hofProducts({ brand: s.brand, line: s.line });
+    const prods = s.line ? hofProducts({ brand: s.brand, line: s.line }) : [];
+    const logos = s.team.map(id => BRANDS.find(b => b.id === id)).filter(Boolean);
     const items = [...s.items].sort(hofSort);
     const open = hofOpen[s.key];
     const shown = open ? items : items.slice(0, 5);
@@ -120,13 +126,15 @@ function renderHallOfFame() {
     const special = s.items.length - s.g - s.s - s.b;
     return `<section class="hof-card" id="${hofDomId(s.key)}">
       <div class="hof-hd">
-        ${brand?.logo ? `<img class="hof-logo" src="${brand.logo}" alt="${escHtml(brand.name)}">` : `<span class="hof-bn">${escHtml(brandName(s.brand))}</span>`}
-        <div class="hof-ttl"><h3>${escHtml(s.line)}</h3><div class="hof-note">${prods.map(p => escHtml(p.name)).slice(0, 4).join(' · ')}</div></div>
+        ${s.line ? (brand?.logo ? `<img class="hof-logo" src="${brand.logo}" alt="${escHtml(brand.name)}">` : `<span class="hof-bn">${escHtml(brandName(s.brand))}</span>`)
+          : `<span class="hof-logos">${logos.map(b => b.logo ? `<img class="hof-logo" src="${b.logo}" alt="${escHtml(b.name)}">` : `<span class="hof-bn">${escHtml(b.name)}</span>`).join('')}</span>`}
+        <div class="hof-ttl"><h3>${escHtml(hofTeamLabel(s))}</h3><div class="hof-note">${s.line ? prods.map(p => escHtml(p.name)).slice(0, 4).join(' · ') : 'Rangkaian sistem audio memakai brand ini'}</div></div>
         <div class="hof-pill"><b>${s.items.length}</b><span>PRESTASI</span><span class="hof-ms">${s.g ? hofMedal(1, s.g) : ''}${s.s ? hofMedal(2, s.s) : ''}${s.b ? hofMedal(3, s.b) : ''}${special ? hofMedal(0, special) : ''}</span></div>
       </div>
       <div class="hof-bd">
-        <div class="hof-prods"><div class="hof-lbl">Produk di seri ini</div>
-          ${prods.map(p => `<button class="hof-prod" onclick="showProduct('${s.brand}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="" loading="lazy">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>Lihat produk →</small></span></button>`).join('') || '<div class="hof-meta">—</div>'}
+        <div class="hof-prods"><div class="hof-lbl">${s.line ? 'Produk di seri ini' : 'Brand yang dipakai'}</div>
+          ${!s.line ? logos.map(b => `<button class="hof-prod" onclick="showBrand('${b.id}')"><span class="hof-ph">🏷️</span><span><b>${escHtml(b.name)}</b><small>Lihat produk brand →</small></span></button>`).join('') + '<div class="hof-meta hof-pend">Seri speaker yang dipakai tiap mobil menyusul.</div>' : ''}
+          ${prods.map(p => `<button class="hof-prod" onclick="showProduct('${s.brand}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="" loading="lazy">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>Lihat produk →</small></span></button>`).join('') || (s.line ? '<div class="hof-meta">—</div>' : '')}
         </div>
         <div class="hof-wins"><div class="hof-lbl">Daftar Prestasi</div>
           ${shown.map(winRow).join('')}
@@ -137,9 +145,38 @@ function renderHallOfFame() {
     </section>`;
   }).join('');
 
+  // Klasemen dealer pemasang
+  const dmap = new Map();
+  list.filter(e => e.dealer).forEach(e => {
+    const k = normKey(e.dealer);
+    if (!dmap.has(k)) dmap.set(k, { name: e.dealer, n: 0, g: 0, s: 0, b: 0 });
+    const d = dmap.get(k); d.n++;
+    if (e.place === 1) d.g++; else if (e.place === 2) d.s++; else if (e.place === 3) d.b++;
+  });
+  const dealers = [...dmap.values()].sort((a, b) => b.g - a.g || b.n - a.n || b.s - a.s);
+  const dmax = Math.max(1, ...dealers.map(d => d.n));
+  const dboard = dealers.map((d, i) => `<div class="hof-row${i === 0 ? ' top' : ''}">
+      <span class="hof-rk">${String(i + 1).padStart(2, '0')}</span>
+      <span class="hof-ser"><b>${escHtml(d.name)}</b><small>${d.n} prestasi</small></span><span class="hof-thumbs"></span>
+      <span class="hof-c">${d.g}</span><span class="hof-c">${d.s}</span><span class="hof-c">${d.b}</span>
+      <span class="hof-tot"><b>${d.n}</b><i class="hof-bar"><i style="width:${Math.round(d.n / dmax * 100)}%"></i></i></span></div>`).join('');
+  // Hasil per kompetisi
+  const emap = new Map();
+  list.forEach(e => { const k = [e.event, e.city, e.year].join('|'); if (!emap.has(k)) emap.set(k, []); emap.get(k).push(e); });
+  const evCards = [...emap.values()].sort((a, b) => (b[0].year || 0) - (a[0].year || 0)).map(items => {
+    const e0 = items[0], cnt = pl => items.filter(e => e.place === pl).length;
+    return `<section class="hof-card hof-ev">
+      <div class="hof-hd"><div class="hof-ttl"><h3>${escHtml(e0.event)}</h3><div class="hof-note">${escHtml([e0.date || e0.year, e0.venue, e0.city].filter(Boolean).join(' · '))}</div></div>
+        <div class="hof-pill"><b>${items.length}</b><span>PRESTASI</span><span class="hof-ms">${[1, 2, 3].map(pl => cnt(pl) ? hofMedal(pl, cnt(pl)) : '').join('')}</span></div></div>
+      <div class="hof-tblw"><table class="hof-tbl"><thead><tr><th>Kelas</th><th>Juara</th><th>Peserta</th><th>Mobil</th><th>Dealer pemasang</th></tr></thead>
+        <tbody>${items.map(e => `<tr><td>${escHtml(e.cls || '')}</td><td>${hofMedal(e.place)}</td><td>${escHtml(e.name || '—')}</td><td>${escHtml(e.car || '—')}</td><td>${escHtml(e.dealer || '—')}</td><td class="hof-mob">${escHtml([e.name, e.car, e.dealer].filter(Boolean).join(' · '))}</td></tr>`).join('')}</tbody></table></div>
+    </section>`;
+  }).join('');
+  const firsts = list.filter(e => e.place === 1).length;
+
   box.innerHTML = `
     ${hofIsDemo() ? `<div class="sc-demo">DATA CONTOH — HALL_OF_FAME masih kosong. Hanya Editor yang melihat halaman ini; isi dengan data kompetisi asli sebelum dibuka untuk publik.</div>` : ''}
-    <div class="hof-stats"><div><b>${list.length}</b><span>Prestasi</span></div><div><b>${events}</b><span>Kompetisi</span></div><div><b>${series.length}</b><span>Seri juara</span></div></div>
+    <div class="hof-stats"><div><b>${list.length}</b><span>Prestasi</span></div><div><b>${firsts}</b><span>Juara 1</span></div><div><b>${events}</b><span>Kompetisi</span></div>${dealers.length ? `<div><b>${dealers.length}</b><span>Dealer pemasang</span></div>` : ''}</div>
     <div class="hof-filters">
       ${brands.length > 1 ? `<span class="hof-flbl">Brand</span>${chip('brand', 'all', 'Semua', hofBrand === 'all')}${brands.map(b => chip('brand', b, brandName(b), hofBrand === b)).join('')}` : ''}
       ${years.length > 1 ? `<span class="hof-flbl">Tahun</span>${chip('year', 'all', 'Semua', hofYear === 'all')}${years.map(y => chip('year', y, y, hofYear === String(y))).join('')}` : ''}
@@ -147,6 +184,11 @@ function renderHallOfFame() {
     ${series.length ? `
     <div class="hof-h2">Klasemen Prestasi per Seri</div><div class="hof-sub">Diurutkan berdasarkan jumlah prestasi — bukan harga.</div>
     <div class="hof-board"><div class="hof-row head"><span>#</span><span>Seri</span><span class="hof-thumbs"></span><span class="hof-c">${hofMedal(1)}</span><span class="hof-c">${hofMedal(2)}</span><span class="hof-c">${hofMedal(3)}</span><span class="hof-tot">Total</span></div>${board}</div>
+    ${dealers.length ? `<div class="hof-h2">Dealer Pemasang Juara</div><div class="hof-sub">Dealer resmi yang memasang sistem pemenang — diurutkan dari jumlah Juara 1.</div>
+    <div class="hof-board"><div class="hof-row head"><span>#</span><span>Dealer</span><span class="hof-thumbs"></span><span class="hof-c">${hofMedal(1)}</span><span class="hof-c">${hofMedal(2)}</span><span class="hof-c">${hofMedal(3)}</span><span class="hof-tot">Total</span></div>${dboard}</div>` : ''}
+    <div class="hof-h2">Hasil per Kompetisi</div><div class="hof-sub">Daftar lengkap kelas yang dimenangkan.</div>
+    ${evCards}
+    <div class="hof-h2">Prestasi per Seri</div>
     ${cards}` : '<div class="stock-empty">Tidak ada prestasi untuk filter ini.</div>'}`;
 }
 
@@ -390,7 +432,7 @@ function renderGlForm() {
       <div class="w4"><div class="gl-flbl">Produk yang dipasang</div>
         <input list="glf-plist" placeholder="Ketik nama produk lalu pilih…" onchange="glAddProduct(this)"><datalist id="glf-plist">${glProdOptions()}</datalist>
         <div class="gl-pchips" id="glf-prods"></div></div>
-      <label class="w2">Prestasi (Hall of Fame)<select onchange="glField('hof_id',this.value)"><option value="">— tidak ada —</option>${hofs.map(h => `<option value="${escHtml(h.id)}"${h.id === e.hof_id ? ' selected' : ''}>${escHtml(`${h.award} · ${h.cls || ''} · ${h.event} ${h.year || ''}`)}</option>`).join('')}</select></label>
+      <label class="w2">Prestasi (Hall of Fame)<select onchange="glField('hof_id',this.value)"><option value="">— tidak ada —</option>${hofs.map(h => `<option value="${escHtml(h.id)}"${h.id === e.hof_id ? ' selected' : ''}>${escHtml([`${h.award} · ${h.cls || ''}`, h.name, h.car, `${h.event} ${h.year || ''}`].filter(Boolean).join(' · '))}</option>`).join('')}</select></label>
       <label class="w2 gl-pub"><input type="checkbox"${e.published ? ' checked' : ''} onchange="glField('published',this.checked)"> Tampilkan (bukan draf)</label>
       <div class="w4"><div class="gl-flbl">Foto <small>(boleh banyak sekaligus; otomatis diperkecil)</small></div>
         <label class="gt-btn gl-up">📷 Tambah Foto<input type="file" accept="image/*" multiple hidden onchange="glAddPhotos(this)"></label>

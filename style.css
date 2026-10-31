@@ -3158,3 +3158,34 @@ body {
 }
 .gl-fphotos > .gl-hint { grid-column: 1 / -1; }
 .gl-fgrid .w4 > input { width: 100%; }
+
+/* Hall of Fame — entri tim (seri per mobil belum dicatat), klasemen dealer & hasil per kompetisi (31 Okt 2026) */
+.hof-logos { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; max-width: 46%; }
+.hof-logos .hof-logo { height: 18px; max-width: 110px; }
+.hof-pend { margin-top: 6px; font-style: italic; }
+div.hof-row { cursor: default; }
+.hof-ev .hof-hd { border-bottom: 1px solid var(--border); }
+.hof-tblw { overflow-x: auto; }
+.hof-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.hof-tbl th { text-align: left; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-muted); font-weight: 500; padding: 12px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.hof-tbl td { padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--fg); white-space: nowrap; }
+.hof-tbl td:first-child { font-weight: 600; }
+.hof-tbl tbody tr:last-child td { border-bottom: 0; }
+.hof-tbl tbody tr:hover td { background: var(--surface2); }
+.hof-tbl td.hof-mob { display: none; }
+@media (max-width: 760px) {
+  .hof-logos { max-width: 100%; }
+  .hof-ev .hof-hd { flex-wrap: wrap; }
+  .hof-ev .hof-note { white-space: normal; }
+  .hof-ev .hof-ttl { flex-basis: 100%; }
+  .hof-tbl thead { display: none; }
+  .hof-tbl, .hof-tbl tbody { display: block; }
+  .hof-tbl tr { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .hof-tbl tbody tr:last-child { border-bottom: 0; }
+  .hof-tbl td { padding: 0; border: 0; white-space: normal; }
+  .hof-tbl td:nth-child(1) { grid-column: 2; grid-row: 1; }
+  .hof-tbl td:nth-child(2) { grid-column: 1; grid-row: 1 / span 2; }
+  .hof-tbl td:nth-child(3), .hof-tbl td:nth-child(4), .hof-tbl td:nth-child(5) { display: none; }
+  .hof-tbl td.hof-mob { display: block; grid-column: 2; grid-row: 2; font-size: 12.5px; color: var(--fg-muted); }
+  .hof-tbl tbody tr:hover td { background: none; }
+}
