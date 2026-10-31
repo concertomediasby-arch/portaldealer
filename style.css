@@ -3198,3 +3198,11 @@ div.hof-row { cursor: default; }
 .hof-dlbox .hof-lbl .hof-ms { margin-left: 8px; vertical-align: middle; }
 .hof-dlhd .ad-btns { margin-top: 12px; }
 .hof-dlhd .ad-addr { margin-top: 6px; }
+.hof-gear { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--accent); border: 1px solid rgba(216,178,106,.45); white-space: nowrap; }
+.hof-mob .hof-gear { margin: 0 0 3px; }
+.hof-win.link { cursor: pointer; border-radius: 10px; }
+.hof-win.link:hover { background: rgba(216,178,106,.06); }
+.hof-wtop { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+.hof-wtop .gl-dt { margin: 0; }
+.hof-oth { cursor: default; }
+.psc-ach li.link { cursor: pointer; } .psc-ach li.link:hover b { text-decoration: underline; }

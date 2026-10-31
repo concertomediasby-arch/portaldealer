@@ -44,7 +44,7 @@ function hofProducts(e) {
 }
 // Prestasi yang berlaku untuk satu produk: entri yang menyebut produk itu, atau entri tanpa daftar produk di line yang sama
 function hofForProduct(brandId, lineName, pid) {
-  return hofData().filter(e => e.brand === brandId && (e.products?.length ? e.products.includes(pid) : normKey(e.line) === normKey(lineName || '')));
+  return hofData().filter(e => e.products?.length ? e.products.includes(pid) : e.brand === brandId && normKey(e.line) === normKey(lineName || ''));
 }
 function hofSeries(list) {
   const map = new Map();
@@ -91,9 +91,28 @@ function openHofDealer(name) {
       ${d.a ? `<div class="ad-addr">${escHtml(d.a)}</div>` : ''}
       <div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat prestasi kompetisi Anda di Hall of Fame CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a></div></div>
     <div class="hof-lbl" style="margin-top:18px">${wins.length} prestasi <span class="hof-ms">${[1, 2, 3].map(pl => cnt(pl) ? hofMedal(pl, cnt(pl)) : '').join('')}</span></div>
-    ${wins.map(e => `<div class="hof-win">${hofMedal(e.place)}<div><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b>
+    ${wins.map(e => `<div class="hof-win${e.products?.length ? ' link' : ''}"${e.products?.length ? hofWinAttr(e) : ''}>${hofMedal(e.place)}<div><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b>
       <div class="hof-meta">${escHtml([e.event, e.city].filter(Boolean).join(' · '))}</div>
       ${e.name || e.car ? `<div class="hof-car">${escHtml([e.name, e.car].filter(Boolean).join(' · '))}</div>` : ''}</div>${e.year ? `<span class="hof-yr">${e.year}</span>` : ''}</div>`).join('')}`;
+  document.getElementById('hof-dealer').classList.add('open');
+}
+// Detail satu prestasi: mobil, perangkat yang dipakai (→ katalog), dealer pemasang
+const hofWinAttr = e => e.products?.length || e.other?.length ? ` onclick="event.stopPropagation();openHofWin('${e.id}')"` : hofDlAttr(e.dealer);
+function openHofWin(id) {
+  const e = hofData().find(x => x.id === id); if (!e) return;
+  const d = hofDealer(e.dealer);
+  const prods = (e.products || []).map(pid => findProductAny(pid)).filter(r => r.product);
+  document.querySelector('#hof-dealer .gl-dbox').innerHTML = `
+    <button class="rk-pick-x gl-x" onclick="closeHofDealer()" aria-label="Tutup">✕</button>
+    <div class="hof-dlhd"><div class="hof-lbl">${escHtml([e.event, e.date || e.year, e.city].filter(Boolean).join(' · '))}</div>
+      <div class="hof-wtop">${hofMedal(e.place)}<div><h3 class="gl-dt">${escHtml(e.car || e.cls || '')}</h3>
+        <div class="gl-dc">${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}${e.name ? ' · ' + escHtml(e.name) : ''}</div></div></div></div>
+    ${prods.length || e.other?.length ? `<div class="hof-lbl" style="margin-top:16px">Perangkat yang dipakai</div>
+      ${prods.map(r => { const p = r.product;
+        return `<button class="gl-prod" onclick="closeHofDealer();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}
+      ${(e.other || []).map(t => `<div class="gl-prod hof-oth"><span class="hof-ph">🔧</span><span><b>${escHtml(t)}</b><small>Belum ada di katalog</small></span></div>`).join('')}` : ''}
+    ${e.dealer ? `<div class="gl-dcard"><div class="hof-lbl">Dipasang oleh</div><b>${escHtml(e.dealer)}${d ? ' <span class="ad-badge">✓ Resmi</span>' : ''}</b>${d ? `<div class="gl-dc">${escHtml([d.c, d.r].join(', '))}</div>
+      <div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat ${e.car || 'mobil'} juara ${e.event} di Hall of Fame CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a></div>` : ''}</div>` : ''}`;
   document.getElementById('hof-dealer').classList.add('open');
 }
 function closeHofDealer() { document.getElementById('hof-dealer')?.classList.remove('open'); }
@@ -137,7 +156,7 @@ function renderHallOfFame() {
       <span class="hof-tot"><b>${s.items.length}</b><i class="hof-bar"><i style="width:${Math.round(s.items.length / max * 100)}%"></i></i></span>
     </button>`).join('');
 
-  const winRow = e => `<div class="hof-win">${hofMedal(e.place)}
+  const winRow = e => `<div class="hof-win${e.products?.length ? ' link' : ''}"${e.products?.length ? hofWinAttr(e) : ''}>${hofMedal(e.place)}
       <div><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b>
       <div class="hof-meta">${escHtml(e.event)}${e.city ? ' · ' + escHtml(e.city) : ''}</div>
       ${e.name || e.car || e.dealer ? `<div class="hof-car">${escHtml([e.name, e.car, e.dealer ? 'dipasang oleh ' + e.dealer : ''].filter(Boolean).join(' · '))}</div>` : ''}</div>
@@ -196,7 +215,7 @@ function renderHallOfFame() {
       <div class="hof-hd"><div class="hof-ttl"><h3>${escHtml(e0.event)}</h3><div class="hof-note">${escHtml([e0.date || e0.year, e0.venue, e0.city].filter(Boolean).join(' · '))}</div></div>
         <div class="hof-pill"><b>${items.length}</b><span>PRESTASI</span><span class="hof-ms">${[1, 2, 3].map(pl => cnt(pl) ? hofMedal(pl, cnt(pl)) : '').join('')}</span></div></div>
       <div class="hof-tblw"><table class="hof-tbl"><thead><tr><th>Kelas</th><th>Juara</th><th>Peserta</th><th>Mobil</th><th>Dealer pemasang</th></tr></thead>
-        <tbody>${items.map(e => `<tr${hofDlAttr(e.dealer)}${hofDealer(e.dealer) ? ' class="link"' : ''}><td>${escHtml(e.cls || '')}</td><td>${hofMedal(e.place)}</td><td>${escHtml(e.name || '—')}</td><td>${escHtml(e.car || '—')}</td><td>${hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer || '—')}</td><td class="hof-mob">${escHtml([e.name, e.car].filter(Boolean).join(' · '))}${e.dealer ? ' · ' + (hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer)) : ''}</td></tr>`).join('')}</tbody></table></div>
+        <tbody>${items.map(e => `<tr${hofWinAttr(e)}${hofWinAttr(e) ? ' class="link"' : ''}><td>${escHtml(e.cls || '')}</td><td>${hofMedal(e.place)}</td><td>${escHtml(e.name || '—')}</td><td>${escHtml(e.car || '—')}${e.products?.length ? ' <span class="hof-gear">🔧 Lihat perangkat</span>' : ''}</td><td>${hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer || '—')}</td><td class="hof-mob">${e.products?.length ? '<span class="hof-gear">🔧 Lihat perangkat</span><br>' : ''}${escHtml([e.name, e.car].filter(Boolean).join(' · '))}${e.dealer ? ' · ' + (hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer)) : ''}</td></tr>`).join('')}</tbody></table></div>
     </section>`;
   }).join('');
   const firsts = list.filter(e => e.place === 1).length;
@@ -527,10 +546,10 @@ function renderProductShowcase(product, lineName, brand) {
   if (!scOn()) { el.innerHTML = ''; return; }
   const hof = hofForProduct(brand.id, lineName, product.id).sort(hofSort);
   const lineTotal = lineName ? hofLineCount(brand.id, lineName) : 0;
-  const key = hofKey(brand.id, lineName || '');
+  const key = hof[0] && !hof[0].line ? hofGroupKey(hof[0]) : hofKey(brand.id, lineName || '');
   const ach = hof.length ? `<div class="psc-ach">
       <div class="psc-t">🏆 Achievement — <b>${hof.length} prestasi</b>${lineName && lineTotal ? ` bersama ${escHtml(lineName)}` : ''}${hofIsDemo() ? ' <span class="sc-tag">DATA CONTOH</span>' : ''}</div>
-      <ul>${hof.slice(0, 3).map(e => `<li>${hofMedal(e.place)}<span><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b> — ${escHtml([e.event, e.city, e.year].filter(Boolean).join(' '))}</span></li>`).join('')}</ul>
+      <ul>${hof.slice(0, 3).map(e => `<li${e.products?.length ? ` class="link" onclick="openHallOfFame();openHofWin('${e.id}')"` : ''}>${hofMedal(e.place)}<span><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b> — ${escHtml([e.event, e.city, e.year].filter(Boolean).join(' '))}${e.car ? ` · ${escHtml(e.car)}` : ''}</span></li>`).join('')}</ul>
       <button class="psc-link" onclick="openHallOfFame('${key}')">Lihat semua prestasi di Hall of Fame →</button></div>` : '';
   if (!glItems && !glLoading && supabase) loadGaleri().then(() => { if (scProduct?.product === product) renderProductShowcase(product, lineName, brand); });
   const inst = (glItems || []).filter(it => (it.products || []).includes(product.id));

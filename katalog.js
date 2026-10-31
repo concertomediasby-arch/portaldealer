@@ -952,7 +952,8 @@ const STOCK_ALIASES = {
      brand:'audiocircle', line:'Stuttgart Line',   // seri (nama line persis seperti di katalog)
      products:['ac-slc62'],          // opsional: hanya produk ini; kosong = semua produk di line itu
      car:'Toyota Fortuner', dealer:'Nama Dealer', photo:'assets/hof/…webp',   // opsional
-     name:'Nama peserta', date:'17–18 Okt 2026', venue:'Tempat' }                // opsional
+     name:'Nama peserta', date:'17–18 Okt 2026', venue:'Tempat',                  // opsional
+     other:['K401'] }   // opsional: perangkat yang belum ada di katalog (teks saja)
    Bila seri belum diketahui: ganti brand+line dengan team:['audiocircle','steg','zelos'] (brand yang dipakai) —
    tampil sebagai kelompok "Tim …" di klasemen; isi brand+line begitu serinya diketahui.
    Kosong = halaman Hall of Fame menampilkan data contoh (hanya untuk Editor). */
@@ -964,7 +965,8 @@ const HALL_OF_FAME = [
   { id:'emma26h2-04', event:'EMMA Heat 02', date:'17–18 Okt 2026', venue:'Tierra Soho', city:'Surabaya', year:2026, cls:'Basic Unlimited', place:1, award:'Juara 1', team:['audiocircle','steg','zelos'], name:'Daniel', car:'Toyota Innova', dealer:'Concerto Malang' },
   { id:'emma26h2-05', event:'EMMA Heat 02', date:'17–18 Okt 2026', venue:'Tierra Soho', city:'Surabaya', year:2026, cls:'Basic Unlimited', place:2, award:'Juara 2', team:['audiocircle','steg','zelos'], name:'Andre', car:'Toyota Fortuner', dealer:'Central Garage' },
   { id:'emma26h2-06', event:'EMMA Heat 02', date:'17–18 Okt 2026', venue:'Tierra Soho', city:'Surabaya', year:2026, cls:'Entry 3000', place:3, award:'Juara 3', team:['audiocircle','steg','zelos'], name:'Tyas', car:'BYD Seal', dealer:'Concerto Malang' },
-  { id:'emma26h2-07', event:'EMMA Heat 02', date:'17–18 Okt 2026', venue:'Tierra Soho', city:'Surabaya', year:2026, cls:'Entry Unlimited', place:3, award:'Juara 3', team:['audiocircle','steg','zelos'], name:'Robby', car:'Aion Hyptec', dealer:'Concerto Surabaya' },
+  { id:'emma26h2-07', event:'EMMA Heat 02', date:'17–18 Okt 2026', venue:'Tierra Soho', city:'Surabaya', year:2026, cls:'Entry Unlimited', place:3, award:'Juara 3', team:['audiocircle','steg','zelos'], name:'Robby', car:'Aion Hyptec HT', dealer:'Concerto Surabaya',
+    products:['ac-prow6c','ac-prom3c','ac-prot28','st-ssdsp12','ac-bls10','zl-hd54','st-sqw6','dm-fuseanl','dm-rca'], other:['K401'] },   // perangkat dari pemilik 31 Okt 2026 (K401 belum ada di katalog)
   { id:'emma26h2-08', event:'EMMA Heat 02', date:'17–18 Okt 2026', venue:'Tierra Soho', city:'Surabaya', year:2026, cls:'Skilled 5000', place:1, award:'Juara 1', team:['audiocircle','steg','zelos'], name:'Dull Fortuner', car:'Toyota Fortuner', dealer:'West Audioworks' },
   { id:'emma26h2-09', event:'EMMA Heat 02', date:'17–18 Okt 2026', venue:'Tierra Soho', city:'Surabaya', year:2026, cls:'Skilled 5000', place:3, award:'Juara 3', team:['audiocircle','steg','zelos'], name:'Harianto', car:'Toyota Innova Zenix', dealer:'Central Garage' },
   { id:'emma26h2-10', event:'EMMA Heat 02', date:'17–18 Okt 2026', venue:'Tierra Soho', city:'Surabaya', year:2026, cls:'Skilled Unlimited', place:1, award:'Juara 1', team:['audiocircle','steg','zelos'], name:'Chloe', car:'Aion Hyptec', dealer:'VIN Audioworks' },
