@@ -943,3 +943,15 @@ const STOCK_ALIASES = {
   slc62mkiv: '-',   // hanya SL-C6.2 MK IV S yang dimasukkan (konfirmasi pemilik); '-' = abaikan
   // ST10PRO ≠ ST10P-PRO (produk berbeda) → ST10PRO = produk katalog sendiri (st-st10prosub), cocok otomatis lewat model
 };
+
+/* SHOWCASE · HALL OF FAME — prestasi kompetisi per seri speaker (data ASLI dari pemilik; jangan diisi data karangan).
+   Satu objek = satu kemenangan:
+   { id:'hof-001', event:'Nama Kompetisi', city:'Jakarta', year:2026, cls:'SQ Pemula',
+     place:1,                        // 1 / 2 / 3 = medali; 0 = penghargaan khusus (mis. Best Sound)
+     award:'Juara 1',                // teks hasil yang tampil
+     brand:'audiocircle', line:'Stuttgart Line',   // seri (nama line persis seperti di katalog)
+     products:['ac-slc62'],          // opsional: hanya produk ini; kosong = semua produk di line itu
+     car:'Toyota Fortuner', dealer:'Nama Dealer', photo:'assets/hof/…webp' }   // opsional
+   Kosong = halaman Hall of Fame menampilkan data contoh (hanya untuk Editor). */
+const HALL_OF_FAME = [
+];

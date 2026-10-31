@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-10-31T03:03:23Z">
+<link rel="stylesheet" href="style.css?b=2026-10-31T03:49:57Z">
 </head>
 <body>
 <noscript>
@@ -196,6 +196,15 @@
       <button class="sidebar-item" id="nav-rakit" onclick="openRakit()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="8.5" cy="12.5" r="2.5"/><circle cx="15.5" cy="12.5" r="2.5"/><path d="M7 6V4h10v2"/></svg>
         Rakitan Audio
+      </button>
+      <div class="sidebar-label sidebar-sub editor-only">Showcase</div>
+      <button class="sidebar-item editor-only" id="nav-halloffame" onclick="openHallOfFame()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4c0 3 1.5 4.5 3.5 4.6M17 6h3c0 3-1.5 4.5-3.5 4.6"/><path d="M12 14v4"/><path d="M8 21h8l-1-3H9z"/></svg>
+        Hall of Fame
+      </button>
+      <button class="sidebar-item editor-only" id="nav-galeri" onclick="openGaleri()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l2.5-5.5A2 2 0 0 1 7.3 9h9.4a2 2 0 0 1 1.8 1.5L21 16v3H3z"/><circle cx="7" cy="19" r="1.6"/><circle cx="17" cy="19" r="1.6"/><path d="M3 16h18"/></svg>
+        Galeri Instalasi
       </button>
       <button class="sidebar-item editor-only" id="nav-gathering" onclick="openGathering()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -361,6 +370,33 @@
           <div class="rk-pick-list"></div>
         </div>
       </div>
+    </div>
+
+    <!-- VIEW: Showcase · Hall of Fame (data HALL_OF_FAME di katalog.js; js/showcase.js) -->
+    <div class="view" id="view-halloffame">
+      <div class="page-header sc-hero">
+        <div>
+          <div class="sc-eyebrow">SHOWCASE · HALL OF FAME</div>
+          <div class="page-title">Terbukti di <em>Panggung Juara.</em></div>
+          <div class="page-subtitle">Setiap seri speaker yang kami distribusikan sudah diuji di kompetisi car audio — dan membawa pulang piala. Lihat prestasi tiap seri, lalu temukan produknya.</div>
+        </div>
+      </div>
+      <div class="hof-wrap" id="hof-body"></div>
+    </div>
+
+    <!-- VIEW: Showcase · Galeri Instalasi (tabel showcase_installs + Storage publik showcase; js/showcase.js) -->
+    <div class="view" id="view-galeri">
+      <div class="page-header sc-hero">
+        <div>
+          <div class="sc-eyebrow">SHOWCASE · GALERI INSTALASI</div>
+          <div class="page-title">Lihat dulu di <em>mobil seperti milik Anda.</em></div>
+          <div class="page-subtitle">Contoh pemasangan audio Concerto dari dealer resmi kami — cari mobil Anda, lihat hasilnya, lalu temukan produk &amp; dealer pemasangnya.</div>
+          <div class="gl-tools" id="gl-tools"></div>
+        </div>
+      </div>
+      <div class="hof-wrap" id="gl-body"></div>
+      <div class="rk-pick gl-ov" id="gl-detail" onclick="if (event.target === this) closeGlDetail()"><div class="rk-pick-box gl-dbox" role="dialog" aria-modal="true"></div></div>
+      <div class="rk-pick gl-ov" id="gl-form" onclick="if (event.target === this) closeGlForm()"><div class="rk-pick-box gl-fbox" role="dialog" aria-modal="true"></div></div>
     </div>
 
     <!-- VIEW: Pengunjung Portal (Admin & Editor; tabel site_visits lewat fungsi log_visit / site_visit_stats) -->
@@ -644,6 +680,7 @@
           <div class="panel-tags" id="panel-tags"></div>
         </div>
       </div>
+      <div class="product-showcase" id="product-showcase"></div>
     </div>
 
     <footer class="app-copy">© 2026 Concerto Audio Indonesia. All rights reserved.</footer>
@@ -716,6 +753,14 @@
     <button class="mobile-nav-item" id="mnav-paket" onclick="openPaketAudio()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
       <span>Paket</span>
+    </button>
+    <button class="mobile-nav-item editor-only" id="mnav-galeri" onclick="openGaleri()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l2.5-5.5A2 2 0 0 1 7.3 9h9.4a2 2 0 0 1 1.8 1.5L21 16v3H3z"/><circle cx="7" cy="19" r="1.6"/><circle cx="17" cy="19" r="1.6"/><path d="M3 16h18"/></svg>
+      <span>Galeri</span>
+    </button>
+    <button class="mobile-nav-item editor-only" id="mnav-halloffame" onclick="openHallOfFame()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4c0 3 1.5 4.5 3.5 4.6M17 6h3c0 3-1.5 4.5-3.5 4.6"/><path d="M12 14v4"/><path d="M8 21h8l-1-3H9z"/></svg>
+      <span>Hall of Fame</span>
     </button>
     <button class="mobile-nav-item" id="mnav-rakit" onclick="openRakit()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="8.5" cy="12.5" r="2.5"/><circle cx="15.5" cy="12.5" r="2.5"/><path d="M7 6V4h10v2"/></svg>
@@ -882,13 +927,14 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-10-31T03:03:23Z"></script>
-<script src="js/core.js?b=2026-10-31T03:03:23Z"></script>
-<script src="js/stock.js?b=2026-10-31T03:03:23Z"></script>
-<script src="js/dealers.js?b=2026-10-31T03:03:23Z"></script>
-<script src="js/gathering.js?b=2026-10-31T03:03:23Z"></script>
-<script src="js/rundown.js?b=2026-10-31T03:03:23Z"></script>
-<script src="js/videotron.js?b=2026-10-31T03:03:23Z"></script>
-<script src="js/main.js?b=2026-10-31T03:03:23Z"></script>
+<script src="katalog.js?b=2026-10-31T03:49:57Z"></script>
+<script src="js/core.js?b=2026-10-31T03:49:57Z"></script>
+<script src="js/stock.js?b=2026-10-31T03:49:57Z"></script>
+<script src="js/dealers.js?b=2026-10-31T03:49:57Z"></script>
+<script src="js/gathering.js?b=2026-10-31T03:49:57Z"></script>
+<script src="js/rundown.js?b=2026-10-31T03:49:57Z"></script>
+<script src="js/videotron.js?b=2026-10-31T03:49:57Z"></script>
+<script src="js/showcase.js?b=2026-10-31T03:49:57Z"></script>
+<script src="js/main.js?b=2026-10-31T03:49:57Z"></script>
 </body>
 </html>

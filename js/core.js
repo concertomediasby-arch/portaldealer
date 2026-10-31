@@ -1301,6 +1301,8 @@ function showView(viewId) {
   if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('nav-paket')?.classList.add('active');
   if (viewId === 'rakit') document.getElementById('nav-rakit')?.classList.add('active');
+  if (viewId === 'halloffame') document.getElementById('nav-halloffame')?.classList.add('active');
+  if (viewId === 'galeri') document.getElementById('nav-galeri')?.classList.add('active');
   if (viewId === 'gathering') document.getElementById('nav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('nav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('nav-dealers')?.classList.add('active');
@@ -1318,6 +1320,8 @@ function showView(viewId) {
   if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('mnav-paket')?.classList.add('active');
   if (viewId === 'rakit') document.getElementById('mnav-rakit')?.classList.add('active');
+  if (viewId === 'halloffame') document.getElementById('mnav-halloffame')?.classList.add('active');
+  if (viewId === 'galeri') document.getElementById('mnav-galeri')?.classList.add('active');
   if (viewId === 'gathering') document.getElementById('mnav-gathering')?.classList.add('active');
   if (viewId === 'academy') document.getElementById('mnav-academy')?.classList.add('active');
   if (viewId === 'dealers') document.getElementById('mnav-dealers')?.classList.add('active');
@@ -1398,6 +1402,7 @@ function productCard(brand, p) {
         <span class="product-thumb-label">${p.category}</span>
         ${p.hasVideo ? `<span class="video-badge">▶ VIDEO</span>` : ''}
         ${sb ? `<span class="product-stock-badge ${sb.cls}">${sb.label}</span>` : ''}
+        ${typeof hofCardBadge === 'function' ? hofCardBadge(brand.id, p) : ''}
       </div>
       <div class="product-info">
         <div class="product-name">${p.name}${eolTag(p)}</div>
@@ -1415,7 +1420,7 @@ function renderProducts(brand, filter) {
     const items = filter === 'Semua' ? line.products : line.products.filter(p => p.category === filter);
     if (!items.length) return;
     html += `<div class="line-group">
-      <div class="line-header"><span class="line-name">${line.name}</span><span class="line-count">${items.length}</span></div>
+      <div class="line-header"><span class="line-name">${line.name}</span>${typeof hofLineBadge === 'function' ? hofLineBadge(brand.id, line.name) : ''}<span class="line-count">${items.length}</span></div>
       <div class="line-grid">${items.map(p => productCard(brand, p)).join('')}</div>
     </div>`;
   });
@@ -1510,7 +1515,7 @@ function renderCatalog() {
 // Kembali dari detail produk ke halaman asal (katalog/brand/stok/…) di posisi scroll yang sama, tanpa merender ulang (30 Okt 2026, permintaan pemilik).
 // Tombol back HP / browser juga kembali ke halaman asal (history.pushState saat detail produk dibuka).
 let productFrom = null;
-const PRODUCT_FROM_LABEL = { catalog: 'Katalog', stock: 'Stok Produk', rakit: 'Rakitan Audio', updates: 'Update Terbaru', dashboard: 'Dashboard' };
+const PRODUCT_FROM_LABEL = { halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'Rakitan Audio', updates: 'Update Terbaru', dashboard: 'Dashboard' };
 function showProduct(brandId, productId) {
   const curView = document.querySelector('.view.active');
   if (curView && curView.id !== 'view-product') {
@@ -1577,6 +1582,7 @@ function showProduct(brandId, productId) {
 
   // Stock badge in detail panel
   renderProductStockBadge(product.id);
+  if (typeof renderProductShowcase === 'function') renderProductShowcase(product, line, brand);   // Showcase: Achievement + Contoh pemasangan
 
   hideViews();
   document.getElementById('view-product').classList.add('active');

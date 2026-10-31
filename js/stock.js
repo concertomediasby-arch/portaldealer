@@ -320,6 +320,7 @@ function updateAuthUI() {
   if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
   if (!isAdmin() && document.getElementById('view-rundown')?.classList.contains('active')) showView('dashboard');
   qaScreenAuth();
+  if (typeof scAuthChanged === 'function') scAuthChanged();
   const btn = document.getElementById('auth-btn');
   if (btn) btn.title = authUser ? `Login sebagai ${accountLabel(authUser)} (${ROLE_LABEL[userRole()] || 'Dealer'}) — klik untuk keluar` : 'Login dealer';
 }
