@@ -154,8 +154,16 @@ function renderHallOfFame() {
    GALERI INSTALASI (Supabase: tabel showcase_installs + bucket publik `showcase`)
 ══════════════════════════════════════════ */
 const GL_TABLE = 'showcase_installs', GL_BUCKET = 'showcase';
-const GL_MAKES = ['Toyota', 'Honda', 'Mitsubishi', 'Suzuki', 'Daihatsu', 'Nissan', 'Mazda', 'Hyundai', 'Kia', 'Wuling', 'Chery', 'BYD', 'Isuzu', 'Subaru', 'Lexus', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Porsche', 'Mini', 'Volvo', 'Ford', 'Lainnya'];
-const GL_BODIES = ['SUV', 'MPV', 'Sedan', 'Hatchback', 'Double Cabin', 'Coupe', 'Lainnya'];
+const GL_MAKES = ['Toyota', 'Honda', 'Mitsubishi', 'Suzuki', 'Daihatsu', 'Nissan', 'Mazda', 'Hyundai', 'Kia', 'Wuling', 'Chery', 'BYD', 'Isuzu', 'Subaru', 'Lexus', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Porsche', 'Mini', 'Volvo', 'Ford',
+  // merek mobil listrik / baru (31 Okt 2026, permintaan pemilik)
+  'Aion', 'Denza', 'Geely', 'GWM', 'Jaecoo', 'MG', 'Neta', 'Omoda', 'Polytron', 'Seres', 'Tesla', 'VinFast', 'Xpeng', 'Zeekr', 'Lainnya'];
+const GL_BODY_GROUPS = [
+  ['Bensin / Diesel', ['SUV', 'MPV', 'Sedan', 'Hatchback', 'Double Cabin', 'Coupe']],
+  ['Mobil Listrik & Hybrid', ['SUV Listrik (EV)', 'MPV Listrik (EV)', 'Sedan Listrik (EV)', 'Hatchback Listrik (EV)', 'Hybrid (HEV)', 'Plug-in Hybrid (PHEV)']],   // 31 Okt 2026, permintaan pemilik
+  ['', ['Lainnya']],
+];
+const GL_BODIES = GL_BODY_GROUPS.flatMap(g => g[1]);
+const glIsEv = b => /listrik|hybrid|\bev\b/i.test(b || '');
 const GL_AREAS = ['Dasbor', 'Pintu', 'Tweeter', 'Midrange', 'Bagasi / Sub', 'Amplifier', 'DSP', 'Lainnya'];
 const SHOWCASE_SQL = `-- Galeri Instalasi (Showcase) — jalankan sekali di Supabase → SQL Editor → Run
 create table if not exists public.showcase_installs (
@@ -253,7 +261,7 @@ function renderGaleri() {
   if (glErr) { box.innerHTML = `<div class="vs-warn">${escHtml(glErr)}</div>`; return; }
   const q = normKey(glQ);
   const hay = it => normKey([it.car_make, it.car_model, it.car_year, it.body, it.dealer, it.city, ...(it.products || []).map(pid => glProd(pid).product?.name)].join(' '));
-  const base = glItems.filter(it => (!glHofOnly || it.hof_id) && (glBody === 'all' || it.body === glBody) && (!q || hay(it).includes(q)));
+  const base = glItems.filter(it => (!glHofOnly || it.hof_id) && (glBody === 'all' || (glBody === 'ev' ? glIsEv(it.body) : it.body === glBody)) && (!q || hay(it).includes(q)));
   const rows = base.filter(it => glMake === 'all' || it.car_make === glMake);
   const makes = [...new Set(glItems.map(it => it.car_make).filter(Boolean))].sort();
   const bodies = [...new Set(glItems.map(it => it.body).filter(Boolean))];
@@ -263,6 +271,7 @@ function renderGaleri() {
     <div class="gl-search"><span>🔎</span><input type="search" placeholder="Cari mobil Anda — mis. Fortuner, HR-V, Pajero…" value="${escHtml(glQ)}" oninput="glQ=this.value;clearTimeout(window.glQt);window.glQt=setTimeout(()=>{renderGaleri();const i=document.querySelector('.gl-search input');i?.focus();i?.setSelectionRange(i.value.length,i.value.length)},250)"></div>
     ${glItems.length ? `<div class="gl-makes">${['all', ...makes].map(m => `<button class="gl-make${glMake === m ? ' on' : ''}" onclick="setGlFilter('make','${escHtml(m)}')">${m === 'all' ? 'SEMUA' : escHtml(m.toUpperCase())}<small>${cnt(m)} mobil</small></button>`).join('')}</div>
     <div class="hof-filters">${bodies.length > 1 ? `<button class="filter-chip${glBody === 'all' ? ' active' : ''}" onclick="setGlFilter('body','all')">Semua tipe</button>${bodies.map(b => `<button class="filter-chip${glBody === b ? ' active' : ''}" onclick="setGlFilter('body','${escHtml(b)}')">${escHtml(b)}</button>`).join('')}` : ''}
+      ${glItems.some(it => glIsEv(it.body)) ? `<button class="filter-chip${glBody === 'ev' ? ' active' : ''}" onclick="setGlFilter('body','ev')">⚡ Mobil listrik &amp; hybrid</button>` : ''}
       ${glItems.some(it => it.hof_id) ? `<button class="filter-chip${glHofOnly ? ' active' : ''}" onclick="setGlFilter('hof')">🏆 Mobil juara</button>` : ''}</div>` : ''}
     ${rows.length ? `<div class="gl-grid">${rows.map(glCard).join('')}</div>`
       : `<div class="stock-empty">${glItems.length ? 'Tidak ada instalasi yang cocok. Coba kata kunci lain.' : 'Belum ada instalasi. ' + (isAdmin() ? 'Tekan <b>＋ Tambah Instalasi</b> untuk menambahkan yang pertama.' : '')}</div>`}`;
@@ -373,7 +382,7 @@ function renderGlForm() {
       <label>Merek mobil<select onchange="glField('car_make',this.value)"><option value="">— pilih —</option>${opt(GL_MAKES, e.car_make)}</select></label>
       <label>Model<input value="${escHtml(e.car_model)}" placeholder="mis. Fortuner VRZ" oninput="glField('car_model',this.value)"></label>
       <label>Tahun<input type="number" min="1980" max="2100" value="${escHtml(e.car_year ?? '')}" oninput="glField('car_year',this.value)"></label>
-      <label>Tipe<select onchange="glField('body',this.value)"><option value="">—</option>${opt(GL_BODIES, e.body)}</select></label>
+      <label>Tipe<select onchange="glField('body',this.value)"><option value="">—</option>${GL_BODY_GROUPS.map(([g, arr]) => g ? `<optgroup label="${g}">${opt(arr, e.body)}</optgroup>` : opt(arr, e.body)).join('')}</select></label>
       <label class="w2">Dealer pemasang<input list="glf-dealers" value="${escHtml(e.dealer)}" placeholder="Ketik / pilih dealer resmi" oninput="glPickDealer(this.value)"><datalist id="glf-dealers">${[...new Set(AUTH_DEALERS.map(d => d.n))].map(n => `<option value="${escHtml(n)}"></option>`).join('')}</datalist></label>
       <label>Kota<input id="glf-city" value="${escHtml(e.city)}" oninput="glField('city',this.value)"></label>
       <label>Urutan<input type="number" value="${escHtml(e.sort ?? 0)}" title="Angka kecil tampil lebih dulu" oninput="glField('sort',this.value)"></label>
