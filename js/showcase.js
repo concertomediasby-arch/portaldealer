@@ -108,7 +108,9 @@ function openHofWin(id) {
       <div class="hof-wtop">${hofMedal(e.place)}<div><h3 class="gl-dt">${escHtml(e.car || e.cls || '')}</h3>
         <div class="gl-dc">${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}${e.name ? ' · ' + escHtml(e.name) : ''}</div></div></div>
       ${hofGallery(e) ? `<button class="gt-btn hof-galwide" onclick="hofOpenGallery('${hofGallery(e).id}')">📷 Lihat foto pemasangan di Galeri Instalasi</button>` : ''}
-      ${authUser && !isAdmin() ? `<button class="gt-btn confirm hof-galwide" onclick="openGlSubmit('${e.id}')">📤 Kirim foto / video mobil ini</button>` : ''}</div>
+      ${authUser && !isAdmin() ? `<button class="gt-btn confirm hof-galwide" onclick="openGlSubmit('${e.id}')">📤 Kirim foto / video mobil ini</button>` : ''}
+      ${isAdmin() ? (hofGallery(e) ? `<button class="gt-btn confirm hof-galwide" onclick="closeHofDealer();openGlForm('${hofGallery(e).id}')">✏️ Tambah / ubah foto &amp; video mobil ini</button>`
+        : `<button class="gt-btn confirm hof-galwide" onclick="openGlForHof('${e.id}')">＋ Tambah foto / video mobil ini</button>`) : ''}</div>
     ${prods.length || e.other?.length ? `<div class="hof-lbl" style="margin-top:16px">Perangkat yang dipakai</div>
       ${prods.map(r => { const p = r.product;
         return `<button class="gl-prod" onclick="closeHofDealer();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}
@@ -125,7 +127,8 @@ function hofGallery(e) {
   const k = hofCarKey(e);
   return glLive().find(it => it.hof_id && (it.hof_id === e.id || (() => { const h = hofData().find(x => x.id === it.hof_id); return h && hofCarKey(h) === k; })())) || null;
 }
-const hofGalBtn = e => { const it = hofGallery(e); return it ? `<button class="hof-galbtn" onclick="event.stopPropagation();hofOpenGallery('${it.id}')" title="Lihat foto pemasangan mobil ini di Galeri Instalasi">📷 Galeri</button>` : ''; };
+const hofGalBtn = e => { const it = hofGallery(e); return it ? `<button class="hof-galbtn" onclick="event.stopPropagation();hofOpenGallery('${it.id}')" title="Lihat foto pemasangan mobil ini di Galeri Instalasi">📷 Galeri</button>`
+  : isAdmin() && !hofIsDemo() ? `<button class="hof-galbtn add" onclick="event.stopPropagation();openGlForHof('${e.id}')" title="Editor: tambah foto / video mobil ini">＋ Foto/Video</button>` : ''; };
 async function hofOpenGallery(id) { closeHofDealer(); await openGaleri(); openGlDetail(id); }
 function closeHofDealer() { document.getElementById('hof-dealer')?.classList.remove('open'); }
 
@@ -229,7 +232,7 @@ function renderHallOfFame() {
       <div class="hof-hd"><div class="hof-ttl"><h3>${escHtml(e0.event)}</h3><div class="hof-note">${escHtml([e0.date || e0.year, e0.venue, e0.city].filter(Boolean).join(' · '))}</div></div>
         <div class="hof-pill"><b>${items.length}</b><span>PRESTASI</span><span class="hof-ms">${[1, 2, 3].map(pl => cnt(pl) ? hofMedal(pl, cnt(pl)) : '').join('')}</span></div></div>
       <div class="hof-tblw"><table class="hof-tbl"><thead><tr><th>Kelas</th><th>Juara</th><th>Peserta</th><th>Mobil</th><th>Dealer pemasang</th></tr></thead>
-        <tbody>${items.map(e => `<tr${hofWinAttr(e)}${hofWinAttr(e) ? ' class="link"' : ''}><td>${escHtml(e.cls || '')}</td><td>${hofMedal(e.place)}</td><td>${escHtml(e.name || '—')}</td><td>${escHtml(e.car || '—')}${e.products?.length ? ' <span class="hof-gear">🔧 Lihat perangkat</span>' : ''}${hofGalBtn(e)}</td><td>${hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer || '—')}</td><td class="hof-mob">${e.products?.length || hofGallery(e) ? `${e.products?.length ? '<span class="hof-gear">🔧 Lihat perangkat</span>' : ''}${hofGalBtn(e)}<br>` : ''}${escHtml([e.name, e.car].filter(Boolean).join(' · '))}${e.dealer ? ' · ' + (hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer)) : ''}</td></tr>`).join('')}</tbody></table></div>
+        <tbody>${items.map(e => `<tr${hofWinAttr(e)}${hofWinAttr(e) ? ' class="link"' : ''}><td>${escHtml(e.cls || '')}</td><td>${hofMedal(e.place)}</td><td>${escHtml(e.name || '—')}</td><td>${escHtml(e.car || '—')}${e.products?.length ? ' <span class="hof-gear">🔧 Lihat perangkat</span>' : ''}${hofGalBtn(e)}</td><td>${hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer || '—')}</td><td class="hof-mob">${e.products?.length || hofGalBtn(e) ? `${e.products?.length ? '<span class="hof-gear">🔧 Lihat perangkat</span>' : ''}${hofGalBtn(e)}<br>` : ''}${escHtml([e.name, e.car].filter(Boolean).join(' · '))}${e.dealer ? ' · ' + (hofDealer(e.dealer) ? `<span class="hof-dl">${escHtml(e.dealer)} ›</span>` : escHtml(e.dealer)) : ''}</td></tr>`).join('')}</tbody></table></div>
     </section>`;
   }).join('');
   const firsts = list.filter(e => e.place === 1).length;
@@ -481,9 +484,8 @@ function openGlForm(id) {
   renderGlForm();
   document.getElementById('gl-form').classList.add('open');
 }
-// Dealer: buka form kiriman (hofId = prestasi yang dipilih dari Hall of Fame, diisi otomatis)
-function openGlSubmit(hofId) {
-  if (!authUser) { requireLogin(() => openGlSubmit(hofId)); return; }
+// Isian awal dari entri Hall of Fame (mobil, dealer, kota, perangkat, prestasi)
+function glFromHof(hofId) {
   const h = hofId ? hofData().find(e => e.id === hofId) : null;
   let make = '', model = '';
   if (h?.car) {
@@ -491,7 +493,22 @@ function openGlSubmit(hofId) {
     make = m || ''; model = m ? h.car.slice(m.length).trim() : h.car;
   }
   const d = h ? hofDealer(h.dealer) : null;
-  glEdit = { submit: true, agree: false, car_make: make, car_model: model, car_year: '', body: '', dealer: d?.n || '', city: d?.c || '', note: '', products: [...(h?.products || [])], photos: [], hof_id: h?.id || '', published: false, sort: 0, removed: [] };
+  return { car_make: make, car_model: model, car_year: '', body: '', dealer: d?.n || h?.dealer || '', city: d?.c || '', note: '', products: [...(h?.products || [])], photos: [], hof_id: h?.id || '', published: false, sort: 0, removed: [] };
+}
+// Editor: tambah foto/video mobil juara langsung dari Hall of Fame (form Galeri biasa, prestasi sudah tertaut, langsung tampil)
+function openGlForHof(hofId) {
+  if (!isAdmin()) return;
+  glEdit = { ...glFromHof(hofId), published: true };
+  closeHofDealer();
+  renderGlForm();
+  document.getElementById('gl-form').classList.add('open');
+}
+// Dealer: buka form kiriman (hofId = prestasi yang dipilih dari Hall of Fame, diisi otomatis)
+function openGlSubmit(hofId) {
+  if (!authUser) { requireLogin(() => openGlSubmit(hofId)); return; }
+  const g = glFromHof(hofId);
+  if (g.dealer && !adPublic().some(d => d.n === g.dealer)) g.dealer = '';
+  glEdit = { submit: true, agree: false, ...g };
   closeHofDealer?.();
   renderGlForm();
   document.getElementById('gl-form').classList.add('open');
@@ -661,6 +678,7 @@ async function saveGlItem() {
     closeGlForm();
     showToast('✓ Instalasi disimpan');
     await loadGaleri(true); renderGaleri(); refreshProductShowcase();
+    if (document.getElementById('view-halloffame')?.classList.contains('active')) renderHallOfFame();
   } catch (err) {
     showToast('⚠ Gagal menyimpan: ' + (err.message || err), 6000);
     btn.disabled = false; btn.textContent = '💾 Simpan';
