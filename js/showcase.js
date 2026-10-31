@@ -320,7 +320,7 @@ let glEdit = null;   // { id?, …field, photos:[{path?, area, blob?, url}], rem
 const GL_VIDEO_MAX_MB = 50;
 /* Kiriman dealer (31 Okt 2026, permintaan pemilik): dealer yang login mengirim foto/video instalasinya → masuk sebagai
    baris source='dealer', published=false (file di Storage `pending/<id>/…`) → tampil hanya setelah Editor menyetujui. */
-const GL_SUB_MAX_PHOTOS = 20, GL_SUB_MAX_VIDEOS = 3;
+const GL_SUB_MAX_PHOTOS = 10, GL_SUB_MAX_VIDEOS = 2;   // 31 Okt 2026, permintaan pemilik (sempat 20 foto + 3 video)
 // Menunggu persetujuan Editor: kiriman dealer & simpanan akun Admin staff (31 Okt 2026, permintaan pemilik)
 const glPending = it => (it?.source === 'dealer' || it?.source === 'admin') && !it.published;
 const glLive = () => (glItems || []).filter(it => !glPending(it));
