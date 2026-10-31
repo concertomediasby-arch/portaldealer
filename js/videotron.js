@@ -443,7 +443,7 @@ let pksSel = 'dealer';   // dokumen PKS yang sedang dibuka di panel
 const opNum = k => { const m = /^opening:(\d+)(:[vi])?$/.exec(k || ''); return m ? +m[1] : 0; };
 const opVid = k => (/^opening:\d+:([vi])$/.exec(k || '') || [])[1] || '';   // 'v' = video recap, 'i' = video speech CAI, '' = kartu
 const ANTHEM_VIDEO = 'assets/opening/indonesia-raya.mp4';   // video lagu kebangsaan Indonesia Raya (scene 'anthem:v'), pembuka acara pagi — dari Drive pemilik
-const PORTAL_INTRO_VIDEO = 'assets/intro/portal-dealer-explainer-40s.mp4?v=2';   // video perkenalan portal (scene 'kickoff:v')
+const PORTAL_INTRO_VIDEO = 'assets/intro/portal-dealer-explainer-40s.mp4?v=3';   // video perkenalan portal (scene 'kickoff:v')
 const fmNum = k => { const m = /^funmkt:(\d+)$/.exec(k || ''); return m ? +m[1] : 0; };
 const sceneInfo = k => {
   const base = QS_SCENES[sceneBase(k)]; if (!base) return null;
