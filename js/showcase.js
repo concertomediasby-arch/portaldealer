@@ -1,10 +1,10 @@
 /* CAI Hub (Concerto Audio Indonesia) — js/showcase.js
    SHOWCASE (31 Okt 2026, permintaan pemilik): 🏆 Hall of Fame (prestasi kompetisi per seri speaker, data HALL_OF_FAME
    di katalog.js) + 🚗 Galeri Instalasi (contoh pemasangan per mobil, tabel Supabase showcase_installs + Storage publik
-   `showcase`). Sementara hanya untuk Editor (SHOWCASE_PUBLIC = false) sampai data asli terkumpul.
+   `showcase`). Dibuka untuk publik 31 Okt 2026 (SHOWCASE_PUBLIC = true; sebelumnya hanya Editor).
    Dimuat setelah videotron.js; dipanggil dari core.js (showProduct/renderProducts/productCard) & stock.js (updateAuthUI). */
 
-const SHOWCASE_PUBLIC = false;   // true = menu & bagian Showcase tampil untuk semua pengunjung
+const SHOWCASE_PUBLIC = true;   // dibuka untuk publik 31 Okt 2026 (permintaan pemilik); true = menu & bagian Showcase tampil untuk semua pengunjung
 const scOn = () => SHOWCASE_PUBLIC || isEditor();
 
 /* ══════════════════════════════════════════
@@ -108,7 +108,8 @@ function openHofWin(id) {
       <div class="hof-wtop">${hofMedal(e.place)}<div><h3 class="gl-dt">${escHtml(e.car || e.cls || '')}</h3>
         <div class="gl-dc">${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}${e.name ? ' · ' + escHtml(e.name) : ''}</div></div></div>
       ${hofGallery(e) ? `<button class="gt-btn hof-galwide" onclick="hofOpenGallery('${hofGallery(e).id}')">📷 Lihat foto pemasangan di Galeri Instalasi</button>` : ''}
-      ${authUser && !isAdmin() ? `<button class="gt-btn confirm hof-galwide" onclick="openGlSubmit('${e.id}')">📤 Kirim foto / video mobil ini</button>` : ''}
+      ${authUser && !isAdmin() ? `<button class="gt-btn confirm hof-galwide" onclick="openGlSubmit('${e.id}')">📤 Kirim foto / video mobil ini</button>`
+        : !authUser ? `<button class="gt-btn ghost hof-galwide" onclick="openGlSubmit('${e.id}')">🔑 Dealer pemasang? Login untuk kirim foto / video</button>` : ''}
       ${isAdmin() ? (hofGallery(e) ? `<button class="gt-btn confirm hof-galwide" onclick="closeHofDealer();openGlForm('${hofGallery(e).id}')">✏️ Tambah / ubah foto &amp; video mobil ini</button>`
         : `<button class="gt-btn confirm hof-galwide" onclick="openGlForHof('${e.id}')">＋ Tambah foto / video mobil ini</button>`) : ''}
       ${isAdmin() && !isEditor() ? '<div class="gl-hint">Foto/video dari akun Admin tampil setelah disetujui Editor.</div>' : ''}
@@ -396,16 +397,18 @@ function glCard(it) {
 function renderGaleri() {
   const box = document.getElementById('gl-body'); if (!box) return;
   const add = isAdmin() ? `<button class="gt-btn confirm" onclick="openGlForm()">＋ Tambah Instalasi</button>`
-    : authUser ? `<button class="gt-btn confirm" onclick="openGlSubmit()">📤 Kirim Foto / Video Instalasi Anda</button>` : '';
+    : authUser ? `<button class="gt-btn confirm" onclick="openGlSubmit()">📤 Kirim Foto / Video Instalasi Anda</button>`
+    : `<button class="gt-btn ghost" onclick="openGlSubmit()">🔑 Dealer resmi? Login untuk kirim foto / video</button>`;
   document.getElementById('gl-tools').innerHTML = add;
   if (isAdmin() && glSubmitReady === null) glCheckSubmit().then(() => { if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri(); });
   if (!glItems) { box.innerHTML = '<div class="stock-empty">⏳ Memuat galeri…</div>'; return; }
+  if (glErr === 'setup' && !isAdmin()) { box.innerHTML = '<div class="stock-empty">Galeri Instalasi segera hadir.</div>'; document.getElementById('gl-tools').innerHTML = ''; return; }
   if (glErr === 'setup') {
     box.innerHTML = `<div class="vs-warn">Galeri Instalasi belum disiapkan di database. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (membuat tabel <b>showcase_installs</b> + folder foto publik <b>showcase</b>), lalu buka menu ini lagi.<br><br><button class="gt-btn" onclick="glCopySql()">📋 Salin SQL</button></div>`;
     document.getElementById('gl-tools').innerHTML = '';
     return;
   }
-  if (glErr) { box.innerHTML = `<div class="vs-warn">${escHtml(glErr)}</div>`; return; }
+  if (glErr) { box.innerHTML = `<div class="vs-warn">${escHtml(isAdmin() ? glErr : 'Galeri belum bisa dimuat. Periksa koneksi internet lalu muat ulang halaman.')}</div>`; return; }
   const pend = isAdmin() ? glItems.filter(glPending) : [];
   // Jalan tengah (31 Okt 2026): mobil juara (ber-hof_id) tidak tampil di daftar Galeri — tempatnya di Hall of Fame;
   // Galeri hanya memberi banner + petunjuk saat pencarian cocok dengan mobil juara
