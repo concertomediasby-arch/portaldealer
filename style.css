@@ -3206,3 +3206,10 @@ div.hof-row { cursor: default; }
 .hof-wtop .gl-dt { margin: 0; }
 .hof-oth { cursor: default; }
 .psc-ach li.link { cursor: pointer; } .psc-ach li.link:hover b { text-decoration: underline; }
+/* Hall of Fame → mobil di Galeri Instalasi */
+.hof-galbtn { margin-left: 6px; padding: 2px 9px; border-radius: 999px; font: 600 11px var(--f-body); color: #111; background: var(--accent); border: 0; cursor: pointer; white-space: nowrap; }
+.hof-galbtn:hover { background: var(--accent-hi); }
+.hof-mob .hof-galbtn { margin: 0 0 3px 6px; }
+.hof-mob .hof-gear + .hof-galbtn, .hof-mob .hof-galbtn:first-child { margin-left: 0; }
+.hof-mob .hof-gear + .hof-galbtn { margin-left: 6px; }
+.hof-galwide { margin-top: 14px; width: 100%; }
