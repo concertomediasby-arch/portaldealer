@@ -137,20 +137,99 @@ function findProduct(brandId, productId) {
   return { brand };
 }
 
-/* ── Video loop brand di Dashboard (2 Nov 2026, permintaan pemilik) ──
-   assets/brand-loop.mp4 = potongan video resmi Audiocircle (Pro Line) · STEG (DSP-S12) · Zelos (foto MFA3/MFA5, efek zoom) ·
-   Audio System (AY65C), 18,7 dtk tanpa suara. BRAND_LOOP = detik mulai tiap brand di video → logo yang menyala di bawahnya. */
-const BRAND_LOOP = [{ id: 'audiocircle', t: 0 }, { id: 'steg', t: 4.7 }, { id: 'zelos', t: 9.1 }, { id: 'audiosystem', t: 14.0 }];
-function initBrandLoop() {
-  const box = document.getElementById('bl-brands'), v = document.getElementById('brand-loop-video');
-  if (!box || !v) return;
-  box.innerHTML = BRAND_LOOP.map(x => { const b = BRANDS.find(y => y.id === x.id); if (!b) return '';
-    return `<button class="bl-b" data-bl="${b.id}" onclick="showBrand('${b.id}')" title="Lihat produk ${escHtml(b.name)}">${b.logo ? `<img src="${b.logo}" alt="${escHtml(b.name)}">` : `<span>${escHtml(b.name)}</span>`}</button>`; }).join('');
-  const paint = () => { const t = v.currentTime || 0; let cur = BRAND_LOOP[0].id; BRAND_LOOP.forEach(x => { if (t >= x.t) cur = x.id; });
-    box.querySelectorAll('.bl-b').forEach(el => el.classList.toggle('on', el.dataset.bl === cur)); };
-  v.addEventListener('timeupdate', paint); paint();
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); }
-  else v.play?.().catch(() => {});
+/* ── Kotak video loop per brand di Dashboard (2 Nov 2026, permintaan pemilik — menggantikan 4 kartu statistik) ──
+   Bawaan: video pendek di assets/dash/<id>.mp4 (dipotong dari video resmi, 854×480, tanpa suara, ±0,3–0,5 MB) atau
+   slideshow foto (Zelos, sampai videonya ada). Editor bisa mengganti video tiap kotak dari portal: file diunggah ke
+   Storage publik `showcase/dashboard/<id>-<waktu>.<ext>` dan dicatat di `showcase/dashboard/tiles.json`
+   ({ <id>: { path, label } }) — tanpa SQL baru (memakai policy Storage showcase yang sudah ada). */
+const DASH_TILES = [
+  { id: 'audiocircle', label: 'Hamburg Line', video: 'assets/dash/audiocircle.mp4?v=1', poster: 'assets/dash/audiocircle.jpg?v=1' },
+  { id: 'steg', label: 'DSP-S12', video: 'assets/dash/steg.mp4?v=1', poster: 'assets/dash/steg.jpg?v=1' },
+  { id: 'zelos', label: 'ZLS-HD5.4', photos: ['assets/zl-hd54-1.webp', 'assets/zl-hd54-2.webp', 'assets/zl-hd54-3.webp', 'assets/zl-hd54-4.webp'] },
+  { id: 'audiosystem', label: 'AY65C', video: 'assets/dash/audiosystem.mp4?v=1', poster: 'assets/dash/audiosystem.jpg?v=1' },
+];
+const DASH_DIR = 'dashboard', DASH_MANIFEST = 'dashboard/tiles.json', DASH_VIDEO_MAX_MB = 50;
+let dashOverrides = {}, dashSlideTimer = null, dashIO = null;
+const dashPublicUrl = path => `${SUPA_URL}/storage/v1/object/public/showcase/${path}`;
+async function loadDashOverrides() {
+  try {
+    const r = await fetch(dashPublicUrl(DASH_MANIFEST) + '?t=' + Date.now(), { cache: 'no-store' });
+    dashOverrides = r.ok ? (await r.json()) || {} : {};
+  } catch (e) { dashOverrides = {}; }
+}
+function dashTile(t) {
+  const b = BRANDS.find(x => x.id === t.id); if (!b) return '';
+  const o = dashOverrides[t.id] || {};
+  const label = o.label || t.label || '';
+  const vid = o.path ? dashPublicUrl(o.path) : t.video;
+  const media = vid
+    ? `<video class="dt-media" src="${vid}"${!o.path && t.poster ? ` poster="${t.poster}"` : ''} autoplay muted loop playsinline preload="metadata"></video>`
+    : `<div class="dt-media dt-slides">${(t.photos || []).map((src, i) => `<img src="${src}" alt="" class="${i ? '' : 'on'}" loading="lazy">`).join('')}</div>`;
+  return `<div class="dt" role="button" tabindex="0" onclick="showBrand('${b.id}')" onkeydown="if(event.key==='Enter')showBrand('${b.id}')" style="--bc:${b.color || '#d8b26a'}">
+    ${media}<div class="dt-shade"></div>
+    <div class="dt-info">${b.logo ? `<img class="dt-logo" src="${b.logo}" alt="${escHtml(b.name)}">` : `<b class="dt-name">${escHtml(b.name)}</b>`}
+      ${label ? `<span class="dt-label">${escHtml(label)}</span>` : ''}<span class="dt-go">Lihat produk ›</span></div>
+    <div class="dt-edit editor-only" onclick="event.stopPropagation()">
+      <label class="dt-btn" title="Ganti video kotak ini">🎬 Ganti video<input type="file" accept="video/mp4,video/webm,video/quicktime" hidden onchange="uploadDashVideo('${t.id}', this)"></label>
+      <button class="dt-btn" onclick="editDashLabel('${t.id}')" title="Ubah teks label">✏️</button>
+      ${o.path ? `<button class="dt-btn" onclick="resetDashVideo('${t.id}')" title="Kembali ke tampilan bawaan">↺</button>` : ''}
+    </div></div>`;
+}
+function renderDashTiles() {
+  const box = document.getElementById('dash-tiles'); if (!box) return;
+  box.innerHTML = DASH_TILES.map(dashTile).join('');
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  dashIO?.disconnect();
+  dashIO = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => {
+    const v = e.target; if (reduce) { v.pause(); return; }
+    if (e.isIntersecting) v.play?.().catch(() => {}); else v.pause();
+  })) : null;
+  box.querySelectorAll('video').forEach(v => { if (reduce) v.removeAttribute('autoplay'); dashIO?.observe(v); });
+  clearInterval(dashSlideTimer);
+  if (!reduce) dashSlideTimer = setInterval(() => document.querySelectorAll('#dash-tiles .dt-slides').forEach(s => {
+    if (!s.offsetParent) return;
+    const im = [...s.querySelectorAll('img')]; if (im.length < 2) return;
+    const i = im.findIndex(x => x.classList.contains('on')); im[i]?.classList.remove('on'); im[(i + 1) % im.length].classList.add('on');
+  }), 3200);
+}
+async function initDashTiles() { renderDashTiles(); await loadDashOverrides(); if (Object.keys(dashOverrides).length) renderDashTiles(); }
+async function saveDashManifest() {
+  const blob = new Blob([JSON.stringify(dashOverrides)], { type: 'application/json' });
+  const { error } = await supabase.storage.from('showcase').upload(DASH_MANIFEST, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
+  if (error) throw error;
+}
+async function uploadDashVideo(id, input) {
+  const f = input.files?.[0]; input.value = '';
+  if (!f || !isEditor() || !supabase) return;
+  if (f.size > DASH_VIDEO_MAX_MB * 1048576) { showToast(`⚠ Video terlalu besar (${(f.size / 1048576).toFixed(1)} MB). Maksimal ${DASH_VIDEO_MAX_MB} MB — sebaiknya ≤ 5 MB agar Dashboard cepat dimuat.`, 6000); return; }
+  const ext = (f.name.match(/\.(mp4|m4v|mov|webm)$/i)?.[1] || 'mp4').toLowerCase();
+  const path = `${DASH_DIR}/${id}-${Date.now()}.${ext}`;
+  showToast('⏳ Mengunggah video…', 60000);
+  try {
+    const { error } = await supabase.storage.from('showcase').upload(path, f, { contentType: f.type || 'video/mp4', cacheControl: '31536000', upsert: false });
+    if (error) throw error;
+    const old = dashOverrides[id]?.path;
+    dashOverrides[id] = { ...(dashOverrides[id] || {}), path };
+    await saveDashManifest();
+    if (old) supabase.storage.from('showcase').remove([old]).catch(() => {});
+    renderDashTiles(); showToast('✓ Video kotak diganti — langsung tampil untuk semua pengunjung');
+  } catch (e) { showToast('⚠ Gagal mengunggah: ' + (e.message || e), 7000); }
+}
+async function editDashLabel(id) {
+  if (!isEditor() || !supabase) return;
+  const t = DASH_TILES.find(x => x.id === id), cur = dashOverrides[id]?.label ?? t?.label ?? '';
+  const v = prompt('Teks label di kotak (mis. nama produk/seri). Kosongkan = teks bawaan.', cur); if (v === null) return;
+  dashOverrides[id] = { ...(dashOverrides[id] || {}) };
+  if (v.trim()) dashOverrides[id].label = v.trim(); else delete dashOverrides[id].label;
+  if (!Object.keys(dashOverrides[id]).length) delete dashOverrides[id];
+  try { await saveDashManifest(); renderDashTiles(); showToast('✓ Label disimpan'); } catch (e) { showToast('⚠ Gagal menyimpan: ' + (e.message || e), 6000); }
+}
+async function resetDashVideo(id) {
+  if (!isEditor() || !supabase || !confirm('Kembalikan kotak ini ke video/foto bawaan?')) return;
+  const old = dashOverrides[id]?.path;
+  if (dashOverrides[id]) { delete dashOverrides[id].path; if (!Object.keys(dashOverrides[id]).length) delete dashOverrides[id]; }
+  try { await saveDashManifest(); if (old) await supabase.storage.from('showcase').remove([old]); renderDashTiles(); showToast('✓ Kembali ke tampilan bawaan'); }
+  catch (e) { showToast('⚠ Gagal: ' + (e.message || e), 6000); }
 }
 
 function init() {
@@ -172,7 +251,7 @@ function init() {
   const _lu = new Date(LAST_UPDATE);
   _set('stat-lastupdate', _lu.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Jakarta'}) +
     '<br><span style="font-size:13px;opacity:.7">' + _lu.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}) + ' WIB</span>');
-  initBrandLoop();
+  initDashTiles();
 
   // Brand logos
   document.getElementById('logo-landing').src = LOGO_WHITE;

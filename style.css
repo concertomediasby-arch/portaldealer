@@ -3285,21 +3285,32 @@ div.hof-row { cursor: default; }
 .hof-galbtn.add { background: transparent; color: var(--accent); border: 1px dashed var(--accent); }
 .hof-galbtn.add:hover { background: rgba(212,175,106,.12); }
 
-/* Dashboard: video loop brand (2 Nov 2026) — menggantikan 4 kartu statistik */
-.brand-loop { position: relative; margin: 20px 28px 0; border-radius: var(--r); overflow: hidden; aspect-ratio: 16 / 6.2; background: #050506; border: 1px solid var(--border); }
-.brand-loop video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-.bl-shade { position: absolute; inset: auto 0 0 0; height: 46%; background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,0)); pointer-events: none; }
-.bl-brands { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: center; gap: 10px; padding: 0 14px; flex-wrap: wrap; }
-.bl-b { display: flex; align-items: center; justify-content: center; height: 40px; min-width: 110px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: rgba(10,10,12,.45); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); cursor: pointer; opacity: .55; transition: opacity .35s, border-color .35s, background .35s, transform .35s; }
-.bl-b img { max-height: 18px; max-width: 96px; object-fit: contain; }
-.bl-b span { color: #fff; font: 600 12px var(--f-body); }
-.bl-b:hover { opacity: .9; }
-.bl-b.on { opacity: 1; border-color: rgba(216,178,106,.85); background: rgba(216,178,106,.16); transform: translateY(-2px); }
+/* Dashboard: 4 kotak video loop per brand (2 Nov 2026) — menggantikan 4 kartu statistik */
+.dash-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 20px 28px 0; }
+.dt { position: relative; aspect-ratio: 4 / 3; border-radius: var(--r); overflow: hidden; background: #08090b; border: 1px solid var(--border); cursor: pointer; isolation: isolate; transition: transform .3s, border-color .3s, box-shadow .3s; }
+.dt:hover, .dt:focus-visible { transform: translateY(-3px); border-color: color-mix(in srgb, var(--bc) 70%, #fff 10%); box-shadow: 0 14px 30px -14px rgba(0,0,0,.6); outline: none; }
+.dt-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.dt-slides { background: #fff; }
+.dt-slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); transition: opacity 1s ease, transform 4.2s ease-out; }
+.dt-slides img.on { opacity: 1; transform: scale(1.12); }
+.dt-shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.82) 0%, rgba(0,0,0,.25) 42%, rgba(0,0,0,0) 62%); pointer-events: none; }
+.dt-info { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; flex-direction: column; gap: 3px; color: #fff; }
+.dt-logo { height: 20px; max-width: 130px; object-fit: contain; object-position: left; filter: drop-shadow(0 1px 3px rgba(0,0,0,.6)); }
+.dt-name { font: 700 15px var(--f-display); }
+.dt-label { font: 600 13px var(--f-display); letter-spacing: .01em; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.dt-go { font-size: 11.5px; color: #e9cf96; opacity: .9; }
+.dt::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--bc); z-index: 2; opacity: .9; }
+.dt-edit { position: absolute; top: 9px; right: 9px; display: flex; gap: 5px; z-index: 3; }
+.dt-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.6); color: #fff; font: 600 11px var(--f-body); cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.dt-btn:hover { border-color: var(--accent); }
+@media (max-width: 1100px) { .dash-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) {
+  .dash-tiles { gap: 10px; padding: 14px 16px 0; }
+  .dt-info { left: 10px; right: 10px; bottom: 9px; }
+  .dt-logo { height: 15px; max-width: 100px; }
+  .dt-label { font-size: 12px; }
+  .dt-go { display: none; }
+  .dt-btn { padding: 3px 7px; font-size: 10px; }
+}
 .stats-row.vs-row { display: none; }
 body.is-staff .stats-row.vs-row { display: grid; }
-@media (max-width: 720px) {
-  .brand-loop { margin: 14px 16px 0; aspect-ratio: 16 / 9; }
-  .bl-brands { bottom: 10px; gap: 6px; flex-wrap: nowrap; }
-  .bl-b { min-width: 0; flex: 1 1 0; height: 32px; padding: 0 8px; }
-  .bl-b img { max-height: 13px; max-width: 100%; }
-}
