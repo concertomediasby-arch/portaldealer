@@ -827,6 +827,7 @@ const GL_ACTS = [
   ['Masuk kabin', '5–8', ['Pintu dibuka (slow motion)', 'Interior dashboard dari dalam mobil — kamera di kursi belakang, geser pelan kiri → kanan, ambient & layar menyala']],
   ['Detail sistem', '15–20', ['Close-up latar buram (mode Sinematik/Portrait), 2–3 dtk per shot', 'Pilar A / tweeter → midrange → midbass pintu → controller DSP — produk brand CAI saja']],
   ['Bagasi', '10–15', ['Pintu bagasi terangkat perlahan → box subwoofer', 'Amplifier & DSP (logo terbaca) → slide jalur kabel yang rapi']],
+  ['Hero shot', '3–5', ['Mobil utuh dari sudut ¾ depan / belakang — lampu, ambient & bagasi terbuka menyala', 'Kamera diam atau pull-out pelan menjauh sebagai penutup video']],
 ];
 // Hanya perangkat dari brand CAI (Audiocircle, STEG, Zelos, Diosdela Musica, OG One Sound, Audio System) — permintaan pemilik 2 Nov 2026
 const GL_GEAR = [
@@ -859,7 +860,7 @@ const glGuideHtml = () => {
   const gear = `<div class="gl-ggear">${GL_GEAR.map(([g, items]) => `<div class="gl-gg"><div class="gl-gh">${g}</div>${items.map(([n, req, x, ex]) => `<div class="gl-gi"><span class="gl-gtag${req ? ' req' : ''}">${req ? 'Wajib' : 'Bila ada'}</span><div><b>${n}</b><small>${x}</small>${ex ? `<i>${ex}</i>` : ''}</div></div>`).join('')}</div>`).join('')}</div>
     <div class="gl-gtip">📌 <b>Fokus hanya pada produk brand CAI</b> (Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System) — perangkat merek lain (head unit, dll.) jangan di-close-up. Logo & model harus terbaca · 2–3 dtk per perangkat · bersihkan debu & sidik jari dulu.</div>`;
   return `<details class="gl-guide"${glGuideOpen ? ' open' : ''} ontoggle="glGuideOpen=this.open">
-  <summary>🎬 Panduan video cinematic — <b>1 mobil = 1 video</b> <small>45–60 detik</small></summary>
+  <summary>🎬 Panduan video cinematic — <b>1 mobil = 1 video</b> <small>50–65 detik</small></summary>
   <div class="gl-gtabs"><button type="button" class="${tab === 'alur' ? 'on' : ''}" onclick="glGuideSet('alur')">🎬 Alur video</button><button type="button" class="${tab === 'gear' ? 'on' : ''}" onclick="glGuideSet('gear')">🔧 Perangkat</button></div>
   <div class="gl-gbody">${tab === 'alur' ? alur : gear}</div>
   <div class="gl-gwarn">⚠️ <b>Wajib:</b> plat nomor ditutup / diburamkan · STNK, kartu tol & barang pribadi tidak terlihat · wajah pemilik mobil hanya dengan izin</div>
