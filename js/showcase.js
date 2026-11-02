@@ -425,6 +425,7 @@ function renderGaleri() {
     : authUser ? `<button class="gt-btn confirm" onclick="openGlSubmit()">📤 Kirim Foto / Video Instalasi Anda</button>`
     : `<button class="gt-btn ghost" onclick="openGlSubmit()">🔑 Dealer resmi? Login untuk kirim foto / video</button>`;
   document.getElementById('gl-tools').innerHTML = add;
+  renderGlGuide();
   if (GL_DEALER_SUBMIT && isAdmin() && glSubmitReady === null) glCheckSubmit().then(() => { if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri(); });
   if (!glItems) { box.innerHTML = '<div class="stock-empty">⏳ Memuat galeri…</div>'; return; }
   if (glErr === 'setup' && !isAdmin()) { box.innerHTML = '<div class="stock-empty">Galeri Instalasi segera hadir.</div>'; document.getElementById('gl-tools').innerHTML = ''; return; }
@@ -867,8 +868,14 @@ const glGuideHtml = () => {
 </details>`;
 };
 let glGuideTab = 'alur';
-function glGuideSet(t) { glGuideTab = t; const el = document.querySelector('#gl-form .gl-guide'); if (el) el.outerHTML = glGuideHtml(); }
+function glGuideSet(t) { glGuideTab = t; renderGlGuide(); }
 let glGuideOpen = true;
+// Panduan tampil di depan halaman Galeri (2 Nov 2026, permintaan pemilik — dipindah dari form): untuk yang bisa menambah media
+const glGuideFor = () => glCanEdit() || (GL_DEALER_SUBMIT && !!authUser);
+function renderGlGuide() {
+  const el = document.getElementById('gl-guide-box'); if (!el) return;
+  el.innerHTML = glGuideFor() ? glGuideHtml() : '';
+}
 function renderGlForm() {
   const e = glEdit, box = document.querySelector('#gl-form .gl-fbox');
   const opt = (arr, v) => arr.map(a => `<option${a === v ? ' selected' : ''}>${escHtml(a)}</option>`).join('');
@@ -894,7 +901,6 @@ function renderGlForm() {
       <div class="w4"><div class="gl-flbl">Foto & Video <small>(foto otomatis diperkecil; video diunggah apa adanya)</small></div>
         <div class="gl-upr"><label class="gt-btn gl-up">📷 Tambah Foto<input type="file" accept="image/*" multiple hidden onchange="glAddPhotos(this)"></label><label class="gt-btn gl-up">🎬 Tambah Video<input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple hidden onchange="glAddVideos(this)"></label></div>
         <div class="gl-hint gl-vhint">Video: MP4 (H.264), maksimal ${GL_VIDEO_MAX_MB} MB per file — disarankan ≤ 30 MB agar cepat diputar di HP. Video tidak dikompres ulang di sini.</div>
-        ${glGuideHtml()}
         <div class="gl-fphotos" id="glf-photos"></div></div>
       ${e.submit ? `<label class="w4 gl-pub gl-agree"><input type="checkbox"${e.agree ? ' checked' : ''} onchange="glField('agree',this.checked)"> Foto/video ini milik dealer kami, <b>plat nomor sudah diburamkan</b>, dan pemilik mobil tidak keberatan ditampilkan.</label>` : ''}
     </div>

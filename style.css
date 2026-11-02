@@ -3445,6 +3445,8 @@ body:not(.is-editor) .acad-ed { display: none; }
 .gl-fph .gl-fmute input { width: auto; margin: 0; }
 
 /* Galeri — panduan video cinematic (tab Alur video & Perangkat) */
+.gl-guide-wrap:empty { display: none; }
+.gl-guide-wrap .gl-guide { margin: 0 0 4px; }
 .gl-guide { margin: 10px 0 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px; background: var(--surface); }
 .gl-guide summary { cursor: pointer; padding: 10px 14px; font-size: 13.5px; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
 .gl-guide summary::-webkit-details-marker { display: none; }
@@ -3473,3 +3475,4 @@ body:not(.is-editor) .acad-ed { display: none; }
 .gl-gtip { margin: 8px 0 2px; padding: 8px 10px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 12%, transparent); font-size: 12px; line-height: 1.45; }
 .gl-gwarn { margin: 10px 14px 12px; padding: 8px 10px; border-radius: 8px; background: rgba(240,160,32,.12); border: 1px solid rgba(240,160,32,.35); font-size: 12px; line-height: 1.45; }
 @media (max-width: 720px) { .gl-gcols, .gl-ggear { grid-template-columns: 1fr; } }
+.hof-wrap.gl-guide-wrap { padding-bottom: 6px; }
