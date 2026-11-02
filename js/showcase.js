@@ -480,7 +480,7 @@ function openGlDetail(id, photoIdx = 0) {
       <div>
         <div class="gl-big">${cur ? glBigMedia(it, cur, photoIdx) : glCarSvg}${cur?.area ? `<span class="gl-area">${escHtml(cur.area)}</span>` : ''}</div>
         ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path), '', p) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy"${glFrAttr(p)}>`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
-      ${cur && isEditor() ? (() => { const vid = glIsVid(cur), what = vid ? 'video' : 'foto', rot = vid ? '' : `<button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`;
+      ${cur && isEditor() ? (() => { const vid = glIsVid(cur), what = vid ? 'video' : 'foto', rot = vid ? `<button class="${cur.mute ? 'on' : ''}" onclick="glAdjMute('${it.id}',${photoIdx})" title="Atur suara video untuk semua yang menonton">${cur.mute ? '🔇 Tayang tanpa suara · ubah' : '🔊 Tayang dengan suara · ubah'}</button>` : `<button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`;
         return `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
         ? `<span>✥ Geser ${what} di atas & atur zoom — bingkai itu sama dengan sampul kartu Galeri.</span><label class="gl-zm">🔍 Zoom <input type="range" min="1" max="3" step="0.05" value="${glFr(cur).z}" oninput="glZoomLive(this.value)" onchange="glZoomCommit()"><b id="gl-zmv">${glFr(cur).z.toFixed(1)}×</b></label><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Reset</button>${rot}<button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
         : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi & zoom ${what} ini</button>${rot}`}</div>`; })() : ''}
@@ -547,12 +547,13 @@ function glBigMedia(it, cur, idx) {
   glAdjCtx = glAdj ? { id: it.id, idx } : null;
   if (glAdj) return `${vid ? `<video class="gl-drag" src="${url}" muted loop autoplay playsinline preload="auto"${glFrAttr(cur)} onpointerdown="glDragStart(event, glAdjSave)" onwheel="glWheel(event)"></video>`
       : `<img class="gl-drag" src="${url}" alt="" draggable="false"${glFrAttr(cur)} onpointerdown="glDragStart(event, glAdjSave)" onwheel="glWheel(event)">`}<span class="gl-draghint">✥ Geser · 🔍 zoom</span>`;
-  if (vid) return `<video src="${url}#t=0.5" playsinline preload="metadata"${glFrAttr(cur)} onclick="glVidToggle(this)" onplay="this.parentNode.classList.add('playing');glMuteIcon(this)" onpause="this.parentNode.classList.remove('playing')" onvolumechange="glMuteIcon(this)"></video><button class="gl-vmute" onclick="glVidMute(this.parentNode.querySelector('video'))" aria-label="Matikan suara" title="Matikan / nyalakan suara">🔊</button><button class="gl-vplay" onclick="glVidToggle(this.parentNode.querySelector('video'))" aria-label="Putar">▶</button><button class="gl-zoom" onclick="glZoom('${url}', true)" aria-label="Lihat video penuh">⤢</button>`;
+  if (vid) { const ns = !!cur.mute;   // ns = video diset Editor tanpa suara → selalu bisu untuk semua yang menonton
+    return `<video src="${url}#t=0.5" playsinline preload="metadata"${ns ? ' muted data-nosound="1"' : ''}${glFrAttr(cur)} onclick="glVidToggle(this)" onplay="this.parentNode.classList.add('playing');glMuteIcon(this)" onpause="this.parentNode.classList.remove('playing')" onvolumechange="glMuteIcon(this)"></video>${ns ? '<span class="gl-vmute ns" title="Video ini ditayangkan tanpa suara">🔇</span>' : '<button class="gl-vmute" onclick="glVidMute(this.parentNode.querySelector(\'video\'))" aria-label="Matikan suara" title="Matikan / nyalakan suara">🔊</button>'}<button class="gl-vplay" onclick="glVidToggle(this.parentNode.querySelector('video'))" aria-label="Putar">▶</button><button class="gl-zoom" onclick="glZoom('${url}', true${ns ? ', true' : ''})" aria-label="Lihat video penuh">⤢</button>`; }
   return `<img src="${url}" alt=""${glFrAttr(cur)} onclick="glZoom(this.src)" title="Ketuk untuk melihat foto utuh"><button class="gl-zoom" onclick="glZoom('${url}')" aria-label="Lihat penuh">⤢</button>`;
 }
-function glVidMute(v) { if (!v) return; v.muted = !v.muted; v.dataset.muteSet = 1; glMuteIcon(v); }
-function glMuteIcon(v) { const b = v?.parentNode?.querySelector('.gl-vmute'); if (b) { b.textContent = v.muted ? '🔇' : '🔊'; b.title = b.ariaLabel = v.muted ? 'Nyalakan suara' : 'Matikan suara'; } }
-function glVidToggle(v) { if (!v) return; if (v.paused) { if (!v.dataset.muteSet) { v.muted = false; v.dataset.muteSet = 1; } v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } else v.pause(); }
+function glVidMute(v) { if (!v || v.dataset.nosound) return; v.muted = !v.muted; v.dataset.muteSet = 1; glMuteIcon(v); }
+function glMuteIcon(v) { if (v?.dataset?.nosound && !v.muted) v.muted = true; const b = v?.parentNode?.querySelector('.gl-vmute'); if (b) { b.textContent = v.muted ? '🔇' : '🔊'; b.title = b.ariaLabel = v.muted ? 'Nyalakan suara' : 'Matikan suara'; } }
+function glVidToggle(v) { if (!v) return; if (v.paused) { if (v.dataset.nosound) v.muted = true; else if (!v.dataset.muteSet) { v.muted = false; v.dataset.muteSet = 1; } v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } else v.pause(); }
 let glAdjCtx = null, glZoomT = null;
 const glAdjSave = fr => glAdjCtx && glAdjSet(glAdjCtx.id, glAdjCtx.idx, fr);
 const glAdjEl = () => document.querySelector('#gl-detail .gl-big .gl-drag');
@@ -568,6 +569,13 @@ function glWheel(ev) {
   glZoomLive(z);
   const r = document.querySelector('.gl-zm input'); if (r) r.value = z;
   clearTimeout(glZoomT); glZoomT = setTimeout(glZoomCommit, 600);
+}
+async function glAdjMute(id, idx) {
+  if (!isEditor()) return;
+  const it = glItems.find(x => x.id === id); if (!it) return;
+  const photos = (it.photos || []).map((p, i) => { if (i !== idx) return p; const q = { ...p }; if (q.mute) delete q.mute; else q.mute = true; return q; });
+  const now = photos[idx]?.mute;
+  if (await glSavePhotos(id, photos, now ? '🔇 Video ini kini tayang tanpa suara' : '🔊 Video ini kini tayang dengan suara')) openGlDetail(id, idx);
 }
 async function glAdjRotate(id, idx) {
   if (!isEditor()) return;
@@ -735,7 +743,7 @@ function glSetFr(q, f) {
   return q;
 }
 function glPosAttr(p) { return glFrAttr(p); }
-function glPhotoRow(path, p, vid) { const r = { path, area: p.area || '' }; if (vid) r.type = 'video'; if (glPosXY(p)) r.pos = p.pos; if (+p.zoom > 1) r.zoom = +p.zoom; return r; }
+function glPhotoRow(path, p, vid) { const r = { path, area: p.area || '' }; if (vid) r.type = 'video'; if (glPosXY(p)) r.pos = p.pos; if (+p.zoom > 1) r.zoom = +p.zoom; if (vid && p.mute) r.mute = true; return r; }
 function glSetPos(i) { const p = glEdit.photos[i]; if (!p) return; delete p.pos; delete p.zoom; renderGlPhotos(); }
 function glFormFr(i, f) { const p = glEdit.photos[i]; if (!p) return; glSetFr(p, f); renderGlPhotos(); }
 function glFormZoom(i, inp) {
@@ -761,7 +769,7 @@ async function glRotate(i) {
   } catch (e) { showToast('⚠ Foto tidak bisa diputar: ' + (e.message || e), 5000); }
   delete p._rot; renderGlPhotos();
 }
-function glZoom(src, vid) {
+function glZoom(src, vid, nosound) {
   if (!src) return;
   let z = document.getElementById('gl-zoom');
   if (!z) {
@@ -770,7 +778,7 @@ function glZoom(src, vid) {
     document.body.appendChild(z);
   }
   document.querySelectorAll('#gl-detail video').forEach(v => v.pause());
-  z.innerHTML = (vid ? `<video src="${src}" controls autoplay playsinline></video>` : `<img src="${src}" alt="">`) + '<button aria-label="Tutup">✕</button>';
+  z.innerHTML = (vid ? `<video src="${src}" controls autoplay playsinline${nosound ? ' muted data-nosound="1" onvolumechange="if(!this.muted)this.muted=true"' : ''}></video>` : `<img src="${src}" alt="">`) + '<button aria-label="Tutup">✕</button>';
   z.classList.add('open');
 }
 function glZoomClose() { const z = document.getElementById('gl-zoom'); if (!z) return; z.querySelector('video')?.pause(); z.classList.remove('open'); z.innerHTML = ''; }
@@ -782,7 +790,7 @@ function renderGlPhotos() {
     return `<div class="gl-fph"><div class="gl-fimg${vid ? ' vid' : ''}" title="Geser untuk mengatur bagian yang tampil di sampul">${vid
       ? `<video class="gl-drag" src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"${glFrAttr(p)} onpointerdown="glDragStart(event, f => glFormFr(${i}, f))"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}`
       : `<img class="gl-drag" src="${p.url}" alt="" draggable="false"${glFrAttr(p)} onpointerdown="glDragStart(event, f => glFormFr(${i}, f))">`}</div>
-      <label class="gl-fzm" title="Zoom">🔍<input type="range" min="1" max="3" step="0.05" value="${glFr(p).z}" oninput="glFormZoom(${i}, this)"></label>
+      <label class="gl-fzm" title="Zoom">🔍<input type="range" min="1" max="3" step="0.05" value="${glFr(p).z}" oninput="glFormZoom(${i}, this)"></label>${vid ? `<label class="gl-fmute"><input type="checkbox"${p.mute ? ' checked' : ''} onchange="glEdit.photos[${i}].mute = this.checked || undefined"> 🔇 Tayang tanpa suara</label>` : ''}
       <select onchange="glPhotoArea(${i},this.value)"><option value=""${p.area ? '' : ' selected'}>— Keterangan —</option>${p.area && !GL_AREAS.includes(p.area) ? `<option selected>${escHtml(p.area)}</option>` : ''}${GL_AREA_GROUPS.map(([g, l]) => { const o = l.map(a => `<option${a === p.area ? ' selected' : ''}>${a}</option>`).join(''); return g ? `<optgroup label="${g}">${o}</optgroup>` : o; }).join('')}</select>
       <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === first ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button>${vid ? '' : `<button onclick="glRotate(${i})" title="Putar 90°">⟳</button>`}${p.pos || +p.zoom > 1 ? `<button onclick="glSetPos(${i})" title="Reset posisi & zoom">⊙</button>` : ''}<button onclick="glZoom('${p.url}'${vid ? ', true' : ''})" title="Lihat penuh">⤢</button><button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`; }).join('')
     || '<span class="gl-hint">Belum ada foto/video. Foto pertama = foto utama. Pastikan plat nomor sudah diburamkan.</span>';
