@@ -426,9 +426,14 @@ function glCovArm() {   // pasang sekali: interaksi pertama pengguna memutar sam
 }
 function glCoverObs() {
   const vids = document.querySelectorAll('video.gl-cover'); if (!vids.length) return;
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { vids.forEach(v => { v.removeAttribute('autoplay'); v.pause(); }); return; }
+  // Sengaja TIDAK lagi berhenti saat 'Kurangi Gerakan' aktif (2 Nov 2026, permintaan pemilik — loop tidak berjalan di perangkatnya):
+  // video sampul bisu & dipilih Editor, jadi tetap diputar. Coba lagi setelah data video siap (canplay).
   glCovIO = glCovIO || ('IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? glCovPlay(e.target) : e.target.pause()), { rootMargin: '120px 0px' }) : null);
-  vids.forEach(v => { v.muted = true; v.defaultMuted = true; glCovIO?.observe(v); if (!glCovIO || glCovVis(v)) glCovPlay(v); });
+  vids.forEach(v => {
+    v.muted = true; v.defaultMuted = true; glCovIO?.observe(v);
+    v.addEventListener('canplay', () => { if (v.paused && glCovVis(v)) glCovPlay(v); }, { once: true });
+    if (!glCovIO || glCovVis(v)) glCovPlay(v);
+  });
 }
 function renderGaleri() {
   const box = document.getElementById('gl-body'); if (!box) return;
