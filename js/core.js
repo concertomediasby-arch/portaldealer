@@ -152,6 +152,20 @@ const DASH_TILES = [
 const DASH_TAGS = ['Featured', 'New Arrival', 'Coming Soon', 'Best Seller', 'Juara EMMA'];
 const DASH_DIR = 'dashboard', DASH_MANIFEST = 'dashboard/tiles.json', DASH_VIDEO_MAX_MB = 50;
 let dashOverrides = {}, dashSlideTimer = null, dashIO = null;
+// 2 Nov 2026: Storage `showcase` belum punya policy SELECT → menimpa tiles.json (upsert) & menghapus file ditolak RLS
+// ("new row violates row-level security policy"). SQL ini dijalankan sekali oleh Editor (aman diulang).
+const DASH_SQL = `-- Kotak video Dashboard: izin Admin/Editor membaca & menimpa file di folder showcase
+drop policy if exists "showcase staff read" on storage.objects;
+create policy "showcase staff read" on storage.objects for select to authenticated
+  using (bucket_id = 'showcase' and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));`;
+function dashErr(e, what) {
+  const m = e?.message || String(e);
+  if (/row-level security|policy|403|unauthori/i.test(m)) {
+    (navigator.clipboard?.writeText(DASH_SQL) || Promise.reject()).then(
+      () => showToast('⚠ Izin Storage belum lengkap. SQL perbaikan sudah DISALIN — tempel di Supabase → SQL Editor → Run, lalu coba lagi.', 12000),
+      () => prompt('Izin Storage belum lengkap. Jalankan SQL ini sekali di Supabase → SQL Editor → Run, lalu coba lagi:', DASH_SQL));
+  } else showToast(`⚠ Gagal ${what}: ` + m, 7000);
+}
 const dashPublicUrl = path => `${SUPA_URL}/storage/v1/object/public/showcase/${path}`;
 async function loadDashOverrides() {
   try {
@@ -197,8 +211,8 @@ function renderDashTiles() {
   }), 3200);
 }
 async function initDashTiles() { renderDashTiles(); await loadDashOverrides(); if (Object.keys(dashOverrides).length) renderDashTiles(); }
-async function saveDashManifest() {
-  const blob = new Blob([JSON.stringify(dashOverrides)], { type: 'application/json' });
+async function saveDashManifest(data = dashOverrides) {
+  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
   const { error } = await supabase.storage.from('showcase').upload(DASH_MANIFEST, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
   if (error) throw error;
 }
@@ -213,11 +227,13 @@ async function uploadDashVideo(id, input) {
     const { error } = await supabase.storage.from('showcase').upload(path, f, { contentType: f.type || 'video/mp4', cacheControl: '31536000', upsert: false });
     if (error) throw error;
     const old = dashOverrides[id]?.path;
-    dashOverrides[id] = { ...(dashOverrides[id] || {}), path };
-    await saveDashManifest();
+    const next = { ...dashOverrides, [id]: { ...(dashOverrides[id] || {}), path } };
+    try { await saveDashManifest(next); }
+    catch (e) { supabase.storage.from('showcase').remove([path]).catch(() => {}); throw e; }   // catatan gagal → buang video yang baru diunggah
+    dashOverrides = next;
     if (old) supabase.storage.from('showcase').remove([old]).catch(() => {});
     renderDashTiles(); showToast('✓ Video kotak diganti — langsung tampil untuk semua pengunjung');
-  } catch (e) { showToast('⚠ Gagal mengunggah: ' + (e.message || e), 7000); }
+  } catch (e) { dashErr(e, 'mengunggah'); }
 }
 async function editDashLabel(id) {
   if (!isEditor() || !supabase) return;
@@ -227,15 +243,15 @@ async function editDashLabel(id) {
   const n = { ...o };
   if (lab.trim()) n.label = lab.trim(); else delete n.label;
   if (tg.trim() === '-') n.tag = ''; else if (tg.trim() && tg.trim() !== (t?.tag || '')) n.tag = tg.trim(); else delete n.tag;
-  if (Object.keys(n).length) dashOverrides[id] = n; else delete dashOverrides[id];
-  try { await saveDashManifest(); renderDashTiles(); showToast('✓ Disimpan'); } catch (e) { showToast('⚠ Gagal menyimpan: ' + (e.message || e), 6000); }
+  const next = { ...dashOverrides }; if (Object.keys(n).length) next[id] = n; else delete next[id];
+  try { await saveDashManifest(next); dashOverrides = next; renderDashTiles(); showToast('✓ Disimpan'); } catch (e) { dashErr(e, 'menyimpan'); }
 }
 async function resetDashVideo(id) {
   if (!isEditor() || !supabase || !confirm('Kembalikan kotak ini ke video/foto bawaan?')) return;
   const old = dashOverrides[id]?.path;
-  if (dashOverrides[id]) { delete dashOverrides[id].path; if (!Object.keys(dashOverrides[id]).length) delete dashOverrides[id]; }
-  try { await saveDashManifest(); if (old) await supabase.storage.from('showcase').remove([old]); renderDashTiles(); showToast('✓ Kembali ke tampilan bawaan'); }
-  catch (e) { showToast('⚠ Gagal: ' + (e.message || e), 6000); }
+  const next = { ...dashOverrides }; if (next[id]) { next[id] = { ...next[id] }; delete next[id].path; if (!Object.keys(next[id]).length) delete next[id]; }
+  try { await saveDashManifest(next); dashOverrides = next; if (old) await supabase.storage.from('showcase').remove([old]); renderDashTiles(); showToast('✓ Kembali ke tampilan bawaan'); }
+  catch (e) { dashErr(e, 'menyimpan'); }
 }
 
 function init() {

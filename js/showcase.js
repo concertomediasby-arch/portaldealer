@@ -319,6 +319,9 @@ create policy "showcase upload" on storage.objects for insert to authenticated
 create policy "showcase update" on storage.objects for update to authenticated
   using (bucket_id = 'showcase' and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));
 create policy "showcase delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'showcase' and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));
+-- izin baca daftar file untuk Admin/Editor (dibutuhkan saat menimpa file — upsert — & menghapus file)
+create policy "showcase staff read" on storage.objects for select to authenticated
   using (bucket_id = 'showcase' and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));`;
 let glItems = null, glErr = '', glLoading = null, glMake = 'all', glBody = 'all', glHofOnly = false, glQ = '';
 let glEdit = null;   // { id?, …field, photos:[{path?, area, blob?, url}], removed:[path] }
