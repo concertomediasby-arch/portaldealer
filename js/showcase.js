@@ -867,77 +867,85 @@ const GL_TEK = () => ['HP <b>horizontal</b> (16:9) · 4K/1080p 30fps — 60fps u
 const GL_EDIT = () => ['Potongan mengikuti ketukan musik, transisi cut / whip', 'Color grading seragam, teks seminimal mungkin', 'Musik <b>wajib bebas royalti</b> — tanpa musik = set tayang tanpa suara', `Ekspor MP4 (H.264) 1080p · maks. ${GL_VIDEO_MAX_MB} MB`];
 const GL_TIP = '📌 <b>Fokus hanya pada produk brand CAI</b> (Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System) — perangkat merek lain (head unit, dll.) jangan di-close-up. Logo & model harus terbaca · 2–3 dtk per perangkat · bersihkan debu & sidik jari dulu.';
 const GL_WARN = '⚠️ <b>Wajib:</b> plat nomor ditutup / diburamkan · STNK, kartu tol & barang pribadi tidak terlihat · wajah pemilik mobil hanya dengan izin';
-// Unduh panduan (kedua tab) sebagai PNG — digambar langsung ke canvas, tanpa library (2 Nov 2026, permintaan pemilik)
+// Unduh panduan (kedua tab) sebagai PNG landscape 16:9 — 4 kolom, digambar langsung ke canvas tanpa library (2 Nov 2026, permintaan pemilik)
 async function glGuidePng(btn) {
   const old = btn?.textContent; if (btn) { btn.disabled = true; btn.textContent = '⏳ Membuat…'; }
   try {
     await document.fonts?.ready;
     const logo = await new Promise(r => { const im = new Image(); im.onload = () => r(im); im.onerror = () => r(null); im.src = LOGO_WHITE; });
-    const W = 1080, P = 64, CW = W - P * 2, S = 2;
+    const W = 1920, P = 56, GAP = 40, NC = 4, CW = (W - P * 2 - GAP * (NC - 1)) / NC, S = 2, TOP = 190;
     const plain = h => String(h).replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
     const F = (w, sz, fam) => `${w} ${sz}px ${fam === 'd' ? 'Sora, Inter' : fam === 'm' ? '"JetBrains Mono", monospace' : 'Inter'}, system-ui, sans-serif`;
     const GOLD = '#d8b45f', TXT = '#eef0f4', DIM = '#a9afbd', LINE = 'rgba(255,255,255,.12)';
-    const draw = (ctx, on) => {
-      let y = P;
+    const half = 1;   // kolom 3: Speaker depan + Subwoofer · kolom 4: Amplifier & DSP, Kabel, Peredam
+    const draw = (ctx, on, H) => {
+      let y = 0;
       const wrap = (t, x, w, font, color, lh) => {
-        ctx.font = font; const words = plain(t).split(' '); let line = '', n = 0;
-        const out = l => { if (on) { ctx.fillStyle = color; ctx.fillText(l, x, y + lh * 0.78); } y += lh; n++; };
+        ctx.font = font; const words = plain(t).split(' '); let line = '';
+        const out = l => { if (on) { ctx.fillStyle = color; ctx.fillText(l, x, y + lh * 0.78); } y += lh; };
         for (const wd of words) { const tst = line ? line + ' ' + wd : wd; if (ctx.measureText(tst).width > w && line) { out(line); line = wd; } else line = tst; }
-        if (line) out(line); return n;
+        if (line) out(line);
       };
-      const rr = (x, yy, w, h, r, fill, stroke) => { if (!on) return; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, yy, w, h, r) : ctx.rect(x, yy, w, h); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); } };
-      const measure = t => { const s2 = y; const on0 = on; on = false; wrap(t, P + 22, CW - 44, F(500, 21), TXT, 31); const h = y - s2; y = s2; on = on0; return h; };
+      const rr = (x, yy, w, h, r, fill, stroke) => { if (!on) return; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, yy, w, h, r) : ctx.rect(x, yy, w, h); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); } };
+      const dot = (x) => { if (on) { ctx.fillStyle = GOLD; ctx.beginPath(); ctx.arc(x, y + 13, 3.5, 0, Math.PI * 2); ctx.fill(); } };
+      const head = (x, t) => { wrap(t, x, CW, F(700, 26, 'd'), TXT, 36); if (on) { ctx.fillStyle = GOLD; ctx.fillRect(x, y + 2, 44, 3); } y += 18; };
+      const note = (x, t, fill, stroke) => { const s0 = y, on0 = on; on = false; wrap(t, x + 16, CW - 32, F(500, 17), TXT, 25); const h = y - s0; y = s0; on = on0; rr(x, y, CW, h + 28, 12, fill, stroke); y += 14; wrap(t, x + 16, CW - 32, F(500, 17), TXT, 25); y += 14 + 14; };
       // header
-      if (on) { const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, GOLD); g.addColorStop(1, '#8a6a2a'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 8); }
-      if (logo) { const h = 54, w = logo.width * h / logo.height; if (on) ctx.drawImage(logo, P, y, w, h); }
-      if (on) { ctx.font = F(600, 18, 'm'); ctx.fillStyle = GOLD; ctx.textAlign = 'right'; ctx.fillText('CAI HUB · GALERI INSTALASI', W - P, y + 34); ctx.textAlign = 'left'; }
-      y += 92;
-      wrap('Panduan Video Cinematic', P, CW, F(700, 54, 'd'), TXT, 66);
-      wrap('1 mobil = 1 video · 50–65 detik · produk brand CAI', P, CW, F(500, 24), GOLD, 36);
-      y += 26;
-      const sec = t => { if (on) { ctx.fillStyle = LINE; ctx.fillRect(P, y, CW, 2); } y += 26; wrap(t, P, CW, F(700, 32, 'd'), TXT, 44); y += 8; };
-      sec('🎬 Alur video');
+      if (on) { const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, GOLD); g.addColorStop(1, '#8a6a2a'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 7); }
+      if (on && logo) { const h = 50, w = logo.width * h / logo.height; ctx.drawImage(logo, P, 44, w, h); }
+      y = 40; wrap('Panduan Video Cinematic', P + 230, 900, F(700, 46, 'd'), TXT, 58);
+      wrap('1 mobil = 1 video · 50–65 detik · produk brand CAI', P + 232, 900, F(500, 21), GOLD, 30);
+      if (on) { ctx.font = F(600, 16, 'm'); ctx.fillStyle = GOLD; ctx.textAlign = 'right'; ctx.fillText('CAI HUB · GALERI INSTALASI', W - P, 70); ctx.fillStyle = DIM; ctx.fillText('hub.concerto.id', W - P, 98); ctx.textAlign = 'left'; ctx.fillStyle = LINE; ctx.fillRect(P, TOP - 26, W - P * 2, 2); }
+      const xs = [0, 1, 2, 3].map(i => P + i * (CW + GAP)), ends = [];
+      // kolom 1: alur video
+      y = TOP; head(xs[0], '🎬 Alur video');
       GL_ACTS.forEach(([t, d, pts], i) => {
-        const y0 = y;
-        if (on) { ctx.beginPath(); ctx.arc(P + 22, y + 22, 22, 0, Math.PI * 2); ctx.fillStyle = GOLD; ctx.fill(); ctx.font = F(700, 20, 'm'); ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.fillText(String(i + 1), P + 22, y + 29); ctx.textAlign = 'right'; ctx.font = F(600, 19, 'm'); ctx.fillStyle = DIM; ctx.fillText(d + ' dtk', W - P, y + 28); ctx.textAlign = 'left'; }
-        wrap(t, P + 62, CW - 200, F(700, 26), TXT, 38);
-        pts.forEach(pt => { if (on) { ctx.fillStyle = GOLD; ctx.beginPath(); ctx.arc(P + 70, y + 17, 4, 0, Math.PI * 2); ctx.fill(); } wrap(pt, P + 86, CW - 86, F(400, 21), DIM, 31); });
-        y = Math.max(y, y0 + 48) + 14;
+        const x = xs[0], y0 = y;
+        if (on) { ctx.beginPath(); ctx.arc(x + 16, y + 16, 16, 0, Math.PI * 2); ctx.fillStyle = GOLD; ctx.fill(); ctx.font = F(700, 16, 'm'); ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.fillText(String(i + 1), x + 16, y + 22); ctx.textAlign = 'right'; ctx.font = F(600, 15, 'm'); ctx.fillStyle = DIM; ctx.fillText(d + ' dtk', x + CW, y + 21); ctx.textAlign = 'left'; }
+        wrap(t, x + 44, CW - 130, F(700, 20), TXT, 30);
+        pts.forEach(pt => { dot(x + 50); wrap(pt, x + 62, CW - 62, F(400, 16), DIM, 24); });
+        y = Math.max(y, y0 + 34) + 12;
       });
-      y += 6;
+      ends.push(y);
+      // kolom 2: teknik, editing, catatan
+      y = TOP;
       [['🎥 Teknik pengambilan', GL_TEK()], ['✂️ Editing', GL_EDIT()]].forEach(([h, arr]) => {
-        wrap(h, P, CW, F(700, 24), TXT, 36);
-        arr.forEach(pt => { if (on) { ctx.fillStyle = GOLD; ctx.beginPath(); ctx.arc(P + 8, y + 17, 4, 0, Math.PI * 2); ctx.fill(); } wrap(pt, P + 24, CW - 24, F(400, 21), DIM, 31); });
-        y += 14;
+        head(xs[1], h);
+        arr.forEach(pt => { dot(xs[1] + 6); wrap(pt, xs[1] + 18, CW - 18, F(400, 17), DIM, 25); y += 4; });
+        y += 18;
       });
-      y += 16;
-      sec('🔧 Perangkat yang di-shoot');
-      GL_GEAR.forEach(([g, items]) => {
-        wrap(g, P, CW, F(700, 24), GOLD, 36); y += 4;
-        items.forEach(([n, req, x, ex]) => {
-          const y0 = y, tag = req ? 'Wajib' : 'Bila ada';
-          if (on) { rr(P, y + 3, 104, 30, 15, req ? 'rgba(216,180,95,.16)' : null, req ? GOLD : 'rgba(255,255,255,.28)'); ctx.font = F(700, 16); ctx.fillStyle = req ? GOLD : DIM; ctx.textAlign = 'center'; ctx.fillText(tag, P + 52, y + 24); ctx.textAlign = 'left'; }
-          wrap(n, P + 124, CW - 124, F(700, 22), TXT, 32);
-          wrap(x, P + 124, CW - 124, F(400, 19), DIM, 28);
-          if (ex) wrap(ex, P + 124, CW - 124, F(500, 18), GOLD, 27);
-          y = Math.max(y, y0 + 40) + 12;
+      note(xs[1], GL_TIP, 'rgba(216,180,95,.12)', 'rgba(216,180,95,.4)');
+      note(xs[1], GL_WARN, 'rgba(240,160,32,.12)', 'rgba(240,160,32,.45)');
+      ends.push(y);
+      // kolom 3–4: perangkat
+      const gear = (x, groups, title) => {
+        y = TOP; head(x, title);
+        groups.forEach(([g, items]) => {
+          wrap(g, x, CW, F(700, 19), GOLD, 28); y += 2;
+          items.forEach(([n, req, d, ex]) => {
+            const y0 = y;
+            if (on) { rr(x, y + 2, 76, 24, 12, req ? 'rgba(216,180,95,.16)' : null, req ? GOLD : 'rgba(255,255,255,.28)'); ctx.font = F(700, 13); ctx.fillStyle = req ? GOLD : DIM; ctx.textAlign = 'center'; ctx.fillText(req ? 'Wajib' : 'Bila ada', x + 38, y + 19); ctx.textAlign = 'left'; }
+            wrap(n, x + 88, CW - 88, F(700, 17), TXT, 24);
+            wrap(d, x + 88, CW - 88, F(400, 15), DIM, 21);
+            if (ex) wrap(ex, x + 88, CW - 88, F(500, 14), GOLD, 20);
+            y = Math.max(y, y0 + 30) + 9;
+          });
+          y += 10;
         });
-        y += 10;
-      });
-      const note = (t, fill, stroke) => { const h = measure(t); rr(P, y, CW, h + 36, 14, fill, stroke); y += 18; wrap(t, P + 22, CW - 44, F(500, 21), TXT, 31); y += 18 + 18; };
-      note(GL_TIP, 'rgba(216,180,95,.12)', 'rgba(216,180,95,.4)');
-      note(GL_WARN, 'rgba(240,160,32,.12)', 'rgba(240,160,32,.45)');
-      y += 8;
-      if (on) { ctx.fillStyle = LINE; ctx.fillRect(P, y, CW, 2); ctx.font = F(500, 18, 'm'); ctx.fillStyle = DIM; ctx.fillText('hub.concerto.id · Concerto Audio Indonesia', P, y + 40); }
-      return y + 40 + P;
+        ends.push(y);
+      };
+      gear(xs[2], GL_GEAR.slice(0, half + 1), '🔧 Perangkat');
+      gear(xs[3], GL_GEAR.slice(half + 1), '🔧 Perangkat (lanjutan)');
+      if (on) { [1, 2, 3].forEach(i => { ctx.fillStyle = LINE; ctx.fillRect(xs[i] - GAP / 2, TOP, 1.5, H - TOP - P); }); }
+      return Math.max(...ends) + P;
     };
     const tmp = document.createElement('canvas').getContext('2d');
-    const H = Math.ceil(draw(tmp, false));
+    const H = Math.max(1080, Math.ceil(draw(tmp, false, 0)));
     const cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S;
     const ctx = cv.getContext('2d'); ctx.scale(S, S);
-    const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#11141c'); bg.addColorStop(1, '#090b10');
+    const bg = ctx.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#12151d'); bg.addColorStop(1, '#08090d');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-    draw(ctx, true);
+    draw(ctx, true, H);
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Panduan-Video-Cinematic-CAI.png';
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
@@ -963,7 +971,7 @@ const glGuideHtml = () => {
 };
 let glGuideTab = 'alur';
 function glGuideSet(t) { glGuideTab = t; renderGlGuide(); }
-let glGuideOpen = true;
+let glGuideOpen = false;   // tertutup bawaan — dibuka dengan klik judul (2 Nov 2026, permintaan pemilik)
 // Panduan tampil di depan halaman Galeri (2 Nov 2026, permintaan pemilik — dipindah dari form): untuk yang bisa menambah media
 const glGuideFor = () => glCanEdit() || (GL_DEALER_SUBMIT && !!authUser);
 function renderGlGuide() {
