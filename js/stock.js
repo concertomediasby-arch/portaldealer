@@ -108,9 +108,10 @@ function onAuthChanged() {
   if (authUser) {
     loadStock();
     subscribeStock();
+    guideCheckNew();
   } else {
     if (stockChannel) { supabase.removeChannel(stockChannel); stockChannel = null; }
-    stockMap = {}; stockLoaded = false; guideFiles = null; gtItems = null; gtOrders = null; gtTop = null; rdItems = null; qaItems = null;
+    stockMap = {}; stockLoaded = false; guideFiles = null; guideStarChecked = false; updateGuideStar(); gtItems = null; gtOrders = null; gtTop = null; rdItems = null; qaItems = null;
     if (qaChannel) { supabase.removeChannel(qaChannel); qaChannel = null; }
     refreshStockUI();
     if (['view-stock', 'view-guides', 'view-dealers', 'view-gathering', 'view-visitors'].some(id => document.getElementById(id)?.classList.contains('active'))) showView('dashboard');

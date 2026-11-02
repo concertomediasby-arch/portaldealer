@@ -3394,3 +3394,11 @@ img.gl-drag { cursor: grab; touch-action: none; user-select: none; -webkit-user-
 img.gl-drag.dragging { cursor: grabbing; }
 .gl-draghint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 2; pointer-events: none; font: 600 12px var(--f-body); color: #fff; background: rgba(0,0,0,.6); border-radius: 99px; padding: 5px 12px; }
 .gl-big:has(.gl-drag) { outline: 2px dashed var(--accent); outline-offset: 2px; }
+
+/* ★ menu baru (Panduan Dealer & Academy) — menyala berdenyut (2 Nov 2026) */
+.nav-star, .landing-star, .mnav-star { animation: navStarGlow 1.8s ease-in-out infinite; }
+.mobile-nav-item { position: relative; }
+.mnav-star { position: absolute; top: 3px; right: calc(50% - 22px); font-style: normal; font-size: 14px; line-height: 1; color: #e9c46a; text-shadow: 0 0 8px rgba(233,196,106,.9); }
+.mnav-star[hidden], .nav-star[hidden] { display: none; }
+@keyframes navStarGlow { 0%, 100% { opacity: 1; text-shadow: 0 0 6px rgba(233,196,106,.6); } 50% { opacity: .55; text-shadow: 0 0 14px rgba(233,196,106,1), 0 0 22px rgba(233,196,106,.6); } }
+@media (prefers-reduced-motion: reduce) { .nav-star, .landing-star, .mnav-star { animation: none; } }

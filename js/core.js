@@ -624,6 +624,35 @@ async function loadGuideFiles() {
   }
   renderGuides();
   loadGuideThumbs();
+  updateGuideStar();
+}
+// ★ menyala di menu Panduan Dealer bila ada PDF yang diunggah ≤ 14 hari (2 Nov 2026, permintaan pemilik — sama seperti Academy).
+const GUIDE_NEW_DAYS = 14;
+const guideIsNew = f => f?.date && Date.now() - new Date(f.date) < GUIDE_NEW_DAYS * 864e5;
+function updateGuideStar() {
+  const hasNew = !!authUser && !!guideFiles && [...guideFiles.values()].some(arr => arr.some(guideIsNew));
+  ['nav-guides-star', 'mnav-guides-star'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !hasNew; });
+}
+// Cek ringan saat login (tanpa merender halaman / membuat cover): cukup daftar file + tanggalnya.
+let guideStarChecked = false;
+async function guideCheckNew() {
+  if (!supabase || !authUser || guideStarChecked) return updateGuideStar();
+  guideStarChecked = true;
+  try {
+    const store = supabase.storage.from(GUIDES_BUCKET), visible = DEALER_GUIDES.filter(g => !g.hidden);
+    const list = async folder => { const { data, error } = await store.list(folder, { limit: 1000 }); if (error) throw error; return (data || []).filter(f => f.id && /\.pdf$/i.test(f.name)); };
+    const [root, ...folders] = await Promise.all([list(''), ...visible.map(g => g.folder ? list(g.folder) : [])]);
+    if (guideFiles) return updateGuideStar();   // halaman Panduan sudah memuat daftar lengkap
+    const rootMap = new Map(root.map(f => [f.name, f]));
+    guideFiles = new Map(visible.map((g, i) => {
+      const files = folders[i].map(f => ({ key: `${g.folder}/${f.name}`, title: guideTitleFromName(f.name), date: f.updated_at || f.created_at, size: f.metadata?.size || 0 }));
+      const legacy = g.path && rootMap.get(g.path);
+      if (legacy) files.push({ key: g.path, title: g.pathTitle || guideTitleFromName(g.path), date: legacy.updated_at || legacy.created_at, size: legacy.metadata?.size || 0 });
+      files.sort((a, b) => new Date(b.date) - new Date(a.date));
+      return [g.id, files];
+    }));
+  } catch (e) { guideStarChecked = false; }
+  updateGuideStar();
 }
 
 const fmtGuideDate = d => d ? new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', timeZone:'Asia/Jakarta' }) : '';
@@ -647,7 +676,7 @@ function renderGuides() {
               <button class="gf-cover" data-thumb="${escHtml(f.key)}" onclick="openGuideFile('${f.key}', false)" title="Buka ${escHtml(f.title)}">
                 <span class="gf-ph"><b>📄</b>PDF</span><img alt="Cover ${escHtml(f.title)}">
                 <span class="gf-badge">PDF${f.size ? ' · ' + fmtGuideSize(f.size) : ''}</span>
-                ${Date.now() - new Date(f.date) < 14 * 864e5 ? '<span class="gf-new">BARU</span>' : ''}</button>
+                ${guideIsNew(f) ? '<span class="gf-new">BARU</span>' : ''}</button>
               <div class="gf-body">
                 <div><div class="gf-title">${escHtml(f.title)}</div><div class="gf-sub">${fmtGuideDate(f.date)}</div></div>
                 <div class="gf-actions">
@@ -1156,7 +1185,7 @@ let acadCurrent = null;
 
 function updateAcademyStar() {
   const hasNew = acadReleased().some(acadIsNew);
-  ['nav-academy-star', 'landing-academy-star'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !hasNew; });
+  ['nav-academy-star', 'landing-academy-star', 'mnav-academy-star'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !hasNew; });
 }
 
 function openAcademy() {
