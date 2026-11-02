@@ -3485,3 +3485,6 @@ body:not(.is-editor) .acad-ed { display: none; }
   .gl-ggear { grid-template-columns: repeat(3, 1fr); }
   .gl-gcols { grid-template-columns: 1fr 1fr; }
 }
+/* Sentuhan/klik di sampul kartu Galeri selalu diteruskan ke kartu (2 Nov 2026 — kartu dengan video loop tidak bisa diklik di HP) */
+.gl-card .gl-ph video, .gl-card .gl-ph img { pointer-events: none; -webkit-user-select: none; user-select: none; }
+.gl-card { touch-action: manipulation; }
