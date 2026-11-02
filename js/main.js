@@ -75,6 +75,7 @@ initQaScreen();
 if (!QA_SCREEN_MODE) openDeepLink();
 updateAcademyStar();
 initSupabase();
+if (!QA_SCREEN_MODE) loadAcadExtra();
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui
 if (!QA_SCREEN_MODE) { pmIcon(); pmArm(); }   // musik latar portal: tunggu klik pertama
 idleInit();   // keluar otomatis bila tidak ada aktivitas

@@ -3402,3 +3402,22 @@ img.gl-drag.dragging { cursor: grabbing; }
 .mnav-star[hidden], .nav-star[hidden] { display: none; }
 @keyframes navStarGlow { 0%, 100% { opacity: 1; text-shadow: 0 0 6px rgba(233,196,106,.6); } 50% { opacity: .55; text-shadow: 0 0 14px rgba(233,196,106,1), 0 0 22px rgba(233,196,106,.6); } }
 @media (prefers-reduced-motion: reduce) { .nav-star, .landing-star, .mnav-star { animation: none; } }
+
+/* ── Tambah Materi Academy (Editor, 2 Nov 2026) ── */
+.acad-tools { margin-top: 14px; }
+.acad-card { position: relative; }
+.acad-ed { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; gap: 4px; }
+.acad-ed i { font-style: normal; font-size: 13px; background: rgba(0,0,0,.65); border-radius: 8px; padding: 4px 7px; cursor: pointer; }
+body:not(.is-editor) .acad-ed { display: none; }
+.acf { padding: 16px; display: grid; gap: 12px; overflow-y: auto; }
+.acf-l { display: grid; gap: 4px; font: 600 12px var(--f-body); color: var(--fg-muted); }
+.acf-l input, .acf-it input { border: 1px solid var(--border); background: var(--surface2); color: var(--fg); border-radius: 9px; padding: 9px 11px; font: 15px var(--f-body); }
+.acf-pick { justify-self: start; cursor: pointer; }
+.acf-list { display: grid; gap: 8px; }
+.acf-it { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 10px; align-items: center; border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: var(--surface); }
+.acf-it img { width: 64px; height: 96px; object-fit: cover; object-position: top; border-radius: 6px; background: #fff; }
+.acf-it > div { display: grid; gap: 5px; }
+.acf-it span { font: 600 11px var(--f-mono); color: var(--accent); }
+.acf-it button { border: 0; background: var(--surface2); color: var(--fg); border-radius: 8px; padding: 8px; cursor: pointer; }
+.acf-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); }
+.acf-it input { min-width: 0; width: 100%; box-sizing: border-box; }

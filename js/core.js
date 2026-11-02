@@ -17,7 +17,7 @@ const LAST_UPDATE = '2026-10-30T08:50:00Z';
 // type: 'video' | 'photo' | 'data'
 // ── Concerto Academy ──────────────────────────────────────────
 // Satu materi = satu halaman infografis di assets/academy/fundamental-NN.webp (+ -thumb.webp).
-// `date` = tanggal upload (WIB): semua materi langsung tampil; bertanda ★ emas selama 14 hari sejak tanggal itu.
+// `date` = tanggal upload (WIB): semua materi langsung tampil; bertanda ★ emas selama ACADEMY_NEW_DAYS (5) hari sejak tanggal itu.
 // (Tanggal di masa depan tetap menyembunyikan materi sampai hari itu — opsional, tidak dipakai saat ini.)
 // Tambah materi: simpan gambar baru, lalu tambah baris di bawah dengan no & date berikutnya.
 const ACADEMY = [
@@ -1171,14 +1171,15 @@ function openPaketAudio() {
 }
 
 /* ══════════════════════════════════════════
-   CONCERTO ACADEMY — rilis terjadwal + tanda ★ baru 14 hari
+   CONCERTO ACADEMY — rilis terjadwal + tanda ★ baru 5 hari
 ══════════════════════════════════════════ */
-const ACADEMY_NEW_DAYS = 14;
+const ACADEMY_NEW_DAYS = 5;   // ★ Baru 5 hari sejak tanggal upload (2 Nov 2026, permintaan pemilik — dulu 14)
 const acadPad = n => String(n).padStart(2, '0');
-const acadImg = (a, thumb) => `assets/academy/fundamental-${acadPad(a.no)}${thumb ? '-thumb' : ''}.webp`;
+const acadImg = (a, thumb) => a.img ? dashPublicUrl(thumb ? (a.thumb || a.img) : a.img) : `assets/academy/fundamental-${acadPad(a.no)}${thumb ? '-thumb' : ''}.webp`;
 const todayWIB = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });   // YYYY-MM-DD
 const acadDaysSince = d => Math.round((Date.parse(todayWIB()) - Date.parse(d)) / 864e5);
-const acadReleased = () => ACADEMY.filter(a => a.date <= todayWIB()).sort((x, y) => y.no - x.no);
+const acadAll = () => [...ACADEMY, ...acadExtra];
+const acadReleased = () => acadAll().filter(a => a.date <= todayWIB()).sort((x, y) => y.no - x.no);
 const acadIsNew = a => { const d = acadDaysSince(a.date); return d >= 0 && d < ACADEMY_NEW_DAYS; };
 const fmtAcadDate = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 let acadCurrent = null;
@@ -1188,19 +1189,152 @@ function updateAcademyStar() {
   ['nav-academy-star', 'landing-academy-star', 'mnav-academy-star'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !hasNew; });
 }
 
-function openAcademy() {
+/* ── Materi Academy dari portal (2 Nov 2026, permintaan pemilik — Editor menambah sendiri tanpa lewat repo) ──
+   Gambar materi (+ thumbnail) di Storage publik `showcase/academy/`, daftar di `showcase/academy/items.json`
+   ({ items: [{ no, date, title, series, img, thumb }] }); digabung dengan ACADEMY bawaan lewat acadAll().
+   Nomor melanjutkan nomor terakhir; date = hari unggah (WIB) → ★ Baru ACADEMY_NEW_DAYS hari. */
+const ACAD_DIR = 'academy', ACAD_MANIFEST = 'academy/items.json';
+let acadExtra = [], acadForm = null;
+async function loadAcadExtra() {
+  try {
+    const r = await fetch(dashPublicUrl(ACAD_MANIFEST) + '?t=' + Date.now(), { cache: 'no-store' });
+    const j = r.ok ? await r.json() : null;
+    acadExtra = Array.isArray(j?.items) ? j.items.filter(a => a && a.no && a.img && a.date) : [];
+  } catch (e) { acadExtra = []; }
+  updateAcademyStar();
+  if (document.getElementById('view-academy')?.classList.contains('active')) openAcademy(true);
+}
+async function acadSaveManifest(items) {
+  const blob = new Blob([JSON.stringify({ items })], { type: 'application/json' });
+  const { error } = await supabase.storage.from('showcase').upload(ACAD_MANIFEST, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
+  if (error) throw error;
+}
+// Gambar → webp lebar maks 1080 (materi) + thumbnail 540×360 dari bagian atas (sama dengan materi bawaan)
+async function acadImgBlobs(src) {
+  const bmp = await createImageBitmap(src);
+  const toBlob = c => new Promise((res, rej) => c.toBlob(b => b && b.type === 'image/webp' ? res(b) : c.toBlob(j => j ? res(j) : rej(new Error('Gagal memproses gambar')), 'image/jpeg', .88), 'image/webp', .85));
+  const s = Math.min(1, 1080 / bmp.width), c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+  const t = document.createElement('canvas'); t.width = 540; t.height = 360;
+  const ts = 540 / bmp.width, tg = t.getContext('2d'); tg.fillStyle = '#fff'; tg.fillRect(0, 0, 540, 360);
+  tg.drawImage(bmp, 0, 0, bmp.width, Math.min(bmp.height, 360 / ts), 0, 0, 540, Math.min(360, bmp.height * ts));
+  return { img: await toBlob(c), thumb: await toBlob(t) };
+}
+async function acadPdfPages(f) {
+  const lib = await loadPdfJs();
+  const doc = await lib.getDocument({ data: await f.arrayBuffer() }).promise;
+  try {
+    const out = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i), v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: 1080 / v1.width });
+      const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      out.push({ blob: await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('halaman kosong')), 'image/png')), name: f.name.replace(/\.pdf$/i, '') + (doc.numPages > 1 ? ' ' + i : '') });
+    }
+    return out;
+  } finally { doc.destroy(); }
+}
+const acadTitleFromName = n => n.replace(/\.(pdf|jpe?g|png|webp)$/i, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+function openAcadForm() {
+  if (!isEditor()) return;
+  const last = acadAll().filter(a => a.series).slice(-1)[0];
+  acadForm = { series: last?.series || 'Fundamental', items: [], busy: false };
+  let ov = document.getElementById('acad-form');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'acad-form'; ov.className = 'rk-pick gl-ov';
+    ov.innerHTML = '<div class="rk-pick-box gl-fbox" role="dialog" aria-modal="true"></div>';
+    document.body.appendChild(ov);
+  }
+  renderAcadForm(); ov.classList.add('open');
+}
+function closeAcadForm() { acadForm?.items.forEach(x => URL.revokeObjectURL(x.url)); acadForm = null; document.getElementById('acad-form')?.classList.remove('open'); }
+function renderAcadForm() {
+  const f = acadForm, box = document.querySelector('#acad-form .rk-pick-box'); if (!f || !box) return;
+  const next = Math.max(0, ...acadAll().map(a => a.no)) + 1;
+  box.innerHTML = `<div class="rk-pick-hd"><div class="rk-pick-t">＋ Tambah Materi Academy</div><button class="rk-pick-x" onclick="closeAcadForm()" aria-label="Tutup">✕</button></div>
+    <div class="acf">
+      <label class="acf-l">Nama seri<input value="${escHtml(f.series)}" placeholder="mis. Fundamental" oninput="acadForm.series=this.value"></label>
+      <label class="gt-btn acf-pick">📄 Pilih gambar / PDF<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" multiple hidden onchange="acadAddFiles(this)"></label>
+      <div class="gl-hint">Satu gambar = satu materi (sebaiknya tegak, seperti materi yang sudah ada). PDF: setiap halaman jadi satu materi. Materi baru otomatis bertanda <b>★ Baru</b> selama ${ACADEMY_NEW_DAYS} hari.</div>
+      <div class="acf-list">${f.items.map((x, i) => `<div class="acf-it"><img src="${x.url}" alt=""><div><span>${escHtml(f.series || 'Fundamental')} #${next + i}</span><input value="${escHtml(x.title)}" placeholder="Judul materi" oninput="acadForm.items[${i}].title=this.value"></div><button title="Hapus" onclick="acadDropItem(${i})">🗑</button></div>`).join('') || '<div class="stock-empty">Belum ada file dipilih.</div>'}</div>
+    </div>
+    <div class="acf-foot"><button class="gt-btn ghost" onclick="closeAcadForm()">Batal</button><button class="gt-btn" id="acf-save" onclick="saveAcadItems()"${f.items.length && !f.busy ? '' : ' disabled'}>${f.busy ? '⏳ Menyimpan…' : '💾 Simpan & Terbitkan'}</button></div>`;
+}
+async function acadAddFiles(input) {
+  const files = [...(input.files || [])]; input.value = '';
+  for (const file of files) {
+    try {
+      const parts = /\.pdf$/i.test(file.name) || /pdf$/i.test(file.type)
+        ? (showToast(`Mengubah ${file.name} jadi gambar…`, 20000), await acadPdfPages(file))
+        : /^image\//.test(file.type) ? [{ blob: file, name: file.name }] : null;
+      if (!parts) { showToast(`${file.name}: pilih gambar JPG/PNG/WebP atau PDF.`, 5000); continue; }
+      parts.forEach(p => acadForm.items.push({ blob: p.blob, url: URL.createObjectURL(p.blob), title: acadTitleFromName(p.name) }));
+    } catch (e) { showToast(`⚠ ${file.name}: ${e.message || e}`, 6000); }
+  }
+  showToast(`${acadForm.items.length} materi siap — periksa judulnya lalu Simpan.`, 3000);
+  renderAcadForm();
+}
+function acadDropItem(i) { const [x] = acadForm.items.splice(i, 1); if (x) URL.revokeObjectURL(x.url); renderAcadForm(); }
+async function saveAcadItems() {
+  const f = acadForm; if (!f || f.busy || !f.items.length || !isEditor()) return;
+  if (f.items.some(x => !x.title.trim())) { showToast('⚠ Isi judul untuk setiap materi.', 4000); return; }
+  f.busy = true; renderAcadForm();
+  const store = supabase.storage.from('showcase'), uploaded = [], added = [];
+  let no = Math.max(0, ...acadAll().map(a => a.no)) + 1;
+  try {
+    for (const x of f.items) {
+      const b = await acadImgBlobs(x.blob), ext = b.img.type === 'image/webp' ? 'webp' : 'jpg', ts = Date.now();
+      const img = `${ACAD_DIR}/${acadPad(no)}-${ts}.${ext}`, thumb = `${ACAD_DIR}/${acadPad(no)}-${ts}-thumb.${ext}`;
+      for (const [path, blob] of [[img, b.img], [thumb, b.thumb]]) {
+        const { error } = await store.upload(path, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false });
+        if (error) throw error;
+        uploaded.push(path);
+      }
+      added.push({ no, date: todayWIB(), title: x.title.trim(), series: (f.series || '').trim() || 'Fundamental', img, thumb });
+      no++;
+    }
+    const items = [...acadExtra, ...added];
+    await acadSaveManifest(items);
+    acadExtra = items;
+    showToast(`✓ ${added.length} materi baru diterbitkan`, 3500);
+    closeAcadForm(); updateAcademyStar(); openAcademy(true);
+  } catch (e) {
+    if (uploaded.length) store.remove(uploaded);
+    f.busy = false; renderAcadForm(); dashErr(e, 'menyimpan materi');
+  }
+}
+async function acadEditTitle(no) {
+  const a = acadExtra.find(x => x.no === no); if (!a || !isEditor()) return;
+  const t = prompt('Judul materi:', a.title); if (t == null || !t.trim() || t.trim() === a.title) return;
+  const items = acadExtra.map(x => x.no === no ? { ...x, title: t.trim() } : x);
+  try { await acadSaveManifest(items); acadExtra = items; openAcademy(true); showToast('✓ Judul diperbarui', 2500); } catch (e) { dashErr(e, 'menyimpan judul'); }
+}
+async function acadDelete(no) {
+  const a = acadExtra.find(x => x.no === no); if (!a || !isEditor()) return;
+  if (!confirm(`Hapus materi #${no} "${a.title}"?`)) return;
+  const items = acadExtra.filter(x => x.no !== no);
+  try {
+    await acadSaveManifest(items); acadExtra = items;
+    supabase.storage.from('showcase').remove([a.img, a.thumb].filter(Boolean));
+    updateAcademyStar(); openAcademy(true); showToast('✓ Materi dihapus', 2500);
+  } catch (e) { dashErr(e, 'menghapus materi'); }
+}
+
+function openAcademy(keepScroll) {
   // Terbuka untuk umum tanpa Kode Akses (31 Okt 2026, permintaan pemilik — dulu dikunci sejak 25 Okt 2026)
-  showView('academy');
-  document.querySelector('.main')?.scrollTo(0, 0);
+  if (keepScroll !== true) { showView('academy'); document.querySelector('.main')?.scrollTo(0, 0); }
   const list = acadReleased();
-  const upcoming = ACADEMY.filter(a => a.date > todayWIB()).sort((x, y) => x.date.localeCompare(y.date))[0];
+  const upcoming = acadAll().filter(a => a.date > todayWIB()).sort((x, y) => x.date.localeCompare(y.date))[0];
   document.getElementById('acad-next').innerHTML =
     `<b>${list.length}</b> materi tersedia` + (upcoming ? ` · materi berikutnya rilis <b>${fmtAcadDate(upcoming.date)}</b>` : '') + `<span class="acad-views" data-acadv="all">${acadViewsText('all', true)}</span>`;
   document.getElementById('acad-grid').innerHTML = list.map(a => `
     <button class="acad-card" onclick="openAcademyItem(${a.no})">
+      ${a.img ? `<span class="acad-ed editor-only" onclick="event.stopPropagation()"><i role="button" title="Ubah judul" onclick="acadEditTitle(${a.no})">✏️</i><i role="button" title="Hapus materi" onclick="acadDelete(${a.no})">🗑</i></span>` : ''}
       <div class="acad-thumb"><img src="${acadImg(a, true)}" alt="" loading="lazy"></div>
       <div class="acad-body">
-        <div class="acad-kicker">Fundamental #${a.no}${acadIsNew(a) ? '<span class="acad-star" title="Materi baru">★ Baru</span>' : ''}</div>
+        <div class="acad-kicker">${escHtml(a.series || 'Fundamental')} #${a.no}${acadIsNew(a) ? '<span class="acad-star" title="Materi baru">★ Baru</span>' : ''}</div>
         <div class="acad-title">${escHtml(a.title)}</div>
         <div class="acad-date">${fmtAcadDate(a.date)}<span class="acad-views" data-acadv="${a.no}">${acadViewsText(a.no, true)}</span></div>
       </div>
@@ -1213,16 +1347,16 @@ function openAcademyItem(no) {
   const a = acadReleased().find(x => x.no === no);
   if (!a) return;
   acadCurrent = no;
-  document.getElementById('acad-viewer-kicker').innerHTML = `Concerto Academy · Fundamental #${a.no}${acadIsNew(a) ? ' <span class="acad-star">★ Baru</span>' : ''}<span class="acad-views" data-acadv="${a.no}"></span>`;
+  document.getElementById('acad-viewer-kicker').innerHTML = `Concerto Academy · ${escHtml(a.series || 'Fundamental')} #${a.no}${acadIsNew(a) ? ' <span class="acad-star">★ Baru</span>' : ''}<span class="acad-views" data-acadv="${a.no}"></span>`;
   logAcadView(a.no);
   document.getElementById('acad-viewer-title').textContent = a.title;
   const img = document.getElementById('acad-viewer-img');
   img.src = acadImg(a); img.alt = a.title;
   const dl = document.getElementById('acad-viewer-dl');
   dl.href = acadImg(a); dl.setAttribute('download', `Concerto-Academy-${acadPad(a.no)}.webp`);
-  const nos = acadReleased().map(x => x.no);
-  document.getElementById('acad-prev').disabled = !nos.includes(no - 1);
-  document.getElementById('acad-next-btn').disabled = !nos.includes(no + 1);
+  const nos = acadReleased().map(x => x.no).sort((x, y) => x - y), i = nos.indexOf(no);
+  document.getElementById('acad-prev').disabled = i <= 0;
+  document.getElementById('acad-next-btn').disabled = i < 0 || i >= nos.length - 1;
   document.getElementById('acad-viewer-body').scrollTop = 0;
   document.getElementById('acad-viewer').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1315,7 +1449,11 @@ function acadRecapHtml() {
     ${list.map(r => `<tr><td>#${r.a.no} · ${escHtml(r.a.title)}</td><td>${fmtNum(r.views)}</td><td>${fmtNum(r.viewers)}</td></tr>`).join('')}
     </tbody></table></div>`;
 }
-function stepAcademy(d) { if (acadCurrent) openAcademyItem(acadCurrent + d); }
+function stepAcademy(d) {
+  if (!acadCurrent) return;
+  const nos = acadReleased().map(x => x.no).sort((x, y) => x - y), n = nos[nos.indexOf(acadCurrent) + d];
+  if (n) openAcademyItem(n);
+}
 function closeAcademyItem() {
   document.getElementById('acad-viewer').classList.remove('open');
   document.body.style.overflow = '';
