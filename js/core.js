@@ -182,7 +182,7 @@ function dashTile(t) {
     ? `<video class="dt-media" src="${vid}"${!o.path && t.poster ? ` poster="${t.poster}"` : ''} autoplay muted loop playsinline preload="metadata"></video>`
     : `<div class="dt-media dt-slides">${(t.photos || []).map((src, i) => `<img src="${src}" alt="" class="${i ? '' : 'on'}" loading="lazy">`).join('')}</div>`;
   const tag = 'tag' in o ? o.tag : (t.tag || '');
-  return `<div class="dt" role="button" tabindex="0" onclick="showBrand('${b.id}')" onkeydown="if(event.key==='Enter')showBrand('${b.id}')" style="--bc:${b.color || '#d8b26a'}">
+  return `<div class="dt" role="button" tabindex="0" onclick="openDashVideo('${t.id}')" onkeydown="if(event.key==='Enter')openDashVideo('${t.id}')" style="--bc:${b.color || '#d8b26a'}">
     <div class="dt-vid">${media}
       ${tag ? `<span class="dt-tag${/new|baru/i.test(tag) ? ' new' : /soon/i.test(tag) ? ' soon' : /juara|emma/i.test(tag) ? ' win' : ''}">${escHtml(tag)}</span>` : ''}
       <div class="dt-edit editor-only" onclick="event.stopPropagation()">
@@ -191,7 +191,7 @@ function dashTile(t) {
         ${o.path ? `<button class="dt-btn" onclick="resetDashVideo('${t.id}')" title="Kembali ke tampilan bawaan">↺</button>` : ''}
       </div></div>
     <div class="dt-bar">${b.logo ? `<img class="dt-logo" src="${b.logo}" alt="${escHtml(b.name)}">` : `<b class="dt-name">${escHtml(b.name)}</b>`}
-      ${label ? `<span class="dt-label">${escHtml(label)}</span>` : '<span class="dt-label"></span>'}<span class="dt-go" aria-hidden="true">›</span></div></div>`;
+      ${label ? `<span class="dt-label">${escHtml(label)}</span>` : '<span class="dt-label"></span>'}<button class="dt-go" onclick="event.stopPropagation(); showBrand('${b.id}')" title="Halaman ${escHtml(b.name)}" aria-label="Halaman ${escHtml(b.name)}">›</button></div></div>`;
 }
 function renderDashTiles() {
   const box = document.getElementById('dash-tiles'); if (!box) return;
@@ -210,6 +210,106 @@ function renderDashTiles() {
     const i = im.findIndex(x => x.classList.contains('on')); im[i]?.classList.remove('on'); im[(i + 1) % im.length].classList.add('on');
   }), 3200);
 }
+// Video melayang (2 Nov 2026, permintaan pemilik — opsi A): klik kotak Dashboard → jendela di tengah layar memutar video kotak itu
+// (atau slideshow foto), tombol Lihat Produk / Lihat <line> / Halaman brand, pindah brand ‹ › / chip / ← →, tutup ✕ · Esc · klik luar · back HP.
+let dvCur = null, dvSlideT = null, dvAfter = null;
+const dvNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function dvTile(id) {
+  const t = DASH_TILES.find(x => x.id === id), b = BRANDS.find(x => x.id === id); if (!t || !b) return null;
+  const o = dashOverrides[id] || {};
+  return { t, b, label: o.label || t.label || '', tag: 'tag' in o ? o.tag : (t.tag || ''), video: o.path ? dashPublicUrl(o.path) : t.video, poster: o.path ? '' : (t.poster || ''), photos: t.photos || [] };
+}
+// Tujuan tombol utama: produk yang model/namanya = label, atau line yang namanya = label.
+function dvTarget(d) {
+  const k = dvNorm(d.label); if (!k) return null;
+  for (const l of d.b.lines || []) {
+    const p = l.products.find(p => dvNorm(p.model) === k || dvNorm(p.name) === k);
+    if (p) return { kind: 'product', id: p.id, text: 'Lihat Produk ›' };
+  }
+  const line = (d.b.lines || []).find(l => dvNorm(l.name) === k);
+  return line ? { kind: 'line', name: line.name, text: `Lihat ${line.name} ›` } : null;
+}
+function dvSub(d, tg) {
+  if (tg?.kind === 'line') { const l = d.b.lines.find(x => x.name === tg.name); return `${d.b.name} · ${l.products.length} produk`; }
+  if (tg?.kind === 'product') { const f = findProduct(d.b.id, tg.id); return `${d.b.name}${f.line ? ' · ' + f.line : ''}`; }
+  return d.b.name;
+}
+function openDashVideo(id) {
+  const d = dvTile(id); if (!d) return;
+  let ov = document.getElementById('dash-video');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'dash-video'; ov.className = 'dv-ov';
+    ov.addEventListener('click', e => { if (e.target === ov) closeDashVideo(); });
+    document.body.appendChild(ov);
+  }
+  const first = !dvCur; dvCur = id;
+  const tg = dvTarget(d);
+  const tagc = /new|baru/i.test(d.tag) ? ' new' : /soon/i.test(d.tag) ? ' soon' : /juara|emma/i.test(d.tag) ? ' win' : '';
+  const media = d.video
+    ? `<video class="dv-media" src="${d.video}"${d.poster ? ` poster="${d.poster}"` : ''} controls loop playsinline preload="auto"></video>`
+    : `<div class="dv-media dt-slides">${d.photos.map((src, i) => `<img src="${src}" alt="" class="${i ? '' : 'on'}">`).join('')}</div>`;
+  const chips = DASH_TILES.map(x => { const bb = BRANDS.find(y => y.id === x.id); if (!bb) return ''; const lb = (dashOverrides[x.id] || {}).label || x.label || '';
+    return `<button class="dv-chip${x.id === id ? ' on' : ''}" style="--bc:${bb.color || '#d8b26a'}" onclick="openDashVideo('${x.id}')">${escHtml(bb.name)}${lb ? ' · ' + escHtml(lb) : ''}</button>`; }).join('');
+  ov.style.setProperty('--bc', d.b.color || '#d8b26a');
+  ov.innerHTML = `<div class="dv-box" role="dialog" aria-modal="true" aria-label="${escHtml(d.b.name + ' ' + d.label)}">
+    <div class="dv-vid">${media}${d.tag ? `<span class="dt-tag dv-tag${tagc}">${escHtml(d.tag)}</span>` : ''}
+      <button class="dv-x" onclick="closeDashVideo()" aria-label="Tutup">✕</button></div>
+    <div class="dv-body">
+      <div class="dv-info">${d.b.logo ? `<img class="dv-logo" src="${d.b.logo}" alt="${escHtml(d.b.name)}">` : ''}
+        <div class="dv-tt"><b>${escHtml(d.label || d.b.name)}</b><span>${escHtml(dvSub(d, tg))}</span></div>
+        <div class="dv-btns">${tg ? `<button class="dv-btn pri" onclick="dvGo('target')">${escHtml(tg.text)}</button>` : ''}<button class="dv-btn" onclick="dvGo('brand')">Halaman ${escHtml(d.b.name)}</button></div></div>
+      <div class="dv-nav"><button class="dv-nb" onclick="dvStep(-1)" aria-label="Brand sebelumnya">‹</button><div class="dv-chips">${chips}</div><button class="dv-nb" onclick="dvStep(1)" aria-label="Brand berikutnya">›</button></div>
+    </div></div>`;
+  ov.classList.add('open'); document.body.classList.add('dv-lock');
+  document.querySelectorAll('#dash-tiles video').forEach(v => v.pause());
+  ov.querySelector('.dv-chip.on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  const v = ov.querySelector('video');
+  if (v) { v.muted = false; v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); }
+  clearInterval(dvSlideT);
+  if (!v) dvSlideT = setInterval(() => {
+    const im = [...ov.querySelectorAll('.dt-slides img')]; if (im.length < 2) return;
+    const i = im.findIndex(x => x.classList.contains('on')); im[i]?.classList.remove('on'); im[(i + 1) % im.length].classList.add('on');
+  }, 3200);
+  if (first) { try { history.pushState({ dv: 1 }, '', location.href); } catch (e) {} }
+}
+function dvStep(dir) {
+  const ids = DASH_TILES.map(t => t.id).filter(id => BRANDS.some(b => b.id === id));
+  const i = ids.indexOf(dvCur); openDashVideo(ids[(i + dir + ids.length) % ids.length]);
+}
+function dvClose() {
+  const ov = document.getElementById('dash-video'); if (!ov || !dvCur) return;
+  ov.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); });
+  ov.classList.remove('open'); ov.innerHTML = ''; clearInterval(dvSlideT);
+  document.body.classList.remove('dv-lock'); dvCur = null;
+  if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+    document.querySelectorAll('#dash-tiles video').forEach(v => { const r = v.getBoundingClientRect(); if (r.bottom > 0 && r.top < innerHeight) v.play?.().catch(() => {}); });
+}
+function closeDashVideo(after) {
+  if (!dvCur) { after?.(); return; }
+  if (history.state?.dv) { dvAfter = after || null; history.back(); return; }   // popstate → dvClose()
+  dvClose(); after?.();
+}
+function dvGo(what) {
+  const d = dvTile(dvCur); if (!d) return;
+  const tg = dvTarget(d);
+  closeDashVideo(() => {
+    if (what === 'target' && tg?.kind === 'product') return showProduct(d.b.id, tg.id);
+    showBrand(d.b.id);
+    if (what === 'target' && tg?.kind === 'line') requestAnimationFrame(() => {
+      const h = [...document.querySelectorAll('#view-brand .line-name')].find(x => x.textContent.trim() === tg.name);
+      h?.closest('.line-header')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
+addEventListener('popstate', () => {
+  if (!dvCur) return;
+  dvClose(); const f = dvAfter; dvAfter = null; if (f) setTimeout(f, 0);
+});
+document.addEventListener('keydown', e => {
+  if (!dvCur) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeDashVideo(); }
+  else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !/INPUT|TEXTAREA|SELECT/.test(e.target?.tagName || '') && e.target?.tagName !== 'VIDEO') dvStep(e.key === 'ArrowRight' ? 1 : -1);
+});
 async function initDashTiles() { renderDashTiles(); await loadDashOverrides(); if (Object.keys(dashOverrides).length) renderDashTiles(); }
 async function saveDashManifest(data = dashOverrides) {
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });

@@ -3322,3 +3322,54 @@ div.hof-row { cursor: default; }
 }
 .stats-row.vs-row { display: none; }
 body.is-staff .stats-row.vs-row { display: grid; }
+
+/* ── Video melayang Dashboard (opsi A, 2 Nov 2026) ── */
+button.dt-go { background: none; border: 0; padding: 4px 2px 4px 8px; cursor: pointer; }
+.dv-ov { position: fixed; inset: 0; z-index: 3000; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(4,6,10,.8); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.dv-ov.open { display: flex; animation: dvIn .22s ease; }
+body.dv-lock { overflow: hidden; }
+.dv-box { position: relative; width: min(980px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: #0d1016; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,.6); color: #fff; animation: dvPop .25s ease; }
+.dv-vid { position: relative; aspect-ratio: 16/9; background: #000; border-top: 3px solid var(--bc); overflow: hidden; }
+.dv-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+.dv-media.dt-slides { background: #fff; }
+.dv-tag { position: absolute; top: 12px; left: 12px; z-index: 2; pointer-events: none; }
+.dv-x { position: absolute; top: 10px; right: 10px; z-index: 3; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.28); background: rgba(0,0,0,.55); color: #fff; font-size: 17px; cursor: pointer; }
+.dv-x:hover { background: rgba(0,0,0,.8); }
+.dv-body { display: grid; gap: 14px; padding: 16px 20px 18px; }
+.dv-body > *, .dv-chips { min-width: 0; }
+.dv-info { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.dv-logo { height: 30px; max-width: 150px; object-fit: contain; flex: none; }
+.dv-tt { flex: 1; min-width: 160px; }
+.dv-tt b { display: block; font: 700 19px var(--f-display); color: #fff; }
+.dv-tt span { font: 13px var(--f-body); color: #9aa3b2; }
+.dv-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.dv-btn { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #fff; border-radius: 10px; padding: 10px 14px; font: 600 13px var(--f-body); cursor: pointer; white-space: nowrap; }
+.dv-btn:hover { background: rgba(255,255,255,.12); }
+.dv-btn.pri { background: #d8b26a; border-color: #d8b26a; color: #111; }
+.dv-btn.pri:hover { background: #e6c584; }
+.dv-nav { display: flex; align-items: center; gap: 8px; }
+.dv-chips { flex: 1; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.dv-chips::-webkit-scrollbar { display: none; }
+.dv-chip { flex: none; white-space: nowrap; border: 1px solid rgba(255,255,255,.1); background: transparent; color: #8a93a3; border-radius: 999px; padding: 6px 12px; font: 12px var(--f-body); cursor: pointer; }
+.dv-chip.on { color: #fff; border-color: var(--bc); background: rgba(255,255,255,.06); }
+.dv-nb { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #fff; font-size: 18px; cursor: pointer; }
+.dv-nb:hover { background: rgba(255,255,255,.14); }
+@keyframes dvIn { from { opacity: 0; } }
+@keyframes dvPop { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+@media (max-width: 720px) {
+  .dv-ov { padding: 14px; }
+  .dv-box { border-radius: 16px; }
+  .dv-x { width: 34px; height: 34px; font-size: 15px; top: 8px; right: 8px; }
+  .dv-body { padding: 14px; gap: 12px; }
+  .dv-info { gap: 12px; }
+  .dv-logo { height: 22px; max-width: 90px; }
+  .dv-tt { min-width: 0; }
+  .dv-tt b { font-size: 16px; }
+  .dv-tt span { font-size: 12px; }
+  .dv-btns { width: 100%; }
+  .dv-btn { flex: 1; padding: 10px 8px; }
+  .dv-chip { font-size: 11px; padding: 5px 10px; }
+  .dv-nb { width: 34px; height: 34px; font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { .dv-ov.open, .dv-box { animation: none; } }
+.dv-media.dt-slides img { object-fit: contain; }
