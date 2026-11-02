@@ -143,11 +143,13 @@ function findProduct(brandId, productId) {
    Storage publik `showcase/dashboard/<id>-<waktu>.<ext>` dan dicatat di `showcase/dashboard/tiles.json`
    ({ <id>: { path, label } }) — tanpa SQL baru (memakai policy Storage showcase yang sudah ada). */
 const DASH_TILES = [
-  { id: 'audiocircle', label: 'Hamburg Line', video: 'assets/dash/audiocircle.mp4?v=1', poster: 'assets/dash/audiocircle.jpg?v=1' },
-  { id: 'steg', label: 'DSP-S12', video: 'assets/dash/steg.mp4?v=1', poster: 'assets/dash/steg.jpg?v=1' },
-  { id: 'zelos', label: 'ZLS-HD5.4', photos: ['assets/zl-hd54-1.webp', 'assets/zl-hd54-2.webp', 'assets/zl-hd54-3.webp', 'assets/zl-hd54-4.webp'] },
-  { id: 'audiosystem', label: 'AY65C', video: 'assets/dash/audiosystem.mp4?v=1', poster: 'assets/dash/audiosystem.jpg?v=1' },
+  { id: 'audiocircle', tag: 'Featured', label: 'Hamburg Line', video: 'assets/dash/audiocircle.mp4?v=1', poster: 'assets/dash/audiocircle.jpg?v=1' },
+  { id: 'steg', tag: 'New Arrival', label: 'DSP-S12', video: 'assets/dash/steg.mp4?v=1', poster: 'assets/dash/steg.jpg?v=1' },
+  { id: 'zelos', tag: 'Featured', label: 'ZLS-HD5.4', photos: ['assets/zl-hd54-1.webp', 'assets/zl-hd54-2.webp', 'assets/zl-hd54-3.webp', 'assets/zl-hd54-4.webp'] },
+  { id: 'audiosystem', tag: 'New Arrival', label: 'AY65C', video: 'assets/dash/audiosystem.mp4?v=1', poster: 'assets/dash/audiosystem.jpg?v=1' },
 ];
+// Pilihan tag pojok kiri atas (2 Nov 2026, permintaan pemilik); teks bebas juga boleh lewat ✏️
+const DASH_TAGS = ['Featured', 'New Arrival', 'Coming Soon', 'Best Seller', 'Juara EMMA'];
 const DASH_DIR = 'dashboard', DASH_MANIFEST = 'dashboard/tiles.json', DASH_VIDEO_MAX_MB = 50;
 let dashOverrides = {}, dashSlideTimer = null, dashIO = null;
 const dashPublicUrl = path => `${SUPA_URL}/storage/v1/object/public/showcase/${path}`;
@@ -165,15 +167,17 @@ function dashTile(t) {
   const media = vid
     ? `<video class="dt-media" src="${vid}"${!o.path && t.poster ? ` poster="${t.poster}"` : ''} autoplay muted loop playsinline preload="metadata"></video>`
     : `<div class="dt-media dt-slides">${(t.photos || []).map((src, i) => `<img src="${src}" alt="" class="${i ? '' : 'on'}" loading="lazy">`).join('')}</div>`;
+  const tag = 'tag' in o ? o.tag : (t.tag || '');
   return `<div class="dt" role="button" tabindex="0" onclick="showBrand('${b.id}')" onkeydown="if(event.key==='Enter')showBrand('${b.id}')" style="--bc:${b.color || '#d8b26a'}">
-    ${media}<div class="dt-shade"></div>
-    <div class="dt-info">${b.logo ? `<img class="dt-logo" src="${b.logo}" alt="${escHtml(b.name)}">` : `<b class="dt-name">${escHtml(b.name)}</b>`}
-      ${label ? `<span class="dt-label">${escHtml(label)}</span>` : ''}<span class="dt-go">Lihat produk ›</span></div>
-    <div class="dt-edit editor-only" onclick="event.stopPropagation()">
-      <label class="dt-btn" title="Ganti video kotak ini">🎬 Ganti video<input type="file" accept="video/mp4,video/webm,video/quicktime" hidden onchange="uploadDashVideo('${t.id}', this)"></label>
-      <button class="dt-btn" onclick="editDashLabel('${t.id}')" title="Ubah teks label">✏️</button>
-      ${o.path ? `<button class="dt-btn" onclick="resetDashVideo('${t.id}')" title="Kembali ke tampilan bawaan">↺</button>` : ''}
-    </div></div>`;
+    <div class="dt-vid">${media}
+      ${tag ? `<span class="dt-tag${/new|baru/i.test(tag) ? ' new' : /soon/i.test(tag) ? ' soon' : /juara|emma/i.test(tag) ? ' win' : ''}">${escHtml(tag)}</span>` : ''}
+      <div class="dt-edit editor-only" onclick="event.stopPropagation()">
+        <label class="dt-btn" title="Ganti video kotak ini">🎬 Ganti video<input type="file" accept="video/mp4,video/webm,video/quicktime" hidden onchange="uploadDashVideo('${t.id}', this)"></label>
+        <button class="dt-btn" onclick="editDashLabel('${t.id}')" title="Ubah tag & label">✏️</button>
+        ${o.path ? `<button class="dt-btn" onclick="resetDashVideo('${t.id}')" title="Kembali ke tampilan bawaan">↺</button>` : ''}
+      </div></div>
+    <div class="dt-bar">${b.logo ? `<img class="dt-logo" src="${b.logo}" alt="${escHtml(b.name)}">` : `<b class="dt-name">${escHtml(b.name)}</b>`}
+      ${label ? `<span class="dt-label">${escHtml(label)}</span>` : '<span class="dt-label"></span>'}<span class="dt-go" aria-hidden="true">›</span></div></div>`;
 }
 function renderDashTiles() {
   const box = document.getElementById('dash-tiles'); if (!box) return;
@@ -217,12 +221,14 @@ async function uploadDashVideo(id, input) {
 }
 async function editDashLabel(id) {
   if (!isEditor() || !supabase) return;
-  const t = DASH_TILES.find(x => x.id === id), cur = dashOverrides[id]?.label ?? t?.label ?? '';
-  const v = prompt('Teks label di kotak (mis. nama produk/seri). Kosongkan = teks bawaan.', cur); if (v === null) return;
-  dashOverrides[id] = { ...(dashOverrides[id] || {}) };
-  if (v.trim()) dashOverrides[id].label = v.trim(); else delete dashOverrides[id].label;
-  if (!Object.keys(dashOverrides[id]).length) delete dashOverrides[id];
-  try { await saveDashManifest(); renderDashTiles(); showToast('✓ Label disimpan'); } catch (e) { showToast('⚠ Gagal menyimpan: ' + (e.message || e), 6000); }
+  const t = DASH_TILES.find(x => x.id === id), o = dashOverrides[id] || {};
+  const lab = prompt('Nama produk/seri di bilah bawah kotak. Kosongkan = teks bawaan.', o.label ?? t?.label ?? ''); if (lab === null) return;
+  const tg = prompt(`Tag di pojok kiri atas, mis. ${DASH_TAGS.join(' · ')}.\nKetik "-" untuk tanpa tag, kosongkan = tag bawaan.`, 'tag' in o ? (o.tag || '-') : (t?.tag || '')); if (tg === null) return;
+  const n = { ...o };
+  if (lab.trim()) n.label = lab.trim(); else delete n.label;
+  if (tg.trim() === '-') n.tag = ''; else if (tg.trim() && tg.trim() !== (t?.tag || '')) n.tag = tg.trim(); else delete n.tag;
+  if (Object.keys(n).length) dashOverrides[id] = n; else delete dashOverrides[id];
+  try { await saveDashManifest(); renderDashTiles(); showToast('✓ Disimpan'); } catch (e) { showToast('⚠ Gagal menyimpan: ' + (e.message || e), 6000); }
 }
 async function resetDashVideo(id) {
   if (!isEditor() || !supabase || !confirm('Kembalikan kotak ini ke video/foto bawaan?')) return;
