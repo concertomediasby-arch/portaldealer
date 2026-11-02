@@ -137,6 +137,22 @@ function findProduct(brandId, productId) {
   return { brand };
 }
 
+/* ── Video loop brand di Dashboard (2 Nov 2026, permintaan pemilik) ──
+   assets/brand-loop.mp4 = potongan video resmi Audiocircle (Pro Line) · STEG (DSP-S12) · Zelos (foto MFA3/MFA5, efek zoom) ·
+   Audio System (AY65C), 18,7 dtk tanpa suara. BRAND_LOOP = detik mulai tiap brand di video → logo yang menyala di bawahnya. */
+const BRAND_LOOP = [{ id: 'audiocircle', t: 0 }, { id: 'steg', t: 4.7 }, { id: 'zelos', t: 9.1 }, { id: 'audiosystem', t: 14.0 }];
+function initBrandLoop() {
+  const box = document.getElementById('bl-brands'), v = document.getElementById('brand-loop-video');
+  if (!box || !v) return;
+  box.innerHTML = BRAND_LOOP.map(x => { const b = BRANDS.find(y => y.id === x.id); if (!b) return '';
+    return `<button class="bl-b" data-bl="${b.id}" onclick="showBrand('${b.id}')" title="Lihat produk ${escHtml(b.name)}">${b.logo ? `<img src="${b.logo}" alt="${escHtml(b.name)}">` : `<span>${escHtml(b.name)}</span>`}</button>`; }).join('');
+  const paint = () => { const t = v.currentTime || 0; let cur = BRAND_LOOP[0].id; BRAND_LOOP.forEach(x => { if (t >= x.t) cur = x.id; });
+    box.querySelectorAll('.bl-b').forEach(el => el.classList.toggle('on', el.dataset.bl === cur)); };
+  v.addEventListener('timeupdate', paint); paint();
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); }
+  else v.play?.().catch(() => {});
+}
+
 function init() {
   // Products with a `photos` list use the first one as their main `photo` (card, detail, PDF)
   BRANDS.forEach(b => b.lines.forEach(l => l.products.forEach(p => {
@@ -149,17 +165,14 @@ function init() {
   const _latestUpdate = RECENT_UPDATES[0];
   const _latestBrand = BRANDS.find(b => b.id === _latestUpdate.brandId);
   const _latestProduct = _latestBrand ? brandProducts(_latestBrand).find(p => p.id === _latestUpdate.productId) : null;
-  if (_latestProduct && _latestBrand) {
-    document.getElementById('stat-lastitem').innerHTML =
-      '<span style="opacity:.6;font-size:11px;display:block;margin-bottom:2px">' + _latestBrand.name + '</span>' + _latestProduct.name;
-  }
-  document.getElementById('stat-products').textContent = totalProducts;
-  document.getElementById('stat-lines').textContent = BRANDS.reduce((s,b)=>s+b.lines.length,0);
+  const _set = (id, h) => { const el = document.getElementById(id); if (el) el.innerHTML = h; };   // kartu statistik lama (dihapus 2 Nov 2026 — diganti video loop brand)
+  if (_latestProduct && _latestBrand) _set('stat-lastitem', '<span style="opacity:.6;font-size:11px;display:block;margin-bottom:2px">' + _latestBrand.name + '</span>' + _latestProduct.name);
+  _set('stat-products', totalProducts);
+  _set('stat-lines', BRANDS.reduce((s,b)=>s+b.lines.length,0));
   const _lu = new Date(LAST_UPDATE);
-  document.getElementById('stat-lastupdate').innerHTML =
-    _lu.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Jakarta'}) +
-    '<br><span style="font-size:13px;opacity:.7">' +
-    _lu.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}) + ' WIB</span>';
+  _set('stat-lastupdate', _lu.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Jakarta'}) +
+    '<br><span style="font-size:13px;opacity:.7">' + _lu.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}) + ' WIB</span>');
+  initBrandLoop();
 
   // Brand logos
   document.getElementById('logo-landing').src = LOGO_WHITE;

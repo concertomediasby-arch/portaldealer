@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-10-31T14:53:24Z">
+<link rel="stylesheet" href="style.css?b=2026-11-02T03:25:14Z">
 </head>
 <body>
 <noscript>
@@ -264,23 +264,14 @@
         <div class="page-subtitle">Selamat datang di CAI Hub — pusat informasi official brand kami: Audiocircle, STEG, Zelos, Diosdela Musica, OG One Sound &amp; Audio System.</div>
       </div>
 
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Produk Terbaru</div>
-          <div class="stat-value" id="stat-lastitem" style="font-size:15px;line-height:1.3">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Produk</div>
-          <div class="stat-value" id="stat-products">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Product Line</div>
-          <div class="stat-value" id="stat-lines">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Terakhir Update</div>
-          <div class="stat-value" id="stat-lastupdate" style="font-size:18px">—</div>
-        </div>
+      <!-- Video loop brand (2 Nov 2026, permintaan pemilik — menggantikan kartu Produk Terbaru / Total Produk / Product Line / Terakhir Update) -->
+      <div class="brand-loop" id="brand-loop">
+        <video id="brand-loop-video" src="assets/brand-loop.mp4?v=1" poster="assets/brand-loop-poster.jpg?v=1" autoplay muted loop playsinline preload="metadata" aria-label="Video brand Audiocircle, STEG, Zelos dan Audio System"></video>
+        <div class="bl-shade"></div>
+        <div class="bl-brands" id="bl-brands"></div>
+      </div>
+
+      <div class="stats-row vs-row">
         <div class="stat-card vs-stat" onclick="openVisitors()" title="Pengunjung portal — khusus Admin &amp; Editor">
           <div class="stat-label">Pengunjung Hari Ini</div>
           <div class="stat-value" id="stat-visitors">—</div>
@@ -924,14 +915,14 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-10-31T14:53:24Z"></script>
-<script src="js/core.js?b=2026-10-31T14:53:24Z"></script>
-<script src="js/stock.js?b=2026-10-31T14:53:24Z"></script>
-<script src="js/dealers.js?b=2026-10-31T14:53:24Z"></script>
-<script src="js/gathering.js?b=2026-10-31T14:53:24Z"></script>
-<script src="js/rundown.js?b=2026-10-31T14:53:24Z"></script>
-<script src="js/videotron.js?b=2026-10-31T14:53:24Z"></script>
-<script src="js/showcase.js?b=2026-10-31T14:53:24Z"></script>
-<script src="js/main.js?b=2026-10-31T14:53:24Z"></script>
+<script src="katalog.js?b=2026-11-02T03:25:14Z"></script>
+<script src="js/core.js?b=2026-11-02T03:25:14Z"></script>
+<script src="js/stock.js?b=2026-11-02T03:25:14Z"></script>
+<script src="js/dealers.js?b=2026-11-02T03:25:14Z"></script>
+<script src="js/gathering.js?b=2026-11-02T03:25:14Z"></script>
+<script src="js/rundown.js?b=2026-11-02T03:25:14Z"></script>
+<script src="js/videotron.js?b=2026-11-02T03:25:14Z"></script>
+<script src="js/showcase.js?b=2026-11-02T03:25:14Z"></script>
+<script src="js/main.js?b=2026-11-02T03:25:14Z"></script>
 </body>
 </html>
