@@ -627,7 +627,7 @@ async function loadGuideFiles() {
   updateGuideStar();
 }
 // ★ menyala di menu Panduan Dealer bila ada PDF yang diunggah ≤ 14 hari (2 Nov 2026, permintaan pemilik — sama seperti Academy).
-const GUIDE_NEW_DAYS = 14;
+const GUIDE_NEW_DAYS = 5;   // 2 Nov 2026, permintaan pemilik — sama dengan Academy (dulu 14)
 const guideIsNew = f => f?.date && Date.now() - new Date(f.date) < GUIDE_NEW_DAYS * 864e5;
 function updateGuideStar() {
   const hasNew = !!authUser && !!guideFiles && [...guideFiles.values()].some(arr => arr.some(guideIsNew));
