@@ -354,7 +354,7 @@ async function glCheckSubmit() {
   glSubmitReady = !error;
 }
 const glIsVid = p => p?.type === 'video' || /\.(mp4|m4v|mov|webm)$/i.test(p?.path || '');
-const glVidTag = (src, cls = '') => `<video class="${cls}" src="${src}#t=0.5" muted playsinline preload="metadata"></video>`;
+const glVidTag = (src, cls = '', p = null) => `<video class="${cls}" src="${src}#t=0.5" muted playsinline preload="metadata"${p ? glFrAttr(p) : ''}></video>`;
 const glUrl = path => supabase ? supabase.storage.from(GL_BUCKET).getPublicUrl(path).data.publicUrl : '';
 const glTitle = it => [it.car_make, it.car_model].filter(Boolean).join(' ');
 const glProd = pid => findProductAny(pid);
@@ -395,7 +395,7 @@ function glCard(it) {
   const nVid = (it.photos || []).filter(glIsVid).length, nImg = (it.photos || []).length - nVid;
   const prods = (it.products || []).map(pid => glProd(pid).product?.name).filter(Boolean);
   return `<button class="gl-card" onclick="openGlDetail('${it.id}')">
-    <span class="gl-ph">${ph ? (glIsVid(ph) ? glVidTag(glUrl(ph.path)) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glPosAttr(ph)}>`) : glCarSvg}
+    <span class="gl-ph">${ph ? (glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? '<span class="gl-tro">🏆 Juara</span>' : ''}
       ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : ''}</span>
@@ -478,11 +478,12 @@ function openGlDetail(id, photoIdx = 0) {
     <button class="rk-pick-x gl-x" onclick="closeGlDetail()" aria-label="Tutup">✕</button>
     <div class="gl-dgrid">
       <div>
-        <div class="gl-big">${cur ? (glIsVid(cur) ? `<video src="${glUrl(cur.path)}" controls playsinline preload="metadata"></video>` : (glAdj ? `<img class="gl-drag" src="${glUrl(cur.path)}" alt="" draggable="false" style="object-position:${glPosCss(cur)}" onpointerdown="glDragStart(event, pos => glAdjSet('${it.id}',${photoIdx},pos))"><span class="gl-draghint">✥ Geser foto</span>` : `<img src="${glUrl(cur.path)}" alt="" style="object-position:${glPosCss(cur)}" onclick="glZoom(this.src)" title="Ketuk untuk melihat foto utuh">`)) : glCarSvg}${cur && !glIsVid(cur) ? '<button class="gl-zoom" onclick="glZoom(this.parentNode.querySelector(\'img\').src)" aria-label="Lihat penuh">⤢</button>' : ''}${cur?.area ? `<span class="gl-area${glIsVid(cur) ? ' top' : ''}">${escHtml(cur.area)}</span>` : ''}</div>
-        ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path)) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy"${glPosAttr(p)}>`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
-      ${cur && !glIsVid(cur) && isEditor() ? `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
-        ? `<span>✥ Geser foto di atas — bingkai itu sama dengan sampul kartu Galeri.</span><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Tengah</button><button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button><button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
-        : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi foto ini</button><button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`}</div>` : ''}
+        <div class="gl-big">${cur ? glBigMedia(it, cur, photoIdx) : glCarSvg}${cur?.area ? `<span class="gl-area">${escHtml(cur.area)}</span>` : ''}</div>
+        ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path), '', p) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy"${glFrAttr(p)}>`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
+      ${cur && isEditor() ? (() => { const vid = glIsVid(cur), what = vid ? 'video' : 'foto', rot = vid ? '' : `<button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`;
+        return `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
+        ? `<span>✥ Geser ${what} di atas & atur zoom — bingkai itu sama dengan sampul kartu Galeri.</span><label class="gl-zm">🔍 Zoom <input type="range" min="1" max="3" step="0.05" value="${glFr(cur).z}" oninput="glZoomLive(this.value)" onchange="glZoomCommit()"><b id="gl-zmv">${glFr(cur).z.toFixed(1)}×</b></label><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Reset</button>${rot}<button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
+        : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi & zoom ${what} ini</button>${rot}`}</div>`; })() : ''}
       </div>
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
@@ -498,32 +499,33 @@ function openGlDetail(id, photoIdx = 0) {
     </div>`;
   ov.classList.add('open');
 }
-function closeGlDetail() { glAdj = false; document.getElementById('gl-detail')?.classList.remove('open'); }
+function closeGlDetail() { glAdj = false; glAdjCtx = null; document.querySelectorAll('#gl-detail video').forEach(v => v.pause()); document.getElementById('gl-detail')?.classList.remove('open'); }
 // Atur posisi / putar foto langsung dari jendela detail (Editor, 2 Nov 2026 — permintaan pemilik): disimpan langsung ke tabel.
 let glAdj = false;
 function glPosCss(p) { const xy = glPosXY(p) || [50, 50]; return `${xy[0]}% ${xy[1]}%`; }
 // Geser foto (drag) untuk mengatur bagian yang tampil pada bingkai object-fit: cover; onEnd(pos "x y") setelah dilepas.
 function glDragStart(ev, onEnd) {
-  const img = ev.currentTarget; if (!img || ev.button > 0) return;
+  const el = ev.currentTarget; if (!el || ev.button > 0) return;
   ev.preventDefault();
-  const m = (img.style.objectPosition || '50% 50%').match(/([\d.]+)%\s+([\d.]+)%/) || [0, 50, 50];
-  let x = +m[1], y = +m[2]; const sx = ev.clientX, sy = ev.clientY, x0 = x, y0 = y;
-  const r = img.getBoundingClientRect(), nw = img.naturalWidth || r.width, nh = img.naturalHeight || r.height;
-  const sc = Math.max(r.width / nw, r.height / nh), ox = nw * sc - r.width, oy = nh * sc - r.height;
+  const f = glFrOf(el), sx = ev.clientX, sy = ev.clientY, x0 = f.x, y0 = f.y;
+  const box = el.parentElement.getBoundingClientRect(), W = box.width, H = box.height;
+  const nw = el.naturalWidth || el.videoWidth || W, nh = el.naturalHeight || el.videoHeight || H;
+  const sc = Math.max(W / nw, H / nh), ox = nw * sc - W, oy = nh * sc - H;
+  const rx = f.z * ox + (f.z - 1) * W, ry = f.z * oy + (f.z - 1) * H;   // rentang geser total (piksel) per sumbu
   let moved = false;
-  img.setPointerCapture?.(ev.pointerId); img.classList.add('dragging');
+  el.setPointerCapture?.(ev.pointerId); el.classList.add('dragging');
   const mv = e => {
     moved = true;
-    if (ox > 1) x = Math.max(0, Math.min(100, x0 - (e.clientX - sx) / ox * 100));
-    if (oy > 1) y = Math.max(0, Math.min(100, y0 - (e.clientY - sy) / oy * 100));
-    img.style.objectPosition = `${x}% ${y}%`;
+    if (rx > 1) f.x = Math.max(0, Math.min(100, x0 - (e.clientX - sx) / rx * 100));
+    if (ry > 1) f.y = Math.max(0, Math.min(100, y0 - (e.clientY - sy) / ry * 100));
+    glApplyFr(el, f);
   };
   const up = () => {
-    img.removeEventListener('pointermove', mv); img.removeEventListener('pointerup', up); img.removeEventListener('pointercancel', up);
-    img.classList.remove('dragging');
-    if (moved) onEnd(`${Math.round(x)} ${Math.round(y)}`);
+    el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+    el.classList.remove('dragging');
+    if (moved) onEnd(f);
   };
-  img.addEventListener('pointermove', mv); img.addEventListener('pointerup', up); img.addEventListener('pointercancel', up);
+  el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
 }
 async function glSavePhotos(id, photos, msg) {
   const { error } = await supabase.from(GL_TABLE).update({ photos }).eq('id', id);
@@ -533,11 +535,37 @@ async function glSavePhotos(id, photos, msg) {
   if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri();
   return true;
 }
-async function glAdjSet(id, idx, pos) {
+async function glAdjSet(id, idx, fr) {
   if (!isEditor()) return;
   const it = glItems.find(x => x.id === id); if (!it) return;
-  const photos = (it.photos || []).map((p, i) => { if (i !== idx) return p; const q = { ...p }; if (pos) q.pos = pos; else delete q.pos; return q; });
-  if (await glSavePhotos(id, photos, pos ? '✓ Posisi foto disimpan' : '✓ Posisi kembali ke tengah')) openGlDetail(id, idx);
+  const photos = (it.photos || []).map((p, i) => i !== idx ? p : glSetFr({ ...p }, fr));
+  if (await glSavePhotos(id, photos, fr ? '✓ Posisi & zoom disimpan' : '✓ Posisi & zoom direset')) openGlDetail(id, idx);
+}
+// Media besar di jendela detail: bingkai 4:3 sama dengan thumbnail & sampul (posisi + zoom); mode atur = bisa digeser
+function glBigMedia(it, cur, idx) {
+  const url = glUrl(cur.path), vid = glIsVid(cur);
+  glAdjCtx = glAdj ? { id: it.id, idx } : null;
+  if (glAdj) return `${vid ? `<video class="gl-drag" src="${url}" muted loop autoplay playsinline preload="auto"${glFrAttr(cur)} onpointerdown="glDragStart(event, glAdjSave)" onwheel="glWheel(event)"></video>`
+      : `<img class="gl-drag" src="${url}" alt="" draggable="false"${glFrAttr(cur)} onpointerdown="glDragStart(event, glAdjSave)" onwheel="glWheel(event)">`}<span class="gl-draghint">✥ Geser · 🔍 zoom</span>`;
+  if (vid) return `<video src="${url}#t=0.5" playsinline preload="metadata"${glFrAttr(cur)} onclick="glVidToggle(this)" onplay="this.parentNode.classList.add('playing')" onpause="this.parentNode.classList.remove('playing')"></video><button class="gl-vplay" onclick="glVidToggle(this.parentNode.querySelector('video'))" aria-label="Putar">▶</button><button class="gl-zoom" onclick="glZoom('${url}', true)" aria-label="Lihat video penuh">⤢</button>`;
+  return `<img src="${url}" alt=""${glFrAttr(cur)} onclick="glZoom(this.src)" title="Ketuk untuk melihat foto utuh"><button class="gl-zoom" onclick="glZoom('${url}')" aria-label="Lihat penuh">⤢</button>`;
+}
+function glVidToggle(v) { if (!v) return; if (v.paused) { v.muted = false; v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } else v.pause(); }
+let glAdjCtx = null, glZoomT = null;
+const glAdjSave = fr => glAdjCtx && glAdjSet(glAdjCtx.id, glAdjCtx.idx, fr);
+const glAdjEl = () => document.querySelector('#gl-detail .gl-big .gl-drag');
+function glZoomLive(v) {
+  const el = glAdjEl(); if (!el) return;
+  glApplyFr(el, { x: +el.dataset.x, y: +el.dataset.y, z: +v });
+  const b = document.getElementById('gl-zmv'); if (b) b.textContent = (+v).toFixed(1) + '×';
+}
+function glZoomCommit() { const el = glAdjEl(); if (el) glAdjSave(glFrOf(el)); }
+function glWheel(ev) {
+  ev.preventDefault();
+  const el = ev.currentTarget, z = Math.min(3, Math.max(1, +el.dataset.z - ev.deltaY * 0.0015));
+  glZoomLive(z);
+  const r = document.querySelector('.gl-zm input'); if (r) r.value = z;
+  clearTimeout(glZoomT); glZoomT = setTimeout(glZoomCommit, 600);
 }
 async function glAdjRotate(id, idx) {
   if (!isEditor()) return;
@@ -610,7 +638,7 @@ async function submitGlItem() {
       const type = p.blob.type || (ext === 'webm' ? 'video/webm' : ext === 'mov' ? 'video/quicktime' : 'video/mp4');
       const { error } = await supabase.storage.from(GL_BUCKET).upload(path, p.blob, { contentType: type, cacheControl: '31536000', upsert: false });
       if (error) throw error;
-      photos.push(p.video ? { path, area: p.area || '', type: 'video' } : glPhotoRow(path, p));
+      photos.push(glPhotoRow(path, p, !!p.video));
     }
     btn.textContent = '⏳ Mengirim…';
     const row = { id, car_make: e.car_make, car_model: String(e.car_model).trim(), car_year: e.car_year ? +e.car_year : null, body: e.body || null,
@@ -691,9 +719,27 @@ function glPhotoDel(i) { const [p] = glEdit.photos.splice(i, 1); if (p.path) glE
 // pos = titik fokus "x y" (%) untuk object-position kotak kecil & sampul; ⟳ memutar foto 90° (dibuat ulang lewat canvas, diunggah sebagai file baru);
 // ⤢ / ketuk foto besar = lihat penuh (glZoom).
 function glPosXY(p) { const m = String(p?.pos || '').match(/^(\d{1,3}) (\d{1,3})$/); return m ? [Math.min(100, +m[1]), Math.min(100, +m[2])] : null; }
-function glPosAttr(p) { const xy = glPosXY(p); return xy ? ` style="object-position:${xy[0]}% ${xy[1]}%"` : ''; }
-function glPhotoRow(path, p) { const r = { path, area: p.area || '' }; if (glPosXY(p)) r.pos = p.pos; return r; }
-function glSetPos(i) { const p = glEdit.photos[i]; if (!p) return; delete p.pos; renderGlPhotos(); }
+// Bingkai media: pos "x y" (%) + zoom 1–3. Media diperbesar (width/height = zoom×) & digeser lewat left/top, object-fit cover + object-position
+// (tanpa transform agar kontrol video tidak ikut membesar). Dipakai sampul kartu, thumbnail, foto/video besar & form.
+const glFr = p => { const xy = glPosXY(p) || [50, 50], z = Math.min(3, Math.max(1, +p?.zoom || 1)); return { x: xy[0], y: xy[1], z }; };
+const glFrCss = ({ x, y, z }) => `position:absolute;left:${((1 - z) * x).toFixed(2)}%;top:${((1 - z) * y).toFixed(2)}%;width:${(z * 100).toFixed(1)}%;height:${(z * 100).toFixed(1)}%;max-width:none;object-fit:cover;object-position:${x}% ${y}%`;
+const glFrAttr = p => { const f = glFr(p); return ` style="${glFrCss(f)}" data-x="${f.x}" data-y="${f.y}" data-z="${f.z}"`; };
+const glFrOf = el => ({ x: +el.dataset.x, y: +el.dataset.y, z: +el.dataset.z || 1 });
+function glApplyFr(el, f) { el.style.cssText = glFrCss(f); el.dataset.x = f.x; el.dataset.y = f.y; el.dataset.z = f.z; }
+function glSetFr(q, f) {
+  if (!f) { delete q.pos; delete q.zoom; return q; }
+  if (Math.round(f.x) === 50 && Math.round(f.y) === 50) delete q.pos; else q.pos = `${Math.round(f.x)} ${Math.round(f.y)}`;
+  if (f.z > 1.01) q.zoom = Math.round(f.z * 100) / 100; else delete q.zoom;
+  return q;
+}
+function glPosAttr(p) { return glFrAttr(p); }
+function glPhotoRow(path, p, vid) { const r = { path, area: p.area || '' }; if (vid) r.type = 'video'; if (glPosXY(p)) r.pos = p.pos; if (+p.zoom > 1) r.zoom = +p.zoom; return r; }
+function glSetPos(i) { const p = glEdit.photos[i]; if (!p) return; delete p.pos; delete p.zoom; renderGlPhotos(); }
+function glFormFr(i, f) { const p = glEdit.photos[i]; if (!p) return; glSetFr(p, f); renderGlPhotos(); }
+function glFormZoom(i, inp) {
+  const p = glEdit.photos[i], el = inp.closest('.gl-fph')?.querySelector('.gl-drag'); if (!p || !el) return;
+  const f = { ...glFrOf(el), z: +inp.value }; glApplyFr(el, f); glSetFr(p, f);
+}
 async function glRotBlob(src) {
   const bmp = await createImageBitmap(src);
   const c = document.createElement('canvas'); c.width = bmp.height; c.height = bmp.width;
@@ -713,22 +759,32 @@ async function glRotate(i) {
   } catch (e) { showToast('⚠ Foto tidak bisa diputar: ' + (e.message || e), 5000); }
   delete p._rot; renderGlPhotos();
 }
-function glZoom(src) {
+function glZoom(src, vid) {
   if (!src) return;
   let z = document.getElementById('gl-zoom');
-  if (!z) { z = document.createElement('div'); z.id = 'gl-zoom'; z.className = 'gl-zoomov'; z.onclick = () => z.classList.remove('open'); document.body.appendChild(z); }
-  z.innerHTML = `<img src="${src}" alt=""><button aria-label="Tutup">✕</button>`;
+  if (!z) {
+    z = document.createElement('div'); z.id = 'gl-zoom'; z.className = 'gl-zoomov';
+    z.onclick = e => { if (e.target.tagName !== 'VIDEO') glZoomClose(); };
+    document.body.appendChild(z);
+  }
+  document.querySelectorAll('#gl-detail video').forEach(v => v.pause());
+  z.innerHTML = (vid ? `<video src="${src}" controls autoplay playsinline></video>` : `<img src="${src}" alt="">`) + '<button aria-label="Tutup">✕</button>';
   z.classList.add('open');
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('gl-zoom')?.classList.remove('open'); });
+function glZoomClose() { const z = document.getElementById('gl-zoom'); if (!z) return; z.querySelector('video')?.pause(); z.classList.remove('open'); z.innerHTML = ''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') glZoomClose(); });
 function renderGlPhotos() {
   const el = document.getElementById('glf-photos'); if (!el) return;
   const first = glEdit.photos.findIndex(p => !(p.video || glIsVid(p)));
-  el.innerHTML = glEdit.photos.map((p, i) => `<div class="gl-fph">${p.video || glIsVid(p) ? `<div class="gl-fvid"><video src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}</div>` : `<div class="gl-fimg" title="Geser foto untuk mengatur bagian yang tampil di sampul"><img class="gl-drag" src="${p.url}" alt="" draggable="false" style="object-position:${glPosCss(p)}" onpointerdown="glDragStart(event, pos => { glEdit.photos[${i}].pos = pos; renderGlPhotos(); })"></div>`}
+  el.innerHTML = glEdit.photos.map((p, i) => { const vid = !!(p.video || glIsVid(p));
+    return `<div class="gl-fph"><div class="gl-fimg${vid ? ' vid' : ''}" title="Geser untuk mengatur bagian yang tampil di sampul">${vid
+      ? `<video class="gl-drag" src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"${glFrAttr(p)} onpointerdown="glDragStart(event, f => glFormFr(${i}, f))"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}`
+      : `<img class="gl-drag" src="${p.url}" alt="" draggable="false"${glFrAttr(p)} onpointerdown="glDragStart(event, f => glFormFr(${i}, f))">`}</div>
+      <label class="gl-fzm" title="Zoom">🔍<input type="range" min="1" max="3" step="0.05" value="${glFr(p).z}" oninput="glFormZoom(${i}, this)"></label>
       <select onchange="glPhotoArea(${i},this.value)"><option value=""${p.area ? '' : ' selected'}>— Keterangan —</option>${p.area && !GL_AREAS.includes(p.area) ? `<option selected>${escHtml(p.area)}</option>` : ''}${GL_AREA_GROUPS.map(([g, l]) => { const o = l.map(a => `<option${a === p.area ? ' selected' : ''}>${a}</option>`).join(''); return g ? `<optgroup label="${g}">${o}</optgroup>` : o; }).join('')}</select>
-      <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === first ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button>${p.video || glIsVid(p) ? '' : `<button onclick="glRotate(${i})" title="Putar 90°">⟳</button>${p.pos ? `<button onclick="glSetPos(${i})" title="Kembali ke tengah">⊙</button>` : ''}<button onclick="glZoom('${p.url}')" title="Lihat penuh">⤢</button>`}<button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`).join('')
+      <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === first ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button>${vid ? '' : `<button onclick="glRotate(${i})" title="Putar 90°">⟳</button>`}${p.pos || +p.zoom > 1 ? `<button onclick="glSetPos(${i})" title="Reset posisi & zoom">⊙</button>` : ''}<button onclick="glZoom('${p.url}'${vid ? ', true' : ''})" title="Lihat penuh">⤢</button><button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`; }).join('')
     || '<span class="gl-hint">Belum ada foto/video. Foto pertama = foto utama. Pastikan plat nomor sudah diburamkan.</span>';
-  if (glEdit.photos.some(p => !(p.video || glIsVid(p)))) el.insertAdjacentHTML('beforeend', '<span class="gl-hint">Foto selalu tampil utuh di tampilan besar. Untuk kotak kecil &amp; sampul, <b>geser foto</b> di kotaknya; ⟳ memutar foto 90°, ⤢ melihat foto penuh.</span>');
+  if (glEdit.photos.some(p => !(p.video || glIsVid(p)))) el.insertAdjacentHTML('beforeend', '<span class="gl-hint">Foto selalu tampil utuh di tampilan besar. Untuk kotak kecil &amp; sampul, <b>geser foto/video</b> di kotaknya & atur 🔍 zoom; ⟳ memutar foto 90°, ⤢ melihat foto penuh.</span>');
 }
 function renderGlForm() {
   const e = glEdit, box = document.querySelector('#gl-form .gl-fbox');
@@ -785,8 +841,8 @@ async function saveGlItem() {
         const type = p.blob.type || (ext === 'webm' ? 'video/webm' : ext === 'mov' ? 'video/quicktime' : 'video/mp4');
         const { error } = await supabase.storage.from(GL_BUCKET).upload(path, p.blob, { contentType: type, cacheControl: '31536000', upsert: false });
         if (error) throw new Error(/exceeded|too large|413|maximum/i.test(error.message || '') ? `${p.video ? 'Video' : 'Foto'} terlalu besar untuk batas unggah Supabase (${error.message})` : error.message);
-        photos.push(p.video ? { path, area: p.area || '', type: 'video' } : glPhotoRow(path, p));
-      } else photos.push(glIsVid(p) ? { path: p.path, area: p.area || '', type: 'video' } : glPhotoRow(p.path, p));
+        photos.push(glPhotoRow(path, p, !!p.video));
+      } else photos.push(glPhotoRow(p.path, p, glIsVid(p)));
     }
     const { error } = await supabase.from(GL_TABLE).update({ ...row, photos }).eq('id', id);
     if (error) throw error;
