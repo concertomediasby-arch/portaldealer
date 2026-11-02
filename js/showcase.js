@@ -400,7 +400,7 @@ function glCard(it) {
   const nVid = (it.photos || []).filter(glIsVid).length, nImg = (it.photos || []).length - nVid;
   const prods = (it.products || []).map(pid => glProd(pid).product?.name).filter(Boolean);
   return `<button class="gl-card" onclick="openGlDetail('${it.id}')">
-    <span class="gl-ph">${ph ? (cov ? `<video class="gl-cover" src="${glUrl(cov.path)}" muted loop autoplay playsinline preload="metadata"${glFrAttr(cov)}></video>` : glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
+    <span class="gl-ph">${ph ? (cov ? `<video class="gl-cover" src="${glUrl(cov.path)}"${glCovPoster(it)} muted loop autoplay playsinline webkit-playsinline preload="auto"${glFrAttr(cov)}></video>` : glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? '<span class="gl-tro">🏆 Juara</span>' : ''}
       ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : ''}</span>
@@ -410,13 +410,25 @@ function glCard(it) {
       ${prods.length ? `<span class="gl-chips">${prods.slice(0, 4).map(n => `<span>${escHtml(n)}</span>`).join('')}${prods.length > 4 ? `<span>+${prods.length - 4}</span>` : ''}</span>` : ''}
     </span></button>`;
 }
-// Sampul video loop (2 Nov 2026, permintaan pemilik — dicoba dulu per mobil, dipilih Editor): diputar bisu berulang hanya saat terlihat
-let glCovIO = null;
+// Sampul video loop (2 Nov 2026, permintaan pemilik — dicoba dulu per mobil, dipilih Editor): diputar bisu berulang hanya saat terlihat.
+// Langsung diputar saat Galeri dibuka (2 Nov 2026, permintaan pemilik): play() dipanggil seketika untuk kartu yang terlihat; bila HP
+// memblokir (mis. iPhone mode Hemat Daya), sentuhan/klik/tombol pertama di halaman memutar semuanya. Poster = foto pertama mobil itu
+// agar kartu tidak hitam selama video dimuat / diblokir.
+const glCovPoster = it => { const f = (it.photos || []).find(p => !glIsVid(p)), u = f && glUrl(f.path); return u ? ` poster="${u}"` : ''; };
+let glCovIO = null, glCovUnlock = false;
+const glCovVis = v => { const r = v.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight && r.width > 0; };
+const glCovPlay = v => { v.muted = true; v.defaultMuted = true; const p = v.play?.(); p?.catch?.(() => glCovArm()); };
+function glCovArm() {   // pasang sekali: interaksi pertama pengguna memutar sampul yang terlihat
+  if (glCovUnlock) return; glCovUnlock = true;
+  const go = () => { ['pointerdown', 'touchstart', 'keydown'].forEach(t => document.removeEventListener(t, go, true)); glCovUnlock = false;
+    document.querySelectorAll('video.gl-cover').forEach(v => { if (glCovVis(v) && v.paused) v.play?.().catch(() => {}); }); };
+  ['pointerdown', 'touchstart', 'keydown'].forEach(t => document.addEventListener(t, go, { capture: true, passive: true }));
+}
 function glCoverObs() {
   const vids = document.querySelectorAll('video.gl-cover'); if (!vids.length) return;
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { vids.forEach(v => { v.removeAttribute('autoplay'); v.pause(); }); return; }
-  glCovIO = glCovIO || ('IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? e.target.play?.().catch(() => {}) : e.target.pause())) : null);
-  vids.forEach(v => { v.muted = true; glCovIO?.observe(v); });
+  glCovIO = glCovIO || ('IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? glCovPlay(e.target) : e.target.pause()), { rootMargin: '120px 0px' }) : null);
+  vids.forEach(v => { v.muted = true; v.defaultMuted = true; glCovIO?.observe(v); if (!glCovIO || glCovVis(v)) glCovPlay(v); });
 }
 function renderGaleri() {
   const box = document.getElementById('gl-body'); if (!box) return;
