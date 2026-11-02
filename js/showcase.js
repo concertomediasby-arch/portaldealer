@@ -395,7 +395,7 @@ function glCard(it) {
   const nVid = (it.photos || []).filter(glIsVid).length, nImg = (it.photos || []).length - nVid;
   const prods = (it.products || []).map(pid => glProd(pid).product?.name).filter(Boolean);
   return `<button class="gl-card" onclick="openGlDetail('${it.id}')">
-    <span class="gl-ph">${ph ? (glIsVid(ph) ? glVidTag(glUrl(ph.path)) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy">`) : glCarSvg}
+    <span class="gl-ph">${ph ? (glIsVid(ph) ? glVidTag(glUrl(ph.path)) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glPosAttr(ph)}>`) : glCarSvg}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? '<span class="gl-tro">🏆 Juara</span>' : ''}
       ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : ''}</span>
@@ -478,8 +478,8 @@ function openGlDetail(id, photoIdx = 0) {
     <button class="rk-pick-x gl-x" onclick="closeGlDetail()" aria-label="Tutup">✕</button>
     <div class="gl-dgrid">
       <div>
-        <div class="gl-big">${cur ? (glIsVid(cur) ? `<video src="${glUrl(cur.path)}" controls playsinline preload="metadata"></video>` : `<img src="${glUrl(cur.path)}" alt="">`) : glCarSvg}${cur?.area ? `<span class="gl-area${glIsVid(cur) ? ' top' : ''}">${escHtml(cur.area)}</span>` : ''}</div>
-        ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path)) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy">`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
+        <div class="gl-big">${cur ? (glIsVid(cur) ? `<video src="${glUrl(cur.path)}" controls playsinline preload="metadata"></video>` : `<img src="${glUrl(cur.path)}" alt="" onclick="glZoom(this.src)" title="Ketuk untuk melihat penuh">`) : glCarSvg}${cur && !glIsVid(cur) ? '<button class="gl-zoom" onclick="glZoom(this.parentNode.querySelector(\'img\').src)" aria-label="Lihat penuh">⤢</button>' : ''}${cur?.area ? `<span class="gl-area${glIsVid(cur) ? ' top' : ''}">${escHtml(cur.area)}</span>` : ''}</div>
+        ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path)) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy"${glPosAttr(p)}>`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
       </div>
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
@@ -552,7 +552,7 @@ async function submitGlItem() {
       const type = p.blob.type || (ext === 'webm' ? 'video/webm' : ext === 'mov' ? 'video/quicktime' : 'video/mp4');
       const { error } = await supabase.storage.from(GL_BUCKET).upload(path, p.blob, { contentType: type, cacheControl: '31536000', upsert: false });
       if (error) throw error;
-      photos.push(p.video ? { path, area: p.area || '', type: 'video' } : { path, area: p.area || '' });
+      photos.push(p.video ? { path, area: p.area || '', type: 'video' } : glPhotoRow(path, p));
     }
     btn.textContent = '⏳ Mengirim…';
     const row = { id, car_make: e.car_make, car_model: String(e.car_model).trim(), car_year: e.car_year ? +e.car_year : null, body: e.body || null,
@@ -629,13 +629,52 @@ function glAddVideos(input) {
 function glPhotoArea(i, v) { glEdit.photos[i].area = v; }
 function glPhotoMove(i, d) { const a = glEdit.photos, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; renderGlPhotos(); }
 function glPhotoDel(i) { const [p] = glEdit.photos.splice(i, 1); if (p.path) glEdit.removed.push(p.path); if (p.blob) URL.revokeObjectURL(p.url); renderGlPhotos(); }
+// Penyesuaian foto (2 Nov 2026, permintaan pemilik — foto terpotong di kotak kecil/sampul):
+// pos = titik fokus "x y" (%) untuk object-position kotak kecil & sampul; ⟳ memutar foto 90° (dibuat ulang lewat canvas, diunggah sebagai file baru);
+// ⤢ / ketuk foto besar = lihat penuh (glZoom).
+function glPosXY(p) { const m = String(p?.pos || '').match(/^(\d{1,3}) (\d{1,3})$/); return m ? [Math.min(100, +m[1]), Math.min(100, +m[2])] : null; }
+function glPosAttr(p) { const xy = glPosXY(p); return xy ? ` style="object-position:${xy[0]}% ${xy[1]}%"` : ''; }
+function glPhotoRow(path, p) { const r = { path, area: p.area || '' }; if (glPosXY(p)) r.pos = p.pos; return r; }
+function glSetPos(i, ev) {
+  const p = glEdit.photos[i]; if (!p) return;
+  if (!ev) { delete p.pos; renderGlPhotos(); return; }
+  const r = ev.currentTarget.getBoundingClientRect();
+  const x = Math.round(Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * 100), y = Math.round(Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height)) * 100);
+  p.pos = `${x} ${y}`; renderGlPhotos();
+}
+async function glRotate(i) {
+  const p = glEdit.photos[i]; if (!p || p.video || glIsVid(p) || p._rot) return;
+  p._rot = true; showToast('⏳ Memutar foto…', 8000);
+  try {
+    const src = p.blob || await (await fetch(p.url, { cache: 'no-store' })).blob();
+    const bmp = await createImageBitmap(src);
+    const c = document.createElement('canvas'); c.width = bmp.height; c.height = bmp.width;
+    const g = c.getContext('2d'); g.translate(c.width, 0); g.rotate(Math.PI / 2); g.drawImage(bmp, 0, 0);
+    const blob = await new Promise((res, rej) => c.toBlob(b => b && b.type === 'image/webp' ? res(b) : c.toBlob(j => j ? res(j) : rej(new Error('Gagal memutar foto')), 'image/jpeg', .88), 'image/webp', .85));
+    if (p.path) { glEdit.removed.push(p.path); delete p.path; }
+    if (p.blob) URL.revokeObjectURL(p.url);
+    const xy = glPosXY(p); if (xy) p.pos = `${100 - xy[1]} ${xy[0]}`;
+    p.blob = blob; p.url = URL.createObjectURL(blob);
+    showToast('✓ Foto diputar — tersimpan setelah klik Simpan', 3000);
+  } catch (e) { showToast('⚠ Foto tidak bisa diputar: ' + (e.message || e), 5000); }
+  delete p._rot; renderGlPhotos();
+}
+function glZoom(src) {
+  if (!src) return;
+  let z = document.getElementById('gl-zoom');
+  if (!z) { z = document.createElement('div'); z.id = 'gl-zoom'; z.className = 'gl-zoomov'; z.onclick = () => z.classList.remove('open'); document.body.appendChild(z); }
+  z.innerHTML = `<img src="${src}" alt=""><button aria-label="Tutup">✕</button>`;
+  z.classList.add('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('gl-zoom')?.classList.remove('open'); });
 function renderGlPhotos() {
   const el = document.getElementById('glf-photos'); if (!el) return;
   const first = glEdit.photos.findIndex(p => !(p.video || glIsVid(p)));
-  el.innerHTML = glEdit.photos.map((p, i) => `<div class="gl-fph">${p.video || glIsVid(p) ? `<div class="gl-fvid"><video src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}</div>` : `<img src="${p.url}" alt="">`}
+  el.innerHTML = glEdit.photos.map((p, i) => `<div class="gl-fph">${p.video || glIsVid(p) ? `<div class="gl-fvid"><video src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}</div>` : `<div class="gl-fimg" onclick="glSetPos(${i},event)" title="Ketuk bagian foto yang ingin ditampilkan di kotak kecil"><img src="${p.url}" alt=""${glPosAttr(p)}>${p.pos ? `<i class="gl-fdot" style="left:${glPosXY(p)[0]}%;top:${glPosXY(p)[1]}%"></i>` : ''}</div>`}
       <select onchange="glPhotoArea(${i},this.value)"><option value=""${p.area ? '' : ' selected'}>— Keterangan —</option>${p.area && !GL_AREAS.includes(p.area) ? `<option selected>${escHtml(p.area)}</option>` : ''}${GL_AREA_GROUPS.map(([g, l]) => { const o = l.map(a => `<option${a === p.area ? ' selected' : ''}>${a}</option>`).join(''); return g ? `<optgroup label="${g}">${o}</optgroup>` : o; }).join('')}</select>
-      <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === first ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button><button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`).join('')
+      <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === first ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button>${p.video || glIsVid(p) ? '' : `<button onclick="glRotate(${i})" title="Putar 90°">⟳</button>${p.pos ? `<button onclick="glSetPos(${i})" title="Kembali ke tengah">⊙</button>` : ''}<button onclick="glZoom('${p.url}')" title="Lihat penuh">⤢</button>`}<button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`).join('')
     || '<span class="gl-hint">Belum ada foto/video. Foto pertama = foto utama. Pastikan plat nomor sudah diburamkan.</span>';
+  if (glEdit.photos.some(p => !(p.video || glIsVid(p)))) el.insertAdjacentHTML('beforeend', '<span class="gl-hint">Foto selalu tampil utuh di tampilan besar. Untuk kotak kecil &amp; sampul, <b>ketuk bagian foto</b> yang ingin terlihat (titik emas); ⟳ memutar foto 90°, ⤢ melihat foto penuh.</span>');
 }
 function renderGlForm() {
   const e = glEdit, box = document.querySelector('#gl-form .gl-fbox');
@@ -692,8 +731,8 @@ async function saveGlItem() {
         const type = p.blob.type || (ext === 'webm' ? 'video/webm' : ext === 'mov' ? 'video/quicktime' : 'video/mp4');
         const { error } = await supabase.storage.from(GL_BUCKET).upload(path, p.blob, { contentType: type, cacheControl: '31536000', upsert: false });
         if (error) throw new Error(/exceeded|too large|413|maximum/i.test(error.message || '') ? `${p.video ? 'Video' : 'Foto'} terlalu besar untuk batas unggah Supabase (${error.message})` : error.message);
-        photos.push(p.video ? { path, area: p.area || '', type: 'video' } : { path, area: p.area || '' });
-      } else photos.push(glIsVid(p) ? { path: p.path, area: p.area || '', type: 'video' } : { path: p.path, area: p.area || '' });
+        photos.push(p.video ? { path, area: p.area || '', type: 'video' } : glPhotoRow(path, p));
+      } else photos.push(glIsVid(p) ? { path: p.path, area: p.area || '', type: 'video' } : glPhotoRow(p.path, p));
     }
     const { error } = await supabase.from(GL_TABLE).update({ ...row, photos }).eq('id', id);
     if (error) throw error;
