@@ -258,8 +258,7 @@ function renderHallOfFame() {
       ${years.length > 1 ? `<span class="hof-flbl">Tahun</span>${chip('year', 'all', 'Semua', hofYear === 'all')}${years.map(y => chip('year', y, y, hofYear === String(y))).join('')}` : ''}
     </div>
     ${series.length ? `
-    <div class="hof-h2">Klasemen Prestasi per Seri</div><div class="hof-sub">Diurutkan berdasarkan jumlah prestasi — bukan harga.</div>
-    <div class="hof-board"><div class="hof-row head"><span>#</span><span>Seri</span><span class="hof-thumbs"></span><span class="hof-c">${hofMedal(1)}</span><span class="hof-c">${hofMedal(2)}</span><span class="hof-c">${hofMedal(3)}</span><span class="hof-tot">Total</span></div>${board}</div>
+    <!-- Klasemen Prestasi per Seri dihapus 2 Nov 2026 (permintaan pemilik) -->
     ${dealers.length ? `<div class="hof-h2">Dealer Pemasang Juara</div><div class="hof-sub">Dealer resmi yang memasang sistem pemenang — diurutkan dari jumlah Juara 1.</div>
     <div class="hof-board"><div class="hof-row head"><span>#</span><span>Dealer</span><span class="hof-thumbs"></span><span class="hof-c">${hofMedal(1)}</span><span class="hof-c">${hofMedal(2)}</span><span class="hof-c">${hofMedal(3)}</span><span class="hof-tot">Total</span></div>${dboard}</div>` : ''}
     ${isEditor() && glItems?.some(glPending) ? `<div class="gl-pbanner">📥 <b>${glItems.filter(glPending).length} kiriman foto/video</b> menunggu persetujuan. <button class="gt-btn" onclick="openGaleri()">Tinjau di Galeri →</button></div>` : ''}
