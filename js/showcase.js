@@ -478,10 +478,10 @@ function openGlDetail(id, photoIdx = 0) {
     <button class="rk-pick-x gl-x" onclick="closeGlDetail()" aria-label="Tutup">✕</button>
     <div class="gl-dgrid">
       <div>
-        <div class="gl-big">${cur ? (glIsVid(cur) ? `<video src="${glUrl(cur.path)}" controls playsinline preload="metadata"></video>` : `<img src="${glUrl(cur.path)}" alt="" onclick="${glAdj ? `glAdjClick(event,'${it.id}',${photoIdx})` : 'glZoom(this.src)'}" title="${glAdj ? 'Ketuk bagian yang ingin terlihat di kotak kecil & sampul' : 'Ketuk untuk melihat penuh'}">${glAdj && glPosXY(cur) ? glAdjDot(cur) : ''}`) : glCarSvg}${cur && !glIsVid(cur) ? '<button class="gl-zoom" onclick="glZoom(this.parentNode.querySelector(\'img\').src)" aria-label="Lihat penuh">⤢</button>' : ''}${cur?.area ? `<span class="gl-area${glIsVid(cur) ? ' top' : ''}">${escHtml(cur.area)}</span>` : ''}</div>
+        <div class="gl-big">${cur ? (glIsVid(cur) ? `<video src="${glUrl(cur.path)}" controls playsinline preload="metadata"></video>` : (glAdj ? `<img class="gl-drag" src="${glUrl(cur.path)}" alt="" draggable="false" style="object-position:${glPosCss(cur)}" onpointerdown="glDragStart(event, pos => glAdjSet('${it.id}',${photoIdx},pos))"><span class="gl-draghint">✥ Geser foto</span>` : `<img src="${glUrl(cur.path)}" alt="" onclick="glZoom(this.src)" title="Ketuk untuk melihat penuh">`)) : glCarSvg}${cur && !glIsVid(cur) ? '<button class="gl-zoom" onclick="glZoom(this.parentNode.querySelector(\'img\').src)" aria-label="Lihat penuh">⤢</button>' : ''}${cur?.area ? `<span class="gl-area${glIsVid(cur) ? ' top' : ''}">${escHtml(cur.area)}</span>` : ''}</div>
         ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path)) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy"${glPosAttr(p)}>`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
       ${cur && !glIsVid(cur) && isEditor() ? `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
-        ? `<span>🎯 Ketuk foto di atas pada bagian yang ingin terlihat di kotak kecil &amp; sampul kartu.</span><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Tengah</button><button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button><button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
+        ? `<span>✥ Geser foto di atas — bingkai itu sama dengan sampul kartu Galeri.</span><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Tengah</button><button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button><button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
         : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi foto ini</button><button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`}</div>` : ''}
       </div>
       <div>
@@ -501,7 +501,30 @@ function openGlDetail(id, photoIdx = 0) {
 function closeGlDetail() { glAdj = false; document.getElementById('gl-detail')?.classList.remove('open'); }
 // Atur posisi / putar foto langsung dari jendela detail (Editor, 2 Nov 2026 — permintaan pemilik): disimpan langsung ke tabel.
 let glAdj = false;
-function glAdjDot(p) { const [x, y] = glPosXY(p); return `<i class="gl-fdot" style="left:${x}%;top:${y}%"></i>`; }
+function glPosCss(p) { const xy = glPosXY(p) || [50, 50]; return `${xy[0]}% ${xy[1]}%`; }
+// Geser foto (drag) untuk mengatur bagian yang tampil pada bingkai object-fit: cover; onEnd(pos "x y") setelah dilepas.
+function glDragStart(ev, onEnd) {
+  const img = ev.currentTarget; if (!img || ev.button > 0) return;
+  ev.preventDefault();
+  const m = (img.style.objectPosition || '50% 50%').match(/([\d.]+)%\s+([\d.]+)%/) || [0, 50, 50];
+  let x = +m[1], y = +m[2]; const sx = ev.clientX, sy = ev.clientY, x0 = x, y0 = y;
+  const r = img.getBoundingClientRect(), nw = img.naturalWidth || r.width, nh = img.naturalHeight || r.height;
+  const sc = Math.max(r.width / nw, r.height / nh), ox = nw * sc - r.width, oy = nh * sc - r.height;
+  let moved = false;
+  img.setPointerCapture?.(ev.pointerId); img.classList.add('dragging');
+  const mv = e => {
+    moved = true;
+    if (ox > 1) x = Math.max(0, Math.min(100, x0 - (e.clientX - sx) / ox * 100));
+    if (oy > 1) y = Math.max(0, Math.min(100, y0 - (e.clientY - sy) / oy * 100));
+    img.style.objectPosition = `${x}% ${y}%`;
+  };
+  const up = () => {
+    img.removeEventListener('pointermove', mv); img.removeEventListener('pointerup', up); img.removeEventListener('pointercancel', up);
+    img.classList.remove('dragging');
+    if (moved) onEnd(`${Math.round(x)} ${Math.round(y)}`);
+  };
+  img.addEventListener('pointermove', mv); img.addEventListener('pointerup', up); img.addEventListener('pointercancel', up);
+}
 async function glSavePhotos(id, photos, msg) {
   const { error } = await supabase.from(GL_TABLE).update({ photos }).eq('id', id);
   if (error) { showToast('⚠ Gagal menyimpan: ' + error.message, 6000); return false; }
@@ -509,13 +532,6 @@ async function glSavePhotos(id, photos, msg) {
   if (msg) showToast(msg, 2500);
   if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri();
   return true;
-}
-function glAdjClick(ev, id, idx) {
-  const img = ev.currentTarget, r = img.getBoundingClientRect();
-  const nw = img.naturalWidth || r.width, nh = img.naturalHeight || r.height, sc = Math.min(r.width / nw, r.height / nh);
-  const w = nw * sc, h = nh * sc, ox = (r.width - w) / 2, oy = (r.height - h) / 2;
-  const x = Math.round(Math.max(0, Math.min(1, (ev.clientX - r.left - ox) / w)) * 100), y = Math.round(Math.max(0, Math.min(1, (ev.clientY - r.top - oy) / h)) * 100);
-  glAdjSet(id, idx, `${x} ${y}`);
 }
 async function glAdjSet(id, idx, pos) {
   if (!isEditor()) return;
@@ -677,13 +693,7 @@ function glPhotoDel(i) { const [p] = glEdit.photos.splice(i, 1); if (p.path) glE
 function glPosXY(p) { const m = String(p?.pos || '').match(/^(\d{1,3}) (\d{1,3})$/); return m ? [Math.min(100, +m[1]), Math.min(100, +m[2])] : null; }
 function glPosAttr(p) { const xy = glPosXY(p); return xy ? ` style="object-position:${xy[0]}% ${xy[1]}%"` : ''; }
 function glPhotoRow(path, p) { const r = { path, area: p.area || '' }; if (glPosXY(p)) r.pos = p.pos; return r; }
-function glSetPos(i, ev) {
-  const p = glEdit.photos[i]; if (!p) return;
-  if (!ev) { delete p.pos; renderGlPhotos(); return; }
-  const r = ev.currentTarget.getBoundingClientRect();
-  const x = Math.round(Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * 100), y = Math.round(Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height)) * 100);
-  p.pos = `${x} ${y}`; renderGlPhotos();
-}
+function glSetPos(i) { const p = glEdit.photos[i]; if (!p) return; delete p.pos; renderGlPhotos(); }
 async function glRotBlob(src) {
   const bmp = await createImageBitmap(src);
   const c = document.createElement('canvas'); c.width = bmp.height; c.height = bmp.width;
@@ -714,11 +724,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') document.get
 function renderGlPhotos() {
   const el = document.getElementById('glf-photos'); if (!el) return;
   const first = glEdit.photos.findIndex(p => !(p.video || glIsVid(p)));
-  el.innerHTML = glEdit.photos.map((p, i) => `<div class="gl-fph">${p.video || glIsVid(p) ? `<div class="gl-fvid"><video src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}</div>` : `<div class="gl-fimg" onclick="glSetPos(${i},event)" title="Ketuk bagian foto yang ingin ditampilkan di kotak kecil"><img src="${p.url}" alt=""${glPosAttr(p)}>${p.pos ? `<i class="gl-fdot" style="left:${glPosXY(p)[0]}%;top:${glPosXY(p)[1]}%"></i>` : ''}</div>`}
+  el.innerHTML = glEdit.photos.map((p, i) => `<div class="gl-fph">${p.video || glIsVid(p) ? `<div class="gl-fvid"><video src="${p.url}${p.blob ? '' : '#t=0.5'}" muted playsinline preload="metadata"></video><i class="gl-play">▶</i>${p.size ? `<span class="gl-vsz">${(p.size / 1048576).toFixed(1)} MB</span>` : ''}</div>` : `<div class="gl-fimg" title="Geser foto untuk mengatur bagian yang tampil di sampul"><img class="gl-drag" src="${p.url}" alt="" draggable="false" style="object-position:${glPosCss(p)}" onpointerdown="glDragStart(event, pos => { glEdit.photos[${i}].pos = pos; renderGlPhotos(); })"></div>`}
       <select onchange="glPhotoArea(${i},this.value)"><option value=""${p.area ? '' : ' selected'}>— Keterangan —</option>${p.area && !GL_AREAS.includes(p.area) ? `<option selected>${escHtml(p.area)}</option>` : ''}${GL_AREA_GROUPS.map(([g, l]) => { const o = l.map(a => `<option${a === p.area ? ' selected' : ''}>${a}</option>`).join(''); return g ? `<optgroup label="${g}">${o}</optgroup>` : o; }).join('')}</select>
       <div class="gl-fpb"><button onclick="glPhotoMove(${i},-1)" title="Geser kiri">◀</button>${i === first ? '<span>Utama</span>' : ''}<button onclick="glPhotoMove(${i},1)" title="Geser kanan">▶</button>${p.video || glIsVid(p) ? '' : `<button onclick="glRotate(${i})" title="Putar 90°">⟳</button>${p.pos ? `<button onclick="glSetPos(${i})" title="Kembali ke tengah">⊙</button>` : ''}<button onclick="glZoom('${p.url}')" title="Lihat penuh">⤢</button>`}<button onclick="glPhotoDel(${i})" title="Hapus">🗑</button></div></div>`).join('')
     || '<span class="gl-hint">Belum ada foto/video. Foto pertama = foto utama. Pastikan plat nomor sudah diburamkan.</span>';
-  if (glEdit.photos.some(p => !(p.video || glIsVid(p)))) el.insertAdjacentHTML('beforeend', '<span class="gl-hint">Foto selalu tampil utuh di tampilan besar. Untuk kotak kecil &amp; sampul, <b>ketuk bagian foto</b> yang ingin terlihat (titik emas); ⟳ memutar foto 90°, ⤢ melihat foto penuh.</span>');
+  if (glEdit.photos.some(p => !(p.video || glIsVid(p)))) el.insertAdjacentHTML('beforeend', '<span class="gl-hint">Foto selalu tampil utuh di tampilan besar. Untuk kotak kecil &amp; sampul, <b>geser foto</b> di kotaknya; ⟳ memutar foto 90°, ⤢ melihat foto penuh.</span>');
 }
 function renderGlForm() {
   const e = glEdit, box = document.querySelector('#gl-form .gl-fbox');
