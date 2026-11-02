@@ -547,10 +547,12 @@ function glBigMedia(it, cur, idx) {
   glAdjCtx = glAdj ? { id: it.id, idx } : null;
   if (glAdj) return `${vid ? `<video class="gl-drag" src="${url}" muted loop autoplay playsinline preload="auto"${glFrAttr(cur)} onpointerdown="glDragStart(event, glAdjSave)" onwheel="glWheel(event)"></video>`
       : `<img class="gl-drag" src="${url}" alt="" draggable="false"${glFrAttr(cur)} onpointerdown="glDragStart(event, glAdjSave)" onwheel="glWheel(event)">`}<span class="gl-draghint">✥ Geser · 🔍 zoom</span>`;
-  if (vid) return `<video src="${url}#t=0.5" playsinline preload="metadata"${glFrAttr(cur)} onclick="glVidToggle(this)" onplay="this.parentNode.classList.add('playing')" onpause="this.parentNode.classList.remove('playing')"></video><button class="gl-vplay" onclick="glVidToggle(this.parentNode.querySelector('video'))" aria-label="Putar">▶</button><button class="gl-zoom" onclick="glZoom('${url}', true)" aria-label="Lihat video penuh">⤢</button>`;
+  if (vid) return `<video src="${url}#t=0.5" playsinline preload="metadata"${glFrAttr(cur)} onclick="glVidToggle(this)" onplay="this.parentNode.classList.add('playing');glMuteIcon(this)" onpause="this.parentNode.classList.remove('playing')" onvolumechange="glMuteIcon(this)"></video><button class="gl-vmute" onclick="glVidMute(this.parentNode.querySelector('video'))" aria-label="Matikan suara" title="Matikan / nyalakan suara">🔊</button><button class="gl-vplay" onclick="glVidToggle(this.parentNode.querySelector('video'))" aria-label="Putar">▶</button><button class="gl-zoom" onclick="glZoom('${url}', true)" aria-label="Lihat video penuh">⤢</button>`;
   return `<img src="${url}" alt=""${glFrAttr(cur)} onclick="glZoom(this.src)" title="Ketuk untuk melihat foto utuh"><button class="gl-zoom" onclick="glZoom('${url}')" aria-label="Lihat penuh">⤢</button>`;
 }
-function glVidToggle(v) { if (!v) return; if (v.paused) { v.muted = false; v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } else v.pause(); }
+function glVidMute(v) { if (!v) return; v.muted = !v.muted; v.dataset.muteSet = 1; glMuteIcon(v); }
+function glMuteIcon(v) { const b = v?.parentNode?.querySelector('.gl-vmute'); if (b) { b.textContent = v.muted ? '🔇' : '🔊'; b.title = b.ariaLabel = v.muted ? 'Nyalakan suara' : 'Matikan suara'; } }
+function glVidToggle(v) { if (!v) return; if (v.paused) { if (!v.dataset.muteSet) { v.muted = false; v.dataset.muteSet = 1; } v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } else v.pause(); }
 let glAdjCtx = null, glZoomT = null;
 const glAdjSave = fr => glAdjCtx && glAdjSet(glAdjCtx.id, glAdjCtx.idx, fr);
 const glAdjEl = () => document.querySelector('#gl-detail .gl-big .gl-drag');
