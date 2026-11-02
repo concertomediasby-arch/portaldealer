@@ -391,11 +391,12 @@ function setGlFilter(kind, v) {
 }
 const glCarSvg = '<svg class="gl-car" viewBox="0 0 200 80" fill="none"><path d="M14 58c0-8 4-12 12-13l26-4 22-17c4-3 9-4 14-4h44c6 0 11 2 15 6l18 17 18 3c7 1 11 6 11 12v4H14v-4Z" fill="rgba(255,255,255,.08)" stroke="currentColor" stroke-width="1.6"/><circle cx="54" cy="64" r="11" fill="#0b0c0e" stroke="currentColor" stroke-width="2"/><circle cx="150" cy="64" r="11" fill="#0b0c0e" stroke="currentColor" stroke-width="2"/></svg>';
 function glCard(it) {
-  const ph = (it.photos || []).find(p => !glIsVid(p)) || it.photos?.[0];
+  const cov = (it.photos || []).find(p => glIsVid(p) && p.cover);   // video dipilih Editor sebagai sampul loop
+  const ph = cov || (it.photos || []).find(p => !glIsVid(p)) || it.photos?.[0];
   const nVid = (it.photos || []).filter(glIsVid).length, nImg = (it.photos || []).length - nVid;
   const prods = (it.products || []).map(pid => glProd(pid).product?.name).filter(Boolean);
   return `<button class="gl-card" onclick="openGlDetail('${it.id}')">
-    <span class="gl-ph">${ph ? (glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
+    <span class="gl-ph">${ph ? (cov ? `<video class="gl-cover" src="${glUrl(cov.path)}" muted loop autoplay playsinline preload="metadata"${glFrAttr(cov)}></video>` : glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? '<span class="gl-tro">🏆 Juara</span>' : ''}
       ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : ''}</span>
@@ -404,6 +405,14 @@ function glCard(it) {
       ${it.dealer || it.city ? `<span class="gl-dl">🛠 ${escHtml([it.dealer, it.city].filter(Boolean).join(' · '))}</span>` : ''}
       ${prods.length ? `<span class="gl-chips">${prods.slice(0, 4).map(n => `<span>${escHtml(n)}</span>`).join('')}${prods.length > 4 ? `<span>+${prods.length - 4}</span>` : ''}</span>` : ''}
     </span></button>`;
+}
+// Sampul video loop (2 Nov 2026, permintaan pemilik — dicoba dulu per mobil, dipilih Editor): diputar bisu berulang hanya saat terlihat
+let glCovIO = null;
+function glCoverObs() {
+  const vids = document.querySelectorAll('video.gl-cover'); if (!vids.length) return;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { vids.forEach(v => { v.removeAttribute('autoplay'); v.pause(); }); return; }
+  glCovIO = glCovIO || ('IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? e.target.play?.().catch(() => {}) : e.target.pause())) : null);
+  vids.forEach(v => { v.muted = true; glCovIO?.observe(v); });
 }
 function renderGaleri() {
   const box = document.getElementById('gl-body'); if (!box) return;
@@ -448,6 +457,7 @@ function renderGaleri() {
     ${hint}
     ${rows.length ? `<div class="gl-grid">${rows.map(glCard).join('')}</div>` : hint ? ''
       : `<div class="stock-empty">${live.length ? 'Tidak ada instalasi yang cocok. Coba kata kunci lain.' : 'Belum ada instalasi. ' + (isAdmin() ? 'Tekan <b>＋ Tambah Instalasi</b> untuk menambahkan yang pertama.' : '')}</div>`}`;
+  glCoverObs();
 }
 
 // Banner ke Hall of Fame: jumlah mobil juara (peserta + mobil + dealer berbeda) di data Hall of Fame
@@ -480,7 +490,7 @@ function openGlDetail(id, photoIdx = 0) {
       <div>
         <div class="gl-big">${cur ? glBigMedia(it, cur, photoIdx) : glCarSvg}${cur?.area ? `<span class="gl-area">${escHtml(cur.area)}</span>` : ''}</div>
         ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path), '', p) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy"${glFrAttr(p)}>`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
-      ${cur && isEditor() ? (() => { const vid = glIsVid(cur), what = vid ? 'video' : 'foto', rot = vid ? `<button class="${cur.mute ? 'on' : ''}" onclick="glAdjMute('${it.id}',${photoIdx})" title="Atur suara video untuk semua yang menonton">${cur.mute ? '🔇 Tayang tanpa suara · ubah' : '🔊 Tayang dengan suara · ubah'}</button>` : `<button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`;
+      ${cur && isEditor() ? (() => { const vid = glIsVid(cur), what = vid ? 'video' : 'foto', rot = vid ? `<button class="${cur.cover ? 'on' : ''}" onclick="glAdjCover('${it.id}',${photoIdx})" title="Video ini diputar berulang (tanpa suara) sebagai sampul kartu Galeri">${cur.cover ? '🎞 Sampul loop · lepas' : '🎞 Jadikan sampul loop'}</button>`+`<button class="${cur.mute ? 'on' : ''}" onclick="glAdjMute('${it.id}',${photoIdx})" title="Atur suara video untuk semua yang menonton">${cur.mute ? '🔇 Tayang tanpa suara · ubah' : '🔊 Tayang dengan suara · ubah'}</button>` : `<button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`;
         return `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
         ? `<span>✥ Geser ${what} di atas & atur zoom — bingkai itu sama dengan sampul kartu Galeri.</span><label class="gl-zm">🔍 Zoom <input type="range" min="1" max="3" step="0.05" value="${glFr(cur).z}" oninput="glZoomLive(this.value)" onchange="glZoomCommit()"><b id="gl-zmv">${glFr(cur).z.toFixed(1)}×</b></label><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Reset</button>${rot}<button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
         : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi & zoom ${what} ini</button>${rot}`}</div>`; })() : ''}
@@ -569,6 +579,13 @@ function glWheel(ev) {
   glZoomLive(z);
   const r = document.querySelector('.gl-zm input'); if (r) r.value = z;
   clearTimeout(glZoomT); glZoomT = setTimeout(glZoomCommit, 600);
+}
+async function glAdjCover(id, idx) {
+  if (!isEditor()) return;
+  const it = glItems.find(x => x.id === id); if (!it) return;
+  const on = !it.photos?.[idx]?.cover;
+  const photos = (it.photos || []).map((p, i) => { const q = { ...p }; delete q.cover; if (i === idx && on) q.cover = true; return q; });
+  if (await glSavePhotos(id, photos, on ? '🎞 Video ini kini jadi sampul loop di Galeri' : 'Sampul kembali ke foto pertama')) openGlDetail(id, idx);
 }
 async function glAdjMute(id, idx) {
   if (!isEditor()) return;
@@ -743,7 +760,7 @@ function glSetFr(q, f) {
   return q;
 }
 function glPosAttr(p) { return glFrAttr(p); }
-function glPhotoRow(path, p, vid) { const r = { path, area: p.area || '' }; if (vid) r.type = 'video'; if (glPosXY(p)) r.pos = p.pos; if (+p.zoom > 1) r.zoom = +p.zoom; if (vid && p.mute) r.mute = true; return r; }
+function glPhotoRow(path, p, vid) { const r = { path, area: p.area || '' }; if (vid) r.type = 'video'; if (glPosXY(p)) r.pos = p.pos; if (+p.zoom > 1) r.zoom = +p.zoom; if (vid && p.mute) r.mute = true; if (vid && p.cover) r.cover = true; return r; }
 function glSetPos(i) { const p = glEdit.photos[i]; if (!p) return; delete p.pos; delete p.zoom; renderGlPhotos(); }
 function glFormFr(i, f) { const p = glEdit.photos[i]; if (!p) return; glSetFr(p, f); renderGlPhotos(); }
 function glFormZoom(i, inp) {
