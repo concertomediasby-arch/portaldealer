@@ -478,8 +478,11 @@ function openGlDetail(id, photoIdx = 0) {
     <button class="rk-pick-x gl-x" onclick="closeGlDetail()" aria-label="Tutup">✕</button>
     <div class="gl-dgrid">
       <div>
-        <div class="gl-big">${cur ? (glIsVid(cur) ? `<video src="${glUrl(cur.path)}" controls playsinline preload="metadata"></video>` : `<img src="${glUrl(cur.path)}" alt="" onclick="glZoom(this.src)" title="Ketuk untuk melihat penuh">`) : glCarSvg}${cur && !glIsVid(cur) ? '<button class="gl-zoom" onclick="glZoom(this.parentNode.querySelector(\'img\').src)" aria-label="Lihat penuh">⤢</button>' : ''}${cur?.area ? `<span class="gl-area${glIsVid(cur) ? ' top' : ''}">${escHtml(cur.area)}</span>` : ''}</div>
+        <div class="gl-big">${cur ? (glIsVid(cur) ? `<video src="${glUrl(cur.path)}" controls playsinline preload="metadata"></video>` : `<img src="${glUrl(cur.path)}" alt="" onclick="${glAdj ? `glAdjClick(event,'${it.id}',${photoIdx})` : 'glZoom(this.src)'}" title="${glAdj ? 'Ketuk bagian yang ingin terlihat di kotak kecil & sampul' : 'Ketuk untuk melihat penuh'}">${glAdj && glPosXY(cur) ? glAdjDot(cur) : ''}`) : glCarSvg}${cur && !glIsVid(cur) ? '<button class="gl-zoom" onclick="glZoom(this.parentNode.querySelector(\'img\').src)" aria-label="Lihat penuh">⤢</button>' : ''}${cur?.area ? `<span class="gl-area${glIsVid(cur) ? ' top' : ''}">${escHtml(cur.area)}</span>` : ''}</div>
         ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path)) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy"${glPosAttr(p)}>`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
+      ${cur && !glIsVid(cur) && isEditor() ? `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
+        ? `<span>🎯 Ketuk foto di atas pada bagian yang ingin terlihat di kotak kecil &amp; sampul kartu.</span><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Tengah</button><button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button><button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
+        : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi foto ini</button><button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`}</div>` : ''}
       </div>
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
@@ -495,7 +498,46 @@ function openGlDetail(id, photoIdx = 0) {
     </div>`;
   ov.classList.add('open');
 }
-function closeGlDetail() { document.getElementById('gl-detail')?.classList.remove('open'); }
+function closeGlDetail() { glAdj = false; document.getElementById('gl-detail')?.classList.remove('open'); }
+// Atur posisi / putar foto langsung dari jendela detail (Editor, 2 Nov 2026 — permintaan pemilik): disimpan langsung ke tabel.
+let glAdj = false;
+function glAdjDot(p) { const [x, y] = glPosXY(p); return `<i class="gl-fdot" style="left:${x}%;top:${y}%"></i>`; }
+async function glSavePhotos(id, photos, msg) {
+  const { error } = await supabase.from(GL_TABLE).update({ photos }).eq('id', id);
+  if (error) { showToast('⚠ Gagal menyimpan: ' + error.message, 6000); return false; }
+  const it = glItems.find(x => x.id === id); if (it) it.photos = photos;
+  if (msg) showToast(msg, 2500);
+  if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri();
+  return true;
+}
+function glAdjClick(ev, id, idx) {
+  const img = ev.currentTarget, r = img.getBoundingClientRect();
+  const nw = img.naturalWidth || r.width, nh = img.naturalHeight || r.height, sc = Math.min(r.width / nw, r.height / nh);
+  const w = nw * sc, h = nh * sc, ox = (r.width - w) / 2, oy = (r.height - h) / 2;
+  const x = Math.round(Math.max(0, Math.min(1, (ev.clientX - r.left - ox) / w)) * 100), y = Math.round(Math.max(0, Math.min(1, (ev.clientY - r.top - oy) / h)) * 100);
+  glAdjSet(id, idx, `${x} ${y}`);
+}
+async function glAdjSet(id, idx, pos) {
+  if (!isEditor()) return;
+  const it = glItems.find(x => x.id === id); if (!it) return;
+  const photos = (it.photos || []).map((p, i) => { if (i !== idx) return p; const q = { ...p }; if (pos) q.pos = pos; else delete q.pos; return q; });
+  if (await glSavePhotos(id, photos, pos ? '✓ Posisi foto disimpan' : '✓ Posisi kembali ke tengah')) openGlDetail(id, idx);
+}
+async function glAdjRotate(id, idx) {
+  if (!isEditor()) return;
+  const it = glItems.find(x => x.id === id), p = it?.photos?.[idx]; if (!p || glIsVid(p)) return;
+  showToast('⏳ Memutar foto…', 15000);
+  try {
+    const blob = await glRotBlob(await (await fetch(glUrl(p.path), { cache: 'no-store' })).blob());
+    const path = p.path.replace(/[^/]+$/, `${Date.now()}-r.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`);
+    const up = await supabase.storage.from(GL_BUCKET).upload(path, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false });
+    if (up.error) throw up.error;
+    const xy = glPosXY(p), q = { ...p, path }; if (xy) q.pos = `${100 - xy[1]} ${xy[0]}`;
+    const photos = it.photos.map((x, i) => i === idx ? q : x);
+    if (await glSavePhotos(id, photos, '✓ Foto diputar')) { supabase.storage.from(GL_BUCKET).remove([p.path]); openGlDetail(id, idx); }
+    else supabase.storage.from(GL_BUCKET).remove([path]);
+  } catch (e) { showToast('⚠ Foto tidak bisa diputar: ' + (e.message || e), 6000); }
+}
 
 /* ── Form tambah / edit (Admin & Editor) ── */
 function openGlForm(id) {
@@ -642,15 +684,17 @@ function glSetPos(i, ev) {
   const x = Math.round(Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * 100), y = Math.round(Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height)) * 100);
   p.pos = `${x} ${y}`; renderGlPhotos();
 }
+async function glRotBlob(src) {
+  const bmp = await createImageBitmap(src);
+  const c = document.createElement('canvas'); c.width = bmp.height; c.height = bmp.width;
+  const g = c.getContext('2d'); g.translate(c.width, 0); g.rotate(Math.PI / 2); g.drawImage(bmp, 0, 0);
+  return new Promise((res, rej) => c.toBlob(b => b && b.type === 'image/webp' ? res(b) : c.toBlob(j => j ? res(j) : rej(new Error('Gagal memutar foto')), 'image/jpeg', .88), 'image/webp', .85));
+}
 async function glRotate(i) {
   const p = glEdit.photos[i]; if (!p || p.video || glIsVid(p) || p._rot) return;
   p._rot = true; showToast('⏳ Memutar foto…', 8000);
   try {
-    const src = p.blob || await (await fetch(p.url, { cache: 'no-store' })).blob();
-    const bmp = await createImageBitmap(src);
-    const c = document.createElement('canvas'); c.width = bmp.height; c.height = bmp.width;
-    const g = c.getContext('2d'); g.translate(c.width, 0); g.rotate(Math.PI / 2); g.drawImage(bmp, 0, 0);
-    const blob = await new Promise((res, rej) => c.toBlob(b => b && b.type === 'image/webp' ? res(b) : c.toBlob(j => j ? res(j) : rej(new Error('Gagal memutar foto')), 'image/jpeg', .88), 'image/webp', .85));
+    const blob = await glRotBlob(p.blob || await (await fetch(p.url, { cache: 'no-store' })).blob());
     if (p.path) { glEdit.removed.push(p.path); delete p.path; }
     if (p.blob) URL.revokeObjectURL(p.url);
     const xy = glPosXY(p); if (xy) p.pos = `${100 - xy[1]} ${xy[0]}`;
