@@ -820,6 +820,54 @@ function renderGlPhotos() {
     || '<span class="gl-hint">Belum ada foto/video. Foto pertama = foto utama. Pastikan plat nomor sudah diburamkan.</span>';
   if (glEdit.photos.some(p => !(p.video || glIsVid(p)))) el.insertAdjacentHTML('beforeend', '<span class="gl-hint">Foto selalu tampil utuh di tampilan besar. Untuk kotak kecil &amp; sampul, <b>geser foto/video</b> di kotaknya & atur 🔍 zoom; ⟳ memutar foto 90°, ⤢ melihat foto penuh.</span>');
 }
+// Panduan video cinematic: 1 mobil = 1 video (2 Nov 2026, dari pemilik) — tab Alur video & Perangkat
+const GL_ACTS = [
+  ['Pembuka', '3–5', ['Garasi gelap, lampu mobil menyala perlahan / siluet mobil dengan cahaya samping', 'Detik pertama = sampul kartu Galeri — buat semenarik mungkin']],
+  ['Mobil', '6–10', ['Orbit pelan sudut ¾ depan, kamera rendah', 'Detail singkat: lampu, velg, garis bodi']],
+  ['Masuk kabin', '5–8', ['Pintu dibuka (slow motion)', 'Interior dashboard dari dalam mobil — kamera di kursi belakang, geser pelan kiri → kanan, ambient & layar menyala']],
+  ['Detail sistem', '15–20', ['Close-up latar buram (mode Sinematik/Portrait), 2–3 dtk per shot', 'Pilar A / tweeter → midrange → midbass pintu → controller DSP — produk brand CAI saja']],
+  ['Bagasi', '10–15', ['Pintu bagasi terangkat perlahan → box subwoofer', 'Amplifier & DSP (logo terbaca) → slide jalur kabel yang rapi']],
+];
+// Hanya perangkat dari brand CAI (Audiocircle, STEG, Zelos, Diosdela Musica, OG One Sound, Audio System) — permintaan pemilik 2 Nov 2026
+const GL_GEAR = [
+  ['🔊 Speaker depan', [
+    ['Tweeter / super tweeter', 1, 'Posisi di pilar A / dasbor + finishing, kiri & kanan', 'Audiocircle PRO-T28, BL-T26 · STEG MSS1 PRO, SST90, SST50'],
+    ['Midrange', 0, 'Posisi di dasbor / pilar / pintu atas', 'Audiocircle PRO-M3C, BL-M3 · STEG MSS3, K3C'],
+    ['Midbass / speaker komponen', 1, 'Panel pintu utuh, lalu close-up speaker', 'Audiocircle PRO-W6C NEO, HL-W6 · STEG MSS6, K6C · Audio System AY65C'],
+    ['Passive crossover', 0, 'Posisi pemasangan + logo', 'Audiocircle Passive 2 Way / 3 Way']]],
+  ['🔉 Subwoofer', [
+    ['Subwoofer', 1, 'Cone & logo, lalu box utuh + finishing', 'Audiocircle BL-S10, ML-S10 · STEG SQW-8, SS-10 · Audio System AS10'],
+    ['Active / spare tire subwoofer', 0, 'Posisi pemasangan + logo', 'Audiocircle IQ-LES10A · STEG S10, SA-8W, SA-55W']]],
+  ['⚡ Amplifier & DSP', [
+    ['Power amplifier', 1, 'Logo & model terbaca, tiap unit', 'Zelos · STEG DK / QK · Audiocircle BL AMP · Audio System AS500.1'],
+    ['DSP / DSP amplifier', 1, 'Logo & model terbaca jelas', 'STEG DSP-S12, SS-DSP16 · Zelos ZLS-HD5.4 · Audio System DSP-AS6'],
+    ['Controller / remote DSP', 0, 'Posisi + layar menyala', 'STEG DRC V4, DRC V5, BT1']]],
+  ['🔌 Kabel & kelistrikan', [
+    ['Kabel RCA', 1, 'Jalur rapi + close-up konektor berlogo', 'OG One Sound Red Dragon, Reference · Diosdela RCA Quadruple'],
+    ['Kabel power & speaker', 0, 'Jalur rapi, terikat, tidak semrawut', 'Diosdela Septuple, Cable Quadruple, DM-16AW'],
+    ['Fuse', 0, 'Close-up holder fuse', 'Diosdela Fuse ANL / Mini ANL']]],
+  ['🧱 Peredam', [
+    ['Peredam pintu / kabin / kap', 0, 'Saat panel terbuka (dokumentasi proses)', 'STEG X3, S-8, S-15, Hoodliner · Audiocircle / Diosdela Sound Deadening']]],
+];
+const glGuideHtml = () => {
+  const tab = glGuideTab, li = a => `<ul>${a.map(x => `<li>${x}</li>`).join('')}</ul>`;
+  const alur = `<ol class="gl-gacts">${GL_ACTS.map(([t, d, pts]) => `<li><div><b>${t}</b><span>${d} dtk</span></div>${li(pts)}</li>`).join('')}</ol>
+    <div class="gl-gcols">
+      <div><div class="gl-gh">🎥 Teknik pengambilan</div>${li(['HP <b>horizontal</b> (16:9) · 4K/1080p 30fps — 60fps untuk slow motion', 'Pakai gimbal, gerak pelan satu arah: maju · mundur · geser · orbit', '<b>Reveal</b>: mulai dari objek di depan, lalu buka ke perangkat', 'Ruang agak gelap + lampu LED samping; bodi & kaca dilap'])}</div>
+      <div><div class="gl-gh">✂️ Editing</div>${li(['Potongan mengikuti ketukan musik, transisi cut / whip', 'Color grading seragam, teks seminimal mungkin', 'Musik <b>wajib bebas royalti</b> — tanpa musik = set tayang tanpa suara', `Ekspor MP4 (H.264) 1080p · maks. ${GL_VIDEO_MAX_MB} MB`])}</div>
+    </div>`;
+  const gear = `<div class="gl-ggear">${GL_GEAR.map(([g, items]) => `<div class="gl-gg"><div class="gl-gh">${g}</div>${items.map(([n, req, x, ex]) => `<div class="gl-gi"><span class="gl-gtag${req ? ' req' : ''}">${req ? 'Wajib' : 'Bila ada'}</span><div><b>${n}</b><small>${x}</small>${ex ? `<i>${ex}</i>` : ''}</div></div>`).join('')}</div>`).join('')}</div>
+    <div class="gl-gtip">📌 <b>Fokus hanya pada produk brand CAI</b> (Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System) — perangkat merek lain (head unit, dll.) jangan di-close-up. Logo & model harus terbaca · 2–3 dtk per perangkat · bersihkan debu & sidik jari dulu.</div>`;
+  return `<details class="gl-guide"${glGuideOpen ? ' open' : ''} ontoggle="glGuideOpen=this.open">
+  <summary>🎬 Panduan video cinematic — <b>1 mobil = 1 video</b> <small>45–60 detik</small></summary>
+  <div class="gl-gtabs"><button type="button" class="${tab === 'alur' ? 'on' : ''}" onclick="glGuideSet('alur')">🎬 Alur video</button><button type="button" class="${tab === 'gear' ? 'on' : ''}" onclick="glGuideSet('gear')">🔧 Perangkat</button></div>
+  <div class="gl-gbody">${tab === 'alur' ? alur : gear}</div>
+  <div class="gl-gwarn">⚠️ <b>Wajib:</b> plat nomor ditutup / diburamkan · STNK, kartu tol & barang pribadi tidak terlihat · wajah pemilik mobil hanya dengan izin</div>
+</details>`;
+};
+let glGuideTab = 'alur';
+function glGuideSet(t) { glGuideTab = t; const el = document.querySelector('#gl-form .gl-guide'); if (el) el.outerHTML = glGuideHtml(); }
+let glGuideOpen = true;
 function renderGlForm() {
   const e = glEdit, box = document.querySelector('#gl-form .gl-fbox');
   const opt = (arr, v) => arr.map(a => `<option${a === v ? ' selected' : ''}>${escHtml(a)}</option>`).join('');
@@ -845,6 +893,7 @@ function renderGlForm() {
       <div class="w4"><div class="gl-flbl">Foto & Video <small>(foto otomatis diperkecil; video diunggah apa adanya)</small></div>
         <div class="gl-upr"><label class="gt-btn gl-up">📷 Tambah Foto<input type="file" accept="image/*" multiple hidden onchange="glAddPhotos(this)"></label><label class="gt-btn gl-up">🎬 Tambah Video<input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple hidden onchange="glAddVideos(this)"></label></div>
         <div class="gl-hint gl-vhint">Video: MP4 (H.264), maksimal ${GL_VIDEO_MAX_MB} MB per file — disarankan ≤ 30 MB agar cepat diputar di HP. Video tidak dikompres ulang di sini.</div>
+        ${glGuideHtml()}
         <div class="gl-fphotos" id="glf-photos"></div></div>
       ${e.submit ? `<label class="w4 gl-pub gl-agree"><input type="checkbox"${e.agree ? ' checked' : ''} onchange="glField('agree',this.checked)"> Foto/video ini milik dealer kami, <b>plat nomor sudah diburamkan</b>, dan pemilik mobil tidak keberatan ditampilkan.</label>` : ''}
     </div>
