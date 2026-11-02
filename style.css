@@ -3476,3 +3476,5 @@ body:not(.is-editor) .acad-ed { display: none; }
 .gl-gwarn { margin: 10px 14px 12px; padding: 8px 10px; border-radius: 8px; background: rgba(240,160,32,.12); border: 1px solid rgba(240,160,32,.35); font-size: 12px; line-height: 1.45; }
 @media (max-width: 720px) { .gl-gcols, .gl-ggear { grid-template-columns: 1fr; } }
 .hof-wrap.gl-guide-wrap { padding-bottom: 6px; }
+.gl-gtabs button.gl-gpng { flex: 0 0 auto; border-style: dashed; }
+@media (max-width: 720px) { .gl-gtabs { flex-wrap: wrap; } .gl-gtabs button.gl-gpng { flex: 1 1 100%; } }
