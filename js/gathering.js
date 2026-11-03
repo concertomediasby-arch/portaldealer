@@ -42,9 +42,9 @@ function renderGtDealerSelect() {
   const sel = document.getElementById('gt-dealer-sel');
   if (!sel || sel.options.length) return;
   const opt = n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`;
-  sel.innerHTML = '<option value="">— Pilih dealer —</option>'
+  sel.innerHTML = '<option value="">— Pilih partner —</option>'
     + `<optgroup label="Distributor">${GT_DISTRIBUTORS.map(opt).join('')}</optgroup>`
-    + `<optgroup label="Dealer">${GT_DEALERS.map(opt).join('')}</optgroup>`
+    + `<optgroup label="Partner">${GT_DEALERS.map(opt).join('')}</optgroup>`
     + `<option value="${GT_OTHER}">Lainnya (ketik manual)…</option>`;
 }
 // Sinkronkan select ↔ input tersembunyi #gt-dealer (sumber nilai yang disimpan)
@@ -407,21 +407,21 @@ function renderGtLock() {
   }
   if (isAdmin() && gtClosed()) {
     el.className = 'gt-lock staff'; el.hidden = false;
-    el.innerHTML = `<span class="ic">⛔</span><b>Ditutup untuk dealer</b><p>Lewat pukul ${GT_CLOSE_LABEL}: form otomatis tertutup untuk dealer. Admin/Editor tetap bisa memakai form & Edit Pesanan.</p>`;
+    el.innerHTML = `<span class="ic">⛔</span><b>Ditutup untuk partner</b><p>Lewat pukul ${GT_CLOSE_LABEL}: form otomatis tertutup untuk partner. Admin/Editor tetap bisa memakai form & Edit Pesanan.</p>`;
     return;
   }
   if (isAdmin() && gtLocked != null) {
     el.className = 'gt-lock staff' + (gtLocked ? '' : ' open'); el.hidden = false;
     el.innerHTML = gtLocked
-      ? '<span class="ic">🔒</span><b>Terkunci untuk dealer</b><p>Dealer belum bisa melihat & mengisi form belanja. Admin/Editor tetap bisa mengakses form ini.</p><button class="gt-btn wa" onclick="gtSetLock(false)">🔓 Buka Shopping Gathering</button>'
-      : '<span class="ic">🔓</span><b>Dibuka untuk dealer</b><p>Dealer bisa berbelanja & mengirim pesanan sekarang.</p><button class="gt-btn ghost" onclick="gtSetLock(true)">🔒 Kunci lagi</button>';
+      ? '<span class="ic">🔒</span><b>Terkunci untuk partner</b><p>Partner belum bisa melihat & mengisi form belanja. Admin/Editor tetap bisa mengakses form ini.</p><button class="gt-btn wa" onclick="gtSetLock(false)">🔓 Buka Shopping Gathering</button>'
+      : '<span class="ic">🔓</span><b>Dibuka untuk partner</b><p>Partner bisa berbelanja & mengirim pesanan sekarang.</p><button class="gt-btn ghost" onclick="gtSetLock(true)">🔒 Kunci lagi</button>';
     return;
   }
   el.hidden = true; el.innerHTML = '';
 }
 async function gtSetLock(lock) {
   if (!isAdmin()) return;
-  if (!confirm(lock ? 'Kunci Shopping Gathering? Dealer tidak bisa berbelanja sampai dibuka lagi.' : 'Buka Shopping Gathering sekarang? Semua dealer langsung bisa berbelanja & mengirim pesanan.')) return;
+  if (!confirm(lock ? 'Kunci Shopping Gathering? Partner tidak bisa berbelanja sampai dibuka lagi.' : 'Buka Shopping Gathering sekarang? Semua partner langsung bisa berbelanja & mengirim pesanan.')) return;
   const note = lock ? 'locked' : 'open';
   try {
     const res = gtLockRow?.id != null
@@ -431,7 +431,7 @@ async function gtSetLock(lock) {
     if (!res.data?.length) throw new Error('tidak ada baris yang berubah (cek hak akses)');
     gtLockRow = res.data[0]; gtLocked = lock;
     renderGtLock();
-    showToast(lock ? '🔒 Shopping Gathering dikunci untuk dealer.' : '🔓 Shopping Gathering dibuka — dealer bisa berbelanja.');
+    showToast(lock ? '🔒 Shopping Gathering dikunci untuk partner.' : '🔓 Shopping Gathering dibuka — partner bisa berbelanja.');
   } catch (e) { showToast('Gagal mengubah kunci: ' + (e.message || e), 8000); }
 }
 
@@ -497,7 +497,7 @@ function renderGathering() {
   const rows = gtItems.filter(r => (gtFilter === 'all' || gtGroup(r) === gtFilter) && (!q || normKey(r.name).includes(q)));
   if (!rows.length) { list.innerHTML = `<div class="stock-empty">${gtItems.length ? 'Tidak ada produk yang cocok — ketik manual di bawah.' : 'Belum ada data gathering.'}</div>` + gtManualHtml(); gtUpdateBar(); return; }
   const resWarn = (gtReservedErr || gtSoldErr) && isAdmin() ? `<div class="gt-res-warn">⚠ Pengurangan stok dari pesanan gathering belum aktif — sisa stok masih memakai angka katalog saja. Admin/editor: jalankan SQL fungsi <b>gathering_reserved</b> &amp; <b>gathering_sold</b> di Supabase (stok katalog dikurangi pembelian yang sudah dikonfirmasi). <button class="gt-btn ghost" onclick="gtCopyReservedSql()">📋 Salin SQL</button></div>` : '';
-  const peNote = gtPriceEdit ? '<div class="gt-pe-note">✏️ <b>Mode Edit Harga</b> — ubah angka lalu tekan Enter / pindah kolom; langsung tersimpan ke database dan terlihat dealer. Kosongkan = tanpa harga. <b>Harga Baru</b> mengikuti SRP katalog (ubah di katalog); hanya barang tanpa SRP katalog yang Harga Barunya bisa diisi di sini. Klik <b>Selesai Edit</b> untuk kembali.</div>' : '';
+  const peNote = gtPriceEdit ? '<div class="gt-pe-note">✏️ <b>Mode Edit Harga</b> — ubah angka lalu tekan Enter / pindah kolom; langsung tersimpan ke database dan terlihat partner. Kosongkan = tanpa harga. <b>Harga Baru</b> mengikuti SRP katalog (ubah di katalog); hanya barang tanpa SRP katalog yang Harga Barunya bisa diisi di sini. Klik <b>Selesai Edit</b> untuk kembali.</div>' : '';
   const manualHtml = gtManualHtml();
   list.innerHTML = peNote + resWarn + groups.filter(g => rows.some(r => gtGroup(r) === g)).map(g => {
     const items = rows.filter(r => gtGroup(r) === g);
@@ -669,7 +669,7 @@ function gtCheck() {
   const o = gtOrder();
   if (!o.qty) { showToast('Isi jumlah (Qty) minimal satu produk dulu.'); return null; }
   const i = gtInfo();
-  if (!i.dealer) { showToast('Pilih Nama Dealer dulu.'); document.getElementById(document.getElementById('gt-dealer').hidden ? 'gt-dealer-sel' : 'gt-dealer').focus(); return null; }
+  if (!i.dealer) { showToast('Pilih Nama Partner dulu.'); document.getElementById(document.getElementById('gt-dealer').hidden ? 'gt-dealer-sel' : 'gt-dealer').focus(); return null; }
   return { o, i };
 }
 
@@ -800,7 +800,7 @@ async function gtAdminSave(o, i) {
 function renderGtEditing() {
   const el = document.getElementById('gt-editing'), btn = document.getElementById('gt-send');
   el.hidden = !gtEditing;
-  el.innerHTML = gtEditing ? `✏️ <b>Admin</b> mengedit pesanan <b>${escHtml(gtEditing.invoice)}</b> · ${escHtml(gtEditing.store || '')} — ubah Qty / data dealer (harga produk ketik manual bisa diisi di bagian bawah) lalu tekan <b>Simpan Perubahan</b>. <button class="gt-btn ghost" onclick="gtCancelEdit()">Batal edit</button>` : '';
+  el.innerHTML = gtEditing ? `✏️ <b>Admin</b> mengedit pesanan <b>${escHtml(gtEditing.invoice)}</b> · ${escHtml(gtEditing.store || '')} — ubah Qty / data partner (harga produk ketik manual bisa diisi di bagian bawah) lalu tekan <b>Simpan Perubahan</b>. <button class="gt-btn ghost" onclick="gtCancelEdit()">Batal edit</button>` : '';
   if (btn) btn.lastChild.textContent = gtEditing ? 'Simpan Perubahan' : 'Kirim ke Sales';
 }
 
@@ -809,9 +809,9 @@ function gtPrint() {
   const { o, i } = c;
   let el = document.getElementById('gt-print');
   if (!el) { el = document.createElement('div'); el.id = 'gt-print'; document.body.appendChild(el); }
-  const info = [...(gtEditing ? [['No. Invoice', gtEditing.invoice]] : []), ['Nama Dealer', i.dealer], ['Kota', i.city], ['No. HP', i.phone], ['Distributor', i.pic], ['Tanggal', gtToday()]];
+  const info = [...(gtEditing ? [['No. Invoice', gtEditing.invoice]] : []), ['Nama Partner', i.dealer], ['Kota', i.city], ['No. HP', i.phone], ['Distributor', i.pic], ['Tanggal', gtToday()]];
   el.innerHTML = `
-    <div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>FORM BELANJA DEALER</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
+    <div class="gp-head"><img src="${LOGO_NAVY}" alt="CAI"><div><h1>FORM BELANJA PARTNER</h1><p>GATHERING CAI 2026 · Concerto Audio Indonesia</p></div></div>
     <table class="gp-info">${info.map(([a, b]) => `<tr><td>${a}</td><td>: ${escHtml(b || '')}</td></tr>`).join('')}</table>
     ${o.groups.map(g => `<h2>${escHtml(g.name)}</h2>
       <table class="gp-items"><thead><tr><th>No</th><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead><tbody>
@@ -820,7 +820,7 @@ function gtPrint() {
     <table class="gp-items gp-grand"><tr><td>GRAND TOTAL (${o.qty} item)</td><td>${fmtRp(o.total)}</td></tr></table>
     <p class="gp-terms"><b>Pembayaran (transfer ke salah satu):</b><br>${gtBankLines().map(escHtml).join('<br>')}</p>
     <p class="gp-terms">Harga Spesial Gathering hanya berlaku selama acara berlangsung. Clearance: harga clearance = harga normal − diskon 50% − cashback 10% × DPP (DPP = harga setelah diskon ÷ 1,11), stok terbatas.</p>
-    <div class="gp-sign"><div>Dealer<br><br><br>(______________________)</div><div>Distributor<br><br><br>(______________________)</div></div>`;
+    <div class="gp-sign"><div>Partner<br><br><br>(______________________)</div><div>Distributor<br><br><br>(______________________)</div></div>`;
   window.print();
 }
 
@@ -891,7 +891,7 @@ function renderGtTop() {
   const el = document.getElementById('gt-top');
   if (!el || gtTab !== 'top') return;
   const head = `<div class="gt-top-head"><div class="gt-top-title">🏆 Top Spender Gathering 2026</div>
-    <div class="gt-top-sub">Total belanja semua dealer selama Gathering CAI 2026 (sebelum PPN 11%) · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · dihitung dari pembelian yang sudah dikonfirmasi admin${gtTopAt ? ` · diperbarui pukul ${new Date(gtTopAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' })}` : ''}</div>
+    <div class="gt-top-sub">Total belanja semua partner selama Gathering CAI 2026 (sebelum PPN 11%) · ${GT_TOP_HIGHLIGHT} besar ditonjolkan · dihitung dari pembelian yang sudah dikonfirmasi admin${gtTopAt ? ` · diperbarui pukul ${new Date(gtTopAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Jakarta' })}` : ''}</div>
     <button class="gt-btn ghost" id="gt-top-reload" onclick="reloadGtTop(this)">↻ Muat ulang</button></div>`;
   if (gtTop === null) { el.innerHTML = head + '<div class="stock-empty">Memuat peringkat…</div>'; return; }
   if (gtTopErr) { el.innerHTML = head + `<div class="stock-empty">${escHtml(gtTopErr)}</div>`; return; }
@@ -994,7 +994,7 @@ function renderGtRekap() {
       <div class="stock-sum gt-sum-val"><b>${fmtRp(gtOrders.filter(gtConfirmed).reduce((a, o) => a + gtAccumTotal(o), 0))}</b><span>Nilai dikonfirmasi (tanpa Audio System)</span></div>
     </div>
     <div class="gt-rk-tools">
-      <input id="gt-rk-search" class="catalog-search gt-rk-search" placeholder="Cari invoice, toko, kota, dealer, sales…" value="${escHtml(document.getElementById('gt-rk-search')?.value || '')}" oninput="renderGtRekap(); this.focus(); this.setSelectionRange(this.value.length, this.value.length)">
+      <input id="gt-rk-search" class="catalog-search gt-rk-search" placeholder="Cari invoice, toko, kota, partner, sales…" value="${escHtml(document.getElementById('gt-rk-search')?.value || '')}" oninput="renderGtRekap(); this.focus(); this.setSelectionRange(this.value.length, this.value.length)">
       <div class="catalog-chips">${['all', ...Object.keys(GT_STATUS)].map(st =>
         `<button class="filter-chip${gtOrderFilter === st ? ' active' : ''}" onclick="setGtOrderFilter('${st}')">${st === 'all' ? 'Semua' : GT_STATUS[st]} (${st === 'all' ? gtOrders.length : count(st)})</button>`).join('')}
         <button class="filter-chip gt-trash-chip${gtOrderFilter === 'trash' ? ' active' : ''}" onclick="setGtOrderFilter('trash')">🗑 Terhapus (${gtTrash.length})</button></div>
@@ -1033,7 +1033,7 @@ function renderGtRekap() {
             <button class="gt-btn ghost gt-del" onclick="deleteGtOrder(${o.id})">🗑 Hapus</button>
           </div></div>` : ''}
         <span class="gt-badge st-${o.status}">${GT_STATUS[o.status] || o.status}</span>
-      </div>`).join('') : `<div class="stock-empty">${gtOrders.length ? 'Tidak ada pesanan yang cocok.' : 'Belum ada pesanan. Pesanan muncul di sini saat dealer menekan "Kirim ke Sales".'}</div>`}</div>
+      </div>`).join('') : `<div class="stock-empty">${gtOrders.length ? 'Tidak ada pesanan yang cocok.' : 'Belum ada pesanan. Pesanan muncul di sini saat partner menekan "Kirim ke Sales".'}</div>`}</div>
     ${stores.length ? `<div class="line-header gt-rk-head"><span class="line-name">Rekap per toko</span><span class="line-count">${stores.length}</span><span class="gt-sub">tanpa pesanan batal</span></div>
     <div class="gt-table gt-prod-table gt-store-table"><div class="gt-row gt-head"><span>Toko</span><span>Kota</span><span>Pesanan</span><span>Total Qty</span><span>Total Pembelian</span></div>
       ${stores.map((t, i) => `<div class="gt-row"><span class="gt-name"><b class="gt-rank">${i + 1}</b>${escHtml(t.name)}<small class="gt-store-items">${t.items.map(it => `${escHtml(it.name)} ×${it.qty}`).join(' · ')}</small></span><span class="gt-p" data-l="Kota">${escHtml(t.city || '—')}</span><span class="gt-p" data-l="Pesanan">${t.orders}</span><span class="gt-p gt-sp" data-l="Total Qty">${t.qty}</span><span class="gt-p gt-line" data-l="Total Pembelian">${fmtRp(t.total)}</span></div>`).join('')}
@@ -1110,7 +1110,7 @@ function downloadGtInvoice(id, build) {   // build = true → kembalikan { doc, 
 
   header();
   let y = 44;
-  const lf = [['No. Invoice', o.invoice], ['Nama Dealer', o.store || o.dealer], ['Kota', o.city]];
+  const lf = [['No. Invoice', o.invoice], ['Nama Partner', o.store || o.dealer], ['Kota', o.city]];
   const rf = [['Tanggal', date], ['No. HP', o.phone], ['Distributor', o.pic], ['Status', GT_STATUS[o.status] || o.status]];
   lf.forEach(([k, v], n) => field(k, v, L, y + n * 6.2, 100));
   rf.forEach(([k, v], n) => field(k, v, 108, y + n * 6.2, R));
@@ -1189,7 +1189,7 @@ function downloadGtInvoice(id, build) {   // build = true → kembalikan { doc, 
   y = ny + 6;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(20, 20, 30);
   // tanda tangan: Dealer · Distributor · CV Concerto Audio Indonesia
-  const sig = [[45, 'Dealer', ''], [105, 'Distributor', o.pic || ''], [165, 'CV Concerto Audio Indonesia', '']];
+  const sig = [[45, 'Partner', ''], [105, 'Distributor', o.pic || ''], [165, 'CV Concerto Audio Indonesia', '']];
   sig.forEach(([cx, t]) => doc.text(t, cx, y, { align: 'center' }));
   doc.setFont('helvetica', 'normal');
   doc.setDrawColor(40, 40, 50); doc.setLineWidth(0.3);
@@ -1301,7 +1301,7 @@ async function exportGtOrders() {
   if (!gtOrders?.length) { showToast('Belum ada pesanan untuk diekspor.'); return; }
   try {
     const XLSX = await loadXlsx();
-    const rows = [['No. Invoice', 'Waktu', 'Status', 'Nama Toko', 'Kota', 'Nama Dealer', 'No. HP', 'Distributor', 'Grup', 'Produk', 'Qty', 'Harga', 'Subtotal', 'Total Pesanan']];
+    const rows = [['No. Invoice', 'Waktu', 'Status', 'Nama Toko', 'Kota', 'Nama Partner', 'No. HP', 'Distributor', 'Grup', 'Produk', 'Qty', 'Harga', 'Subtotal', 'Total Pesanan']];
     gtOrders.forEach(o => (o.items || []).forEach((it, n) => rows.push([o.invoice || '', fmtGtTime(o.created_at), GT_STATUS[o.status] || o.status, o.store, o.city, o.dealer, o.phone, o.pic,
       it.group, it.name, it.qty, it.price, it.total, n === 0 ? Number(o.total || 0) : ''])));
     const prod = [['Produk', 'Grup', 'Jumlah Pesanan', 'Total Qty', 'Total Nilai', 'Dibeli oleh (toko × qty)'], ...gtProductTotals().map(p => [p.name, p.group, p.orders, p.qty, p.total, p.stores.map(t => `${t.name} ×${t.qty}`).join(', ')])];

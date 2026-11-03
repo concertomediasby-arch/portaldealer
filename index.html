@@ -17,14 +17,14 @@
 <meta property="og:locale" content="id_ID">
 <meta property="og:url" content="https://hub.concerto.id/">
 <meta property="og:title" content="CAI Hub — Concerto Audio Indonesia">
-<meta property="og:description" content="Katalog resmi, spesifikasi, media produk, paket audio, dan authorized dealer Concerto Audio Indonesia. Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System.">
+<meta property="og:description" content="Katalog resmi, spesifikasi, media produk, paket audio, dan authorized partner Concerto Audio Indonesia. Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System.">
 <meta property="og:image" content="https://hub.concerto.id/assets/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="CAI Hub — Hear the Difference. Choose With Confidence.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="CAI Hub — Concerto Audio Indonesia">
-<meta name="twitter:description" content="Katalog resmi, spesifikasi, media produk, paket audio, dan authorized dealer Concerto Audio Indonesia.">
+<meta name="twitter:description" content="Katalog resmi, spesifikasi, media produk, paket audio, dan authorized partner Concerto Audio Indonesia.">
 <meta name="twitter:image" content="https://hub.concerto.id/assets/og-cover.jpg">
 
 <!-- Ikon & Add to Home Screen -->
@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-11-03T09:02:42Z">
+<link rel="stylesheet" href="style.css?b=2026-11-03T09:57:17Z">
 </head>
 <body>
 <noscript>
@@ -95,7 +95,7 @@
     <div class="landing-links">
       <a href="#" onclick="landingGo('dashboard'); return false;">Dashboard</a>
       <a href="#" onclick="landingGo('catalog'); return false;">Katalog</a>
-      <a href="#" onclick="landingGo('authdealer'); return false;">Authorized Dealer</a>
+      <a href="#" onclick="landingGo('authdealer'); return false;">Authorized Partner</a>
       <a href="#" class="login-only" onclick="landingGo('stock'); return false;">Stok Produk</a>
       <a href="#" onclick="landingGo('paket'); return false;">Paket Audio</a>
       <a href="#" onclick="landingGo('academy'); return false;">Academy<span class="landing-star" id="landing-academy-star" title="Ada materi baru" hidden>★</span></a>
@@ -113,7 +113,7 @@
       <span class="line"><span>Hear the Difference.</span></span>
       <span class="line"><span>Choose With <em>Confidence.</em></span></span>
     </h1>
-    <p class="landing-sub">Explore the complete range of brands distributed by Concerto Audio Indonesia — full specifications, product media, and authorized dealers near you.</p>
+    <p class="landing-sub">Explore the complete range of brands distributed by Concerto Audio Indonesia — full specifications, product media, and authorized partners near you.</p>
     <button class="enter-btn" onclick="enterPortal()">
       Masuk Portal
       <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg>
@@ -143,7 +143,7 @@
     <div class="topbar-spacer"></div>
     <span class="topbar-status"><i></i>System Online</span>
     <span class="topbar-badge">CAI Hub</span>
-    <button class="theme-btn auth-btn" id="auth-btn" onclick="authButton()" title="Login dealer" aria-label="Akun dealer">
+    <button class="theme-btn auth-btn" id="auth-btn" onclick="authButton()" title="Login partner" aria-label="Akun partner">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
       </svg>
@@ -191,7 +191,7 @@
       </button>
       <button class="sidebar-item" id="nav-authdealer" onclick="openAuthDealers()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>
-        Authorized Dealer
+        Authorized Partner
       </button>
       <button class="sidebar-item" id="nav-paket" onclick="openPaketAudio()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
@@ -216,7 +216,7 @@
       </button>
       <button class="sidebar-item login-only" id="nav-guides" onclick="openGuides()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Panduan Dealer<span class="nav-star" id="nav-guides-star" title="Ada panduan baru" hidden>★</span><span class="nav-lock" title="Perlu login">🔒</span>
+        Panduan Partner<span class="nav-star" id="nav-guides-star" title="Ada panduan baru" hidden>★</span><span class="nav-lock" title="Perlu login">🔒</span>
       </button>
       <button class="sidebar-item login-only" id="nav-cway" onclick="openCway()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><line x1="7" y1="2" x2="7" y2="5"/><line x1="11" y1="2" x2="11" y2="5"/></svg>
@@ -249,7 +249,7 @@
       </button>
       <button class="sidebar-item editor-only" id="nav-dealers" onclick="openDealers()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
-        Kelola Dealer
+        Kelola Partner
       </button>
       <button class="sidebar-item staff-nav" id="nav-rundown" onclick="openRundown()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
@@ -313,13 +313,13 @@
     <!-- VIEW: Authorized Dealer (publik) -->
     <div class="view" id="view-authdealer">
       <div class="page-header">
-        <div class="page-title">Authorized Dealer</div>
-        <div class="page-subtitle">Daftar dealer resmi Concerto Audio Indonesia di seluruh Indonesia — pasang &amp; beli produk original bergaransi resmi.</div>
+        <div class="page-title">Authorized Partner</div>
+        <div class="page-subtitle">Daftar partner resmi Concerto Audio Indonesia di seluruh Indonesia — pasang &amp; beli produk original bergaransi resmi.</div>
       </div>
       <div class="catalog-controls">
         <div class="catalog-search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="ad-search" class="catalog-search" placeholder="Cari nama dealer atau kota…" oninput="renderAuthDealers()" autocomplete="off">
+          <input id="ad-search" class="catalog-search" placeholder="Cari nama partner atau kota…" oninput="renderAuthDealers()" autocomplete="off">
         </div>
         <div class="catalog-chips" id="ad-chips"></div>
       </div>
@@ -331,8 +331,8 @@
     <!-- VIEW: Panduan Dealer -->
     <div class="view" id="view-guides">
       <div class="page-header">
-        <div class="page-title">Panduan Dealer</div>
-        <div class="page-subtitle">Dokumen panduan penjualan produk Concerto Audio Indonesia untuk dealer &amp; distributor resmi.</div>
+        <div class="page-title">Panduan Partner</div>
+        <div class="page-subtitle">Dokumen panduan penjualan produk Concerto Audio Indonesia untuk partner &amp; distributor resmi.</div>
       </div>
       <div id="guides-list" style="padding:0 0 48px"></div>
     </div>
@@ -381,7 +381,7 @@
         <div>
           <div class="sc-eyebrow">SHOWCASE · GALERI INSTALASI</div>
           <div class="page-title">Lihat dulu di <em>mobil seperti milik Anda.</em></div>
-          <div class="page-subtitle">Contoh pemasangan audio Concerto dari dealer resmi kami — cari mobil Anda, lihat hasilnya, lalu temukan produk &amp; dealer pemasangnya.</div>
+          <div class="page-subtitle">Contoh pemasangan audio Concerto dari partner resmi kami — cari mobil Anda, lihat hasilnya, lalu temukan produk &amp; partner pemasangnya.</div>
           <div class="gl-tools" id="gl-tools"></div>
         </div>
       </div>
@@ -480,25 +480,25 @@
 
     <div class="view" id="view-dealers">
       <div class="page-header">
-        <div class="page-title">Kelola Dealer</div>
-        <div class="page-subtitle">Buat dan atur akun dealer untuk login ke portal. Khusus akun Editor.</div>
+        <div class="page-title">Kelola Partner</div>
+        <div class="page-subtitle">Buat dan atur akun partner untuk login ke portal. Khusus akun Editor.</div>
       </div>
       <div class="dl-wrap">
         <div class="dl-card dl-shared" id="dl-shared">
           <div class="dl-card-title">🔑 Mode akun bersama aktif</div>
-          <div class="dl-sub">Semua dealer login dengan <b>satu Kode Akses</b> (akun <code>cai@hub.concerto.id</code>, dibuat di Supabase → Authentication → Users). Kode akses = password akun itu, ditulis HURUF BESAR. Ganti kode lewat Supabase → SQL Editor. Formulir di bawah hanya untuk akun dealer perorangan dan tidak diperlukan dalam mode ini.</div>
+          <div class="dl-sub">Semua partner login dengan <b>satu Kode Akses</b> (akun <code>cai@hub.concerto.id</code>, dibuat di Supabase → Authentication → Users). Kode akses = password akun itu, ditulis HURUF BESAR. Ganti kode lewat Supabase → SQL Editor. Formulir di bawah hanya untuk akun partner perorangan dan tidak diperlukan dalam mode ini.</div>
         </div>
         <form class="dl-card dl-form" id="dl-form" onsubmit="submitDealerForm(); return false;">
-          <div class="dl-card-title" id="dl-form-title">Tambah dealer baru</div>
+          <div class="dl-card-title" id="dl-form-title">Tambah partner baru</div>
           <div class="dl-grid">
-            <label>Nama toko / dealer<input class="dl-input" id="dl-store" required maxlength="80" placeholder="mis. Sinar Audio Surabaya" oninput="suggestDealerCode()"></label>
+            <label>Nama toko / partner<input class="dl-input" id="dl-store" required maxlength="80" placeholder="mis. Sinar Audio Surabaya" oninput="suggestDealerCode()"></label>
             <label>Kota<input class="dl-input" id="dl-city" maxlength="60" placeholder="mis. Surabaya" oninput="suggestDealerCode()"></label>
             <label><span>No. WhatsApp <span class="dl-opt">(opsional)</span></span><input class="dl-input" id="dl-phone" maxlength="20" inputmode="tel" placeholder="08xxxxxxxxxx"></label>
-            <label class="dl-new"><span>Kode Dealer <span class="dl-opt">(huruf, angka, tanda -)</span></span><input class="dl-input" id="dl-code" maxlength="30" placeholder="mis. SBY-SINARAUDIO" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="dealerCodeTouched = true"></label>
+            <label class="dl-new"><span>Kode Partner <span class="dl-opt">(huruf, angka, tanda -)</span></span><input class="dl-input" id="dl-code" maxlength="30" placeholder="mis. SBY-SINARAUDIO" autocapitalize="characters" autocorrect="off" spellcheck="false" oninput="dealerCodeTouched = true"></label>
             <label class="dl-new">PIN<span class="dl-pass"><input class="dl-input" id="dl-password" maxlength="30" autocomplete="new-password"><button type="button" class="dlr-btn ghost" onclick="document.getElementById('dl-password').value = randomPin()">Acak</button></span></label>
           </div>
           <div class="dl-actions">
-            <button class="dlr-btn primary" id="dl-submit" type="submit">Buat akun dealer</button>
+            <button class="dlr-btn primary" id="dl-submit" type="submit">Buat akun partner</button>
             <button class="dlr-btn ghost" id="dl-cancel" type="button" onclick="resetDealerForm()" hidden>Batal edit</button>
             <span class="dl-msg" id="dl-msg"></span>
           </div>
@@ -506,7 +506,7 @@
         <div class="dl-card dl-cred" id="dl-cred" hidden></div>
         <div class="dl-card">
           <div class="dl-list-head">
-            <div class="dl-card-title" id="dl-count">Daftar dealer</div>
+            <div class="dl-card-title" id="dl-count">Daftar partner</div>
             <input class="dl-input dl-search" id="dl-search" type="search" placeholder="Cari toko, kota, atau kode…" oninput="renderDealers()">
           </div>
           <div id="dl-list"><div class="dl-empty">Memuat…</div></div>
@@ -567,10 +567,10 @@
         <div class="gt-tabs">
           <button class="filter-chip active" id="gt-tab-form" onclick="setGtTab('form')">🛍 Form Belanja</button>
           <button class="filter-chip" id="gt-tab-top" onclick="setGtTab('top')">🏆 Top Spender</button>
-          <button class="filter-chip staff-only" id="gt-tab-rekap" onclick="setGtTab('rekap')">📋 Rekap Pesanan Dealer</button>
+          <button class="filter-chip staff-only" id="gt-tab-rekap" onclick="setGtTab('rekap')">📋 Rekap Pesanan Partner</button>
         </div>
         <div class="gt-cd" data-gtcd></div>
-        <div class="page-subtitle">Form belanja dealer <b>Gathering CAI 2026</b>. Isi jumlah pesanan, total dihitung otomatis, lalu kirim ke sales CAI lewat WhatsApp atau cetak sebagai PDF.</div>
+        <div class="page-subtitle">Form belanja partner <b>Gathering CAI 2026</b>. Isi jumlah pesanan, total dihitung otomatis, lalu kirim ke sales CAI lewat WhatsApp atau cetak sebagai PDF.</div>
         <div class="gt-terms">* Harga Spesial Gathering = harga lama − diskon 35% − cashback, hanya berlaku selama acara berlangsung. Produk yang tidak masuk promo memakai harga lama. Clearance Sale: harga clearance = harga normal − diskon 50% − cashback (10% × DPP, DPP = harga setelah diskon ÷ 1,11), stok terbatas.</div>
       </div>
       <div id="gt-top" class="gt-top" hidden></div>
@@ -579,13 +579,13 @@
       <div id="gt-lock" hidden></div>
       <div class="gt-editing" id="gt-editing" hidden></div>
       <div class="gt-info">
-        <label class="gt-dealer-field">Nama Dealer
+        <label class="gt-dealer-field">Nama Partner
           <select class="gt-input" id="gt-dealer-sel" onchange="gtDealerChanged()"></select>
-          <input class="gt-input" id="gt-dealer" maxlength="60" placeholder="Ketik nama dealer…" oninput="gtSaveDraft()" hidden>
+          <input class="gt-input" id="gt-dealer" maxlength="60" placeholder="Ketik nama partner…" oninput="gtSaveDraft()" hidden>
         </label>
         <label>Kota<input class="gt-input" id="gt-city" maxlength="40" oninput="gtSaveDraft()"></label>
         <label>No. HP<input class="gt-input" id="gt-phone" maxlength="20" inputmode="tel" oninput="gtSaveDraft()"></label>
-        <label>Distributor<input class="gt-input" id="gt-pic" maxlength="40" oninput="gtSaveDraft()" placeholder="Otomatis sesuai dealer"></label>
+        <label>Distributor<input class="gt-input" id="gt-pic" maxlength="40" oninput="gtSaveDraft()" placeholder="Otomatis sesuai partner"></label>
       </div>
       <div class="gt-pay" id="gt-pay"></div>
       <div class="catalog-controls">
@@ -725,7 +725,7 @@
     </button>
     <button class="mobile-nav-item" id="mnav-authdealer" onclick="openAuthDealers()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>
-      <span>Dealer</span>
+      <span>Partner</span>
     </button>
     <button class="mobile-nav-item login-only" id="mnav-stock" onclick="openStockView()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><polyline points="9 14 11 16 15 12"/></svg>
@@ -753,7 +753,7 @@
     </button>
     <button class="mobile-nav-item editor-only" id="mnav-dealers" onclick="openDealers()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
-      <span>Dealer</span>
+      <span>Partner</span>
     </button>
     <button class="mobile-nav-item staff-nav" id="mnav-rundown" onclick="openRundown()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
@@ -850,11 +850,11 @@
 </div>
 
 <div class="admin-overlay" id="login-overlay" onclick="if(event.target===this)closeLogin()">
-  <div class="admin-panel" role="dialog" aria-modal="true" aria-label="Login dealer" style="width:min(92vw,420px)">
+  <div class="admin-panel" role="dialog" aria-modal="true" aria-label="Login partner" style="width:min(92vw,420px)">
     <div class="admin-header">
       <div>
-        <h2>🔒 Login Dealer</h2>
-        <p>Stok Produk &amp; Panduan Dealer khusus dealer resmi CAI.</p>
+        <h2>🔒 Login Partner</h2>
+        <p>Stok Produk &amp; Panduan Partner khusus partner resmi CAI.</p>
       </div>
       <button class="admin-close" onclick="closeLogin()" title="Tutup">✕</button>
     </div>
@@ -866,7 +866,7 @@
         </div>
         <div>
           <label id="login-pass-label">Kode Akses</label>
-          <input class="admin-input" type="password" id="login-password" placeholder="Masukkan kode akses dealer" autocomplete="current-password" autocapitalize="characters" autocorrect="off" spellcheck="false">
+          <input class="admin-input" type="password" id="login-password" placeholder="Masukkan kode akses partner" autocomplete="current-password" autocapitalize="characters" autocorrect="off" spellcheck="false">
         </div>
         <div class="cf-captcha" id="login-captcha"></div>
         <div class="admin-error" id="login-error"></div>
@@ -907,7 +907,7 @@
       </div>
       <div id="admin-noaccess" style="display:none">
         <div class="admin-login" style="text-align:center;color:#a3aab8;font-size:13px;line-height:1.6">
-          Akun ini adalah akun <b style="color:#f0f1f4">dealer</b> — bisa melihat stok, tetapi tidak dapat mengubahnya.<br>
+          Akun ini adalah akun <b style="color:#f0f1f4">partner</b> — bisa melihat stok, tetapi tidak dapat mengubahnya.<br>
           Untuk mengubah stok, keluar lalu masuk dengan akun admin.
           <button class="admin-btn ghost" onclick="adminLogout()">Keluar</button>
         </div>
@@ -917,7 +917,7 @@
         <div class="admin-tools">
           <button class="admin-btn ghost" onclick="downloadStockTemplate()">⬇ Template Excel</button>
           <button class="admin-btn ghost" onclick="toggleImport()">⬆ Import dari Excel</button>
-          <button class="admin-btn ghost editor-only" onclick="closeAdmin(); openDealers()">👥 Kelola Dealer</button>
+          <button class="admin-btn ghost editor-only" onclick="closeAdmin(); openDealers()">👥 Kelola Partner</button>
         </div>
         <div class="sheet-link" id="sheet-link"></div>
         <div class="sheet-link" id="auto-sync"></div>
@@ -953,16 +953,16 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/core.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/stock.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/dealers.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/gathering.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/rundown.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/videotron.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/showcase.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/cway.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/news.js?b=2026-11-03T09:02:42Z"></script>
-<script src="js/main.js?b=2026-11-03T09:02:42Z"></script>
+<script src="katalog.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/core.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/stock.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/dealers.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/gathering.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/rundown.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/videotron.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/showcase.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/cway.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/news.js?b=2026-11-03T09:57:17Z"></script>
+<script src="js/main.js?b=2026-11-03T09:57:17Z"></script>
 </body>
 </html>

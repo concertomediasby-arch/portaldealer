@@ -78,12 +78,12 @@ const ACADEMY = [
 const DEALER_GUIDES = [
   { id:'guide-selling', title:'Tips & Teknik Penjualan Produk', category:'Penjualan', icon:'💡',
     desc:'Panduan praktis cara mempresentasikan dan menjual produk CAI: argumen nilai, perbandingan kompetitor, dan closing technique.',
-    folder:'tips-penjualan', path:'product-knowledge.pdf', pathTitle:'Munich ML-S10 — Panduan Dealer' },
+    folder:'tips-penjualan', path:'product-knowledge.pdf', pathTitle:'Munich ML-S10 — Panduan Partner' },
   { id:'guide-pk', title:'Product Knowledge — Semua Brand', category:'Produk', icon:'📋',
     desc:'Ringkasan spesifikasi, keunggulan, dan positioning setiap brand CAI dalam satu dokumen referensi cepat.',
     folder:'product-knowledge', hidden:true },
   { id:'guide-install', title:'Panduan Instalasi & After Sales', category:'Instalasi', icon:'🔧',
-    desc:'Prosedur instalasi standar, tips perawatan produk, dan penanganan klaim garansi untuk dealer & installer resmi.',
+    desc:'Prosedur instalasi standar, tips perawatan produk, dan penanganan klaim garansi untuk partner & installer resmi.',
     folder:'panduan-instalasi', path:'panduan-instalasi.pdf', hidden:true },
 ];
 
@@ -878,7 +878,7 @@ async function uploadGuideFiles(id, input) {
 
 async function deleteGuideFile(id, key) {
   const f = (guideFiles?.get(id) || []).find(x => x.key === key);
-  if (!f || !supabase || !confirm(`Hapus "${f.title}" dari Panduan Dealer?\n\nFile akan hilang untuk semua dealer.`)) return;
+  if (!f || !supabase || !confirm(`Hapus "${f.title}" dari Panduan Partner?\n\nFile akan hilang untuk semua partner.`)) return;
   try {
     const { data, error } = await supabase.storage.from(GUIDES_BUCKET).remove([key]);
     if (error) throw error;
@@ -1050,7 +1050,7 @@ function renderRakitSide() {
     </div>
     <div class="rk-card">
       <b class="rk-ct">Data penawaran (opsional)</b>
-      ${f('cust', 'Nama customer', 'mis. Bapak Andi')}${f('car', 'Mobil', 'mis. Toyota Fortuner 2024')}${f('by', 'Disiapkan oleh', 'nama toko / dealer')}
+      ${f('cust', 'Nama customer', 'mis. Bapak Andi')}${f('car', 'Mobil', 'mis. Toyota Fortuner 2024')}${f('by', 'Disiapkan oleh', 'nama toko / partner')}
       <label class="rk-f"><span>Catatan</span><textarea rows="2" placeholder="mis. termasuk pemasangan" oninput="rk.note=this.value;rkSave()">${escHtml(rk.note || '')}</textarea></label>
       <button class="gt-btn confirm rk-pdf" onclick="rkPdf()" ${rk.items.length ? '' : 'disabled'}>⬇ Unduh PDF Penawaran</button>
       <button class="gt-btn ghost rk-clear" onclick="rkClear()" ${rk.items.length ? '' : 'disabled'}>Kosongkan sistem</button>
@@ -1178,7 +1178,7 @@ function rkPdf() {
   const notes = [];
   if (rk.note) notes.push(clean(rk.note));
   notes.push('Harga = harga jual umum (SRP) Concerto Audio Indonesia saat dokumen dibuat dan dapat berubah sewaktu-waktu.');
-  notes.push(RK_EXCL + ' Ketersediaan stok mohon dikonfirmasi ke dealer / CAI.');
+  notes.push(RK_EXCL + ' Ketersediaan stok mohon dikonfirmasi ke partner / CAI.');
   if (rows.some(r => !hasPrice(r.product))) notes.push('Produk bertanda "Hub. sales" belum memiliki SRP dan tidak masuk total.');
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...NAVY); doc.text('Catatan', L, y); y += 5;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.3); doc.setTextColor(60, 60, 70);
@@ -1596,7 +1596,7 @@ function renderAuthDealers() {
     `<button class="filter-chip${adRegion === r ? ' active' : ''}" onclick="setAdRegion('${escHtml(r)}')">${r === 'all' ? 'Semua' : escHtml(r)}</button>`).join('');
   const q = normKey(document.getElementById('ad-search')?.value || '');
   const rows = list.filter(d => (adRegion === 'all' || d.r === adRegion) && (!q || normKey([d.n, d.c, d.r, d.a].join(' ')).includes(q)));
-  document.getElementById('ad-count').innerHTML = `<b>${rows.length}</b> dealer resmi${adRegion === 'all' && !q ? ` di <b>${regions.length}</b> provinsi` : ''}`;
+  document.getElementById('ad-count').innerHTML = `<b>${rows.length}</b> partner resmi${adRegion === 'all' && !q ? ` di <b>${regions.length}</b> provinsi` : ''}`;
   const card = d => `<div class="ad-card${d.hidden ? ' ad-hid' : ''}" data-adn="${escHtml(normKey(d.n))}">
       <div class="ad-top"><div class="ad-name">${escHtml(d.n)}</div>${d.hidden ? '<span class="ad-badge hid">Disembunyikan</span>' : '<span class="ad-badge">✓ Resmi</span>'}</div>
       <div class="ad-city">📍 ${escHtml(d.c || d.r)}</div>
@@ -1605,14 +1605,14 @@ function renderAuthDealers() {
         ${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
         ${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}
         <a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>
-        <button class="ad-btn ad-share" title="Bagikan dealer ini ke WhatsApp" aria-label="Bagikan" onclick="adShare(${escHtml(JSON.stringify(d.n))})">${SHARE_ICON}</button>
+        <button class="ad-btn ad-share" title="Bagikan partner ini ke WhatsApp" aria-label="Bagikan" onclick="adShare(${escHtml(JSON.stringify(d.n))})">${SHARE_ICON}</button>
       </div>
       ${ed ? `<div class="ad-adm"><button class="gt-btn" onclick="openAdForm('${d.id}')">✏️ Edit</button><button class="gt-btn ghost gt-del" onclick="deleteAdDealer('${d.id}')">🗑 Hapus</button></div>` : ''}
     </div>`;
   document.getElementById('ad-list').innerHTML = rows.length ? regions.filter(r => rows.some(d => d.r === r)).map(r => {
     const ds = rows.filter(d => d.r === r);
     return `<div class="line-header"><span class="line-name">${escHtml(r)}</span><span class="line-count">${ds.length}</span></div><div class="ad-grid">${ds.map(card).join('')}</div>`;
-  }).join('') : '<div class="stock-empty">Dealer tidak ditemukan. Coba kata kunci lain.</div>';
+  }).join('') : '<div class="stock-empty">Partner tidak ditemukan. Coba kata kunci lain.</div>';
 }
 
 /* ── Authorized Dealer bisa diedit Editor dari portal (31 Okt 2026, permintaan pemilik) ──
@@ -1664,7 +1664,7 @@ function loadAuthDealers(force) {
     } catch (e) {
       const m = String(e.message || e);
       adRows = null;
-      adErr = /relation|does not exist|schema cache|404|PGRST205/i.test(m) ? 'setup' : 'Daftar dealer dari database tidak bisa dimuat: ' + m;
+      adErr = /relation|does not exist|schema cache|404|PGRST205/i.test(m) ? 'setup' : 'Daftar partner dari database tidak bisa dimuat: ' + m;
     }
     adTried = true; adLoading = null;
   })();
@@ -1682,9 +1682,9 @@ function adAuthChanged() { adTried = false; adRows = null; if (document.getEleme
 function renderAdTools() {
   const el = document.getElementById('ad-tools'); if (!el) return;
   if (!isEditor()) { el.innerHTML = ''; return; }
-  if (adErr === 'setup') el.innerHTML = `<div class="vs-warn">Daftar dealer belum bisa diedit dari portal: tabel <b>auth_dealers</b> belum dibuat. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (sekaligus memasukkan ${AUTH_DEALERS.length} dealer yang tampil sekarang), lalu buka menu ini lagi. Sementara itu pengunjung tetap melihat daftar bawaan.<br><br><button class="gt-btn" onclick="adCopySql()">📋 Salin SQL</button></div>`;
+  if (adErr === 'setup') el.innerHTML = `<div class="vs-warn">Daftar partner belum bisa diedit dari portal: tabel <b>auth_dealers</b> belum dibuat. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (sekaligus memasukkan ${AUTH_DEALERS.length} partner yang tampil sekarang), lalu buka menu ini lagi. Sementara itu pengunjung tetap melihat daftar bawaan.<br><br><button class="gt-btn" onclick="adCopySql()">📋 Salin SQL</button></div>`;
   else if (adErr) el.innerHTML = `<div class="vs-warn">${escHtml(adErr)}</div>`;
-  else if (adRows) el.innerHTML = `<div class="ad-toolbar"><button class="gt-btn confirm" onclick="openAdForm()">＋ Tambah Dealer</button><span class="ad-hint">Mode Editor — perubahan langsung terlihat pengunjung.</span></div>`;
+  else if (adRows) el.innerHTML = `<div class="ad-toolbar"><button class="gt-btn confirm" onclick="openAdForm()">＋ Tambah Partner</button><span class="ad-hint">Mode Editor — perubahan langsung terlihat pengunjung.</span></div>`;
   else el.innerHTML = '';
 }
 const adWa = v => { let d = String(v || '').replace(/\D/g, ''); if (d.startsWith('0')) d = '62' + d.slice(1); else if (d.startsWith('8')) d = '62' + d; return d; };
@@ -1696,9 +1696,9 @@ function openAdForm(id) {
   const e = adEdit, regions = [...new Set(adRows.map(x => x.r))].sort();
   const f = (k, label, cls = '', ph = '', type = 'text') => `<label class="${cls}">${label}<input type="${type}" value="${escHtml(e[k] ?? '')}" placeholder="${escHtml(ph)}" oninput="adEdit.${k}=this.value"></label>`;
   document.querySelector('#ad-form .gl-fbox').innerHTML = `
-    <div class="rk-pick-hd"><div class="rk-pick-t">${d ? 'Edit' : 'Tambah'} Dealer</div><button class="rk-pick-x" onclick="closeAdForm()" aria-label="Tutup">✕</button></div>
+    <div class="rk-pick-hd"><div class="rk-pick-t">${d ? 'Edit' : 'Tambah'} Partner</div><button class="rk-pick-x" onclick="closeAdForm()" aria-label="Tutup">✕</button></div>
     <div class="gl-fgrid">
-      <label class="w2">Nama dealer *<input value="${escHtml(e.n)}" placeholder="mis. Concerto Surabaya" oninput="adEdit.n=this.value"></label>
+      <label class="w2">Nama partner *<input value="${escHtml(e.n)}" placeholder="mis. Concerto Surabaya" oninput="adEdit.n=this.value"></label>
       <label>Provinsi / wilayah *<input list="adf-regions" value="${escHtml(e.r)}" placeholder="Pilih / ketik baru" oninput="adEdit.r=this.value"><datalist id="adf-regions">${regions.map(r => `<option value="${escHtml(r)}"></option>`).join('')}</datalist></label>
       ${f('c', 'Kota', '', 'mis. Surabaya')}
       <label class="w4">Alamat<textarea rows="2" oninput="adEdit.a=this.value">${escHtml(e.a)}</textarea></label>
@@ -1715,7 +1715,7 @@ function closeAdForm() { document.getElementById('ad-form')?.classList.remove('o
 async function saveAdDealer() {
   const e = adEdit; if (!e || !supabase) return;
   const name = String(e.n || '').trim(), region = String(e.r || '').trim();
-  if (!name || !region) { showToast('⚠ Isi nama dealer & provinsi dulu.'); return; }
+  if (!name || !region) { showToast('⚠ Isi nama partner & provinsi dulu.'); return; }
   const row = { region, name, city: String(e.c || '').trim() || null, address: String(e.a || '').trim() || null,
     wa: adWa(e.wa) || null, ig: adIg(e.ig) || null, map: String(e.map || '').trim() || null,
     hidden: !!e.hidden, sort: +e.sort || 0, updated_at: new Date().toISOString() };
@@ -1724,7 +1724,7 @@ async function saveAdDealer() {
     const q = e.id ? supabase.from(AD_TABLE).update(row).eq('id', e.id) : supabase.from(AD_TABLE).insert(row);
     const { error } = await q;
     if (error) throw error;
-    closeAdForm(); showToast('✓ Dealer disimpan');
+    closeAdForm(); showToast('✓ Partner disimpan');
     await loadAuthDealers(true); adRerender();
   } catch (err) {
     showToast('⚠ Gagal menyimpan: ' + (err.message || err), 6000);
@@ -1733,10 +1733,10 @@ async function saveAdDealer() {
 }
 async function deleteAdDealer(id) {
   const d = adRows?.find(x => x.id === id); if (!d || !supabase) return;
-  if (!confirm(`Hapus dealer "${d.n}" dari daftar Authorized Dealer?\n\nTips: untuk menyembunyikan sementara, pakai ✏️ Edit lalu hilangkan centang "Tampilkan".`)) return;
+  if (!confirm(`Hapus partner "${d.n}" dari daftar Authorized Partner?\n\nTips: untuk menyembunyikan sementara, pakai ✏️ Edit lalu hilangkan centang "Tampilkan".`)) return;
   const { error } = await supabase.from(AD_TABLE).delete().eq('id', id);
   if (error) { showToast('⚠ Gagal menghapus: ' + error.message, 6000); return; }
-  showToast('✓ Dealer dihapus');
+  showToast('✓ Partner dihapus');
   await loadAuthDealers(true); adRerender();
 }
 
@@ -2443,9 +2443,9 @@ function acadOpenLinked(no) {
 /* ── Bagikan Authorized Dealer (3 Nov 2026, permintaan pemilik): nama, kota, alamat, WA & Maps dealer + link ?dealer=<nama> ── */
 function adShare(name) {
   const d = adPublic().find(x => x.n === name) || (adRows || []).find(x => x.n === name); if (!d) return;
-  const text = `📍 *${d.n}* — Authorized Dealer Concerto Audio Indonesia\n${[d.c, d.r].filter(Boolean).join(', ')}` +
+  const text = `📍 *${d.n}* — Authorized Partner Concerto Audio Indonesia\n${[d.c, d.r].filter(Boolean).join(', ')}` +
     (d.a ? `\n${d.a}` : '') + (d.wa ? `\nWhatsApp: https://wa.me/${d.wa}` : '') + (d.ig ? `\nInstagram: @${d.ig}` : '') +
-    `\nMaps: ${adMaps(d)}\n\nDaftar dealer resmi di CAI Hub:\n${AUTH_DEALERS.some(x => x.n === d.n) ? sharePage('d', shareSlug(d.n)) : PORTAL_URL + '/?dealer=' + encodeURIComponent(d.n)}`;
+    `\nMaps: ${adMaps(d)}\n\nDaftar partner resmi di CAI Hub:\n${AUTH_DEALERS.some(x => x.n === d.n) ? sharePage('d', shareSlug(d.n)) : PORTAL_URL + '/?dealer=' + encodeURIComponent(d.n)}`;
   shareWa(text);
 }
 function adOpenLinked(name) {
@@ -2453,7 +2453,7 @@ function adOpenLinked(name) {
   const s = document.getElementById('ad-search'); if (s) s.value = name;
   adRegion = 'all'; renderAuthDealers();
   const el = document.querySelector(`.ad-card[data-adn="${CSS.escape(normKey(name))}"]`);
-  if (!el) { if (s) s.value = ''; renderAuthDealers(); return showToast('Dealer ini tidak ditemukan di daftar dealer resmi.'); }
+  if (!el) { if (s) s.value = ''; renderAuthDealers(); return showToast('Dealer ini tidak ditemukan di daftar partner resmi.'); }
   el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('gf-flash'); setTimeout(() => el.classList.remove('gf-flash'), 4000);
 }
 /* ── Bagikan Paket Audio (3 Nov 2026, permintaan pemilik): di HP PDF paket (publik) ikut terlampir; link ?paket=<id> ── */

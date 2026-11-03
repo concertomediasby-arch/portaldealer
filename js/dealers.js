@@ -37,7 +37,7 @@ async function callDealers(action, payload = {}) {
 
 function openDealers() {
   if (!requireLogin(openDealers)) return;
-  if (!isEditor()) { showToast('Menu Kelola Dealer khusus akun Editor.'); return; }
+  if (!isEditor()) { showToast('Menu Kelola Partner khusus akun Editor.'); return; }
   showView('dealers');
   document.querySelector('.main')?.scrollTo(0, 0);
   document.getElementById('dl-shared').hidden = !SHARED_DEALER_CODE;
@@ -67,7 +67,7 @@ function renderDealers() {
     .sort((a, b) => (a.store || a.email).localeCompare(b.store || b.email));
   const staff = dealerUsers.filter(u => u.role !== 'dealer');
   const total = dealerUsers.filter(u => u.role === 'dealer').length;
-  document.getElementById('dl-count').textContent = `Daftar dealer (${total})`;
+  document.getElementById('dl-count').textContent = `Daftar partner (${total})`;
   const row = u => `<div class="dl-row${u.active ? '' : ' off'}">
       <div class="dl-main">
         <div class="dl-store">${escHtml(u.store || '(tanpa nama toko)')}${u.active ? '' : ' <span class="dl-tag off">Nonaktif</span>'}</div>
@@ -82,7 +82,7 @@ function renderDealers() {
       </div>
     </div>`;
   document.getElementById('dl-list').innerHTML =
-    (dealers.length ? dealers.map(row).join('') : `<div class="dl-empty">${total ? 'Tidak ada dealer yang cocok.' : 'Belum ada akun dealer. Tambahkan lewat formulir di atas.'}</div>`) +
+    (dealers.length ? dealers.map(row).join('') : `<div class="dl-empty">${total ? 'Tidak ada partner yang cocok.' : 'Belum ada akun partner. Tambahkan lewat formulir di atas.'}</div>`) +
     (staff.length && !q ? `<div class="dl-staff">Akun staff (tidak bisa diubah dari sini): ${staff.map(u => `${escHtml(u.email)} · ${ROLE_LABEL[u.role] || u.role}`).join(' &nbsp;|&nbsp; ')}</div>` : '');
 }
 
@@ -96,8 +96,8 @@ function resetDealerForm() {
   ['dl-store', 'dl-city', 'dl-phone', 'dl-code'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('dl-password').value = randomPin();
   dealerCodeTouched = false;
-  document.getElementById('dl-form-title').textContent = 'Tambah dealer baru';
-  document.getElementById('dl-submit').textContent = 'Buat akun dealer';
+  document.getElementById('dl-form-title').textContent = 'Tambah partner baru';
+  document.getElementById('dl-submit').textContent = 'Buat akun partner';
   document.getElementById('dl-cancel').hidden = true;
   document.querySelectorAll('#dl-form .dl-new').forEach(el => el.hidden = false);
   dealerMsg('');
@@ -110,7 +110,7 @@ function editDealer(id) {
   document.getElementById('dl-store').value = u.store;
   document.getElementById('dl-city').value = u.city;
   document.getElementById('dl-phone').value = u.phone;
-  document.getElementById('dl-form-title').textContent = `Edit dealer — ${accountLabel(u)}`;
+  document.getElementById('dl-form-title').textContent = `Edit partner — ${accountLabel(u)}`;
   document.getElementById('dl-submit').textContent = 'Simpan perubahan';
   document.getElementById('dl-cancel').hidden = false;
   document.querySelectorAll('#dl-form .dl-new').forEach(el => el.hidden = true);
@@ -142,11 +142,11 @@ async function submitDealerForm() {
       showToast(`✓ Data ${store} diperbarui.`);
     } else {
       const code = normDealerCode(v('dl-code')), password = v('dl-password');
-      if (!validDealerCode(code)) throw new Error('Kode Dealer 3–30 karakter: huruf, angka, dan tanda - (tidak di awal/akhir).');
+      if (!validDealerCode(code)) throw new Error('Kode Partner 3–30 karakter: huruf, angka, dan tanda - (tidak di awal/akhir).');
       if (password.length < 6) throw new Error('PIN minimal 6 karakter.');
-      if (dealerUsers?.some(u => codeFromEmail(u.email) === code)) throw new Error(`Kode ${code} sudah dipakai dealer lain.`);
+      if (dealerUsers?.some(u => codeFromEmail(u.email) === code)) throw new Error(`Kode ${code} sudah dipakai partner lain.`);
       await callDealers('create', { code, email: loginEmailFor(code), password, store, city, phone });
-      showCredentials({ store, email: loginEmailFor(code), password, phone }, 'Akun dealer berhasil dibuat');
+      showCredentials({ store, email: loginEmailFor(code), password, phone }, 'Akun partner berhasil dibuat');
     }
     resetDealerForm();
     loadDealers();
@@ -161,7 +161,7 @@ function credentialMessage(c) {
   return `Halo ${c.store}, berikut akun CAI Hub Anda:\n\n` +
     `🔗 ${PORTAL_URL}\n` +
     (codeFromEmail(c.email) ? `🏷️ Kode Dealer: ${codeFromEmail(c.email)}\n🔑 PIN: ${c.password}\n\n` : `📧 Email: ${c.email}\n🔑 Password: ${c.password}\n\n`) +
-    `Login lewat ikon akun di kanan atas portal untuk membuka Stok Produk & Panduan Dealer. Mohon jaga kerahasiaan akun ini. Terima kasih — Concerto Audio Indonesia`;
+    `Login lewat ikon akun di kanan atas portal untuk membuka Stok Produk & Panduan Partner. Mohon jaga kerahasiaan akun ini. Terima kasih — Concerto Audio Indonesia`;
 }
 
 function showCredentials(c, title) {
@@ -171,7 +171,7 @@ function showCredentials(c, title) {
   box.hidden = false;
   box.innerHTML = `
     <div class="dl-card-title">✓ ${escHtml(title)}</div>
-    <div class="dl-sub">Kirim data login ini ke dealer. PIN tidak bisa dilihat lagi setelah kotak ini ditutup.</div>
+    <div class="dl-sub">Kirim data login ini ke partner. PIN tidak bisa dilihat lagi setelah kotak ini ditutup.</div>
     <pre class="dl-pre">${escHtml(msg)}</pre>
     <div class="dl-actions">
       <button class="dlr-btn primary" onclick="copyCredentials()">Salin pesan</button>
@@ -202,7 +202,7 @@ async function resetDealerPassword(id) {
 async function toggleDealer(id) {
   const u = dealerUsers?.find(x => x.id === id);
   if (!u) return;
-  if (u.active && !confirm(`Nonaktifkan ${u.store || u.email}? Dealer ini tidak bisa login sampai diaktifkan lagi.`)) return;
+  if (u.active && !confirm(`Nonaktifkan ${u.store || u.email}? Partner ini tidak bisa login sampai diaktifkan lagi.`)) return;
   try {
     await callDealers('set_active', { id, active: !u.active });
     showToast(u.active ? `${u.store || u.email} dinonaktifkan.` : `${u.store || u.email} diaktifkan kembali.`);

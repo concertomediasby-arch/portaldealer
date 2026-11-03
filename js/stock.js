@@ -17,7 +17,7 @@ let   authUser = null;   // akun yang sedang login (dealer atau admin)
 const userRole = () => authUser?.app_metadata?.role || 'dealer';
 const isEditor = () => userRole() === 'editor';
 const isAdmin = () => ['admin', 'editor'].includes(userRole());
-const ROLE_LABEL = { editor: 'Editor', admin: 'Admin Staff', dealer: 'Dealer' };
+const ROLE_LABEL = { editor: 'Editor', admin: 'Admin Staff', dealer: 'Partner' };
 let   stockChannel = null, afterLogin = null, lastAuthId;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
@@ -140,8 +140,8 @@ function setLoginMode(staff) {
   loginStaffMode = staff || !SHARED_DEALER_CODE;
   document.getElementById('login-id-row').hidden = !loginStaffMode;
   document.getElementById('login-pass-label').textContent = loginStaffMode ? 'Password' : 'Kode Akses';
-  document.getElementById('login-password').placeholder = loginStaffMode ? '••••••••' : 'Masukkan kode akses dealer';
-  document.getElementById('login-mode-link').textContent = loginStaffMode ? 'Login dealer (kode akses)' : 'Login staff (email)';
+  document.getElementById('login-password').placeholder = loginStaffMode ? '••••••••' : 'Masukkan kode akses partner';
+  document.getElementById('login-mode-link').textContent = loginStaffMode ? 'Login partner (kode akses)' : 'Login staff (email)';
   document.getElementById('login-mode-link').hidden = !SHARED_DEALER_CODE;
   document.getElementById('login-error').textContent = '';
   setTimeout(() => document.getElementById(loginStaffMode && !document.getElementById('login-email').value ? 'login-email' : 'login-password')?.focus(), 50);
@@ -244,7 +244,7 @@ async function dealerLogin() {
     const next = afterLogin;
     document.getElementById('login-password').value = '';
     closeLogin();
-    showToast(`Masuk sebagai ${authUser.user_metadata?.store || accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Dealer'}`);
+    showToast(`Masuk sebagai ${authUser.user_metadata?.store || accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Partner'}`);
     if (next) next();
   } catch (e) {
     err.textContent = /invalid login/i.test(e.message || '') ? (loginStaffMode ? 'Email atau password salah.' : 'Kode akses salah.') : 'Login gagal: ' + (e.message || e);
@@ -326,7 +326,7 @@ function updateAuthUI() {
   qaScreenAuth();
   if (typeof scAuthChanged === 'function') scAuthChanged();
   const btn = document.getElementById('auth-btn');
-  if (btn) btn.title = authUser ? `Login sebagai ${accountLabel(authUser)} (${ROLE_LABEL[userRole()] || 'Dealer'}) — klik untuk keluar` : 'Login dealer';
+  if (btn) btn.title = authUser ? `Login sebagai ${accountLabel(authUser)} (${ROLE_LABEL[userRole()] || 'Partner'}) — klik untuk keluar` : 'Login partner';
 }
 
 async function loadStock() {
@@ -554,7 +554,7 @@ function showAdminStockSection() {
   document.getElementById('admin-noaccess').style.display = admin ? 'none' : 'block';
   document.getElementById('admin-stock-section').style.display = admin ? 'block' : 'none';
   document.getElementById('admin-footer').style.display = 'block';
-  document.getElementById('admin-user-email').textContent = authUser ? `${accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Dealer'}` : '';
+  document.getElementById('admin-user-email').textContent = authUser ? `${accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Partner'}` : '';
   document.getElementById('admin-subtitle').textContent = admin ? 'Kelola ketersediaan produk' : 'Akun ini tidak punya akses admin';
   if (admin) { renderAdminList(); renderSheetLink(); loadAutoSync(); }
 }
@@ -632,7 +632,7 @@ function renderAdminList() {
         <input class="admin-qty-input" type="number" min="0" step="1" inputmode="numeric" placeholder="Qty"
           value="${qty}" data-pid="${p.id}" oninput="adminQtyChange('${p.id}',this)" title="Jumlah stok tersisa">
         <input class="admin-note-input admin-otw-input" type="text" placeholder="🚚 OTW (mis. 20 pcs)" maxlength="40"
-          value="${escHtml(otw)}" data-pid="${p.id}" oninput="scheduleSave('${p.id}')" title="Barang OTW / belum datang — tampil ke dealer sebagai 🚚 OTW. Kosongkan bila tidak ada.">
+          value="${escHtml(otw)}" data-pid="${p.id}" oninput="scheduleSave('${p.id}')" title="Barang OTW / belum datang — tampil ke partner sebagai 🚚 OTW. Kosongkan bila tidak ada.">
         <div class="admin-save-row" id="saved-${p.id}"></div>
       </div>`;
     });

@@ -233,7 +233,7 @@ function renderCwPost(body, it) {
     <article class="cw-art">
     <div class="cw-hero"><div class="cw-hero-top"><span class="cw-badge">☕ CONCERTO WAY</span>${it.day != null ? `<span class="cw-dnum">DAY ${it.day}</span>` : ''}</div>
       ${it.series ? `<div class="cw-ser">${escHtml(it.series)}</div>` : ''}<h2 class="cw-title">${escHtml(it.title)}</h2>${it.subtitle ? `<p class="cw-sub">${escHtml(it.subtitle)}</p>` : ''}
-      ${it.published ? '' : '<div class="cw-draft-note">DRAF — belum tampil untuk dealer</div>'}</div>
+      ${it.published ? '' : '<div class="cw-draft-note">DRAF — belum tampil untuk partner</div>'}</div>
     <div class="cw-body">${cwBodyHtml(it)}</div>
     <div class="cw-foot"><span class="cw-date">${escHtml(cwDate(it.post_date))}</span>
       <div class="cw-acts">${acts}</div></div>
@@ -293,7 +293,7 @@ function renderCwForm() {
         <label class="cwf-l">Seri<input value="${escHtml(f.series)}" placeholder="mis. BASIC: Kalau Saya Jadi Customer" oninput="cwFormSet('series',this.value)"></label>
         <label class="cwf-l">Judul<input value="${escHtml(f.title)}" oninput="cwFormSet('title',this.value)"></label>
         <label class="cwf-l">Subjudul<input value="${escHtml(f.subtitle)}" oninput="cwFormSet('subtitle',this.value)"></label>
-        <label class="cwf-chk"><input type="checkbox"${f.published ? ' checked' : ''} onchange="cwForm.published=this.checked"> Tampilkan untuk dealer (hapus centang = simpan sebagai draf)</label>
+        <label class="cwf-chk"><input type="checkbox"${f.published ? ' checked' : ''} onchange="cwForm.published=this.checked"> Tampilkan untuk partner (hapus centang = simpan sebagai draf)</label>
         <div class="cwf-h">Pratinjau</div>
         <div class="cwf-prev" id="cwf-prev"></div>
       </div>
@@ -336,7 +336,7 @@ async function saveCw() {
 }
 async function deleteCw(id) {
   const it = cwItems?.find(x => x.id === id); if (!it || !isAdmin()) return;
-  if (!confirm(`Hapus Concerto Way ${it.day != null ? 'Day ' + it.day + ' — ' : ''}"${it.title}"?\n\nPostingan hilang dari portal untuk semua dealer.`)) return;
+  if (!confirm(`Hapus Concerto Way ${it.day != null ? 'Day ' + it.day + ' — ' : ''}"${it.title}"?\n\nPostingan hilang dari portal untuk semua partner.`)) return;
   const { error } = await supabase.from(CWAY_TABLE).delete().eq('id', id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
   showToast('Postingan dihapus'); cwCur = null; await loadCway(true);

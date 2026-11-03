@@ -72,21 +72,21 @@ for (const k of PAKET_AUDIO) items.push({ kind: 'k', id: k.id, target: `/?paket=
   title: k.title, desc: clip(`${k.segment} · Komponen: ${k.products.join(', ')}. Lihat detail & unduh PDF paket di CAI Hub.`, 200),
   card: { t: 'k', title: k.title, seg: k.segment, prods: k.products, icon: k.icon, file: k.available ? k.file : '' } });
 for (const d of AUTH_DEALERS) items.push({ kind: 'd', id: shareSlug(d.n), target: `/?dealer=${encodeURIComponent(d.n)}`,
-  title: `${d.n} — Authorized Dealer Concerto Audio Indonesia`, desc: clip([[d.c, d.r].filter(Boolean).join(', '), d.a, 'Dealer resmi Audiocircle · STEG · Zelos · Diosdela · OG One Sound · Audio System.'].filter(Boolean).join(' · '), 200),
+  title: `${d.n} — Authorized Partner Concerto Audio Indonesia`, desc: clip([[d.c, d.r].filter(Boolean).join(', '), d.a, 'Dealer resmi Audiocircle · STEG · Zelos · Diosdela · OG One Sound · Audio System.'].filter(Boolean).join(' · '), 200),
   card: { t: 'd', name: d.n, city: d.c || '', region: d.r || '', addr: d.a || '', ig: d.ig || '' } });
 
 // Kartu per JENIS (3 Nov 2026, permintaan pemilik — pilihan 1): isi Panduan Dealer / Concerto Way / News / Galeri ada di
 // database (Panduan & Concerto Way khusus partner), jadi satu kartu per jenis. Halaman di /<id>/ meneruskan query apa adanya
 // (mis. /news/?news=<id> → /?news=<id>); dipakai guideLink(), cwLink(), nwLink(), glLink().
 const TYPES = [
-  { id: 'panduan', title: 'Panduan Dealer — khusus partner CAI', desc: 'Materi penjualan & produk untuk dealer resmi Concerto Audio Indonesia. Buka di CAI Hub dengan Kode Akses.',
-    card: { t: 't', v: 'pd', kick: 'PANDUAN DEALER', h: 'Materi penjualan & produk untuk partner resmi', sub: 'Tips penjualan, product knowledge & panduan dealer dari tim CAI.', lock: true } },
+  { id: 'panduan', title: 'Panduan Partner — khusus partner CAI', desc: 'Materi penjualan & produk untuk partner resmi Concerto Audio Indonesia. Buka di CAI Hub dengan Kode Akses.',
+    card: { t: 't', v: 'pd', kick: 'PANDUAN PARTNER', h: 'Materi penjualan & produk untuk partner resmi', sub: 'Tips penjualan, product knowledge & panduan partner dari tim CAI.', lock: true } },
   { id: 'cway', title: 'Concerto Way — khusus partner CAI', desc: 'Satu kebiasaan kecil setiap hari dari tim CAI untuk toko yang makin dipercaya customer. Buka di CAI Hub dengan Kode Akses.',
     card: { t: 't', v: 'cw', kick: 'CONCERTO WAY', h: 'Satu kebiasaan kecil setiap hari', sub: 'Materi harian tim CAI untuk toko yang makin dipercaya customer.', lock: true } },
   { id: 'news', title: 'CAI Hub News', desc: 'Berita terbaru Concerto Audio Indonesia: produk baru, event & info dari brand resmi CAI.',
     card: { t: 't', v: 'nw', kick: 'CAI HUB NEWS', h: 'Berita terbaru Concerto Audio Indonesia', sub: 'Produk baru, event & info dari Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System.' } },
-  { id: 'galeri', title: 'Galeri Instalasi — CAI Hub', desc: 'Foto & video pemasangan audio mobil dari dealer resmi Concerto Audio Indonesia.',
-    card: { t: 't', v: 'gl', kick: 'GALERI INSTALASI', h: 'Instalasi audio mobil dari dealer resmi CAI', sub: 'Foto & video pemasangan Audiocircle · STEG · Zelos dan brand resmi CAI lainnya.' } },
+  { id: 'galeri', title: 'Galeri Instalasi — CAI Hub', desc: 'Foto & video pemasangan audio mobil dari partner resmi Concerto Audio Indonesia.',
+    card: { t: 't', v: 'gl', kick: 'GALERI INSTALASI', h: 'Instalasi audio mobil dari partner resmi CAI', sub: 'Foto & video pemasangan Audiocircle · STEG · Zelos dan brand resmi CAI lainnya.' } },
 ];
 for (const t of TYPES) items.push({ kind: '', id: t.id, target: '/?', title: t.title, desc: t.desc, card: t.card });
 
@@ -160,7 +160,7 @@ function cardHtml(c) {
       ${c.logo ? `<img class="bl" src="/${esc(c.logo)}">` : `<div class="bn">${esc(c.brand)}</div>`}
       <div class="cat">${esc(c.cat)}</div><h1${c.name.length > 14 ? ' class="sm"' : ''}>${esc(c.name)}</h1>
       ${c.model ? `<div class="ln">${esc(c.model)}</div>` : c.specs ? `<div class="ln">${esc(c.specs)}</div>` : ''}${c.soon ? '<div><span class="soon">COMING SOON</span></div>' : ''}
-      ${c.srp ? `<div class="srp"><span>SRP</span><b style="font-size:${c.srp.length > 24 ? 30 : c.srp.length > 16 ? 36 : 44}px">${esc(c.srp)}</b></div>` : '<div class="nos">Harga: hubungi dealer resmi</div>'}
+      ${c.srp ? `<div class="srp"><span>SRP</span><b style="font-size:${c.srp.length > 24 ? 30 : c.srp.length > 16 ? 36 : 44}px">${esc(c.srp)}</b></div>` : '<div class="nos">Harga: hubungi partner resmi</div>'}
       <div class="ft">${LOGO}<span class="u">hub.concerto.id</span></div></div></div>`;
   if (c.t === 'h') return `<div class="c gold hof" id="c"><div class="top">${LOGO}<span class="k">🏆 HALL OF FAME</span></div>
     <div class="row"><div class="med m${c.place >= 1 && c.place <= 3 ? c.place : 0}">${c.place >= 1 && c.place <= 3 ? `<small>JUARA</small><b>${c.place}</b>` : '<b>★</b>'}</div>
@@ -173,8 +173,8 @@ function cardHtml(c) {
   if (c.t === 'k') return `<div class="c split" id="c"><div class="im">${c.cover ? `<img src="/${esc(c.cover)}" style="object-position:left top">` : `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:160px">${c.icon}</span>`}</div><div class="in">
     <img class="lg" src="${LOGO_WHITE}"><div class="kk">Paket Audio · ${esc(c.seg)}</div><h1 style="font-size:40px">${esc(c.title)}</h1>
     <ul>${c.prods.slice(0, 4).map(p => `<li>${esc(p)}</li>`).join('')}</ul><div class="ft"><span style="font-size:18px;color:#9aa0ad">PDF paket di CAI Hub</span><span class="u">hub.concerto.id</span></div></div></div>`;
-  if (c.t === 'd') return `<div class="c gold dl" id="c"><div class="top">${LOGO}<span class="k">AUTHORIZED DEALER</span></div>
-    <div class="badge">Dealer Resmi Concerto Audio Indonesia <i>✓ Resmi</i></div><h1${c.name.length > 22 ? ' class="sm"' : ''}>${esc(c.name)}</h1>
+  if (c.t === 'd') return `<div class="c gold dl" id="c"><div class="top">${LOGO}<span class="k">AUTHORIZED PARTNER</span></div>
+    <div class="badge">Partner Resmi Concerto Audio Indonesia <i>✓ Resmi</i></div><h1${c.name.length > 22 ? ' class="sm"' : ''}>${esc(c.name)}</h1>
     <div class="city">📍 ${esc([c.city, c.region].filter(Boolean).join(', '))}</div>${c.addr ? `<div class="addr">${esc(clip(c.addr, 110))}</div>` : ''}
     <div class="brands">Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System</div>
     <div class="ft"><span style="font-size:18px;color:#9aa0ad">${c.ig ? 'Instagram @' + esc(c.ig) : 'Lihat kontak & lokasi di CAI Hub'}</span><span class="u">hub.concerto.id</span></div></div>`;
