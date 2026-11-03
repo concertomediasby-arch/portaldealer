@@ -3908,3 +3908,15 @@ body.logged-in .guest-only { display: none !important; }
 /* Halaman produk: jarak tombol Kembali ke konten = sama dengan halaman brand (3 Nov 2026, permintaan pemilik) */
 #view-product .product-detail-layout { padding-top: 18px; }
 @media (max-width: 720px) { #view-product .product-detail-layout { padding-top: 14px; } }
+/* Authorized Partner: kartu lebih lebar & tombol tidak terpotong (3 Nov 2026, permintaan pemilik —
+   sebelumnya "WhatsApp" terpotong & tombol bertumpuk di 5 kolom) */
+.ad-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.ad-card { padding: 16px 18px; }
+.ad-btns { gap: 6px; }
+.ad-btns .ad-btn { flex: 1 1 auto; min-width: max-content; white-space: nowrap; }
+.ad-btns .ad-btn.ad-share { flex: 0 0 auto; min-width: 0; }
+@media (max-width: 720px) {
+  #ad-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: -6px -16px 0 -6px; padding: 6px 16px 8px 6px; }
+  #ad-chips::-webkit-scrollbar { display: none; }
+  #ad-chips .filter-chip { flex: none; }
+}
