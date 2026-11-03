@@ -3695,14 +3695,34 @@ body:not(.is-editor) .acad-ed { display: none; }
 .nw-sall { background: none; border: 0; padding: 4px 0 0; text-align: left; font: 600 13px var(--f-body); color: #3fb8cf; cursor: pointer; }
 .nw-art .cw-foot .cw-acts { display: none; }   /* tombol ada di kolom kanan */
 .nw-art .nw-cta { display: none; }
+/* Halaman baca Concerto Way: 2 kolom di laptop (3 Nov 2026, permintaan pemilik) — memakai .nw-layout/.nw-side */
+.cw-reader.cw-wide { max-width: 1320px; padding: 18px 28px 40px; }
+.cw-art { min-width: 0; }
+.cw-sday { display: flex; align-items: baseline; gap: 8px; } .cw-sday span { font: 600 11px var(--f-display); letter-spacing: .18em; color: var(--fg-muted); } .cw-sday b { font: 800 40px/1 var(--f-display); color: #b8892f; }
+.cw-sser { font: 700 10.5px/1.4 var(--f-display); letter-spacing: .12em; text-transform: uppercase; color: #b8892f; }
+.cw-sprog { display: flex; flex-direction: column; gap: 8px; } .cw-sprog-t { font-size: 13px; color: var(--fg-muted); }
+.cw-sprog .cw-hl-bar { width: 100%; margin: 0; background: rgba(127,127,127,.18); }
+.cw-sact .gt-btn { width: 100%; justify-content: center; }
+.cw-sact .nw-sbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cw-sact .nw-sbtns .gt-btn { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
+.cw-sprog > .gt-btn { background: #d8b26a; border-color: #d8b26a; color: #1a1408; font-weight: 700; }
+.cw-oth { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; text-align: left; background: none; border: 0; padding: 6px; margin: 0 -6px; border-radius: 12px; color: var(--fg); font: inherit; cursor: pointer; }
+.cw-oth:hover { background: rgba(127,127,127,.08); }
+.cw-oday { width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(160deg, #17181d, #0d0e12); display: flex; flex-direction: column; align-items: center; justify-content: center; font: 800 22px/1 var(--f-display); color: #d8b26a; }
+.cw-oday i { font: 600 8.5px var(--f-display); letter-spacing: .2em; color: #9097a4; font-style: normal; margin-bottom: 3px; }
+.cw-oth small em { font-style: normal; color: #b8892f; font-weight: 700; }
+.cw-sall { color: #b8892f; }
+.cw-art .cw-foot .cw-acts { display: none; }   /* tombol ada di kolom kanan */
 @media (max-width: 1100px) {
   .nw-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .nw-side { position: static; }
   .nw-sact { display: none; }
   .nw-art .cw-foot .cw-acts, .nw-art .nw-cta { display: flex; }
+  .cw-art .cw-foot .cw-acts { display: flex; }
+  .cw-reader.cw-wide { max-width: 820px; }
   .cw-reader.nw-reader { max-width: 820px; }
 }
-@media (max-width: 720px) { .cw-reader.nw-reader { padding: 12px 16px 32px; } }
+@media (max-width: 720px) { .cw-reader.nw-reader, .cw-reader.cw-wide { padding: 12px 16px 32px; } }
 .nw-hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .nw-meta { font-size: 12.5px; color: var(--fg-muted); letter-spacing: .02em; }
 .nw-meta b { color: #6fd3e6; font-weight: 700; }

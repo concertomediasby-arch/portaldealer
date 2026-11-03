@@ -103,6 +103,8 @@ function cwTask(id, j, on) {
   const all = cwLS(CWAY_TASK_KEY), a = all[id] || []; a[j] = on; all[id] = a; cwLS(CWAY_TASK_KEY, all);
   const box = document.querySelector('#view-cway .cw-task'), n = a.filter(Boolean).length, tot = box ? box.querySelectorAll('input').length : 0;
   if (box) box.querySelector('.cw-prog').textContent = `${n} dari ${tot} selesai · centang tersimpan di perangkat ini`;
+  const sp = document.getElementById('cw-side-prog'), sb = document.getElementById('cw-side-bar');   // kolom kanan ikut diperbarui
+  if (sp) sp.textContent = `Tugas hari ini: ${n} dari ${tot} selesai`; if (sb) sb.style.width = (tot ? Math.round(n / tot * 100) : 0) + '%';
   renderCwayHl();
 }
 
@@ -220,17 +222,41 @@ function renderCwPost(body, it) {
   const asc = cwShown().slice().reverse(), i = asc.findIndex(x => x.id === it.id), prev = asc[i - 1], next = asc[i + 1];
   const lbl = x => x.day != null ? 'Day ' + x.day : 'Sebelumnya';
   cwPrepImage(it);
-  body.innerHTML = `<div class="cw-reader">
+  const tot = cwTaskCount(it), done = (cwLS(CWAY_TASK_KEY)[it.id] || []).filter(Boolean).length;
+  const others = cwShown().filter(x => x.id !== it.id).slice(0, 8);
+  const acts = `<button class="gt-btn ghost" onclick="cwShare('${it.id}')">${SHARE_ICON} Bagikan</button><button class="gt-btn ghost" onclick="cwPngDownload('${it.id}', this)">⬇ Unduh PNG</button>
+        ${isAdmin() ? `<button class="gt-btn ghost" onclick="openCwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteCw('${it.id}')">🗑 Hapus</button>` : ''}`;
+  // Laptop >1100px: 2 kolom (3 Nov 2026, permintaan pemilik — ruang kosong kiri/kanan), sama seperti halaman baca News
+  body.innerHTML = `<div class="cw-reader cw-wide">
     <button class="cw-back" onclick="cwBack()">← Semua Concerto Way</button>
+    <div class="nw-layout cw-layout">
+    <article class="cw-art">
     <div class="cw-hero"><div class="cw-hero-top"><span class="cw-badge">☕ CONCERTO WAY</span>${it.day != null ? `<span class="cw-dnum">DAY ${it.day}</span>` : ''}</div>
       ${it.series ? `<div class="cw-ser">${escHtml(it.series)}</div>` : ''}<h2 class="cw-title">${escHtml(it.title)}</h2>${it.subtitle ? `<p class="cw-sub">${escHtml(it.subtitle)}</p>` : ''}
       ${it.published ? '' : '<div class="cw-draft-note">DRAF — belum tampil untuk dealer</div>'}</div>
     <div class="cw-body">${cwBodyHtml(it)}</div>
     <div class="cw-foot"><span class="cw-date">${escHtml(cwDate(it.post_date))}</span>
-      <div class="cw-acts"><button class="gt-btn ghost" onclick="cwShare('${it.id}')">${SHARE_ICON} Bagikan</button><button class="gt-btn ghost" onclick="cwPngDownload('${it.id}', this)">⬇ Unduh PNG</button>
-        ${isAdmin() ? `<button class="gt-btn ghost" onclick="openCwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteCw('${it.id}')">🗑 Hapus</button>` : ''}</div></div>
+      <div class="cw-acts">${acts}</div></div>
     <div class="cw-nav">${prev ? `<button class="gt-btn ghost" onclick="openCway('${prev.id}')">‹ ${lbl(prev)}</button>` : '<span></span>'}${next ? `<button class="gt-btn ghost" onclick="openCway('${next.id}')">${next.day != null ? 'Day ' + next.day : 'Berikutnya'} ›</button>` : ''}</div>
+    </article>
+    <aside class="nw-side cw-side">
+      <div class="nw-sbox cw-sbox cw-sact">
+        <div class="cw-sday"><span>DAY</span><b>${it.day ?? '•'}</b></div>
+        ${it.series ? `<div class="cw-sser">${escHtml(it.series)}</div>` : ''}
+        <div class="nw-sinfo">${escHtml(cwDate(it.post_date))}</div>
+        ${tot ? `<div class="cw-sprog"><div class="cw-sprog-t" id="cw-side-prog">Tugas hari ini: ${done} dari ${tot} selesai</div><div class="cw-hl-bar"><i id="cw-side-bar" style="width:${Math.round(done / tot * 100)}%"></i></div>
+          <button class="gt-btn" onclick="document.querySelector('#view-cway .cw-task')?.scrollIntoView({behavior:'smooth',block:'center'})">☑ Kerjakan tugas ↓</button></div>` : ''}
+        <div class="nw-sbtns">${acts}</div>
+      </div>
+      ${others.length ? `<div class="nw-sbox cw-sbox"><div class="nw-sh">Day lainnya</div>
+        ${others.map(x => { const t2 = cwTaskCount(x), d2 = (cwLS(CWAY_TASK_KEY)[x.id] || []).filter(Boolean).length;
+          return `<button class="cw-oth" onclick="openCway('${x.id}')"><span class="cw-oday"><i>DAY</i>${x.day ?? '•'}</span>
+          <span class="nw-otx"><b>${escHtml(x.title)}</b><small>${escHtml(cwDate(x.post_date))}${t2 ? ` · ${d2 === t2 ? '✅' : '☐'} ${d2}/${t2} tugas` : ''}${cwIsNew(x) ? ' · <em>★ BARU</em>' : ''}</small></span></button>`; }).join('')}
+        <button class="nw-sall cw-sall" onclick="cwBack()">Lihat semua Concerto Way ›</button></div>` : ''}
+    </aside>
+    </div>
   </div>`;
+  document.querySelector('.main')?.scrollTo?.({ top: 0 }); window.scrollTo({ top: 0 });
 }
 
 /* ── Form Editor/Admin: tempel teks WA ── */
