@@ -41,7 +41,16 @@ grant select, insert, update, delete on public.cai_news to authenticated;`;
 
 let nwItems = null, nwMissing = false, nwErr = '', nwLoading = null, nwCur = null, nwPending = null, nwForm = null, nwQ = '', nwCat = '';
 const nwImgCache = {};
-const nwImgUrl = p => !p ? '' : /^https?:/i.test(p) ? p : dashPublicUrl(p);
+// Posisi/zoom gambar sampul disimpan di kolom `image` yang sama: "news/123.webp#x,y,z" (x/y = titik fokus %, z = zoom 1–2,5)
+// — tanpa kolom/SQL baru (3 Nov 2026, permintaan pemilik: atur posisi gambar).
+const nwImgPath = v => String(v || '').split('#')[0];
+function nwImgFr(v) {
+  const m = String(v || '').split('#')[1]; const [x, y, z] = m ? m.split(',').map(s => s === '' ? NaN : Number(s)) : [];
+  return { x: isFinite(x) ? x : 50, y: isFinite(y) ? y : 50, z: isFinite(z) && z >= 1 ? z : 1 };
+}
+const nwFrStyle = f => (f.x === 50 && f.y === 50 && f.z === 1) ? '' : ` style="object-position:${f.x}% ${f.y}%;transform-origin:${f.x}% ${f.y}%;scale:${f.z}"`;
+const nwImgStyle = v => nwFrStyle(nwImgFr(v));
+const nwImgUrl = p => { p = nwImgPath(p); return !p ? '' : /^https?:/i.test(p) ? p : dashPublicUrl(p); };
 const nwSorted = () => (nwItems || []).slice().sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || String(b.created_at).localeCompare(String(a.created_at)));
 const nwLive = () => nwSorted().filter(x => x.published);
 const nwShown = () => isEditor() ? nwSorted() : nwLive();
@@ -86,7 +95,7 @@ function hlSlides() {
 function nwHlHtml(n) {
   const img = nwImgUrl(n.image);
   return `<div class="nw-hl" role="button" tabindex="0" onclick="openNews('${n.id}')" onkeydown="if(event.key==='Enter')openNews('${n.id}')">
-    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async" draggable="false">` : '<span>📰</span>'}</div>
+    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async" draggable="false"${nwImgStyle(n.image)}>` : '<span>📰</span>'}</div>
     <div class="nw-main"><div class="nw-top">📰 News${nwIsNew(n) ? ' <span class="nw-new">BARU</span>' : ''}${n.category ? ` <span class="nw-cat">${escHtml(n.category)}</span>` : ''}</div>
       <div class="nw-t">${escHtml(n.title)}</div>${n.summary ? `<div class="nw-s">${escHtml(n.summary)}</div>` : ''}
       <div class="nw-foot"><span class="nw-date">${escHtml(nwDate(n.post_date))}</span>
@@ -272,7 +281,7 @@ function nwListHtml() {
   const list = all.filter(x => (!nwCat || x.category === nwCat) && (!q || [x.title, x.summary, x.body, x.category].join(' ').toLowerCase().includes(q)));
   if (!list.length) return '<div class="stock-empty">Tidak ada berita yang cocok.</div>';
   return `<div class="nw-grid">${list.map(x => { const img = nwImgUrl(x.image); return `<button class="nw-card${x.published ? '' : ' draft'}" onclick="openNews('${x.id}')">
-    <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy">` : '<span>📰</span>'}${nwIsNew(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}</div>
+    <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '<span>📰</span>'}${nwIsNew(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}</div>
     <div class="nw-cb"><div class="nw-cm">${x.category ? `<span class="nw-cat">${escHtml(x.category)}</span>` : ''}<span>${escHtml(nwDate(x.post_date))}</span></div>
       <div class="nw-ct">${escHtml(x.title)}</div>${x.summary ? `<div class="nw-cs">${escHtml(x.summary)}</div>` : ''}</div></button>`; }).join('')}</div>`;
 }
@@ -288,7 +297,7 @@ function renderNwPost(body, it) {
     <button class="cw-back" onclick="nwBack()">← Semua berita</button>
     <div class="nw-layout">
     <article class="nw-art">
-    ${img ? `<div class="nw-hero-img"><img src="${escHtml(img)}" alt=""></div>` : ''}
+    ${img ? `<div class="nw-hero-img"><img src="${escHtml(img)}" alt=""${nwImgStyle(it.image)}></div>` : ''}
     <div class="nw-meta">📰 News${it.category ? ` · <b>${escHtml(it.category)}</b>` : ''} · ${escHtml(nwDate(it.post_date))}${it.published ? '' : ' · <span class="cw-draft-note">DRAF — belum tampil untuk publik</span>'}</div>
     <h2 class="nw-title">${escHtml(it.title)}</h2>
     ${it.summary ? `<p class="nw-lead">${escHtml(it.summary)}</p>` : ''}
@@ -306,7 +315,7 @@ function renderNwPost(body, it) {
       </div>
       ${others.length ? `<div class="nw-sbox"><div class="nw-sh">Berita lainnya</div>
         ${others.map(x => { const im = nwImgUrl(x.image); return `<button class="nw-oth" onclick="openNews('${x.id}')">
-          <span class="nw-oimg${im ? '' : ' ph'}">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy">` : '📰'}</span>
+          <span class="nw-oimg${im ? '' : ' ph'}">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '📰'}</span>
           <span class="nw-otx"><b>${escHtml(x.title)}</b><small>${x.category ? escHtml(x.category) + ' · ' : ''}${escHtml(nwDate(x.post_date))}</small></span></button>`; }).join('')}
         <button class="nw-sall" onclick="nwBack()">Lihat semua berita ›</button></div>` : ''}
     </aside>
@@ -333,8 +342,8 @@ function openNwForm(id) {
   if (!isEditor()) return;
   if (nwMissing) { nwCopySql(); return; }
   const it = id && nwItems?.find(x => x.id === id);
-  nwForm = it ? { id: it.id, title: it.title, summary: it.summary || '', body: it.body || '', category: it.category || '', image: it.image || '', file: null, preview: '', link_url: it.link_url || '', link_label: it.link_label || '', post_date: it.post_date, published: it.published, busy: false }
-    : { id: null, title: '', summary: '', body: '', category: NEWS_CATS[0], image: '', file: null, preview: '', link_url: '', link_label: '', post_date: todayWIB(), published: true, busy: false };
+  nwForm = it ? { id: it.id, title: it.title, summary: it.summary || '', body: it.body || '', category: it.category || '', image: nwImgPath(it.image), fr: nwImgFr(it.image), file: null, preview: '', link_url: it.link_url || '', link_label: it.link_label || '', post_date: it.post_date, published: it.published, busy: false }
+    : { id: null, title: '', summary: '', body: '', category: NEWS_CATS[0], image: '', fr: { x: 50, y: 50, z: 1 }, file: null, preview: '', link_url: '', link_label: '', post_date: todayWIB(), published: true, busy: false };
   let ov = document.getElementById('nw-form');
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'nw-form'; ov.className = 'rk-pick gl-ov';
@@ -359,7 +368,8 @@ function renderNwForm() {
       </div>
       <div class="cwf-col">
         <div class="cwf-l">Gambar sampul (disarankan landscape 16:9)
-          <div class="nw-fimg">${img ? `<img src="${escHtml(img)}" alt="">` : '<span>Belum ada gambar</span>'}</div>
+          <div class="nw-fimg${img ? ' adj' : ''}"${img ? ' onpointerdown="nwFrDrag(event)"' : ''}>${img ? `<img src="${escHtml(img)}" alt="" draggable="false"${nwFrStyle(f.fr)}><span class="nw-fhint">✥ Geser gambar untuk mengatur bagian yang tampil</span>` : '<span>Belum ada gambar</span>'}</div>
+          ${img ? `<div class="nw-fz"><span>🔍 Zoom</span><input type="range" min="1" max="2.5" step="0.05" value="${f.fr.z}" oninput="nwFrZoom(this.value)" aria-label="Zoom gambar"><button type="button" class="gt-btn ghost" onclick="nwFrReset()">⊙ Reset</button></div>` : ''}
           <div style="display:flex;gap:8px;flex-wrap:wrap"><label class="gt-btn ghost">🖼 Pilih gambar<input type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="nwPickImg(this)"></label>${img ? '<button class="gt-btn ghost" onclick="nwDropImg()">Hapus gambar</button>' : ''}</div></div>
         <div class="cwf-row"><label>Kategori<input list="nw-cats" value="${escHtml(f.category)}" oninput="nwForm.category=this.value"><datalist id="nw-cats">${NEWS_CATS.map(c => `<option value="${c}">`).join('')}</datalist></label>
           <label>Tanggal<input type="date" value="${escHtml(f.post_date)}" oninput="nwForm.post_date=this.value"></label></div>
@@ -381,14 +391,35 @@ function nwPickProduct(pid) {
 function nwPickImg(input) {
   const file = input.files?.[0]; input.value = ''; if (!file || !nwForm) return;
   if (nwForm.preview) URL.revokeObjectURL(nwForm.preview);
-  nwForm.file = file; nwForm.preview = URL.createObjectURL(file); renderNwForm();
+  nwForm.file = file; nwForm.preview = URL.createObjectURL(file); nwForm.fr = { x: 50, y: 50, z: 1 }; renderNwForm();
 }
-function nwDropImg() { if (!nwForm) return; if (nwForm.preview) URL.revokeObjectURL(nwForm.preview); nwForm.file = null; nwForm.preview = ''; nwForm.image = ''; renderNwForm(); }
+function nwDropImg() { if (!nwForm) return; if (nwForm.preview) URL.revokeObjectURL(nwForm.preview); nwForm.file = null; nwForm.preview = ''; nwForm.image = ''; nwForm.fr = { x: 50, y: 50, z: 1 }; renderNwForm(); }
+// Atur posisi: geser gambar di kotak pratinjau (titik fokus x/y %), slider zoom 1–2,5×
+function nwFrApply() {
+  const im = document.querySelector('#nw-form .nw-fimg img'); if (!im || !nwForm) return;
+  const f = nwForm.fr; im.style.objectPosition = `${f.x}% ${f.y}%`; im.style.transformOrigin = `${f.x}% ${f.y}%`; im.style.scale = f.z;
+}
+function nwFrDrag(e) {
+  const box = e.currentTarget, f = nwForm?.fr; if (!f || e.button > 0) return;
+  e.preventDefault(); box.setPointerCapture?.(e.pointerId); box.classList.add('drag');
+  const r = box.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY, fx = f.x, fy = f.y;
+  const mv = ev => {   // gambar ikut jari: geser kanan = bagian kiri gambar terlihat
+    const k = 100 / Math.max(1, f.z - 1 + .6);
+    f.x = Math.round(Math.min(100, Math.max(0, fx - (ev.clientX - x0) / r.width * k)));
+    f.y = Math.round(Math.min(100, Math.max(0, fy - (ev.clientY - y0) / r.height * k)));
+    nwFrApply();
+  };
+  const up = () => { box.classList.remove('drag'); box.removeEventListener('pointermove', mv); box.removeEventListener('pointerup', up); box.removeEventListener('pointercancel', up); };
+  box.addEventListener('pointermove', mv); box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+}
+function nwFrZoom(v) { if (!nwForm) return; nwForm.fr.z = Math.round(Number(v) * 100) / 100; nwFrApply(); }
+function nwFrReset() { if (!nwForm) return; nwForm.fr = { x: 50, y: 50, z: 1 }; renderNwForm(); }
+const nwFrSuffix = f => (f && (f.x !== 50 || f.y !== 50 || f.z !== 1)) ? `#${f.x},${f.y},${f.z}` : '';
 async function saveNw() {
   const f = nwForm; if (!f || f.busy || !isEditor()) return;
   if (!f.title.trim()) return showToast('Judul belum terisi.');
   f.busy = true; renderNwForm();
-  const old = f.id && nwItems?.find(x => x.id === f.id)?.image;
+  const old = f.id && nwImgPath(nwItems?.find(x => x.id === f.id)?.image);
   let uploaded = null;
   try {
     let image = f.image || null;
@@ -399,11 +430,13 @@ async function saveNw() {
       if (error) throw error;
       image = uploaded;
     }
+    const path = image;
+    if (image) image += nwFrSuffix(f.fr);
     const row = { title: f.title.trim(), summary: f.summary.trim() || null, body: f.body.trim() || null, category: f.category.trim() || null, image,
       link_url: f.link_url.trim() || null, link_label: f.link_label.trim() || null, post_date: f.post_date || todayWIB(), published: !!f.published, updated_at: new Date().toISOString() };
     const q = f.id ? supabase.from(NEWS_TABLE).update(row).eq('id', f.id).select().single() : supabase.from(NEWS_TABLE).insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
-    if (old && old !== image && /^news\//.test(old)) supabase.storage.from('showcase').remove([old]).catch(() => {});
+    if (old && old !== path && /^news\//.test(old)) supabase.storage.from('showcase').remove([old]).catch(() => {});
     closeNwForm(); showToast(f.id ? '✓ Berita diperbarui' : '✓ Berita diterbitkan');
     await loadNews(true); openNews(data.id);
   } catch (e) {
@@ -419,7 +452,7 @@ async function deleteNw(id) {
   if (!confirm(`Hapus berita "${it.title}"?`)) return;
   const { error } = await supabase.from(NEWS_TABLE).delete().eq('id', id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
-  if (it.image && /^news\//.test(it.image)) supabase.storage.from('showcase').remove([it.image]).catch(() => {});
+  if (it.image && /^news\//.test(it.image)) supabase.storage.from('showcase').remove([nwImgPath(it.image)]).catch(() => {});
   showToast('Berita dihapus'); nwCur = null; await loadNews(true); renderNews();
 }
 function nwCopySql() {
