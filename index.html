@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-11-03T06:08:27Z">
+<link rel="stylesheet" href="style.css?b=2026-11-03T06:35:21Z">
 </head>
 <body>
 <noscript>
@@ -173,6 +173,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         Dashboard
       </button>
+      <button class="sidebar-item" id="nav-news" onclick="openNews()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M17 8h3v11a2 2 0 0 1-2 2"/><line x1="7" y1="9" x2="14" y2="9"/><line x1="7" y1="13" x2="14" y2="13"/><line x1="7" y1="17" x2="11" y2="17"/></svg>
+        News<span class="nav-star" id="nav-news-star" title="Ada berita baru" hidden>★</span>
+      </button>
       <button class="sidebar-item" id="nav-brands" onclick="openCatalog()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
         Semua Brand
@@ -263,7 +267,7 @@
 
     <!-- VIEW: Dashboard -->
     <div class="view active" id="view-dashboard">
-      <!-- Headline Concerto Way (khusus login; diisi renderCwayHl() di js/cway.js) -->
+      <!-- Headline News (publik) + Concerto Way (khusus login); diisi hlRender() di js/news.js -->
       <div class="cw-hl-wrap" id="cway-hl" hidden></div>
       <div class="page-header">
         <div class="page-title">Dashboard</div>
@@ -510,6 +514,16 @@
       </div>
     </div>
 
+    <!-- VIEW: News (publik; tabel Supabase cai_news; js/news.js) -->
+    <div class="view" id="view-news">
+      <div class="page-header" id="news-head">
+        <div class="page-title">News</div>
+        <div class="page-subtitle">Kabar terbaru dari Concerto Audio Indonesia — produk, event, dan pengumuman.</div>
+        <div class="acad-tools" id="news-tools"></div>
+      </div>
+      <div class="cw-wrap" id="news-body"></div>
+    </div>
+
     <!-- VIEW: Concerto Way (khusus login; tabel Supabase concerto_way; js/cway.js) -->
     <div class="view" id="view-cway">
       <div class="page-header" id="cway-head">
@@ -699,6 +713,10 @@
     <button class="mobile-nav-item active" id="mnav-dashboard" onclick="showView('dashboard')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       <span>Dashboard</span>
+    </button>
+    <button class="mobile-nav-item" id="mnav-news" onclick="openNews()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h13v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M17 8h3v11a2 2 0 0 1-2 2"/><line x1="7" y1="9" x2="14" y2="9"/><line x1="7" y1="13" x2="14" y2="13"/><line x1="7" y1="17" x2="11" y2="17"/></svg>
+      <span>News</span><i class="mnav-star" id="mnav-news-star" title="Ada berita baru" hidden>★</i>
     </button>
     <button class="mobile-nav-item" id="mnav-brands" onclick="openCatalog()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
@@ -933,15 +951,16 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/core.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/stock.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/dealers.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/gathering.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/rundown.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/videotron.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/showcase.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/cway.js?b=2026-11-03T06:08:27Z"></script>
-<script src="js/main.js?b=2026-11-03T06:08:27Z"></script>
+<script src="katalog.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/core.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/stock.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/dealers.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/gathering.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/rundown.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/videotron.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/showcase.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/cway.js?b=2026-11-03T06:35:21Z"></script>
+<script src="js/news.js?b=x"></script>
+<script src="js/main.js?b=2026-11-03T06:35:21Z"></script>
 </body>
 </html>

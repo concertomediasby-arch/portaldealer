@@ -138,15 +138,13 @@ function cwStar() {
   ['nav-cway-star', 'mnav-cway-star'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !on; });
 }
 
-/* ── Headline Dashboard (postingan terbaru) ── */
-function renderCwayHl() {
-  const el = document.getElementById('cway-hl'); if (!el) return;
+/* ── Headline Dashboard (postingan terbaru) — digabung dengan News di js/news.js (hlRender) ── */
+function cwHlHtml() {
   const list = authUser ? cwLive() : [], it = list[0];
-  if (!it) { el.hidden = true; el.innerHTML = ''; return; }
+  if (!it) return '';
   const res = cwParse(it.body).blocks.find(b => b.t === 'resume');
   const tot = cwTaskCount(it), done = (cwLS(CWAY_TASK_KEY)[it.id] || []).filter(Boolean).length, prev = list[1];
-  el.hidden = false;
-  el.innerHTML = `<div class="cw-hl" role="button" tabindex="0" onclick="openCway('${it.id}')" onkeydown="if(event.key==='Enter')openCway('${it.id}')">
+  return `<div class="cw-hl" role="button" tabindex="0" onclick="openCway('${it.id}')" onkeydown="if(event.key==='Enter')openCway('${it.id}')">
     <div class="cw-hl-day"><span>DAY</span><b>${it.day ?? '•'}</b></div>
     <div class="cw-hl-main"><div class="cw-hl-top">☕ Concerto Way ${it.post_date === todayWIB() ? 'hari ini' : 'terbaru'}${cwIsNew(it) ? ' <span class="cw-new">★ BARU</span>' : ''}${it.series ? ` <span class="cw-hl-ser">${escHtml(it.series)}</span>` : ''}</div>
       <div class="cw-hl-t">${escHtml(it.title)}</div>${it.subtitle ? `<div class="cw-hl-s">${escHtml(it.subtitle)}</div>` : ''}
@@ -156,6 +154,7 @@ function renderCwayHl() {
       ${prev ? `<button class="cw-hl-prev" onclick="event.stopPropagation();openCway('${prev.id}')">Terlewat? Lihat ${prev.day != null ? 'Day ' + prev.day : 'sebelumnya'} ›</button>` : ''}</div>
   </div>`;
 }
+function renderCwayHl() { if (typeof hlRender === 'function') hlRender(); }
 
 /* ── View Concerto Way ── */
 function openCway(id) {

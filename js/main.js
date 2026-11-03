@@ -57,6 +57,7 @@ function shareVideo() {
 function openDeepLink() {
   const q = new URLSearchParams(location.search);
   if (q.get('cw')) { enterPortal(); cwPending = q.get('cw'); return; }   // link Concerto Way → dibuka setelah status login diketahui (cwayAuthChanged)
+  if (q.get('news')) { enterPortal(); nwPending = q.get('news'); return; }   // link berita → dibuka setelah loadNews()
   const pid = q.get('p');
   const { brand, product } = pid ? findProductAny(pid) : {};
   if (!product) return;
@@ -76,6 +77,7 @@ initQaScreen();
 if (!QA_SCREEN_MODE) openDeepLink();
 updateAcademyStar();
 initSupabase();
+if (!QA_SCREEN_MODE) loadNews();   // News publik (headline Dashboard)
 if (!QA_SCREEN_MODE) loadAcadExtra();
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui
 if (!QA_SCREEN_MODE) { pmIcon(); pmArm(); }   // musik latar portal: tunggu klik pertama
