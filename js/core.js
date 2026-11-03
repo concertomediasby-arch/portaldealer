@@ -684,6 +684,7 @@ function renderGuides() {
   const catColor = { 'Penjualan':'#d8b26a', 'Produk':'#6fd3e6', 'Instalasi':'#52c38a' };
   const admin = isAdmin();
   const ICON_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  const ICON_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>';
   const ICON_VIEW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
   el.innerHTML = DEALER_GUIDES.filter(g => !g.hidden).map(g => {
     const color = catColor[g.category] || 'var(--accent)';
@@ -702,7 +703,7 @@ function renderGuides() {
                 <div class="gf-actions">
                   <button class="res-btn res-btn-view" onclick="openGuideFile('${f.key}', false)">${ICON_VIEW}Buka</button>
                   <button class="res-btn res-btn-dl" onclick="openGuideFile('${f.key}', true)">${ICON_DL}Unduh</button>
-                  <button class="res-btn gf-share" title="Bagikan link panduan ini ke WA (penerima perlu Kode Akses)" onclick="guideShare('${f.key}')">📤</button>
+                  <button class="res-btn gf-share" title="Bagikan link panduan ini ke WA (penerima perlu Kode Akses)" aria-label="Bagikan" onclick="guideShare('${f.key}')">${ICON_SHARE}</button>
                   ${admin ? `<button class="res-btn gf-del" title="Hapus file ini" onclick="deleteGuideFile('${g.id}', '${f.key}')">🗑</button>` : ''}
                 </div>
               </div>

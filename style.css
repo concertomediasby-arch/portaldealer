@@ -3671,3 +3671,4 @@ body:not(.is-editor) .acad-ed { display: none; }
 .gf-actions .res-btn.gf-share { flex: 0 0 auto; padding-left: 10px; padding-right: 10px; }
 .gf-card.gf-flash { outline: 2px solid var(--accent); outline-offset: 3px; animation: gfFlash 1s ease 3; }
 @keyframes gfFlash { 50% { outline-color: transparent; } }
+.gf-actions .res-btn.gf-share svg { width: 16px; height: 16px; margin: 0; }
