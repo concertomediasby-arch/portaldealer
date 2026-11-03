@@ -18,7 +18,7 @@ function sharePrep(key, src, name) {
   shareFiles[key] = { src, file: null };
   fetch(src).then(r => r.ok ? r.blob() : null).then(b => {
     if (!b || shareFiles[key]?.src !== src) return;
-    const ext = b.type.includes('png') ? 'png' : b.type.includes('webp') ? 'webp' : 'jpg';
+    const ext = b.type.includes('pdf') ? 'pdf' : b.type.includes('png') ? 'png' : b.type.includes('webp') ? 'webp' : 'jpg';
     shareFiles[key].file = new File([b], `${name || 'CAI-Hub'}.${ext}`, { type: b.type });
   }).catch(() => {});
 }
@@ -1186,6 +1186,7 @@ function openPaketAudio() {
   showView('paket');
   const el = document.getElementById('paket-list');
   if (el.children.length) return;
+  setTimeout(paketPrepObserve, 0);
   el.innerHTML = PAKET_AUDIO.map(p => {
     const btn = p.available
       ? `<button class="res-btn res-btn-prev" onclick="openPdfPreview('${p.file}','${p.title.replace(/'/g,"\\'")}')">
@@ -1196,7 +1197,7 @@ function openPaketAudio() {
     const brandTags = p.brands.map(b =>
       `<span class="res-cat" style="color:var(--accent);border-color:var(--accent)22;background:var(--accent)11">${b}</span>`
     ).join('');
-    return `<div class="res-card">
+    return `<div class="res-card" id="pk-card-${p.id}" data-pk="${p.id}">
       <div class="res-icon">${p.icon}</div>
       <div class="res-body">
         <div class="res-meta">
@@ -1206,7 +1207,7 @@ function openPaketAudio() {
         <div class="res-title">${p.title}</div>
         <div class="res-desc">${p.desc}</div>
         <div class="res-desc" style="opacity:.6;font-size:.8em;margin-top:4px">Komponen: ${p.products.join(', ')}</div>
-        <div class="res-actions">${btn}${p.available ? `<button class="res-btn res-btn-screen" id="pk-btn-${p.id}" onclick="paketOnScreen('${p.id}')">📺 Tayangkan di Layar</button>` : ''}<button class="res-btn res-btn-wa wa-only" onclick="contactPaket('${p.id}')"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>Tanya paket ini</button></div>
+        <div class="res-actions">${btn}${p.available ? `<button class="res-btn res-btn-screen" id="pk-btn-${p.id}" onclick="paketOnScreen('${p.id}')">📺 Tayangkan di Layar</button>` : ''}<button class="res-btn pk-share" onclick="paketShare('${p.id}')" title="Bagikan paket ini ke WhatsApp">${SHARE_ICON}Bagikan</button><button class="res-btn res-btn-wa wa-only" onclick="contactPaket('${p.id}')"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>Tanya paket ini</button></div>
       </div>
     </div>`;
   }).join('');
@@ -1590,7 +1591,7 @@ function renderAuthDealers() {
   const q = normKey(document.getElementById('ad-search')?.value || '');
   const rows = list.filter(d => (adRegion === 'all' || d.r === adRegion) && (!q || normKey([d.n, d.c, d.r, d.a].join(' ')).includes(q)));
   document.getElementById('ad-count').innerHTML = `<b>${rows.length}</b> dealer resmi${adRegion === 'all' && !q ? ` di <b>${regions.length}</b> provinsi` : ''}`;
-  const card = d => `<div class="ad-card${d.hidden ? ' ad-hid' : ''}">
+  const card = d => `<div class="ad-card${d.hidden ? ' ad-hid' : ''}" data-adn="${escHtml(normKey(d.n))}">
       <div class="ad-top"><div class="ad-name">${escHtml(d.n)}</div>${d.hidden ? '<span class="ad-badge hid">Disembunyikan</span>' : '<span class="ad-badge">✓ Resmi</span>'}</div>
       <div class="ad-city">📍 ${escHtml(d.c || d.r)}</div>
       ${d.a ? `<div class="ad-addr">${escHtml(d.a)}</div>` : ''}
@@ -1598,6 +1599,7 @@ function renderAuthDealers() {
         ${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
         ${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}
         <a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>
+        <button class="ad-btn ad-share" title="Bagikan dealer ini ke WhatsApp" aria-label="Bagikan" onclick="adShare(${escHtml(JSON.stringify(d.n))})">${SHARE_ICON}</button>
       </div>
       ${ed ? `<div class="ad-adm"><button class="gt-btn" onclick="openAdForm('${d.id}')">✏️ Edit</button><button class="gt-btn ghost gt-del" onclick="deleteAdDealer('${d.id}')">🗑 Hapus</button></div>` : ''}
     </div>`;
@@ -2430,4 +2432,43 @@ function acadOpenLinked(no) {
   const a = acadReleased().find(x => x.no === no);
   openAcademy();
   if (a) openAcademyItem(no); else showToast('Materi Academy ini tidak ditemukan.');
+}
+
+/* ── Bagikan Authorized Dealer (3 Nov 2026, permintaan pemilik): nama, kota, alamat, WA & Maps dealer + link ?dealer=<nama> ── */
+function adShare(name) {
+  const d = adPublic().find(x => x.n === name) || (adRows || []).find(x => x.n === name); if (!d) return;
+  const text = `📍 *${d.n}* — Authorized Dealer Concerto Audio Indonesia\n${[d.c, d.r].filter(Boolean).join(', ')}` +
+    (d.a ? `\n${d.a}` : '') + (d.wa ? `\nWhatsApp: https://wa.me/${d.wa}` : '') + (d.ig ? `\nInstagram: @${d.ig}` : '') +
+    `\nMaps: ${adMaps(d)}\n\nDaftar dealer resmi di CAI Hub:\n${PORTAL_URL}/?dealer=${encodeURIComponent(d.n)}`;
+  shareWa(text);
+}
+function adOpenLinked(name) {
+  openAuthDealers();
+  const s = document.getElementById('ad-search'); if (s) s.value = name;
+  adRegion = 'all'; renderAuthDealers();
+  const el = document.querySelector(`.ad-card[data-adn="${CSS.escape(normKey(name))}"]`);
+  if (!el) { if (s) s.value = ''; renderAuthDealers(); return showToast('Dealer ini tidak ditemukan di daftar dealer resmi.'); }
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('gf-flash'); setTimeout(() => el.classList.remove('gf-flash'), 4000);
+}
+/* ── Bagikan Paket Audio (3 Nov 2026, permintaan pemilik): di HP PDF paket (publik) ikut terlampir; link ?paket=<id> ── */
+function paketPrepObserve() {
+  if (!(navigator.canShare && 'IntersectionObserver' in window)) return;   // desktop: cukup teks + link
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return; io.unobserve(e.target);
+    const p = PAKET_AUDIO.find(x => x.id === e.target.dataset.pk);
+    if (p?.available && p.file) sharePrep('pk:' + p.id, p.file, p.file.split('/').pop().replace(/\.pdf$/i, ''));
+  }), { rootMargin: '100px' });
+  document.querySelectorAll('#paket-list [data-pk]').forEach(el => io.observe(el));
+}
+function paketShare(id) {
+  const p = PAKET_AUDIO.find(x => x.id === id); if (!p) return;
+  const text = `🎁 *${p.title}*\n${p.segment}\nKomponen: ${p.products.join(', ')}` +
+    `\n\nLihat detail & unduh PDF paketnya di CAI Hub:\n${PORTAL_URL}/?paket=${encodeURIComponent(p.id)}`;
+  shareWa(text, 'pk:' + p.id);
+}
+function paketOpenLinked(id) {
+  openPaketAudio();
+  const el = document.getElementById('pk-card-' + id);
+  if (!el) return showToast('Paket ini tidak ditemukan.');
+  setTimeout(() => { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('gf-flash'); setTimeout(() => el.classList.remove('gf-flash'), 4000); }, 100);
 }
