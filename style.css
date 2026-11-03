@@ -3901,3 +3901,7 @@ body.logged-in .guest-only { display: none !important; }
   .dash-brand-in { flex-direction: column; gap: 2px; }
 }
 #view-dashboard .section-header + .dash-tiles { padding-top: 0; }
+
+/* Jarak tombol "Kembali" dengan banner brand (3 Nov 2026, permintaan pemilik — sebelumnya menempel) */
+#view-brand .back-btn { margin-bottom: 18px; }
+@media (max-width: 720px) { #view-brand .back-btn { margin-bottom: 14px; } }
