@@ -56,6 +56,7 @@ function shareVideo() {
 // Dibuka dari link berbagi → lewati landing, buka produknya (dan videonya bila &v=1)
 function openDeepLink() {
   const q = new URLSearchParams(location.search);
+  if (q.get('cw')) { enterPortal(); cwPending = q.get('cw'); return; }   // link Concerto Way → dibuka setelah status login diketahui (cwayAuthChanged)
   const pid = q.get('p');
   const { brand, product } = pid ? findProductAny(pid) : {};
   if (!product) return;

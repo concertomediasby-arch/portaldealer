@@ -105,6 +105,7 @@ function onAuthChanged() {
   visitLog();
   if (!GT_DEALER_MENU && !isAdmin() && document.getElementById('view-gathering')?.classList.contains('active')) showView('dashboard');
   if (isAdmin()) loadVisitStats(true);
+  if (typeof cwayAuthChanged === 'function') cwayAuthChanged();   // Concerto Way (js/cway.js): headline Dashboard, link ?cw=
   if (authUser) {
     loadStock();
     subscribeStock();
