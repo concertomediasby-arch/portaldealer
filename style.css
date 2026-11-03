@@ -3902,6 +3902,9 @@ body.logged-in .guest-only { display: none !important; }
 }
 #view-dashboard .section-header + .dash-tiles { padding-top: 0; }
 
-/* Jarak tombol "Kembali" dengan banner brand (3 Nov 2026, permintaan pemilik — sebelumnya menempel) */
+/* Jarak tombol "Kembali" dengan banner brand (3 Nov 2026, permintaan pemilik — sebelumnya menempel); halaman produk disamakan di bawah */
 #view-brand .back-btn { margin-bottom: 18px; }
 @media (max-width: 720px) { #view-brand .back-btn { margin-bottom: 14px; } }
+/* Halaman produk: jarak tombol Kembali ke konten = sama dengan halaman brand (3 Nov 2026, permintaan pemilik) */
+#view-product .product-detail-layout { padding-top: 18px; }
+@media (max-width: 720px) { #view-product .product-detail-layout { padding-top: 14px; } }
