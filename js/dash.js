@@ -43,7 +43,7 @@ const dashSearchBox = (id, ph) => `<form class="dash-search" onsubmit="event.pre
 /* ── Pengunjung umum ── */
 function dashHeroHtml() {
   return `<div class="dash-hero-k">CAI HUB · OFFICIAL BRAND HUB</div>
-    <h1 class="dash-hero-h">Temukan sistem audio mobil<br>yang <em>tepat untuk Anda.</em></h1>
+    <h1 class="dash-hero-h">Temukan sistem audio mobil <br>yang <em>tepat untuk Anda.</em></h1>
     <p class="dash-hero-p">${BRANDS.length} brand resmi Concerto Audio Indonesia — spesifikasi lengkap, harga SRP, dan partner resmi terdekat.</p>
     ${dashSearchBox('dash-q', 'Cari produk, model, atau kota partner…')}
     <div class="dash-chips">${DASH_CATS.map(([t, c]) => `<button onclick="dashSearch('${c}')">${t}</button>`).join('')}</div>`;
