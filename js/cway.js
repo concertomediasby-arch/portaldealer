@@ -36,9 +36,10 @@ grant select, insert, update, delete on public.concerto_way to authenticated;`;
 
 let cwItems = null, cwMissing = false, cwErr = '', cwLoading = null;
 let cwCur = null, cwQ = '', cwSer = '', cwForm = null, cwPending = null;
-// Urutan daftar: 'new' = terbaru dulu (bawaan), 'old' = Day 1 dulu (untuk dealer baru membaca dari awal); diingat per perangkat
-let cwSort = (() => { try { return localStorage.getItem('cai-cway-sort') === 'old' ? 'old' : 'new'; } catch (e) { return 'new'; } })();
-function cwSetSort(v) { cwSort = v; try { localStorage.setItem('cai-cway-sort', v); } catch (e) {} renderCway(); }
+// Urutan daftar: selalu mulai 'new' = terbaru dulu (Day 3, 2, 1 — permintaan pemilik 3 Nov 2026); 'old' = Day 1 dulu hanya selama halaman terbuka (tidak diingat)
+let cwSort = 'new';
+try { localStorage.removeItem('cai-cway-sort'); } catch (e) {}   // buang pilihan lama yang sempat tersimpan
+function cwSetSort(v) { cwSort = v; renderCway(); }
 const cwImgCache = {};   // { <id>: File } gambar bagikan disiapkan saat postingan dibuka (navigator.share harus langsung dari klik)
 
 const cwLS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || '{}') || {}; localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return {}; } };
