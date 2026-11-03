@@ -36,6 +36,9 @@ grant select, insert, update, delete on public.concerto_way to authenticated;`;
 
 let cwItems = null, cwMissing = false, cwErr = '', cwLoading = null;
 let cwCur = null, cwQ = '', cwSer = '', cwForm = null, cwPending = null;
+// Urutan daftar: 'new' = terbaru dulu (bawaan), 'old' = Day 1 dulu (untuk dealer baru membaca dari awal); diingat per perangkat
+let cwSort = (() => { try { return localStorage.getItem('cai-cway-sort') === 'old' ? 'old' : 'new'; } catch (e) { return 'new'; } })();
+function cwSetSort(v) { cwSort = v; try { localStorage.setItem('cai-cway-sort', v); } catch (e) {} renderCway(); }
 const cwImgCache = {};   // { <id>: File } gambar bagikan disiapkan saat postingan dibuka (navigator.share harus langsung dari klik)
 
 const cwLS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || '{}') || {}; localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return {}; } };
@@ -186,6 +189,7 @@ function renderCway() {
   const groups = [];
   shown.forEach(x => { const k = x.series || 'Concerto Way'; let g = groups.find(g => g.k === k); if (!g) groups.push(g = { k, items: [] }); g.items.push(x); });
   body.innerHTML = `<div class="cw-tools"><input type="search" class="cw-search" placeholder="Cari topik, mis. papan nama…" value="${escHtml(cwQ)}" oninput="cwQ=this.value;cwRenderListOnly()">
+      <div class="cw-sort" role="group" aria-label="Urutan"><button class="cw-chip${cwSort === 'new' ? ' on' : ''}" onclick="cwSetSort('new')">Terbaru dulu</button><button class="cw-chip${cwSort === 'old' ? ' on' : ''}" onclick="cwSetSort('old')">Day 1 dulu</button></div>
       ${sers.length > 1 ? `<div class="cw-chips"><button class="cw-chip${cwSer ? '' : ' on'}" onclick="cwSer='';renderCway()">Semua</button>${sers.map(s => `<button class="cw-chip${cwSer === s ? ' on' : ''}" onclick="cwSer=${escHtml(JSON.stringify(s))};renderCway()">${escHtml(s)}</button>`).join('')}</div>` : ''}</div>
     <div id="cw-list">${cwListHtml(groups, list.length)}</div>`;
 }
@@ -201,6 +205,7 @@ function cwListHtml(groups, total) {
   // Satu grid sejajar, urut terbaru (3 Nov 2026, permintaan pemilik — dulu dikelompokkan per seri sehingga kartu terpencar);
   // nama seri jadi label kecil di kartu, filter seri lewat chip.
   const items = groups.flatMap(g => g.items).sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || (b.day ?? 0) - (a.day ?? 0));
+  if (cwSort === 'old') items.sort((a, b) => (a.day ?? 1e9) - (b.day ?? 1e9) || String(a.post_date).localeCompare(String(b.post_date)));
   return `<div class="cw-grid">${items.map(x => {
     const tot = cwTaskCount(x), done = (cwLS(CWAY_TASK_KEY)[x.id] || []).filter(Boolean).length;
     return `<button class="cw-card${x.published ? '' : ' draft'}" onclick="openCway('${x.id}')">${cwIsNew(x) ? '<span class="cw-new abs">★ BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}
