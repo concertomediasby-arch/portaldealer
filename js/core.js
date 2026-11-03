@@ -1725,6 +1725,8 @@ async function deleteAdDealer(id) {
 }
 
 function openUpdates() {
+  // Hanya Admin/Editor (3 Nov 2026, permintaan pemilik)
+  if (!isAdmin()) { showView('dashboard'); return; }
   showView('updates');
   const el = document.getElementById('updates-list');
   if (el.children.length) return;

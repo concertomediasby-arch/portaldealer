@@ -104,6 +104,7 @@ function onAuthChanged() {
   idleCheck();   // sesi lama yang dipulihkan setelah lewat batas tidak aktif → langsung keluar
   visitLog();
   if (!GT_DEALER_MENU && !isAdmin() && document.getElementById('view-gathering')?.classList.contains('active')) showView('dashboard');
+  if (!isAdmin() && document.getElementById('view-updates')?.classList.contains('active')) showView('dashboard');
   if (isAdmin()) loadVisitStats(true);
   if (typeof cwayAuthChanged === 'function') cwayAuthChanged();
   if (typeof newsAuthChanged === 'function') newsAuthChanged();
