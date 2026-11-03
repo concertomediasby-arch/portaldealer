@@ -1027,7 +1027,7 @@ function renderGtRekap() {
             <label class="gt-status">Status
               <select onchange="setGtOrderStatus(${o.id}, this.value)">${Object.entries(GT_STATUS).map(([k, v]) => `<option value="${k}"${o.status === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
             <button class="gt-btn ghost" onclick="downloadGtInvoice(${o.id})">⬇ Download Invoice</button>
-            <button class="gt-btn ghost" onclick="shareGtOrderWa(${o.id})" title="Bagikan PDF invoice lewat WhatsApp (pilih kontak/grup)">📤 Bagikan Invoice (WA)</button>
+            <button class="gt-btn ghost" onclick="shareGtOrderWa(${o.id})" title="Bagikan PDF invoice lewat WhatsApp (pilih kontak/grup)">${SHARE_ICON} Bagikan Invoice (WA)</button>
             <button class="gt-btn ghost" onclick="adminEditGtOrder(${o.id})">✏️ Edit Pesanan</button>
             ${o.status === 'baru' || o.status === 'belum_lunas' ? `<button class="gt-btn confirm" onclick="confirmGtOrder(${o.id})">✓ Konfirmasi Pembayaran</button>` : ''}
             <button class="gt-btn ghost gt-del" onclick="deleteGtOrder(${o.id})">🗑 Hapus</button>

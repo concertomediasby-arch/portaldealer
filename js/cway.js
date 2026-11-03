@@ -218,7 +218,7 @@ function renderCwPost(body, it) {
       ${it.published ? '' : '<div class="cw-draft-note">DRAF — belum tampil untuk dealer</div>'}</div>
     <div class="cw-body">${cwBodyHtml(it)}</div>
     <div class="cw-foot"><span class="cw-date">${escHtml(cwDate(it.post_date))}</span>
-      <div class="cw-acts"><button class="gt-btn ghost" onclick="cwShare('${it.id}')">📤 Bagikan ke WA</button><button class="gt-btn ghost" onclick="cwPngDownload('${it.id}', this)">⬇ Unduh PNG</button>
+      <div class="cw-acts"><button class="gt-btn ghost" onclick="cwShare('${it.id}')">${SHARE_ICON} Bagikan</button><button class="gt-btn ghost" onclick="cwPngDownload('${it.id}', this)">⬇ Unduh PNG</button>
         ${isAdmin() ? `<button class="gt-btn ghost" onclick="openCwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteCw('${it.id}')">🗑 Hapus</button>` : ''}</div></div>
     <div class="cw-nav">${prev ? `<button class="gt-btn ghost" onclick="openCway('${prev.id}')">‹ ${lbl(prev)}</button>` : '<span></span>'}${next ? `<button class="gt-btn ghost" onclick="openCway('${next.id}')">${next.day != null ? 'Day ' + next.day : 'Berikutnya'} ›</button>` : ''}</div>
   </div>`;

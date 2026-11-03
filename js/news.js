@@ -185,7 +185,7 @@ function renderNwPost(body, it) {
     <div class="cw-body">${paras.map(p => `<p>${p.split('\n').map(cwWa).join('<br>')}</p>`).join('')}</div>
     ${it.link_url ? `<div class="nw-cta"><button class="gt-btn" onclick="nwOpenLink('${it.id}')">${escHtml(it.link_label || 'Lihat selengkapnya')} ›</button></div>` : ''}
     <div class="cw-foot"><span class="cw-date">CAI Hub · Concerto Audio Indonesia</span>
-      <div class="cw-acts"><button class="gt-btn ghost" onclick="nwShare('${it.id}')">📤 Bagikan ke WA</button>
+      <div class="cw-acts"><button class="gt-btn ghost" onclick="nwShare('${it.id}')">${SHARE_ICON} Bagikan</button>
         ${isEditor() ? `<button class="gt-btn ghost" onclick="openNwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteNw('${it.id}')">🗑 Hapus</button>` : ''}</div></div>
   </div>`;
 }
