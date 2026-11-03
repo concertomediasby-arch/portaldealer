@@ -238,8 +238,13 @@ function renderNwPost(body, it) {
   nwPrepImage(it);
   const img = nwImgUrl(it.image);
   const paras = String(it.body || '').replace(/\r/g, '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  const others = nwLive().filter(x => x.id !== it.id).slice(0, 5);
+  const acts = `<button class="gt-btn ghost" onclick="nwShare('${it.id}')">${SHARE_ICON} Bagikan</button>
+        ${isEditor() ? `<button class="gt-btn ghost" onclick="openNwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteNw('${it.id}')">🗑 Hapus</button>` : ''}`;
   body.innerHTML = `<div class="cw-reader nw-reader">
     <button class="cw-back" onclick="nwBack()">← Semua berita</button>
+    <div class="nw-layout">
+    <article class="nw-art">
     ${img ? `<div class="nw-hero-img"><img src="${escHtml(img)}" alt=""></div>` : ''}
     <div class="nw-meta">📰 News${it.category ? ` · <b>${escHtml(it.category)}</b>` : ''} · ${escHtml(nwDate(it.post_date))}${it.published ? '' : ' · <span class="cw-draft-note">DRAF — belum tampil untuk publik</span>'}</div>
     <h2 class="nw-title">${escHtml(it.title)}</h2>
@@ -247,9 +252,24 @@ function renderNwPost(body, it) {
     <div class="cw-body">${paras.map(p => `<p>${p.split('\n').map(cwWa).join('<br>')}</p>`).join('')}</div>
     ${it.link_url ? `<div class="nw-cta"><button class="gt-btn" onclick="nwOpenLink('${it.id}')">${escHtml(it.link_label || 'Lihat selengkapnya')} ›</button></div>` : ''}
     <div class="cw-foot"><span class="cw-date">CAI Hub · Concerto Audio Indonesia</span>
-      <div class="cw-acts"><button class="gt-btn ghost" onclick="nwShare('${it.id}')">${SHARE_ICON} Bagikan</button>
-        ${isEditor() ? `<button class="gt-btn ghost" onclick="openNwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteNw('${it.id}')">🗑 Hapus</button>` : ''}</div></div>
+      <div class="cw-acts">${acts}</div></div>
+    </article>
+    <aside class="nw-side">
+      <div class="nw-sbox nw-sact">
+        <div class="nw-sh">Berita ini</div>
+        <div class="nw-sinfo">${it.category ? `<b>${escHtml(it.category)}</b> · ` : ''}${escHtml(nwDate(it.post_date))}</div>
+        ${it.link_url ? `<button class="gt-btn" onclick="nwOpenLink('${it.id}')">${escHtml(it.link_label || 'Lihat selengkapnya')} ›</button>` : ''}
+        <div class="nw-sbtns">${acts}</div>
+      </div>
+      ${others.length ? `<div class="nw-sbox"><div class="nw-sh">Berita lainnya</div>
+        ${others.map(x => { const im = nwImgUrl(x.image); return `<button class="nw-oth" onclick="openNews('${x.id}')">
+          <span class="nw-oimg${im ? '' : ' ph'}">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy">` : '📰'}</span>
+          <span class="nw-otx"><b>${escHtml(x.title)}</b><small>${x.category ? escHtml(x.category) + ' · ' : ''}${escHtml(nwDate(x.post_date))}</small></span></button>`; }).join('')}
+        <button class="nw-sall" onclick="nwBack()">Lihat semua berita ›</button></div>` : ''}
+    </aside>
+    </div>
   </div>`;
+  document.querySelector('.main')?.scrollTo?.({ top: 0 }); window.scrollTo({ top: 0 });
 }
 // Tombol link: link produk portal (?p=… / ?news=… / ?cw=…) dibuka di dalam portal, selain itu tab baru
 function nwOpenLink(id) {
