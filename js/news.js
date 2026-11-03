@@ -85,8 +85,8 @@ function hlSlides() {
 }
 function nwHlHtml(n, pos, tot) {
   const img = nwImgUrl(n.image);
-  return `<div class="nw-hl${img ? '' : ' noimg'}" role="button" tabindex="0" onclick="openNews('${n.id}')" onkeydown="if(event.key==='Enter')openNews('${n.id}')">
-    ${img ? `<div class="nw-img"><img src="${escHtml(img)}" alt="" decoding="async"></div>` : ''}
+  return `<div class="nw-hl" role="button" tabindex="0" onclick="openNews('${n.id}')" onkeydown="if(event.key==='Enter')openNews('${n.id}')">
+    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async">` : '<span>📰</span>'}</div>
     <div class="nw-main"><div class="nw-top">📰 News${nwIsNew(n) ? ' <span class="nw-new">BARU</span>' : ''}${n.category ? ` <span class="nw-cat">${escHtml(n.category)}</span>` : ''}</div>
       <div class="nw-t">${escHtml(n.title)}</div>${n.summary ? `<div class="nw-s">${escHtml(n.summary)}</div>` : ''}
       <div class="nw-foot"><span class="nw-date">${escHtml(nwDate(n.post_date))}</span>
