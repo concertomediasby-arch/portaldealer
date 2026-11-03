@@ -13,6 +13,9 @@ const SHARE_ICON = '<svg class="ico-share" viewBox="0 0 24 24" fill="none" strok
 // Bagikan ke WA (3 Nov 2026): gambar disiapkan lebih dulu (sharePrep) agar navigator.share tetap di dalam klik (iPhone);
 // tanpa dukungan berbagi file (umumnya desktop) → wa.me berisi teks + link.
 const shareFiles = {};
+// Halaman kartu pratinjau link per item (tools/gen-share-pages.js): /p/ produk · /h/ Hall of Fame · /a/ Academy · /k/ Paket · /d/ dealer
+const shareSlug = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const sharePage = (kind, id) => `${PORTAL_URL}/${kind}/${encodeURIComponent(id)}/`;
 // Teks untuk link wa.me: emoji dibuang — WhatsApp Web/Desktop menampilkan emoji dari link wa.me sebagai "�" (laporan pemilik 3 Nov 2026).
 // Berbagi lewat menu berbagi HP (navigator.share) tetap memakai teks asli lengkap dengan emoji.
 const waText = t => encodeURIComponent(String(t).replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}][\uFE0F\u200D\p{Extended_Pictographic}\p{Emoji_Modifier}]*[ \t]?/gu, ''));
@@ -2428,7 +2431,7 @@ function productShare() {
 let acadPending = null;
 function acadShare() {
   const a = acadReleased().find(x => x.no === acadCurrent); if (!a) return;
-  const text = `🎓 *Concerto Academy #${a.no}: ${a.title}*\nIlmu dari lapangan, bukan dari brosur.\n\nBaca materinya di CAI Hub:\n${PORTAL_URL}/?acad=${a.no}`;
+  const text = `🎓 *Concerto Academy #${a.no}: ${a.title}*\nIlmu dari lapangan, bukan dari brosur.\n\nBaca materinya di CAI Hub:\n${ACADEMY.some(x => x.no === a.no) ? sharePage('a', a.no) : PORTAL_URL + '/?acad=' + a.no}`;
   shareWa(text, 'a:' + a.no);
 }
 function acadOpenLinked(no) {
@@ -2442,7 +2445,7 @@ function adShare(name) {
   const d = adPublic().find(x => x.n === name) || (adRows || []).find(x => x.n === name); if (!d) return;
   const text = `📍 *${d.n}* — Authorized Dealer Concerto Audio Indonesia\n${[d.c, d.r].filter(Boolean).join(', ')}` +
     (d.a ? `\n${d.a}` : '') + (d.wa ? `\nWhatsApp: https://wa.me/${d.wa}` : '') + (d.ig ? `\nInstagram: @${d.ig}` : '') +
-    `\nMaps: ${adMaps(d)}\n\nDaftar dealer resmi di CAI Hub:\n${PORTAL_URL}/?dealer=${encodeURIComponent(d.n)}`;
+    `\nMaps: ${adMaps(d)}\n\nDaftar dealer resmi di CAI Hub:\n${AUTH_DEALERS.some(x => x.n === d.n) ? sharePage('d', shareSlug(d.n)) : PORTAL_URL + '/?dealer=' + encodeURIComponent(d.n)}`;
   shareWa(text);
 }
 function adOpenLinked(name) {
@@ -2466,7 +2469,7 @@ function paketPrepObserve() {
 function paketShare(id) {
   const p = PAKET_AUDIO.find(x => x.id === id); if (!p) return;
   const text = `🎁 *${p.title}*\n${p.segment}\nKomponen: ${p.products.join(', ')}` +
-    `\n\nLihat detail & unduh PDF paketnya di CAI Hub:\n${PORTAL_URL}/?paket=${encodeURIComponent(p.id)}`;
+    `\n\nLihat detail & unduh PDF paketnya di CAI Hub:\n${sharePage('k', p.id)}`;
   shareWa(text, 'pk:' + p.id);
 }
 function paketOpenLinked(id) {

@@ -137,7 +137,7 @@ function hofShare(id) {
     (e.car ? `\n🚗 ${e.car}${e.name ? ' (' + e.name + ')' : ''}` : '') +
     (e.dealer ? `\n🔧 Dipasang oleh ${e.dealer}` : '') +
     (prods.length ? `\nPerangkat: ${prods.slice(0, 6).join(', ')}${prods.length > 6 ? ', …' : ''}` : '') +
-    `\n\nLihat Hall of Fame CAI Hub:\n${PORTAL_URL}/?hof=${encodeURIComponent(e.id)}`;
+    `\n\nLihat Hall of Fame CAI Hub:\n${HALL_OF_FAME.some(x => x.id === e.id) ? sharePage('h', e.id) : PORTAL_URL + '/?hof=' + encodeURIComponent(e.id)}`;
   shareWa(text, 'h:' + e.id);
 }
 function hofOpenLinked(id) {
