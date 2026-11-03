@@ -198,13 +198,16 @@ function cwRenderListOnly() {   // pencarian: jangan render ulang kotak input (f
 function cwListHtml(groups, total) {
   if (!total) return `<div class="stock-empty">${isAdmin() ? 'Belum ada postingan. Klik <b>＋ Tambah Concerto Way</b> lalu tempel teks dari grup WA.' : 'Belum ada postingan Concerto Way.'}</div>`;
   if (!groups.length) return '<div class="stock-empty">Tidak ada postingan yang cocok.</div>';
-  return groups.map(g => `<div class="cw-series">${escHtml(g.k)}</div><div class="cw-grid">${g.items.map(x => {
+  // Satu grid sejajar, urut terbaru (3 Nov 2026, permintaan pemilik — dulu dikelompokkan per seri sehingga kartu terpencar);
+  // nama seri jadi label kecil di kartu, filter seri lewat chip.
+  const items = groups.flatMap(g => g.items).sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || (b.day ?? 0) - (a.day ?? 0));
+  return `<div class="cw-grid">${items.map(x => {
     const tot = cwTaskCount(x), done = (cwLS(CWAY_TASK_KEY)[x.id] || []).filter(Boolean).length;
     return `<button class="cw-card${x.published ? '' : ' draft'}" onclick="openCway('${x.id}')">${cwIsNew(x) ? '<span class="cw-new abs">★ BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}
       <div class="cw-card-day"><span>DAY</span><b>${x.day ?? '•'}</b></div>
-      <div class="cw-card-t">${escHtml(x.title)}</div>${x.subtitle ? `<div class="cw-card-s">${escHtml(x.subtitle)}</div>` : ''}
+      ${x.series ? `<div class="cw-card-ser">${escHtml(x.series)}</div>` : ''}<div class="cw-card-t">${escHtml(x.title)}</div>${x.subtitle ? `<div class="cw-card-s">${escHtml(x.subtitle)}</div>` : ''}
       <div class="cw-card-m"><span>${escHtml(cwDate(x.post_date))}</span>${tot ? `<span>${done === tot ? '✅' : '☐'} ${done}/${tot} tugas</span>` : ''}</div></button>`;
-  }).join('')}</div>`).join('');
+  }).join('')}</div>`;
 }
 function renderCwPost(body, it) {
   const s = cwLS(CWAY_SEEN_KEY); if (it.published && !s[it.id]) { s[it.id] = 1; cwLS(CWAY_SEEN_KEY, s); renderCwayHl(); cwStar(); }
