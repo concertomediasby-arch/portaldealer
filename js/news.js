@@ -86,7 +86,7 @@ function hlSlides() {
 function nwHlHtml(n, pos, tot) {
   const img = nwImgUrl(n.image);
   return `<div class="nw-hl${img ? '' : ' noimg'}" role="button" tabindex="0" onclick="openNews('${n.id}')" onkeydown="if(event.key==='Enter')openNews('${n.id}')">
-    ${img ? `<div class="nw-img"><img src="${escHtml(img)}" alt="" loading="lazy"></div>` : ''}
+    ${img ? `<div class="nw-img"><img src="${escHtml(img)}" alt="" decoding="async"></div>` : ''}
     <div class="nw-main"><div class="nw-top">📰 News${nwIsNew(n) ? ' <span class="nw-new">BARU</span>' : ''}${n.category ? ` <span class="nw-cat">${escHtml(n.category)}</span>` : ''}</div>
       <div class="nw-t">${escHtml(n.title)}</div>${n.summary ? `<div class="nw-s">${escHtml(n.summary)}</div>` : ''}
       <div class="nw-foot"><span class="nw-date">${escHtml(nwDate(n.post_date))}</span>
@@ -104,8 +104,10 @@ function hlRender() {
   const body = cur.t === 'cw' ? cwHlHtml() : nwHlHtml(cur.n, news.indexOf(cur), news.length);
   el.hidden = false;
   el.innerHTML = `${tabs}<div class="hl-slide">${body}</div>`;
+  slides.forEach(x => { const u = x.t === 'news' && nwImgUrl(x.n.image); if (u && !hlPre[u]) { hlPre[u] = new Image(); hlPre[u].src = u; } });   // pramuat gambar slide lain agar tidak berkedip
   hlArm(slides.length);
 }
+const hlPre = {};
 function hlGo(k) {
   const s = hlSlides(); let i = -1;
   if (k === 'cw') i = s.findIndex(x => x.t === 'cw');
@@ -115,11 +117,31 @@ function hlGo(k) {
   hlIdx = i; hlPause = Date.now() + 15000; hlRender();
 }
 /* Geser (swipe HP / seret mouse) — kiri = berikutnya, kanan = sebelumnya; berputar */
-function hlStep(d) {
-  const n = hlSlides().length; if (n < 2) return;
-  hlIdx = (hlIdx + d + n) % n; hlPause = Date.now() + 15000; hlRender();
+const hlReduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+let hlBusy = false;
+function hlStep(d, fromDx) {
+  const n = hlSlides().length; if (n < 2 || hlBusy) return;
+  const go = () => {
+    hlIdx = (hlIdx + d + n) % n; hlRender();
+    const nx = document.querySelector('#cway-hl .hl-slide');
+    if (nx && !hlReduced()) {
+      nx.style.transition = 'none';
+      nx.style.transform = `translateX(${d * Math.min(nx.offsetWidth * .35, 160)}px)`; nx.style.opacity = '0';
+      nx.offsetWidth;   // paksa reflow agar transisi berjalan
+      nx.style.transition = 'transform .42s cubic-bezier(.22,.61,.36,1), opacity .32s ease';
+      nx.style.transform = ''; nx.style.opacity = '';
+      setTimeout(() => { nx.style.transition = ''; }, 450);
+    }
+    hlBusy = false;
+  };
   const sl = document.querySelector('#cway-hl .hl-slide');
-  if (sl) { sl.classList.add('in', d > 0 ? 'fwd' : 'back'); }
+  if (!sl || hlReduced()) return go();
+  hlBusy = true;
+  const w = sl.offsetWidth, x = fromDx || 0;
+  sl.style.transition = 'none'; sl.style.transform = `translateX(${x}px)`; sl.offsetWidth;
+  sl.style.transition = 'transform .24s cubic-bezier(.4,0,1,1), opacity .24s ease';
+  sl.style.transform = `translateX(${-d * Math.min(w * .35, 160) + x * .3}px)`; sl.style.opacity = '0';
+  setTimeout(go, 230);
 }
 function hlSwipeBind(el) {
   let x0 = null, y0 = 0, id = null, drag = false, sl = null, swiped = 0;
@@ -130,7 +152,7 @@ function hlSwipeBind(el) {
     x0 = e.clientX; y0 = e.clientY; id = e.pointerId; drag = false;
   });
   el.addEventListener('pointermove', e => {
-    if (x0 === null || e.pointerId !== id) return;
+    if (x0 === null || e.pointerId !== id || hlBusy) return;
     const dx = e.clientX - x0, dy = e.clientY - y0;
     if (!drag) {
       if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { reset(); return; }   // gulir vertikal → biarkan
@@ -139,13 +161,13 @@ function hlSwipeBind(el) {
       hlPause = Date.now() + 15000;
     }
     sl.style.transition = 'none';
-    sl.style.transform = `translateX(${dx * .9}px)`;
-    sl.style.opacity = String(Math.max(.4, 1 - Math.abs(dx) / 500));
+    sl.style.transform = `translateX(${dx}px)`;
+    sl.style.opacity = String(Math.max(.55, 1 - Math.abs(dx) / 700));
   });
   const end = e => {
     if (x0 === null || e.pointerId !== id) return;
     const dx = e.clientX - x0, was = drag;
-    if (was && e.type === 'pointerup' && Math.abs(dx) > 45) { swiped = Date.now(); reset(); hlStep(dx < 0 ? 1 : -1); return; }
+    if (was && e.type === 'pointerup' && Math.abs(dx) > 45) { swiped = Date.now(); x0 = null; id = null; drag = false; sl = null; hlStep(dx < 0 ? 1 : -1, dx); return; }
     if (was && sl) { swiped = Date.now(); sl.style.transition = 'transform .25s ease, opacity .25s ease'; sl.style.transform = ''; sl.style.opacity = ''; const s = sl; setTimeout(() => { s.style.transition = ''; }, 260); }
     x0 = null; id = null; drag = false; sl = null;
   };
@@ -170,9 +192,7 @@ function hlArm(n) {
   hlTimer = setInterval(() => {
     if (document.hidden || Date.now() < hlPause || !document.getElementById('view-dashboard')?.classList.contains('active')) return;
     const s = hlSlides(); if (s.length < 2) return;
-    hlIdx = (hlIdx + 1) % s.length;
-    hlRender();
-    document.querySelector('#cway-hl .hl-slide')?.classList.add('in');
+    hlStep(1); hlPause = 0;
   }, NEWS_ROTATE_MS);
 }
 
