@@ -3623,6 +3623,8 @@ body:not(.is-editor) .acad-ed { display: none; }
 #cway-hl { container-type: inline-size; }
 .hl-view { overflow-x: clip; touch-action: pan-y; user-select: none; -webkit-user-select: none; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
 .hl-track .nw-hl, .hl-track .cw-hl { box-shadow: none; }
+.hl-track .nw-img img { inset: -2px -12%; width: 124%; height: calc(100% + 4px); will-change: transform; }   /* ruang lebih untuk parallax */
+.hl-track .nw-img::after { z-index: 1; }
 .hl-track .nw-hl:hover, .hl-track .cw-hl:hover { transform: none; }   /* kartu tidak naik saat hover — tepi atas tidak terpotong */
 .hl-track { display: flex; will-change: transform; }
 .hl-track > .hl-slide { flex: 0 0 100%; min-width: 0; }

@@ -113,7 +113,7 @@ function hlRender() {
   el.innerHTML = `${tabs}<div class="hl-view"><div class="hl-track">${items.map((h, i) => {
     const clone = hlN > 1 && (i === 0 || i === items.length - 1);
     return `<div class="hl-slide"${clone ? ' aria-hidden="true" inert' : ''}>${h}</div>`; }).join('')}</div></div>${dots}`;
-  hlBusy = false; clearTimeout(hlFixT);
+  hlBusy = false; hlTarget = -1; clearTimeout(hlFixT);
   hlPos = hlN > 1 ? hlIdx + 1 : 0;
   hlSet(0, false); hlMark();
   slides.forEach(x => { const u = x.t === 'news' && nwImgUrl(x.n.image); if (u && !hlPre[u]) { hlPre[u] = new Image(); hlPre[u].src = u; } });
@@ -121,24 +121,61 @@ function hlRender() {
 }
 const hlPre = {};
 function hlTrack() { return document.querySelector('#cway-hl .hl-track'); }
-function hlSet(dx, anim) {
-  const t = hlTrack(); if (!t) return;
-  t.style.transition = anim && !hlReduced() ? HL_EASE : 'none';
-  t.style.transform = `translate3d(calc(${-hlPos * 100}% + ${dx || 0}px),0,0)`;
+// Posisi track sebagai bilangan pecahan (pf = indeks slide yang tampil, termasuk salinan).
+// Parallax (opsi A, pilihan pemilik): foto bergerak berlawanan 55% (lebih lambat dari kotak), teks ikut bergeser
+// 18% & memudar; slide tujuan: teks disembunyikan selama meluncur lalu muncul berurutan dari bawah (.hl-arrive).
+let hlTarget = -1;
+const HL_FX = 'transform .5s cubic-bezier(.22,.61,.36,1), opacity .35s ease';
+function hlParts() {
+  return [...document.querySelectorAll('#cway-hl .hl-track > .hl-slide')].map(sl => sl._p || (sl._p = {
+    sl, img: sl.querySelector('.nw-img img, .nw-img > span, .cw-hl-day'),
+    txt: [...sl.querySelectorAll('.nw-main > *, .cw-hl-main > *, .cw-hl-side')] }));
 }
+function hlSetF(pf, anim) {
+  const t = hlTrack(); if (!t) return;
+  const on = anim && !hlReduced();
+  t.style.transition = on ? HL_EASE : 'none';
+  t.style.transform = `translate3d(${-pf * 100}%,0,0)`;
+  if (hlReduced()) return;
+  hlParts().forEach((p, j) => {
+    const o = j - pf, a = Math.abs(o);
+    if (p.img) { p.img.style.transition = on ? HL_EASE : 'none'; p.img.style.transform = `translate3d(${(-o * 55).toFixed(3)}%,0,0)`; }
+    const hide = j === hlTarget && on;
+    p.txt.forEach(x => {
+      x.style.transition = on ? HL_FX : 'none';
+      x.style.transform = `translate3d(${(o * 18).toFixed(3)}%,0,0)`;
+      x.style.opacity = hide ? '0' : String(Math.max(0, 1 - a * 1.6));
+    });
+  });
+}
+function hlSet(dx, anim) { const w = document.querySelector('#cway-hl .hl-view')?.offsetWidth || 1; hlSetF(hlPos - (dx || 0) / w, anim); }
 function hlMark() {   // tab & titik aktif mengikuti slide yang tampil
   const s = hlSlides(), cur = s[hlIdx]; if (!cur) return;
   document.querySelectorAll('#cway-hl .hl-tab').forEach(b => b.classList.toggle('on', b.dataset.hlt === cur.t));
   document.querySelectorAll('#cway-hl .hl-dot').forEach((d, i) => d.classList.toggle('on', i === hlIdx));
 }
-function hlMoveTo(pos, dx) {   // pindah ke posisi track (boleh salinan), lalu lompat diam-diam ke slide asli
-  if (hlN < 2) return;
-  hlPos = pos; hlIdx = ((pos - 1) % hlN + hlN) % hlN; hlMark();
-  if (dx) hlSet(dx, false), hlTrack()?.offsetWidth;
-  hlSet(0, true); hlBusy = true; clearTimeout(hlFixT);
-  hlFixT = setTimeout(() => { hlBusy = false; if (hlPos === 0 || hlPos === hlN + 1) { hlPos = hlIdx + 1; hlSet(0, false); } }, hlReduced() ? 0 : 520);
+function hlArrive(j) {   // teks slide yang baru tiba muncul berurutan dari bawah
+  const p = hlParts()[j]; if (!p || hlReduced()) return;
+  p.txt.forEach((x, k) => {
+    x.style.transition = 'none'; x.style.transform = 'translate3d(0,14px,0)'; x.style.opacity = '0'; x.offsetWidth;
+    x.style.transition = `transform .42s cubic-bezier(.22,.61,.36,1) ${k * 70}ms, opacity .42s ease ${k * 70}ms`;
+    x.style.transform = 'translate3d(0,0,0)'; x.style.opacity = '1';
+  });
 }
-function hlStep(d, fromDx) { if (hlN < 2) return; if (hlBusy) { hlPos = hlIdx + 1; hlSet(0, false); } hlMoveTo(hlPos + d, fromDx); }
+function hlMoveTo(pos, dx) {   // dx = geseran jari terhadap posisi lama; pindah ke posisi track (boleh salinan), lalu lompat diam-diam ke slide asli
+  if (hlN < 2) return;
+  const w = document.querySelector('#cway-hl .hl-view')?.offsetWidth || 1, from = hlPos - (dx || 0) / w;
+  hlPos = pos; hlIdx = ((pos - 1) % hlN + hlN) % hlN; hlMark();
+  hlTarget = pos;
+  hlSetF(from, false); hlTrack()?.offsetWidth;
+  hlSetF(pos, true); hlBusy = true; clearTimeout(hlFixT);
+  hlFixT = setTimeout(() => {
+    hlBusy = false; hlTarget = -1;
+    if (hlPos === 0 || hlPos === hlN + 1) { hlPos = hlIdx + 1; hlSetF(hlPos, false); }
+    hlArrive(hlPos);
+  }, hlReduced() ? 0 : 500);
+}
+function hlStep(d, fromDx) { if (hlN < 2) return; if (hlBusy) { hlTarget = -1; hlPos = hlIdx + 1; hlSet(0, false); } hlMoveTo(hlPos + d, fromDx); }
 function hlGoIdx(i) { hlPause = Date.now() + 15000; if (i !== hlIdx) hlMoveTo(i + 1); }
 function hlGo(k) {
   const s = hlSlides(); let i = -1;
@@ -153,7 +190,7 @@ function hlSwipeBind(el) {
   let x0 = null, y0 = 0, t0 = 0, id = null, drag = false, lastX = 0, lastT = 0, vx = 0, swiped = 0, w = 1;
   el.addEventListener('pointerdown', e => {
     if (e.button > 0 || hlN < 2 || !e.target.closest('.hl-view')) return;
-    if (hlBusy) { hlBusy = false; clearTimeout(hlFixT); if (hlPos === 0 || hlPos === hlN + 1) hlPos = hlIdx + 1; hlSet(0, false); }
+    if (hlBusy) { hlBusy = false; hlTarget = -1; clearTimeout(hlFixT); if (hlPos === 0 || hlPos === hlN + 1) hlPos = hlIdx + 1; hlSet(0, false); }
     x0 = lastX = e.clientX; y0 = e.clientY; t0 = lastT = performance.now(); id = e.pointerId; drag = false; vx = 0;
     w = el.querySelector('.hl-view')?.offsetWidth || 1;
   });
