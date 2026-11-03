@@ -100,7 +100,7 @@ function hlRender() {
   if (hlIdx >= slides.length) hlIdx = 0;
   const cur = slides[hlIdx], hasCw = slides.some(s => s.t === 'cw'), news = slides.filter(s => s.t === 'news');
   const tabs = hasCw && news.length
-    ? `<div class="hl-tabs" role="tablist"><button class="hl-tab${cur.t === 'news' ? ' on' : ''}" onclick="hlGo('news')">${news.some(s => nwIsNew(s.n)) ? '<i class="dot"></i>' : ''}📰 News</button><button class="hl-tab${cur.t === 'cw' ? ' on' : ''}" onclick="hlGo('cw')">☕ Concerto Way <span class="lk">· khusus partner</span></button></div>` : '';
+    ? `<div class="hl-tabs" role="tablist"><button class="hl-tab${cur.t === 'news' ? ' on' : ''}" onclick="hlGo('news')">${news.some(s => nwIsNew(s.n)) ? '<i class="dot"></i>' : ''}📰 News</button><button class="hl-tab${cur.t === 'cw' ? ' on' : ''}" onclick="hlGo('cw')">☕ Concerto Way <span class="lk">· khusus partner</span>${typeof cwIsNew === 'function' && cwLive().some(cwIsNew) ? '<i class="hl-star" title="Ada materi baru">★</i>' : ''}</button></div>` : '';
   const body = cur.t === 'cw' ? cwHlHtml() : nwHlHtml(cur.n, news.indexOf(cur), news.length);
   el.hidden = false;
   el.innerHTML = `${tabs}<div class="hl-slide">${body}</div>`;

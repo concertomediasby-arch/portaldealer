@@ -3610,6 +3610,9 @@ body:not(.is-editor) .acad-ed { display: none; }
 .hl-tab .dot { width: 7px; height: 7px; border-radius: 50%; background: #e0675f; }
 .hl-tab.on .dot { background: #1a1408; }
 .hl-tab .lk { font-size: 11px; opacity: .8; }
+.hl-tab .hl-star { font-style: normal; color: #d9a514; font-size: 16px; line-height: 1; text-shadow: 0 0 8px rgba(233,196,106,.75); animation: navStarGlow 1.8s ease-in-out infinite; }
+.hl-tab.on .hl-star { color: #1a1408; text-shadow: 0 0 6px rgba(255,255,255,.7); }
+@media (prefers-reduced-motion: reduce) { .hl-tab .hl-star { animation: none; } }
 .hl-slide.in > * { animation: hlIn .5s ease both; }
 #cway-hl { overflow-x: clip; overflow-clip-margin: 24px; }
 .hl-slide { touch-action: pan-y; user-select: none; -webkit-user-select: none; will-change: transform, opacity; }
