@@ -522,6 +522,7 @@ function openGlDetail(id, photoIdx = 0) {
         <h3 class="gl-dt">${escHtml(it.car_model || '')}${it.car_year ? ' ' + it.car_year : ''}</h3>
         <div class="gl-tags">${hof ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofGroupKey(hof)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${glPending(it) ? `<span class="gl-tag dr">Kiriman ${escHtml(it.submitter || 'dealer')} — menunggu persetujuan</span>` : !it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : ''}</div>
         ${it.note ? `<p class="gl-note">${escHtml(it.note)}</p>` : ''}
+        ${it.published && !glPending(it) ? `<div class="gl-share"><button class="gt-btn ghost" onclick="glShare('${it.id}')">📤 Bagikan ke WA</button></div>` : ''}
         ${(it.products || []).length ? `<div class="hof-lbl">Produk yang dipasang</div>${it.products.map(pid => { const r = glProd(pid); if (!r.product) return ''; const p = r.product;
           return `<button class="gl-prod" onclick="closeGlDetail();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}` : ''}
         ${it.dealer ? `<div class="gl-dcard"><div class="hof-lbl">Dipasang oleh</div><b>${escHtml(it.dealer)}${d ? ' <span class="ad-badge">✓ Resmi</span>' : ''}</b><div class="gl-dc">${escHtml(d ? [d.c, d.r].join(', ') : it.city || '')}</div>
@@ -530,6 +531,7 @@ function openGlDetail(id, photoIdx = 0) {
       </div>
     </div>`;
   ov.classList.add('open');
+  if (it.published) glPrepShare(it);
 }
 function closeGlDetail() { glAdj = false; glAdjCtx = null; document.querySelectorAll('#gl-detail video').forEach(v => v.pause()); document.getElementById('gl-detail')?.classList.remove('open'); }
 // Atur posisi / putar foto langsung dari jendela detail (Editor, 2 Nov 2026 — permintaan pemilik): disimpan langsung ke tabel.
@@ -1103,4 +1105,33 @@ function scAuthChanged() {
   glItems = null;   // muat ulang sesuai hak akun baru (draf hanya untuk Admin/Editor)
   if (typeof adAuthChanged === 'function') adAuthChanged();
   refreshProductShowcase();
+}
+
+/* ── 📤 Bagikan project Galeri ke WA (3 Nov 2026, permintaan pemilik): foto pertama + teks + link publik ?gl=<id> ── */
+let glLinkPending = null;   // link ?gl=<id> dibuka setelah Supabase siap (js/main.js)
+const glLink = id => `${PORTAL_URL}/?gl=${encodeURIComponent(id)}`;
+const glShareCache = {};
+function glPrepShare(it) {
+  const ph = (it.photos || []).find(p => !glIsVid(p)); const src = ph ? glUrl(ph.path) : '';
+  if (!src || glShareCache[it.id]?.src === src) return;
+  glShareCache[it.id] = { src, file: null };
+  fetch(src).then(r => r.ok ? r.blob() : null).then(b => { if (b && glShareCache[it.id]?.src === src) glShareCache[it.id].file = new File([b], 'Instalasi-CAI.' + (b.type.includes('png') ? 'png' : b.type.includes('webp') ? 'webp' : 'jpg'), { type: b.type }); }).catch(() => {});
+}
+async function glShare(id) {
+  const it = glItems?.find(x => x.id === id); if (!it) return;
+  const prods = (it.products || []).map(pid => { const r = glProd(pid); return r.product ? r.product.name : ''; }).filter(Boolean);
+  const text = `🚗 *Instalasi ${glTitle(it)}${it.car_year ? ' ' + it.car_year : ''}*` +
+    (it.dealer ? `\nDipasang oleh ${it.dealer}${it.city ? ' — ' + it.city : ''}` : '') +
+    (prods.length ? `\nPerangkat: ${prods.slice(0, 6).join(', ')}${prods.length > 6 ? ', …' : ''}` : '') +
+    `\n\nLihat foto & video lengkapnya di CAI Hub:\n${glLink(it.id)}`;
+  const file = glShareCache[it.id]?.file;
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e?.name === 'AbortError') return; }
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+}
+async function glOpenLinked(id) {
+  await openGaleri();
+  const it = glItems?.find(x => x.id === id && x.published && !glPending(x));
+  if (it) openGlDetail(id); else showToast('Instalasi ini tidak ditemukan atau belum ditampilkan.');
 }

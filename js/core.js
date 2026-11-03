@@ -579,6 +579,25 @@ function landingGo(target) {
 
 const GUIDES_BUCKET = 'guides';
 const GUIDE_URL_TTL = 600;   // detik — link PDF kedaluwarsa setelah 10 menit
+// 📤 Bagikan Panduan Dealer ke WA (3 Nov 2026, permintaan pemilik): HANYA link ?guide=<path> — PDF tidak dilampirkan agar
+// tetap privat; penerima harus login dengan Kode Akses, lalu kartu file itu disorot (guideFocusApply).
+let guidePending = null, guideFocus = null;
+const guideLink = key => `${PORTAL_URL}/?guide=${encodeURIComponent(key)}`;
+function guideShare(key) {
+  let f = null; guideFiles?.forEach(list => { f = f || list.find(x => x.key === key); });
+  if (!f) return;
+  const text = `📄 *Panduan Dealer: ${f.title}*\nKhusus partner CAI — buka di CAI Hub dengan Kode Akses:\n${guideLink(key)}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+}
+function guideFocusApply() {
+  if (!guideFocus || !guideFiles) return;
+  const key = guideFocus; guideFocus = null;
+  const el = [...document.querySelectorAll('.gf-cover[data-thumb]')].find(b => b.dataset.thumb === key)?.closest('.gf-card');
+  if (!el) return showToast('Panduan ini tidak ditemukan — mungkin sudah dihapus atau diganti.');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.add('gf-flash'); setTimeout(() => el.classList.remove('gf-flash'), 4000);
+  showToast('📄 Ini panduan yang dibagikan — ketuk Buka untuk membaca.', 5000);
+}
 let guideFiles = null;       // Map id panduan → [{ key, title, date, size }] (terbaru di atas)
 
 function openGuides() {
@@ -625,6 +644,7 @@ async function loadGuideFiles() {
   renderGuides();
   loadGuideThumbs();
   updateGuideStar();
+  guideFocusApply();
 }
 // ★ menyala di menu Panduan Dealer bila ada PDF yang diunggah ≤ 14 hari (2 Nov 2026, permintaan pemilik — sama seperti Academy).
 const GUIDE_NEW_DAYS = 5;   // 2 Nov 2026, permintaan pemilik — sama dengan Academy (dulu 14)
@@ -682,6 +702,7 @@ function renderGuides() {
                 <div class="gf-actions">
                   <button class="res-btn res-btn-view" onclick="openGuideFile('${f.key}', false)">${ICON_VIEW}Buka</button>
                   <button class="res-btn res-btn-dl" onclick="openGuideFile('${f.key}', true)">${ICON_DL}Unduh</button>
+                  <button class="res-btn gf-share" title="Bagikan link panduan ini ke WA (penerima perlu Kode Akses)" onclick="guideShare('${f.key}')">📤</button>
                   ${admin ? `<button class="res-btn gf-del" title="Hapus file ini" onclick="deleteGuideFile('${g.id}', '${f.key}')">🗑</button>` : ''}
                 </div>
               </div>

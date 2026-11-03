@@ -106,7 +106,8 @@ function onAuthChanged() {
   if (!GT_DEALER_MENU && !isAdmin() && document.getElementById('view-gathering')?.classList.contains('active')) showView('dashboard');
   if (isAdmin()) loadVisitStats(true);
   if (typeof cwayAuthChanged === 'function') cwayAuthChanged();
-  if (typeof newsAuthChanged === 'function') newsAuthChanged();   // Concerto Way (js/cway.js): headline Dashboard, link ?cw=
+  if (typeof newsAuthChanged === 'function') newsAuthChanged();
+  if (guidePending) { guideFocus = guidePending; guidePending = null; openGuides(); }   // link ?guide= (tanpa sesi → form Kode Akses dulu)   // Concerto Way (js/cway.js): headline Dashboard, link ?cw=
   if (authUser) {
     loadStock();
     subscribeStock();

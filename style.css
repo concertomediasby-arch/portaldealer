@@ -3664,3 +3664,10 @@ body:not(.is-editor) .acad-ed { display: none; }
 .cw-fbox textarea.nw-body { min-height: 260px; }
 .cw-fbox select { background: var(--field); border: 1px solid var(--border); color: var(--fg); border-radius: 9px; padding: 9px 11px; font: 14px var(--f-body); }
 @media (max-width: 720px) { .nw-title { font-size: 24px; } .nw-lead { font-size: 16px; } }
+
+/* 📤 Bagikan ke WA — Galeri & Panduan Dealer (3 Nov 2026) */
+.gl-share { margin: 0 0 14px; }
+.gl-share .gt-btn { width: 100%; justify-content: center; }
+.gf-actions .res-btn.gf-share { flex: 0 0 auto; padding-left: 10px; padding-right: 10px; }
+.gf-card.gf-flash { outline: 2px solid var(--accent); outline-offset: 3px; animation: gfFlash 1s ease 3; }
+@keyframes gfFlash { 50% { outline-color: transparent; } }
