@@ -76,106 +76,113 @@ function nwStar() {
 }
 
 /* ── Headline gabungan (News publik + Concerto Way khusus login) ── */
-let hlIdx = 0, hlTimer = null, hlPause = 0, hlSig = '';
+let hlIdx = 0, hlTimer = null, hlPause = 0;
 function hlSlides() {
   const s = [];
   if (typeof cwHlHtml === 'function' && authUser && cwLive().length) s.push({ t: 'cw' });
   nwLive().slice(0, NEWS_HL_MAX).forEach(n => s.push({ t: 'news', n }));
   return s;
 }
-function nwHlHtml(n, pos, tot) {
+function nwHlHtml(n) {
   const img = nwImgUrl(n.image);
   return `<div class="nw-hl" role="button" tabindex="0" onclick="openNews('${n.id}')" onkeydown="if(event.key==='Enter')openNews('${n.id}')">
-    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async">` : '<span>📰</span>'}</div>
+    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async" draggable="false">` : '<span>📰</span>'}</div>
     <div class="nw-main"><div class="nw-top">📰 News${nwIsNew(n) ? ' <span class="nw-new">BARU</span>' : ''}${n.category ? ` <span class="nw-cat">${escHtml(n.category)}</span>` : ''}</div>
       <div class="nw-t">${escHtml(n.title)}</div>${n.summary ? `<div class="nw-s">${escHtml(n.summary)}</div>` : ''}
       <div class="nw-foot"><span class="nw-date">${escHtml(nwDate(n.post_date))}</span>
-        ${tot > 1 ? `<span class="nw-dots">${Array.from({ length: tot }, (_, i) => `<i class="${i === pos ? 'on' : ''}" onclick="event.stopPropagation();hlGo('n${i}')"></i>`).join('')}</span>` : ''}
         <span class="nw-btn">Baca selengkapnya ›</span></div></div></div>`;
 }
+/* Carousel: semua slide berjajar di satu "track" (+ salinan slide terakhir di depan & slide pertama di belakang
+   agar geser berputar mulus). Geser = memindah track (GPU), tanpa merender ulang. Titik di bawah kotak, tetap. */
+let hlPos = 1, hlN = 0, hlBusy = false, hlFixT = null;
+const hlReduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const HL_EASE = 'transform .5s cubic-bezier(.22,.61,.36,1)';
 function hlRender() {
   const el = document.getElementById('cway-hl'); if (!el) return;
   const slides = hlSlides();
-  if (!slides.length) { el.hidden = true; el.innerHTML = ''; hlSig = ''; return; }
+  if (!slides.length) { el.hidden = true; el.innerHTML = ''; hlN = 0; return; }
   if (hlIdx >= slides.length) hlIdx = 0;
-  const cur = slides[hlIdx], hasCw = slides.some(s => s.t === 'cw'), news = slides.filter(s => s.t === 'news');
+  hlN = slides.length;
+  const hasCw = slides.some(x => x.t === 'cw'), news = slides.filter(x => x.t === 'news');
   const tabs = hasCw && news.length
-    ? `<div class="hl-tabs" role="tablist"><button class="hl-tab${cur.t === 'news' ? ' on' : ''}" onclick="hlGo('news')">${news.some(s => nwIsNew(s.n)) ? '<i class="dot"></i>' : ''}📰 News</button><button class="hl-tab${cur.t === 'cw' ? ' on' : ''}" onclick="hlGo('cw')">☕ Concerto Way <span class="lk">· khusus partner</span>${typeof cwIsNew === 'function' && cwLive().some(cwIsNew) ? '<i class="hl-star" title="Ada materi baru">★</i>' : ''}</button></div>` : '';
-  const body = cur.t === 'cw' ? cwHlHtml() : nwHlHtml(cur.n, news.indexOf(cur), news.length);
+    ? `<div class="hl-tabs" role="tablist"><button class="hl-tab" data-hlt="news" onclick="hlGo('news')">${news.some(x => nwIsNew(x.n)) ? '<i class="dot"></i>' : ''}📰 News</button><button class="hl-tab" data-hlt="cw" onclick="hlGo('cw')">☕ Concerto Way <span class="lk">· khusus partner</span>${typeof cwIsNew === 'function' && cwLive().some(cwIsNew) ? '<i class="hl-star" title="Ada materi baru">★</i>' : ''}</button></div>` : '';
+  const html = slides.map(x => x.t === 'cw' ? cwHlHtml() : nwHlHtml(x.n));
+  const items = hlN > 1 ? [html[hlN - 1], ...html, html[0]] : html;
+  const dots = hlN > 1 ? `<div class="hl-dots">${slides.map((x, i) => `<button class="hl-dot${x.t === 'cw' ? ' cw' : ''}" aria-label="Slide ${i + 1}" onclick="hlGoIdx(${i})"></button>`).join('')}</div>` : '';
   el.hidden = false;
-  el.innerHTML = `${tabs}<div class="hl-slide">${body}</div>`;
-  slides.forEach(x => { const u = x.t === 'news' && nwImgUrl(x.n.image); if (u && !hlPre[u]) { hlPre[u] = new Image(); hlPre[u].src = u; } });   // pramuat gambar slide lain agar tidak berkedip
+  el.innerHTML = `${tabs}<div class="hl-view"><div class="hl-track">${items.map((h, i) => {
+    const clone = hlN > 1 && (i === 0 || i === items.length - 1);
+    return `<div class="hl-slide"${clone ? ' aria-hidden="true" inert' : ''}>${h}</div>`; }).join('')}</div></div>${dots}`;
+  hlBusy = false; clearTimeout(hlFixT);
+  hlPos = hlN > 1 ? hlIdx + 1 : 0;
+  hlSet(0, false); hlMark();
+  slides.forEach(x => { const u = x.t === 'news' && nwImgUrl(x.n.image); if (u && !hlPre[u]) { hlPre[u] = new Image(); hlPre[u].src = u; } });
   hlArm(slides.length);
 }
 const hlPre = {};
+function hlTrack() { return document.querySelector('#cway-hl .hl-track'); }
+function hlSet(dx, anim) {
+  const t = hlTrack(); if (!t) return;
+  t.style.transition = anim && !hlReduced() ? HL_EASE : 'none';
+  t.style.transform = `translate3d(calc(${-hlPos * 100}% + ${dx || 0}px),0,0)`;
+}
+function hlMark() {   // tab & titik aktif mengikuti slide yang tampil
+  const s = hlSlides(), cur = s[hlIdx]; if (!cur) return;
+  document.querySelectorAll('#cway-hl .hl-tab').forEach(b => b.classList.toggle('on', b.dataset.hlt === cur.t));
+  document.querySelectorAll('#cway-hl .hl-dot').forEach((d, i) => d.classList.toggle('on', i === hlIdx));
+}
+function hlMoveTo(pos, dx) {   // pindah ke posisi track (boleh salinan), lalu lompat diam-diam ke slide asli
+  if (hlN < 2) return;
+  hlPos = pos; hlIdx = ((pos - 1) % hlN + hlN) % hlN; hlMark();
+  if (dx) hlSet(dx, false), hlTrack()?.offsetWidth;
+  hlSet(0, true); hlBusy = true; clearTimeout(hlFixT);
+  hlFixT = setTimeout(() => { hlBusy = false; if (hlPos === 0 || hlPos === hlN + 1) { hlPos = hlIdx + 1; hlSet(0, false); } }, hlReduced() ? 0 : 520);
+}
+function hlStep(d, fromDx) { if (hlN < 2) return; if (hlBusy) { hlPos = hlIdx + 1; hlSet(0, false); } hlMoveTo(hlPos + d, fromDx); }
+function hlGoIdx(i) { hlPause = Date.now() + 15000; if (i !== hlIdx) hlMoveTo(i + 1); }
 function hlGo(k) {
   const s = hlSlides(); let i = -1;
   if (k === 'cw') i = s.findIndex(x => x.t === 'cw');
   else if (k === 'news') i = s.findIndex(x => x.t === 'news');
   else if (/^n\d+$/.test(k)) { const ns = s.map((x, j) => x.t === 'news' ? j : -1).filter(j => j >= 0); i = ns[+k.slice(1)] ?? -1; }
   if (i < 0) return;
-  hlIdx = i; hlPause = Date.now() + 15000; hlRender();
+  hlGoIdx(i);
 }
-/* Geser (swipe HP / seret mouse) — kiri = berikutnya, kanan = sebelumnya; berputar */
-const hlReduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-let hlBusy = false;
-function hlStep(d, fromDx) {
-  const n = hlSlides().length; if (n < 2 || hlBusy) return;
-  const go = () => {
-    hlIdx = (hlIdx + d + n) % n; hlRender();
-    const nx = document.querySelector('#cway-hl .hl-slide');
-    if (nx && !hlReduced()) {
-      nx.style.transition = 'none';
-      nx.style.transform = `translateX(${d * Math.min(nx.offsetWidth * .35, 160)}px)`; nx.style.opacity = '0';
-      nx.offsetWidth;   // paksa reflow agar transisi berjalan
-      nx.style.transition = 'transform .42s cubic-bezier(.22,.61,.36,1), opacity .32s ease';
-      nx.style.transform = ''; nx.style.opacity = '';
-      setTimeout(() => { nx.style.transition = ''; }, 450);
-    }
-    hlBusy = false;
-  };
-  const sl = document.querySelector('#cway-hl .hl-slide');
-  if (!sl || hlReduced()) return go();
-  hlBusy = true;
-  const w = sl.offsetWidth, x = fromDx || 0;
-  sl.style.transition = 'none'; sl.style.transform = `translateX(${x}px)`; sl.offsetWidth;
-  sl.style.transition = 'transform .24s cubic-bezier(.4,0,1,1), opacity .24s ease';
-  sl.style.transform = `translateX(${-d * Math.min(w * .35, 160) + x * .3}px)`; sl.style.opacity = '0';
-  setTimeout(go, 230);
-}
+/* Geser (swipe HP / seret mouse): track mengikuti jari 1:1; dilepas > 80 px (atau 15% lebar) atau dikibas cepat → pindah */
 function hlSwipeBind(el) {
-  let x0 = null, y0 = 0, id = null, drag = false, sl = null, swiped = 0;
-  const reset = () => { if (sl) { sl.style.transform = ''; sl.style.transition = ''; sl.style.opacity = ''; } x0 = null; id = null; drag = false; sl = null; };
+  let x0 = null, y0 = 0, t0 = 0, id = null, drag = false, lastX = 0, lastT = 0, vx = 0, swiped = 0, w = 1;
   el.addEventListener('pointerdown', e => {
-    if (e.button > 0 || hlSlides().length < 2 || e.target.closest('.hl-tabs')) return;
-    sl = e.target.closest('.hl-slide'); if (!sl) return;
-    x0 = e.clientX; y0 = e.clientY; id = e.pointerId; drag = false;
+    if (e.button > 0 || hlN < 2 || !e.target.closest('.hl-view')) return;
+    if (hlBusy) { hlBusy = false; clearTimeout(hlFixT); if (hlPos === 0 || hlPos === hlN + 1) hlPos = hlIdx + 1; hlSet(0, false); }
+    x0 = lastX = e.clientX; y0 = e.clientY; t0 = lastT = performance.now(); id = e.pointerId; drag = false; vx = 0;
+    w = el.querySelector('.hl-view')?.offsetWidth || 1;
   });
   el.addEventListener('pointermove', e => {
-    if (x0 === null || e.pointerId !== id || hlBusy) return;
+    if (x0 === null || e.pointerId !== id) return;
     const dx = e.clientX - x0, dy = e.clientY - y0;
     if (!drag) {
-      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { reset(); return; }   // gulir vertikal → biarkan
-      if (Math.abs(dx) < 10) return;
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { x0 = null; return; }   // gulir vertikal → biarkan
+      if (Math.abs(dx) < 8) return;
       drag = true; try { el.setPointerCapture(id); } catch (_) {}
-      hlPause = Date.now() + 15000;
+      hlPause = Date.now() + 15000; el.classList.add('dragging');
     }
-    sl.style.transition = 'none';
-    sl.style.transform = `translateX(${dx}px)`;
-    sl.style.opacity = String(Math.max(.55, 1 - Math.abs(dx) / 700));
+    const now = performance.now(); vx = (e.clientX - lastX) / Math.max(1, now - lastT); lastX = e.clientX; lastT = now;
+    hlSet(dx, false);
   });
   const end = e => {
     if (x0 === null || e.pointerId !== id) return;
-    const dx = e.clientX - x0, was = drag;
-    if (was && e.type === 'pointerup' && Math.abs(dx) > 45) { swiped = Date.now(); x0 = null; id = null; drag = false; sl = null; hlStep(dx < 0 ? 1 : -1, dx); return; }
-    if (was && sl) { swiped = Date.now(); sl.style.transition = 'transform .25s ease, opacity .25s ease'; sl.style.transform = ''; sl.style.opacity = ''; const s = sl; setTimeout(() => { s.style.transition = ''; }, 260); }
-    x0 = null; id = null; drag = false; sl = null;
+    const dx = e.clientX - x0; x0 = null; id = null;
+    if (!drag) return;
+    drag = false; swiped = Date.now(); el.classList.remove('dragging');
+    const fling = Math.abs(vx) > .3 && Math.sign(vx) === Math.sign(dx);
+    if (e.type === 'pointerup' && (Math.abs(dx) > Math.min(w * .15, 80) || (fling && Math.abs(dx) > 20))) hlMoveTo(hlPos + (dx < 0 ? 1 : -1), dx);
+    else { hlSet(dx, false); hlTrack()?.offsetWidth; hlSet(0, true); }
   };
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
   // klik setelah menggeser jangan membuka berita
   el.addEventListener('click', e => { if (Date.now() - swiped < 400) { e.stopPropagation(); e.preventDefault(); } }, true);
-  el.addEventListener('dragstart', e => { if (e.target.closest('.hl-slide')) e.preventDefault(); });
+  el.addEventListener('dragstart', e => { if (e.target.closest('.hl-view')) e.preventDefault(); });
 }
 function hlArm(n) {
   const el = document.getElementById('cway-hl');
@@ -191,8 +198,7 @@ function hlArm(n) {
   if (n < 2) return;
   hlTimer = setInterval(() => {
     if (document.hidden || Date.now() < hlPause || !document.getElementById('view-dashboard')?.classList.contains('active')) return;
-    const s = hlSlides(); if (s.length < 2) return;
-    hlStep(1); hlPause = 0;
+    hlStep(1);
   }, NEWS_ROTATE_MS);
 }
 
