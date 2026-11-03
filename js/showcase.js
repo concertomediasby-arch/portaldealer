@@ -1146,7 +1146,7 @@ async function glShare(id) {
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e?.name === 'AbortError') return; }
   }
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
 }
 async function glOpenLinked(id) {
   await openGaleri();

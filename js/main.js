@@ -22,7 +22,7 @@ function waIntro() {
 }
 function openWa(text) {
   if (!hasWa()) return;
-  window.open(`https://wa.me/${CAI_WHATSAPP}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  window.open(`https://wa.me/${CAI_WHATSAPP}?text=${waText(text)}`, '_blank', 'noopener');
 }
 function contactProduct(brandId, productId, intent) {
   const extra = String(productId || '').startsWith(EXTRA_PREFIX);
@@ -51,7 +51,7 @@ function shareVideo() {
   if (!product) return;
   const text = `🎬 Video ${brand.name} *${product.model}*${product.name !== product.model ? ' — ' + product.name : ''}\n` +
     `Tonton di CAI Hub:\n${productLink(product.id, true)}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
 }
 // Dibuka dari link berbagi → lewati landing, buka produknya (dan videonya bila &v=1)
 function openDeepLink() {

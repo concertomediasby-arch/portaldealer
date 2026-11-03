@@ -13,6 +13,9 @@ const SHARE_ICON = '<svg class="ico-share" viewBox="0 0 24 24" fill="none" strok
 // Bagikan ke WA (3 Nov 2026): gambar disiapkan lebih dulu (sharePrep) agar navigator.share tetap di dalam klik (iPhone);
 // tanpa dukungan berbagi file (umumnya desktop) → wa.me berisi teks + link.
 const shareFiles = {};
+// Teks untuk link wa.me: emoji dibuang — WhatsApp Web/Desktop menampilkan emoji dari link wa.me sebagai "�" (laporan pemilik 3 Nov 2026).
+// Berbagi lewat menu berbagi HP (navigator.share) tetap memakai teks asli lengkap dengan emoji.
+const waText = t => encodeURIComponent(String(t).replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}][\uFE0F\u200D\p{Extended_Pictographic}\p{Emoji_Modifier}]*[ \t]?/gu, ''));
 function sharePrep(key, src, name) {
   if (!src || shareFiles[key]?.src === src) return;
   shareFiles[key] = { src, file: null };
@@ -27,7 +30,7 @@ async function shareWa(text, key) {
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e?.name === 'AbortError') return; }
   }
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
 }
 
 /* ══════════════════════════════════════════
@@ -608,7 +611,7 @@ function guideShare(key) {
   let f = null; guideFiles?.forEach(list => { f = f || list.find(x => x.key === key); });
   if (!f) return;
   const text = `📄 *Panduan Dealer: ${f.title}*\nKhusus partner CAI — buka di CAI Hub dengan Kode Akses:\n${guideLink(key)}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
 }
 function guideFocusApply() {
   if (!guideFocus || !guideFiles) return;

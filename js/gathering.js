@@ -742,7 +742,7 @@ async function gtSend() {
     `*GRAND TOTAL: ${fmtRp(o.total)}* (${o.qty} item)`, '',
     '*Pembayaran (transfer ke salah satu):*', ...gtBankLines().map(b => '• ' + b), `Berita transfer: ${invoice}`, '', `(dari ${PORTAL_URL})`].join('\n');
   if (hasWa()) {
-    const url = `https://wa.me/${CAI_WHATSAPP}?text=${encodeURIComponent(txt)}`;
+    const url = `https://wa.me/${CAI_WHATSAPP}?text=${waText(txt)}`;
     if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
   }
   showToast(`✓ Pesanan ${invoice} terkirim. Silakan transfer & tunggu konfirmasi admin.`, 7000);

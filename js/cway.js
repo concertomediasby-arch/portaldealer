@@ -372,7 +372,7 @@ async function cwShare(id) {
     catch (e) { if (e?.name === 'AbortError') return; }
   }
   if (file) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
   showToast(file ? 'Gambar diunduh — lampirkan di WhatsApp yang terbuka (teks & link sudah terisi).' : 'WhatsApp dibuka dengan teks & link.', 7000);
 }
 
