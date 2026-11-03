@@ -620,7 +620,7 @@ function guideFocusApply() {
   if (!el) return showToast('Panduan ini tidak ditemukan — mungkin sudah dihapus atau diganti.');
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   el.classList.add('gf-flash'); setTimeout(() => el.classList.remove('gf-flash'), 4000);
-  showToast('📄 Ini panduan yang dibagikan — ketuk Buka untuk membaca.', 5000);
+  openGuideReader(key);   // link yang dibagikan langsung membuka pratinjau PDF di dalam portal
 }
 let guideFiles = null;       // Map id panduan → [{ key, title, date, size }] (terbaru di atas)
 
@@ -717,14 +717,14 @@ function renderGuides() {
       : files.length
         ? `<div class="gf-grid">${files.map(f => `
             <div class="gf-card">
-              <button class="gf-cover" data-thumb="${escHtml(f.key)}" onclick="openGuideFile('${f.key}', false)" title="Buka ${escHtml(f.title)}">
+              <button class="gf-cover" data-thumb="${escHtml(f.key)}" onclick="openGuideReader('${f.key}')" title="Buka ${escHtml(f.title)}">
                 <span class="gf-ph"><b>📄</b>PDF</span><img alt="Cover ${escHtml(f.title)}">
                 <span class="gf-badge">PDF${f.size ? ' · ' + fmtGuideSize(f.size) : ''}</span>
                 ${guideIsNew(f) ? '<span class="gf-new">BARU</span>' : ''}</button>
               <div class="gf-body">
                 <div><div class="gf-title">${escHtml(f.title)}</div><div class="gf-sub">${fmtGuideDate(f.date)}</div></div>
                 <div class="gf-actions">
-                  <button class="res-btn res-btn-view" onclick="openGuideFile('${f.key}', false)">${ICON_VIEW}Buka</button>
+                  <button class="res-btn res-btn-view" onclick="openGuideReader('${f.key}')">${ICON_VIEW}Buka</button>
                   <button class="res-btn res-btn-dl" onclick="openGuideFile('${f.key}', true)">${ICON_DL}Unduh</button>
                   <button class="res-btn gf-share" title="Bagikan link panduan ini ke WA (penerima perlu Kode Akses)" aria-label="Bagikan" onclick="guideShare('${f.key}')">${SHARE_ICON}</button>
                   ${admin ? `<button class="res-btn gf-del" title="Hapus file ini" onclick="deleteGuideFile('${g.id}', '${f.key}')">🗑</button>` : ''}
@@ -2475,3 +2475,68 @@ function paketOpenLinked(id) {
   if (!el) return showToast('Paket ini tidak ditemukan.');
   setTimeout(() => { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('gf-flash'); setTimeout(() => el.classList.remove('gf-flash'), 4000); }, 100);
 }
+
+/* ── Penampil PDF Panduan Dealer di DALAM portal (3 Nov 2026, permintaan pemilik — link ?guide= langsung ke pratinjau PDF):
+   halaman digambar pdf.js (loadPdfJs) ke canvas, dimuat bertahap saat digulir — jalan di iPhone/Android (iframe PDF tidak),
+   tanpa tab baru (diblokir browser HP bila bukan dari klik). Signed URL privat GUIDE_URL_TTL; tombol Unduh tetap ada. ── */
+let gdrTok = 0, gdrDoc = null, gdrIO = null;
+async function openGuideReader(key) {
+  if (!key || !supabase) return;
+  let f = null; guideFiles?.forEach(list => { f = f || list.find(x => x.key === key); });
+  const title = f?.title || guideTitleFromName(key.split('/').pop());
+  let ov = document.getElementById('gdr');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'gdr'; ov.className = 'gdr-ov';
+    ov.innerHTML = `<div class="gdr-box" role="dialog" aria-modal="true"><div class="gdr-hd"><div class="gdr-t"></div>
+      <button class="gdr-b" id="gdr-share" title="Bagikan link panduan ini">${SHARE_ICON}</button>
+      <button class="gdr-b" id="gdr-dl" title="Unduh PDF">⬇</button>
+      <button class="gdr-b" onclick="closeGuideReader()" title="Tutup">✕</button></div>
+      <div class="gdr-body"><div class="gdr-pages"></div></div></div>`;
+    ov.addEventListener('click', e => { if (e.target === ov) closeGuideReader(); });
+    document.body.appendChild(ov);
+  }
+  const tok = ++gdrTok;
+  ov.querySelector('.gdr-t').textContent = title;
+  ov.querySelector('#gdr-dl').onclick = () => openGuideFile(key, true);
+  ov.querySelector('#gdr-share').onclick = () => guideShare(key);
+  const pages = ov.querySelector('.gdr-pages');
+  pages.innerHTML = '<div class="gdr-msg">⏳ Memuat panduan…</div>';
+  ov.classList.add('open'); document.body.style.overflow = 'hidden';
+  try { if (!history.state?.gdr) history.pushState({ gdr: 1 }, '', location.href); } catch (e) {}
+  try {
+    const [lib, signed] = await Promise.all([loadPdfJs(), supabase.storage.from(GUIDES_BUCKET).createSignedUrl(key, GUIDE_URL_TTL)]);
+    if (signed.error) throw signed.error;
+    const doc = await lib.getDocument({ url: signed.data.signedUrl }).promise;
+    if (tok !== gdrTok) return;
+    gdrDoc = doc;
+    const first = await doc.getPage(1), vp = first.getViewport({ scale: 1 });
+    pages.innerHTML = Array.from({ length: doc.numPages }, (_, i) => `<div class="gdr-pg" data-n="${i + 1}" style="aspect-ratio:${vp.width}/${vp.height}"><span>${i + 1}</span></div>`).join('')
+      + `<div class="gdr-end">${doc.numPages} halaman · ${escHtml(title)}</div>`;
+    gdrIO?.disconnect();
+    gdrIO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { gdrIO.unobserve(e.target); gdrRender(e.target, tok); } }), { root: ov.querySelector('.gdr-body'), rootMargin: '600px 0px' });
+    pages.querySelectorAll('.gdr-pg').forEach(el => gdrIO.observe(el));
+  } catch (e) {
+    if (tok !== gdrTok) return;
+    pages.innerHTML = `<div class="gdr-msg">Panduan tidak dapat dibuka. Coba login ulang atau gunakan tombol ⬇ Unduh.</div>`;
+    console.warn('guide reader', e);
+  }
+}
+async function gdrRender(el, tok) {
+  try {
+    const page = await gdrDoc.getPage(+el.dataset.n); if (tok !== gdrTok) return;
+    const w = el.clientWidth || 800, base = page.getViewport({ scale: 1 }), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const vp = page.getViewport({ scale: w * dpr / base.width });
+    const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    if (tok !== gdrTok) return;
+    el.innerHTML = ''; el.appendChild(c); el.classList.add('done');
+  } catch (e) { el.innerHTML = '<span>Gagal memuat halaman</span>'; }
+}
+function closeGuideReader(fromPop) {
+  const ov = document.getElementById('gdr'); if (!ov?.classList.contains('open')) return;
+  gdrTok++; gdrIO?.disconnect(); gdrDoc?.destroy?.(); gdrDoc = null;
+  ov.classList.remove('open'); ov.querySelector('.gdr-pages').innerHTML = ''; document.body.style.overflow = '';
+  if (!fromPop && history.state?.gdr) history.back();
+}
+window.addEventListener('popstate', () => closeGuideReader(true));   // tombol back HP menutup pratinjau
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeGuideReader(); });
