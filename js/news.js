@@ -114,6 +114,47 @@ function hlGo(k) {
   if (i < 0) return;
   hlIdx = i; hlPause = Date.now() + 15000; hlRender();
 }
+/* Geser (swipe HP / seret mouse) — kiri = berikutnya, kanan = sebelumnya; berputar */
+function hlStep(d) {
+  const n = hlSlides().length; if (n < 2) return;
+  hlIdx = (hlIdx + d + n) % n; hlPause = Date.now() + 15000; hlRender();
+  const sl = document.querySelector('#cway-hl .hl-slide');
+  if (sl) { sl.classList.add('in', d > 0 ? 'fwd' : 'back'); }
+}
+function hlSwipeBind(el) {
+  let x0 = null, y0 = 0, id = null, drag = false, sl = null, swiped = 0;
+  const reset = () => { if (sl) { sl.style.transform = ''; sl.style.transition = ''; sl.style.opacity = ''; } x0 = null; id = null; drag = false; sl = null; };
+  el.addEventListener('pointerdown', e => {
+    if (e.button > 0 || hlSlides().length < 2 || e.target.closest('.hl-tabs')) return;
+    sl = e.target.closest('.hl-slide'); if (!sl) return;
+    x0 = e.clientX; y0 = e.clientY; id = e.pointerId; drag = false;
+  });
+  el.addEventListener('pointermove', e => {
+    if (x0 === null || e.pointerId !== id) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (!drag) {
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { reset(); return; }   // gulir vertikal → biarkan
+      if (Math.abs(dx) < 10) return;
+      drag = true; try { el.setPointerCapture(id); } catch (_) {}
+      hlPause = Date.now() + 15000;
+    }
+    sl.style.transition = 'none';
+    sl.style.transform = `translateX(${dx * .9}px)`;
+    sl.style.opacity = String(Math.max(.4, 1 - Math.abs(dx) / 500));
+  });
+  const end = e => {
+    if (x0 === null || e.pointerId !== id) return;
+    const dx = e.clientX - x0, was = drag;
+    if (was && e.type === 'pointerup' && Math.abs(dx) > 45) { swiped = Date.now(); reset(); hlStep(dx < 0 ? 1 : -1); return; }
+    if (was && sl) { swiped = Date.now(); sl.style.transition = 'transform .25s ease, opacity .25s ease'; sl.style.transform = ''; sl.style.opacity = ''; const s = sl; setTimeout(() => { s.style.transition = ''; }, 260); }
+    x0 = null; id = null; drag = false; sl = null;
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  // klik setelah menggeser jangan membuka berita
+  el.addEventListener('click', e => { if (Date.now() - swiped < 400) { e.stopPropagation(); e.preventDefault(); } }, true);
+  el.addEventListener('dragstart', e => { if (e.target.closest('.hl-slide')) e.preventDefault(); });
+}
 function hlArm(n) {
   const el = document.getElementById('cway-hl');
   if (el && !el._hlBound) {
@@ -122,6 +163,7 @@ function hlArm(n) {
     el.addEventListener('mouseleave', () => { hlPause = Date.now() + 2000; });
     el.addEventListener('touchstart', () => { hlPause = Date.now() + 15000; }, { passive: true });
     el.addEventListener('focusin', () => { hlPause = Date.now() + 15000; });
+    hlSwipeBind(el);
   }
   clearInterval(hlTimer); hlTimer = null;
   if (n < 2) return;
