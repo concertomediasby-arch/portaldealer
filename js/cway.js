@@ -148,7 +148,7 @@ function cwHlHtml() {
     <div class="cw-hl-day"><span>DAY</span><b>${it.day ?? '•'}</b></div>
     <div class="cw-hl-main"><div class="cw-hl-top">☕ Concerto Way ${it.post_date === todayWIB() ? 'hari ini' : 'terbaru'}${cwIsNew(it) ? ' <span class="cw-new">★ BARU</span>' : ''}${it.series ? ` <span class="cw-hl-ser">${escHtml(it.series)}</span>` : ''}</div>
       <div class="cw-hl-t">${escHtml(it.title)}</div>${it.subtitle ? `<div class="cw-hl-s">${escHtml(it.subtitle)}</div>` : ''}
-      ${res ? `<div class="cw-hl-res"><b>RESUME</b>${cwWa(res.v)}</div>` : ''}</div>
+      ${res ? `<div class="cw-hl-res"><div class="cw-hl-rt"><b>RESUME</b>${cwWa(res.v)}</div></div>` : ''}</div>
     <div class="cw-hl-side">${tot ? `<div class="cw-hl-prog">Tugas hari ini: ${done} dari ${tot} selesai<div class="cw-hl-bar"><i style="width:${Math.round(done / tot * 100)}%"></i></div></div>` : ''}
       <span class="cw-hl-btn">Baca sekarang ›</span>
       ${prev ? `<button class="cw-hl-prev" onclick="event.stopPropagation();openCway('${prev.id}')">Terlewat? Lihat ${prev.day != null ? 'Day ' + prev.day : 'sebelumnya'} ›</button>` : ''}</div>

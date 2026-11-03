@@ -3494,7 +3494,8 @@ body:not(.is-editor) .acad-ed { display: none; }
 .cw-hl-wrap { padding: 26px 28px 0; }
 .cw-hl { position: relative; overflow: hidden; border-radius: 20px; padding: 22px 26px; border: 1px solid rgba(216,178,106,.45); color: #eceef2; cursor: pointer;
   background: radial-gradient(90% 160% at 100% 0%, rgba(216,178,106,.22), transparent 60%), linear-gradient(135deg, #17140d, #0c0d10 70%);
-  display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,.3); transition: transform .2s, border-color .2s; }
+  display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,.3); transition: transform .2s, border-color .2s;
+  height: 236px; box-sizing: border-box; }   /* sama dengan kotak News */
 .cw-hl:hover { border-color: rgba(216,178,106,.75); transform: translateY(-1px); }
 .cw-hl::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 40%, rgba(255,255,255,.07) 50%, transparent 60%); transform: translateX(-100%); animation: cwShine 6s ease-in-out infinite; }
 @keyframes cwShine { 0%, 70% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
@@ -3507,9 +3508,10 @@ body:not(.is-editor) .acad-ed { display: none; }
 .cw-hl-ser { color: #9097a4; letter-spacing: .12em; }
 .cw-new { background: #d8b26a; color: #1a1408; border-radius: 999px; padding: 3px 9px; font: 700 10.5px var(--f-display); letter-spacing: .1em; }
 .cw-new.abs { position: absolute; top: 14px; right: 14px; }
-.cw-hl-t { font: 800 24px/1.2 var(--f-display); margin: 8px 0 2px; color: #fff; }
-.cw-hl-s { color: #f0cf8a; font-size: 15px; }
-.cw-hl-res { margin-top: 10px; font-size: 13.5px; color: #c9ccd3; }
+.cw-hl-t { font: 800 24px/1.2 var(--f-display); margin: 8px 0 2px; color: #fff; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.cw-hl-s { color: #f0cf8a; font-size: 15px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
+.cw-hl-res { margin-top: 10px; font-size: 13.5px; line-height: 1.5; color: #c9ccd3; }
+.cw-hl-rt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .cw-hl-res b { color: #d8b26a; font: 700 10.5px var(--f-display); letter-spacing: .16em; margin-right: 6px; }
 .cw-hl-side { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; min-width: 190px; }
 .cw-hl-prog { font-size: 12.5px; color: #9097a4; text-align: right; }
@@ -3520,11 +3522,16 @@ body:not(.is-editor) .acad-ed { display: none; }
 .cw-hl-prev:hover { color: #f0cf8a; }
 @media (max-width: 720px) {
   .cw-hl-wrap { padding: 16px 16px 0; }
-  .cw-hl { grid-template-columns: auto 1fr; gap: 14px; padding: 16px; }
-  .cw-hl-day { width: 64px; height: 64px; border-radius: 14px; } .cw-hl-day b { font-size: 30px; }
-  .cw-hl-t { font-size: 19px; } .cw-hl-s { font-size: 14px; } .cw-hl-res, .cw-hl-prev { display: none; }
-  .cw-hl-side { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; min-width: 0; }
-  .cw-hl-prog { text-align: left; } .cw-hl-bar { width: 120px; }
+  /* tinggi = kotak News di HP (gambar 16:9 + bagian teks 196px + garis tepi) */
+  .cw-hl { grid-template-columns: 64px minmax(0, 1fr); grid-template-rows: auto auto auto 1fr auto; column-gap: 14px; row-gap: 4px; padding: 18px 16px 16px; align-items: start; height: calc((100cqw - 2px) * 9 / 16 + 198px); }
+  .cw-hl-main { display: contents; }
+  .cw-hl-day { grid-row: 1 / span 3; width: 64px; height: 64px; border-radius: 14px; } .cw-hl-day b { font-size: 30px; }
+  .cw-hl-top, .cw-hl-t, .cw-hl-s { grid-column: 2; } .cw-hl-t { margin: 4px 0 0; }
+  .cw-hl-t { font-size: 19px; } .cw-hl-s { font-size: 14px; } .cw-hl-prev { display: none; }
+  .cw-hl-res { grid-column: 1 / -1; align-self: center; margin: 10px 0; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(216,178,106,.25); background: rgba(216,178,106,.06); }
+  .cw-hl-rt { -webkit-line-clamp: 4; }
+  .cw-hl-side { grid-column: 1 / -1; align-self: end; flex-direction: row; align-items: center; justify-content: space-between; min-width: 0; }
+  .cw-hl-prog { text-align: left; flex: 1; min-width: 0; } .cw-hl-bar { width: 120px; max-width: 100%; }
 }
 /* Daftar */
 .cw-wrap { padding: 0 28px 40px; }
@@ -3614,7 +3621,7 @@ body:not(.is-editor) .acad-ed { display: none; }
 .hl-tab.on .hl-star { color: #1a1408; text-shadow: 0 0 6px rgba(255,255,255,.7); }
 @media (prefers-reduced-motion: reduce) { .hl-tab .hl-star { animation: none; } }
 .hl-slide.in > * { animation: hlIn .5s ease both; }
-#cway-hl { overflow-x: clip; overflow-clip-margin: 24px; }
+#cway-hl { overflow-x: clip; overflow-clip-margin: 24px; container-type: inline-size; }
 .hl-slide { touch-action: pan-y; user-select: none; -webkit-user-select: none; will-change: transform, opacity; }
 @keyframes hlIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .hl-slide.in > * { animation: none; } }
