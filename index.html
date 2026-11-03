@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-11-03T09:57:17Z">
+<link rel="stylesheet" href="style.css?b=2026-11-03T10:24:15Z">
 </head>
 <body>
 <noscript>
@@ -269,13 +269,24 @@
     <div class="view active" id="view-dashboard">
       <!-- Headline News (publik) + Concerto Way (khusus login); diisi hlRender() di js/news.js -->
       <div class="cw-hl-wrap" id="cway-hl" hidden></div>
-      <div class="page-header">
-        <div class="page-title">Dashboard</div>
-        <div class="page-subtitle">Selamat datang di CAI Hub — pusat informasi official brand kami: Audiocircle, STEG, Zelos, Diosdela Musica, OG One Sound &amp; Audio System.</div>
+      <!-- Dashboard baru (3 Nov 2026, permintaan pemilik): .guest-only = pengunjung umum, .login-only = partner login; diisi dashRender() di js/dash.js -->
+      <div class="dash-hero guest-only" id="dash-hero"></div>
+      <div class="dash-hello login-only" id="dash-hello"></div>
+      <div class="dash-cta guest-only" id="dash-cta"></div>
+      <div class="login-only">
+        <div class="section-header"><div class="section-title dash-sh">Baru untuk Anda</div></div>
+        <div class="dash-new" id="dash-new"></div>
       </div>
 
+      <div class="section-header"><div class="section-title dash-sh">Sorotan Brand</div></div>
       <!-- Kotak video loop per brand (2 Nov 2026, permintaan pemilik — menggantikan 4 kartu statistik); diisi initDashTiles() -->
       <div class="dash-tiles" id="dash-tiles"></div>
+
+      <div class="dash-pair guest-only" id="dash-pair"></div>
+      <div class="guest-only">
+        <div class="section-header"><div class="section-title dash-sh">Paket Audio Pilihan</div><button class="dash-more" onclick="openPaketAudio()">Semua paket ›</button></div>
+        <div class="dash-paket" id="dash-paket"></div>
+      </div>
 
       <div class="stats-row vs-row">
         <div class="stat-card vs-stat" onclick="openVisitors()" title="Pengunjung portal — khusus Admin &amp; Editor">
@@ -286,10 +297,16 @@
       </div>
 
       <div class="section-header">
-        <div class="section-title">Our Official Support Brands</div>
+        <div class="section-title dash-sh">Our Official Support Brands</div>
+        <button class="dash-more" onclick="openCatalog()">Semua brand ›</button>
       </div>
+      <div class="dash-brands" id="dashboard-brands"></div>
 
-      <div class="brands-grid" id="dashboard-brands"></div>
+      <div class="dash-join guest-only">
+        <span class="dash-join-i">🔑</span>
+        <div><b>Partner resmi CAI?</b><span>Masuk dengan Kode Akses untuk melihat stok, Concerto Way &amp; Panduan Partner.</span></div>
+        <button onclick="openLogin()">Masuk dengan Kode Akses</button>
+      </div>
     </div>
 
     <!-- VIEW: Brand Resmi -->
@@ -953,16 +970,17 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/core.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/stock.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/dealers.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/gathering.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/rundown.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/videotron.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/showcase.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/cway.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/news.js?b=2026-11-03T09:57:17Z"></script>
-<script src="js/main.js?b=2026-11-03T09:57:17Z"></script>
+<script src="katalog.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/core.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/stock.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/dealers.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/gathering.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/rundown.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/videotron.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/showcase.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/cway.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/news.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/dash.js?b=2026-11-03T10:24:15Z"></script>
+<script src="js/main.js?b=2026-11-03T10:24:15Z"></script>
 </body>
 </html>

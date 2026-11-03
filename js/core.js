@@ -410,25 +410,8 @@ function init() {
   initMarquee();
   initViz();
 
-  // Dashboard brand cards
-  const grid = document.getElementById('dashboard-brands');
-  grid.innerHTML = BRANDS.map(b => `
-    <div class="brand-card" onclick="showBrand('${b.id}')">
-      <div class="brand-card-header" style="background:${b.bg};color:${b.text}">
-        ${b.logo ? brandMark(b, 36) : `<span style="font-family:var(--f-display);font-size:30px;font-weight:800;letter-spacing:0.04em;text-shadow:0 2px 12px rgba(0,0,0,.4)">${b.name}</span>`}
-      </div>
-      <div class="brand-card-body">
-        <div class="brand-card-name">${b.name}</div>
-        <div class="brand-card-desc">${b.desc}</div>
-        <div class="brand-card-footer">
-          <div class="product-count"><strong>${brandProducts(b).length}</strong> produk</div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
-            ${brandCategories(b).slice(0,3).map(c => `<span class="tag" style="color:${b.color};border-color:${b.color}40">${c}</span>`).join('')}
-          </div>
-        </div>
-      </div>
-    </div>
-  `).join('');
+  // Dashboard (kartu brand ringkas, bar pembuka, dll.) — js/dash.js (3 Nov 2026)
+  if (typeof dashRender === 'function') dashRender();
 }
 
 /* ══════════════════════════════════════════
@@ -679,6 +662,7 @@ const guideIsNew = f => f?.date && Date.now() - new Date(f.date) < GUIDE_NEW_DAY
 function updateGuideStar() {
   const hasNew = !!authUser && !!guideFiles && [...guideFiles.values()].some(arr => arr.some(guideIsNew));
   ['nav-guides-star', 'mnav-guides-star'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = !hasNew; });
+  if (typeof dashNewRender === 'function') dashNewRender();   // "Baru untuk Anda" di Dashboard
 }
 // Cek ringan saat login (tanpa merender halaman / membuat cover): cukup daftar file + tanggalnya.
 let guideStarChecked = false;

@@ -86,7 +86,7 @@ updateAcademyStar();
 initSupabase();
 if (!QA_SCREEN_MODE) loadNews();   // News publik (headline Dashboard)
 if (glLinkPending) { const id = glLinkPending; glLinkPending = null; glOpenLinked(id); }
-if (!QA_SCREEN_MODE) loadAcadExtra().then(() => { if (acadPending) { const n = acadPending; acadPending = null; acadOpenLinked(n); } });
+if (!QA_SCREEN_MODE) loadAcadExtra().then(() => { if (typeof dashRender === 'function') dashRender(); if (acadPending) { const n = acadPending; acadPending = null; acadOpenLinked(n); } });
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui
 if (!QA_SCREEN_MODE) { pmIcon(); pmArm(); }   // musik latar portal: tunggu klik pertama
 idleInit();   // keluar otomatis bila tidak ada aktivitas

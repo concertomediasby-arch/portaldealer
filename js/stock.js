@@ -107,6 +107,7 @@ function onAuthChanged() {
   if (isAdmin()) loadVisitStats(true);
   if (typeof cwayAuthChanged === 'function') cwayAuthChanged();
   if (typeof newsAuthChanged === 'function') newsAuthChanged();
+  if (typeof dashAuthChanged === 'function') dashAuthChanged();   // Dashboard umum ⇄ partner (js/dash.js)
   if (guidePending) { guideFocus = guidePending; guidePending = null; openGuides(); }   // link ?guide= (tanpa sesi → form Kode Akses dulu)   // Concerto Way (js/cway.js): headline Dashboard, link ?cw=
   if (authUser) {
     loadStock();
