@@ -46,7 +46,7 @@ const cwLS = (k, v) => { try { if (v === undefined) return JSON.parse(localStora
 // Format WhatsApp: *tebal* _miring_ ~coret~
 const cwWa = s => escHtml(s).replace(/\*([^*\n]+)\*/g, '<b>$1</b>').replace(/(^|[\s(])_([^_\n]+)_(?=$|[\s).,!?])/g, '$1<i>$2</i>').replace(/~([^~\n]+)~/g, '<s>$1</s>');
 const cwPlain = s => String(s || '').replace(/[*_~]/g, '');
-const cwLink = id => `${PORTAL_URL}/?cw=${encodeURIComponent(id)}`;
+const cwLink = id => `${PORTAL_URL}/cway/?cw=${encodeURIComponent(id)}`;   // /cway/ = kartu pratinjau WA Concerto Way, lalu diteruskan ke /?cw=
 const cwDate = d => d ? new Date(d + 'T12:00:00+07:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) : '';
 const cwSorted = () => (cwItems || []).slice().sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || (b.day || 0) - (a.day || 0) || String(b.created_at).localeCompare(String(a.created_at)));
 const cwLive = () => cwSorted().filter(x => x.published);

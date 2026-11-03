@@ -75,6 +75,21 @@ for (const d of AUTH_DEALERS) items.push({ kind: 'd', id: shareSlug(d.n), target
   title: `${d.n} — Authorized Dealer Concerto Audio Indonesia`, desc: clip([[d.c, d.r].filter(Boolean).join(', '), d.a, 'Dealer resmi Audiocircle · STEG · Zelos · Diosdela · OG One Sound · Audio System.'].filter(Boolean).join(' · '), 200),
   card: { t: 'd', name: d.n, city: d.c || '', region: d.r || '', addr: d.a || '', ig: d.ig || '' } });
 
+// Kartu per JENIS (3 Nov 2026, permintaan pemilik — pilihan 1): isi Panduan Dealer / Concerto Way / News / Galeri ada di
+// database (Panduan & Concerto Way khusus partner), jadi satu kartu per jenis. Halaman di /<id>/ meneruskan query apa adanya
+// (mis. /news/?news=<id> → /?news=<id>); dipakai guideLink(), cwLink(), nwLink(), glLink().
+const TYPES = [
+  { id: 'panduan', title: 'Panduan Dealer — khusus partner CAI', desc: 'Materi penjualan & produk untuk dealer resmi Concerto Audio Indonesia. Buka di CAI Hub dengan Kode Akses.',
+    card: { t: 't', v: 'pd', kick: 'PANDUAN DEALER', h: 'Materi penjualan & produk untuk partner resmi', sub: 'Tips penjualan, product knowledge & panduan dealer dari tim CAI.', lock: true } },
+  { id: 'cway', title: 'Concerto Way — khusus partner CAI', desc: 'Satu kebiasaan kecil setiap hari dari tim CAI untuk toko yang makin dipercaya customer. Buka di CAI Hub dengan Kode Akses.',
+    card: { t: 't', v: 'cw', kick: 'CONCERTO WAY', h: 'Satu kebiasaan kecil setiap hari', sub: 'Materi harian tim CAI untuk toko yang makin dipercaya customer.', lock: true } },
+  { id: 'news', title: 'CAI Hub News', desc: 'Berita terbaru Concerto Audio Indonesia: produk baru, event & info dari brand resmi CAI.',
+    card: { t: 't', v: 'nw', kick: 'CAI HUB NEWS', h: 'Berita terbaru Concerto Audio Indonesia', sub: 'Produk baru, event & info dari Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System.' } },
+  { id: 'galeri', title: 'Galeri Instalasi — CAI Hub', desc: 'Foto & video pemasangan audio mobil dari dealer resmi Concerto Audio Indonesia.',
+    card: { t: 't', v: 'gl', kick: 'GALERI INSTALASI', h: 'Instalasi audio mobil dari dealer resmi CAI', sub: 'Foto & video pemasangan Audiocircle · STEG · Zelos dan brand resmi CAI lainnya.' } },
+];
+for (const t of TYPES) items.push({ kind: '', id: t.id, target: '/?', title: t.title, desc: t.desc, card: t.card });
+
 /* ── Tampilan kartu (HTML → screenshot) ── */
 const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
 .c{width:1200px;height:630px;position:relative;overflow:hidden;font-family:Inter,sans-serif;color:#eceef2}
@@ -116,9 +131,30 @@ const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
 .dl .badge i{font-style:normal;border:1.5px solid #d8b26a;border-radius:999px;padding:4px 12px;letter-spacing:.08em;font-size:15px}
 .dl h1{font:800 66px/1.05 Sora;margin:14px 0 10px;color:#fff}.dl h1.sm{font-size:52px}
 .dl .city{font:700 28px Sora;color:#f0cf8a}.dl .addr{font-size:21px;color:#b9bec9;margin-top:10px;max-width:980px}
-.dl .brands{margin-top:auto;margin-bottom:22px;font:600 17px Inter;color:#9aa0ad;letter-spacing:.04em}`;
+.dl .brands{margin-top:auto;margin-bottom:22px;font:600 17px Inter;color:#9aa0ad;letter-spacing:.04em}
+.ty{padding:54px 64px 44px;display:flex;flex-direction:column}.ty .k{font:700 16px Sora;letter-spacing:.3em}
+.ty .mid{display:flex;align-items:center;gap:46px;margin:auto 0}.ty .ic{width:190px;height:190px;flex:none;border-radius:34px;display:flex;align-items:center;justify-content:center}
+.ty h1{font:800 56px/1.08 Sora;margin:0 0 16px;color:#fff;max-width:820px}.ty .sub{font-size:22px;line-height:1.45;color:#b9bec9;max-width:820px}
+.ty .lock{display:inline-flex;align-items:center;gap:10px;font:700 18px Sora;border-radius:999px;padding:9px 18px;margin-top:22px}
+.ty .ft{margin-top:0}
+.ty.nw{background:radial-gradient(70% 90% at 90% 0%,rgba(111,211,230,.28),transparent 60%),linear-gradient(150deg,#0c1520,#07080a 62%)}.ty.nw .k,.ty.nw .u{color:#6fd3e6}
+.ty.nw .ic{background:rgba(111,211,230,.1);border:2px solid rgba(111,211,230,.5)}
+.ty .ic{background:rgba(216,178,106,.1);border:2px solid rgba(216,178,106,.55)}.ty .k{color:#d8b26a}
+.ty .lock{background:rgba(216,178,106,.14);border:1.5px solid rgba(216,178,106,.6);color:#f0cf8a}
+.ty .day{display:flex;flex-direction:column;align-items:center;line-height:1}.ty .day i{font:600 22px Sora;letter-spacing:.24em;color:#d8b26a;font-style:normal}.ty .day b{font:800 92px Sora;color:#f0cf8a}`;
 const LOGO = `<img src="${LOGO_WHITE}">`;
 function cardHtml(c) {
+  if (c.t === 't') {
+    const svg = (d, col) => `<svg width="104" height="104" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+    const ic = c.v === 'cw' ? '<div class="day"><i>DAY</i><b>1</b></div>'
+      : c.v === 'pd' ? svg('<path d="M4 5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v5h5"/><path d="M8 13h8M8 17h5"/>', '#f0cf8a')
+      : c.v === 'nw' ? svg('<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/>', '#6fd3e6')
+      : svg('<path d="M3 13l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5v4a1 1 0 0 1-1 1h-1a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H4a1 1 0 0 1-1-1z"/><path d="M3 13h18"/>', '#f0cf8a');
+    return `<div class="c ty ${c.v === 'nw' ? 'nw' : 'gold'}" id="c"><div class="top">${LOGO}<span class="k">${esc(c.kick)}</span></div>
+      <div class="mid"><div class="ic">${ic}</div><div><h1>${esc(c.h)}</h1><div class="sub">${esc(c.sub)}</div>
+        ${c.lock ? '<div class="lock">🔒 Khusus partner CAI · buka dengan Kode Akses</div>' : ''}</div></div>
+      <div class="ft"><span style="font-size:18px;color:#9aa0ad">CAI Hub · Concerto Audio Indonesia</span><span class="u">hub.concerto.id</span></div></div>`;
+  }
   if (c.t === 'p') return `<div class="c pr" id="c"><div class="ph">${c.photo ? `<img src="/${esc(c.photo)}">` : `<span class="emo">${c.emoji}</span>`}<div class="bar" style="background:${esc(c.color)}"></div></div>
     <div class="in" style="background:radial-gradient(80% 70% at 100% 0%,${esc(c.color)}55,transparent 60%),linear-gradient(160deg,#101216,#08090b)">
       ${c.logo ? `<img class="bl" src="/${esc(c.logo)}">` : `<div class="bn">${esc(c.brand)}</div>`}
@@ -144,7 +180,7 @@ function cardHtml(c) {
     <div class="ft"><span style="font-size:18px;color:#9aa0ad">${c.ig ? 'Instagram @' + esc(c.ig) : 'Lihat kontak & lokasi di CAI Hub'}</span><span class="u">hub.concerto.id</span></div></div>`;
 }
 function pageHtml(it, imgUrl) {
-  const url = `${SITE}/${it.kind}/${encodeURIComponent(it.id)}/`;
+  const url = `${SITE}/${it.kind ? it.kind + '/' : ''}${encodeURIComponent(it.id)}/`;
   return `<!doctype html>
 <html lang="id"><head><meta charset="utf-8">
 <title>${esc(it.title)} · CAI Hub</title>
@@ -167,7 +203,7 @@ function pageHtml(it, imgUrl) {
 <meta name="twitter:image" content="${imgUrl}">
 <link rel="icon" href="/favicon.ico">
 <meta http-equiv="refresh" content="0; url=${esc(it.target)}">
-<script>location.replace(${JSON.stringify(it.target)} + (location.search ? '&' + location.search.slice(1) : '') + location.hash);</script>
+<script>location.replace(${JSON.stringify(it.target)} + (location.search ? (${JSON.stringify(it.target)}.endsWith('?') ? '' : '&') + location.search.slice(1) : '') + location.hash);</script>
 </head><body style="background:#07080a;color:#eceef2;font-family:sans-serif;text-align:center;padding:40px">
 <p>Membuka CAI Hub…</p><p><a style="color:#d8b26a" href="${esc(it.target)}">${esc(it.title)}</a></p>
 </body></html>
@@ -202,7 +238,7 @@ function pageHtml(it, imgUrl) {
   await pg.goto(base + '/favicon.ico').catch(() => {});
   let drawn = 0;
   for (const it of items) {
-    const key = `${it.kind}-${it.id}`, html = cardHtml(it.card);
+    const key = it.kind ? `${it.kind}-${it.id}` : `t-${it.id}`, html = cardHtml(it.card);
     let fileHash = '';
     for (const m of html.matchAll(/src="\/([^"]+)"/g)) { const f = path.join(ROOT, m[1]); if (fs.existsSync(f)) fileHash += fs.statSync(f).size + ':' + Math.round(fs.statSync(f).mtimeMs / 1000); }
     const h = crypto.createHash('md5').update(html + fileHash).digest('hex').slice(0, 8);
@@ -214,7 +250,7 @@ function pageHtml(it, imgUrl) {
       drawn++;
     }
     next[key] = h;
-    const dir = path.join(ROOT, it.kind, it.id);
+    const dir = path.join(ROOT, it.kind || '', it.id);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'index.html'), pageHtml(it, `${SITE}/share/img/${key}.jpg?v=${h}`));
   }

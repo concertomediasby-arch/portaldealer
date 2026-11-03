@@ -609,7 +609,7 @@ const GUIDE_URL_TTL = 600;   // detik — link PDF kedaluwarsa setelah 10 menit
 // 📤 Bagikan Panduan Dealer ke WA (3 Nov 2026, permintaan pemilik): HANYA link ?guide=<path> — PDF tidak dilampirkan agar
 // tetap privat; penerima harus login dengan Kode Akses, lalu kartu file itu disorot (guideFocusApply).
 let guidePending = null, guideFocus = null;
-const guideLink = key => `${PORTAL_URL}/?guide=${encodeURIComponent(key)}`;
+const guideLink = key => `${PORTAL_URL}/panduan/?guide=${encodeURIComponent(key)}`;   // /panduan/ = kartu pratinjau WA Panduan Dealer, lalu diteruskan ke /?guide=
 function guideShare(key) {
   let f = null; guideFiles?.forEach(list => { f = f || list.find(x => x.key === key); });
   if (!f) return;
