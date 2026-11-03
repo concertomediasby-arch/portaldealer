@@ -112,6 +112,7 @@ function openHofWin(id) {
       <div class="hof-wtop">${hofMedal(e.place)}<div><h3 class="gl-dt">${escHtml(e.car || e.cls || '')}</h3>
         <div class="gl-dc">${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}${e.name ? ' · ' + escHtml(e.name) : ''}</div></div></div>
       ${hofGallery(e) ? `<button class="gt-btn hof-galwide" onclick="hofOpenGallery('${hofGallery(e).id}')">📷 Lihat foto pemasangan di Galeri Instalasi</button>` : ''}
+      <button class="gt-btn ghost hof-galwide" onclick="hofShare('${e.id}')">${SHARE_ICON} Bagikan</button>
       ${!GL_DEALER_SUBMIT ? '' : authUser && !isAdmin() ? `<button class="gt-btn confirm hof-galwide" onclick="openGlSubmit('${e.id}')">📤 Kirim foto / video mobil ini</button>`
         : !authUser ? `<button class="gt-btn ghost hof-galwide" onclick="openGlSubmit('${e.id}')">🔑 Dealer pemasang? Login untuk kirim foto / video</button>` : ''}
       ${glCanEdit() ? (hofGallery(e) ? `<button class="gt-btn confirm hof-galwide" onclick="closeHofDealer();openGlForm('${hofGallery(e).id}')">✏️ Tambah / ubah foto &amp; video mobil ini</button>`
@@ -125,6 +126,23 @@ function openHofWin(id) {
     ${e.dealer ? `<div class="gl-dcard"><div class="hof-lbl">Dipasang oleh</div><b>${escHtml(e.dealer)}${d ? ' <span class="ad-badge">✓ Resmi</span>' : ''}</b>${d ? `<div class="gl-dc">${escHtml([d.c, d.r].join(', '))}</div>
       <div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat ${e.car || 'mobil'} juara ${e.event} di Hall of Fame CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a></div>` : ''}</div>` : ''}`;
   document.getElementById('hof-dealer').classList.add('open');
+  const g = hofGallery(e), ph = g && (g.photos || []).find(p => !glIsVid(p));
+  if (ph) sharePrep('h:' + e.id, glUrl(ph.path), 'Hall-of-Fame-CAI');
+}
+/* ── Bagikan prestasi Hall of Fame (3 Nov 2026, permintaan pemilik): foto mobil dari Galeri (bila ada) + teks + link ?hof=<id> ── */
+function hofShare(id) {
+  const e = hofData().find(x => x.id === id); if (!e) return;
+  const prods = (e.products || []).map(pid => findProductAny(pid).product?.name).filter(Boolean);
+  const text = `🏆 *${e.award}${e.cls ? ' — ' + e.cls : ''}*\n${[e.event, e.city, e.year].filter(Boolean).join(' · ')}` +
+    (e.car ? `\n🚗 ${e.car}${e.name ? ' (' + e.name + ')' : ''}` : '') +
+    (e.dealer ? `\n🔧 Dipasang oleh ${e.dealer}` : '') +
+    (prods.length ? `\nPerangkat: ${prods.slice(0, 6).join(', ')}${prods.length > 6 ? ', …' : ''}` : '') +
+    `\n\nLihat Hall of Fame CAI Hub:\n${PORTAL_URL}/?hof=${encodeURIComponent(e.id)}`;
+  shareWa(text, 'h:' + e.id);
+}
+function hofOpenLinked(id) {
+  openHallOfFame();
+  if (hofData().some(x => x.id === id)) openHofWin(id); else showToast('Prestasi ini tidak ditemukan.');
 }
 // Kiriman yang belum disetujui untuk mobil ini (hanya terlihat oleh Admin/Editor — RLS)
 function hofPendingFor(e) {

@@ -3674,3 +3674,7 @@ body:not(.is-editor) .acad-ed { display: none; }
 .gf-actions .res-btn.gf-share svg { width: 16px; height: 16px; margin: 0; }
 .ico-share { width: 15px; height: 15px; vertical-align: -2px; flex: none; }
 .gt-btn .ico-share { margin-right: 4px; }
+.acad-vbtn.share svg { width: 17px; height: 17px; }
+.acad-vbtn.share { display: inline-flex; align-items: center; justify-content: center; }
+.dl-btn.share-btn { margin-top: 8px; background: transparent; }
+.dl-btn.share-btn svg { width: 16px; height: 16px; }

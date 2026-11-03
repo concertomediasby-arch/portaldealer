@@ -59,6 +59,8 @@ function openDeepLink() {
   if (q.get('cw')) { enterPortal(); cwPending = q.get('cw'); return; }   // link Concerto Way → dibuka setelah status login diketahui (cwayAuthChanged)
   if (q.get('news')) { enterPortal(); nwPending = q.get('news'); return; }   // link berita → dibuka setelah loadNews()
   if (q.get('gl')) { enterPortal(); glLinkPending = q.get('gl'); return; }   // link project Galeri → dibuka setelah initSupabase()
+  if (q.get('acad')) { enterPortal(); acadPending = +q.get('acad'); return; }   // link materi Academy → setelah loadAcadExtra()
+  if (q.get('hof')) { enterPortal(); hofOpenLinked(q.get('hof')); return; }   // link prestasi Hall of Fame (data statis di katalog.js)
   if (q.get('guide')) { enterPortal(); guidePending = q.get('guide'); return; }   // link Panduan Dealer → setelah status login diketahui
   const pid = q.get('p');
   const { brand, product } = pid ? findProductAny(pid) : {};
@@ -81,7 +83,7 @@ updateAcademyStar();
 initSupabase();
 if (!QA_SCREEN_MODE) loadNews();   // News publik (headline Dashboard)
 if (glLinkPending) { const id = glLinkPending; glLinkPending = null; glOpenLinked(id); }
-if (!QA_SCREEN_MODE) loadAcadExtra();
+if (!QA_SCREEN_MODE) loadAcadExtra().then(() => { if (acadPending) { const n = acadPending; acadPending = null; acadOpenLinked(n); } });
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui
 if (!QA_SCREEN_MODE) { pmIcon(); pmArm(); }   // musik latar portal: tunggu klik pertama
 idleInit();   // keluar otomatis bila tidak ada aktivitas
