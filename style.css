@@ -2370,11 +2370,10 @@ body {
   .scr-fl-del:hover { background: #b3261e; }
   .scr-bd-card.on { border-color: #e9c46a; box-shadow: 0 0 0 1px #e9c46a inset; background: rgba(233,196,106,.1); }
   .paket-staff { display: none; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
-  body.is-staff .paket-staff { display: flex; }
+  /* 3 Nov 2026, permintaan pemilik: bar & tombol tayang videotron di Paket Audio disembunyikan untuk Admin & Editor (kode tetap ada) */
   .paket-staff b { font-size: 13px; color: var(--fg); margin-right: auto; }
   .paket-staff span.pk-now { font: 600 11.5px var(--f-mono); color: var(--accent); }
   .res-btn-screen { display: none; background: #0f1628; border-color: #e9c46a; color: #e9c46a; }
-  body.is-staff .res-btn-screen { display: inline-flex; }
   .res-btn-screen.on { background: #e9c46a; color: #1a1305; }
   .qs-slide.qs-pks { background: radial-gradient(ellipse at 50% 0%, #1b2440, #05070d 70%); }
   .qs-slide canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 96vw; max-height: 96vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 2vh 6vh rgba(0,0,0,.6); opacity: 0; transition: opacity .45s ease; background: #fff; }
