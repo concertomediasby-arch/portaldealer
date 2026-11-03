@@ -219,7 +219,7 @@ function renderCwPost(body, it) {
       ${it.published ? '' : '<div class="cw-draft-note">DRAF — belum tampil untuk dealer</div>'}</div>
     <div class="cw-body">${cwBodyHtml(it)}</div>
     <div class="cw-foot"><span class="cw-date">${escHtml(cwDate(it.post_date))}</span>
-      <div class="cw-acts"><button class="gt-btn ghost" onclick="cwShare('${it.id}')">📤 Bagikan ke WA</button>
+      <div class="cw-acts"><button class="gt-btn ghost" onclick="cwShare('${it.id}')">📤 Bagikan ke WA</button><button class="gt-btn ghost" onclick="cwPngDownload('${it.id}', this)">⬇ Unduh PNG</button>
         ${isAdmin() ? `<button class="gt-btn ghost" onclick="openCwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteCw('${it.id}')">🗑 Hapus</button>` : ''}</div></div>
     <div class="cw-nav">${prev ? `<button class="gt-btn ghost" onclick="openCway('${prev.id}')">‹ ${lbl(prev)}</button>` : '<span></span>'}${next ? `<button class="gt-btn ghost" onclick="openCway('${next.id}')">${next.day != null ? 'Day ' + next.day : 'Berikutnya'} ›</button>` : ''}</div>
   </div>`;
@@ -375,4 +375,100 @@ async function cwShare(id) {
   if (file) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   showToast(file ? 'Gambar diunduh — lampirkan di WhatsApp yang terbuka (teks & link sudah terisi).' : 'WhatsApp dibuka dengan teks & link.', 7000);
+}
+
+/* ── ⬇ Unduh PNG: materi lengkap sebagai satu gambar memanjang (lebar 1080 px, dibuat 2×) — 3 Nov 2026, permintaan pemilik ── */
+async function cwPng(it) {
+  try { await Promise.all(['800 60px Sora', '700 22px Sora', '600 30px Sora', '400 30px Inter', 'italic 400 30px Inter', '600 30px Inter'].map(f => document.fonts.load(f))); } catch (e) {}
+  const logo = await new Promise(r => { const im = new Image(); im.onload = () => r(im); im.onerror = () => r(null); im.src = LOGO_WHITE; });
+  const W = 1080, P = 84, CW = W - 2 * P, SC = 2;
+  const blocks = cwParse(it.body).blocks;
+  const clean = s => cwPlain(s).replace(/\s+/g, ' ').trim();
+  const draw = (x, H) => {
+    const ls = v => { if ('letterSpacing' in x) x.letterSpacing = v; };
+    const lines = (text, font, maxW) => { x.font = font; return cwWrap(x, text, maxW); };
+    const rr = (X, Y, w, h, r) => { x.beginPath(); x.roundRect ? x.roundRect(X, Y, w, h, r) : x.rect(X, Y, w, h); };
+    if (H) {
+      let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#15120b'); g.addColorStop(.18, '#0b0c0f'); g.addColorStop(1, '#08090b');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      g = x.createRadialGradient(W * .9, 0, 0, W * .9, 0, 700); g.addColorStop(0, 'rgba(216,178,106,.28)'); g.addColorStop(1, 'rgba(216,178,106,0)');
+      x.fillStyle = g; x.fillRect(0, 0, W, 800);
+      x.strokeStyle = 'rgba(216,178,106,.35)'; x.lineWidth = 2; rr(28, 28, W - 56, H - 56, 30); x.stroke();
+    }
+    let y = 84;
+    if (H && logo) x.drawImage(logo, P, y, logo.width * 52 / logo.height, 52);
+    if (H) { ls('6px'); x.font = '700 20px Sora'; x.fillStyle = '#d8b26a'; x.textAlign = 'right'; x.fillText('CONCERTO WAY', W - P, y + 34); x.textAlign = 'left'; ls('0px'); }
+    y += 100;
+    // kotak DAY + seri
+    if (it.day != null) {
+      if (H) { x.fillStyle = 'rgba(216,178,106,.10)'; rr(P, y, 150, 150, 26); x.fill(); x.strokeStyle = 'rgba(216,178,106,.6)'; x.lineWidth = 2; x.stroke();
+        ls('5px'); x.font = '700 20px Sora'; x.fillStyle = '#d8b26a'; x.textAlign = 'center'; x.fillText('DAY', P + 78, y + 46); ls('0px');
+        x.font = '800 80px Sora'; x.fillStyle = '#f0cf8a'; x.fillText(String(it.day), P + 75, y + 124); x.textAlign = 'left'; }
+      y += 182;
+    }
+    if (it.series) { ls('3px'); lines(it.series.toUpperCase(), '600 22px Sora', CW).forEach(l => { y += 30; if (H) { x.fillStyle = '#9aa0ad'; x.fillText(l, P, y); } }); ls('0px'); y += 18; }
+    lines(it.title, '800 56px Sora', CW).forEach(l => { y += 64; if (H) { x.fillStyle = '#ffffff'; x.font = '800 56px Sora'; x.fillText(l, P, y); } }); y += 8;
+    if (it.subtitle) lines(it.subtitle, '400 30px Inter', CW).forEach(l => { y += 42; if (H) { x.fillStyle = '#f0cf8a'; x.font = '400 30px Inter'; x.fillText(l, P, y); } });
+    y += 34; if (H) { x.fillStyle = '#d8b26a'; x.fillRect(P, y, 90, 4); } y += 40;
+    // isi
+    const para = (rows, font, color, lh, ind = 0) => rows.forEach(r => lines(clean(r), font, CW - ind).forEach(l => { y += lh; if (H) { x.font = font; x.fillStyle = color; x.fillText(l, P + ind, y); } }));
+    blocks.forEach(b => {
+      if (b.t === 'p') { para(b.v, '400 30px Inter', '#e6e8ec', 46); y += 26; }
+      else if (b.t === 'close') { const y0 = y + 12; para(b.v, 'italic 400 30px Inter', '#d6d9df', 46, 28); if (H) { x.fillStyle = '#d8b26a'; x.fillRect(P, y0, 5, y - y0 + 14); } y += 30; }
+      else if (b.t === 'src') { const y0 = y + 8; para([b.v], '400 22px Inter', '#9aa0ad', 34, 22); if (H) { x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(P, y0, 3, y - y0 + 12); } y += 32; }
+      else if (b.t === 'stats') {
+        const cols = Math.min(2, b.v.length), gap = 20, cw = (CW - gap * (cols - 1)) / cols;
+        for (let r = 0; r < b.v.length; r += cols) {
+          const row = b.v.slice(r, r + cols), hs = row.map(s => 90 + lines(clean(s.v), '400 24px Inter', cw - 48).length * 34 + 28), rh = Math.max(...hs);
+          row.forEach((s, j) => { const X = P + j * (cw + gap);
+            if (H) { x.fillStyle = 'rgba(255,255,255,.05)'; rr(X, y, cw, rh, 22); x.fill(); x.strokeStyle = 'rgba(255,255,255,.10)'; x.lineWidth = 2; x.stroke();
+              x.font = '800 60px Sora'; x.fillStyle = '#d8b26a'; x.fillText(s.n, X + 24, y + 80);
+              let yy = y + 90; lines(clean(s.v), '400 24px Inter', cw - 48).forEach(l => { yy += 34; x.font = '400 24px Inter'; x.fillStyle = '#d6d9df'; x.fillText(l, X + 24, yy); }); } });
+          y += rh + gap;
+        }
+        y += 16;
+      } else if (b.t === 'resume') {
+        const ln = lines(clean(b.v), '600 32px Sora', CW - 64), h = 76 + ln.length * 46 + 28;
+        if (H) { const g = x.createLinearGradient(P, y, P + CW, y + h); g.addColorStop(0, 'rgba(216,178,106,.20)'); g.addColorStop(1, 'rgba(216,178,106,.05)');
+          x.fillStyle = g; rr(P, y, CW, h, 24); x.fill(); x.strokeStyle = 'rgba(216,178,106,.55)'; x.lineWidth = 2; x.stroke();
+          ls('4px'); x.font = '700 20px Sora'; x.fillStyle = '#d8b26a'; x.fillText('📌 RESUME HARI INI', P + 32, y + 52); ls('0px');
+          ln.forEach((l, k) => { x.font = '600 32px Sora'; x.fillStyle = '#ffffff'; x.fillText(l, P + 32, y + 76 + 38 + k * 46); }); }
+        y += h + 34;
+      } else if (b.t === 'task') {
+        const items = b.v.map(t => lines(clean(t), '400 29px Inter', CW - 120)), h = 82 + items.reduce((a, l) => a + l.length * 42 + 30, 0) + 10;
+        if (H) { x.fillStyle = 'rgba(255,255,255,.04)'; rr(P, y, CW, h, 24); x.fill(); x.strokeStyle = 'rgba(255,255,255,.12)'; x.lineWidth = 2; x.stroke();
+          ls('4px'); x.font = '700 20px Sora'; x.fillStyle = '#d8b26a'; x.fillText('✅ TUGAS HARI INI', P + 32, y + 52); ls('0px');
+          let yy = y + 82; items.forEach((ln, k) => {
+            if (k) { x.fillStyle = 'rgba(255,255,255,.08)'; x.fillRect(P + 32, yy - 4, CW - 64, 2); }
+            x.strokeStyle = '#d8b26a'; x.lineWidth = 3; rr(P + 34, yy + 14, 30, 30, 7); x.stroke();
+            ln.forEach((l, j) => { x.font = '400 29px Inter'; x.fillStyle = '#e6e8ec'; x.fillText(l, P + 88, yy + 40 + j * 42); });
+            yy += ln.length * 42 + 30; }); }
+        y += h + 34;
+      }
+    });
+    // kaki
+    y += 30; if (H) { x.fillStyle = 'rgba(255,255,255,.12)'; x.fillRect(P, y, CW, 2); }
+    y += 62;
+    if (H) { x.font = '400 24px Inter'; x.fillStyle = '#9aa0ad'; x.fillText('Baca semua Concerto Way di', P, y); const bw = x.measureText('Baca semua Concerto Way di').width;
+      x.font = '700 26px Sora'; x.fillStyle = '#d8b26a'; x.fillText('hub.concerto.id', P + bw + 10, y);
+      x.font = '500 22px Inter'; x.fillStyle = '#f0cf8a'; x.textAlign = 'right'; x.fillText('🔒 Khusus partner CAI', W - P, y); x.textAlign = 'left'; }
+    return y + 70;
+  };
+  const m = document.createElement('canvas').getContext('2d');
+  const H = Math.ceil(Math.max(1350, draw(m, 0)));
+  const c = document.createElement('canvas'); c.width = W * SC; c.height = H * SC;
+  const x = c.getContext('2d'); x.scale(SC, SC); x.textBaseline = 'alphabetic'; draw(x, H);
+  return new Promise(r => c.toBlob(r, 'image/png'));
+}
+async function cwPngDownload(id, btn) {
+  const it = cwItems?.find(x => x.id === id); if (!it) return;
+  const t = btn?.textContent; if (btn) { btn.disabled = true; btn.textContent = '⏳ Membuat PNG…'; }
+  try {
+    const b = await cwPng(it); if (!b) throw new Error('gambar gagal dibuat');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+    a.download = `Concerto-Way-${it.day != null ? 'Day-' + it.day + '-' : ''}${cwPlain(it.title).replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)}.png`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    showToast('✓ PNG diunduh');
+  } catch (e) { showToast('⚠ Gagal membuat PNG: ' + (e?.message || e), 6000); }
+  if (btn) { btn.disabled = false; btn.textContent = t; }
 }
