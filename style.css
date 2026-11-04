@@ -3940,3 +3940,6 @@ body.logged-in .guest-only { display: none !important; }
 /* Sorotan Brand paling atas Dashboard (3 Nov 2026): jarak judul pertama & headline di bawahnya */
 #view-dashboard > .section-header:first-child { padding-top: 24px; }
 @media (max-width: 720px) { #view-dashboard > .section-header:first-child { padding-top: 16px; } }
+
+/* Dashboard tanpa Hall of Fame (4 Nov 2026): kartu Academy satu-satunya → selebar baris */
+.dash-pair.one { grid-template-columns: minmax(0, 1fr); }

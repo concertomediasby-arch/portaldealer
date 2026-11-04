@@ -9,7 +9,10 @@
 const NEWS_TABLE = 'cai_news';
 const NEWS_NEW_DAYS = 5;
 const NEWS_ROTATE_MS = 8000;
-const NEWS_HL_MAX = 3;                    // berita terbaru yang ikut bergantian di headline
+const NEWS_HL_MAX = 3;
+// 4 Nov 2026 (permintaan pemilik): News tidak tampil di headline Dashboard (pengunjung & partner); menu News tetap ada.
+// Tampilkan lagi: ubah ke true.
+const NEWS_ON_DASH = false;                    // berita terbaru yang ikut bergantian di headline
 const NEWS_SEEN_KEY = 'cai-news-seen';
 const NEWS_CATS = ['Product', 'Event', 'Promo', 'Info'];
 const NEWS_SQL = `-- News (CAI Hub) — jalankan sekali di Supabase → SQL Editor → Run
@@ -89,7 +92,7 @@ let hlIdx = 0, hlTimer = null, hlPause = 0;
 function hlSlides() {
   const s = [];
   if (typeof cwHlHtml === 'function' && authUser && cwLive().length) s.push({ t: 'cw' });
-  nwLive().slice(0, NEWS_HL_MAX).forEach(n => s.push({ t: 'news', n }));
+  if (NEWS_ON_DASH) nwLive().slice(0, NEWS_HL_MAX).forEach(n => s.push({ t: 'news', n }));
   return s;
 }
 function nwHlHtml(n) {

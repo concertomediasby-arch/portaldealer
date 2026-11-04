@@ -61,8 +61,10 @@ function dashHofStats() {
   const e = list[0];
   return { n: list.length, win: list.filter(x => x.place === 1).length, ev: [e.event, e.city, e.date].filter(Boolean).join(' · ') };
 }
+// Hall of Fame tidak ditampilkan di Dashboard (4 Nov 2026, permintaan pemilik) — tetap di menu Showcase. Tampilkan lagi: true.
+const DASH_HOF = false;
 function dashPairHtml() {
-  const h = dashHofStats(), a = acadReleased()[0];
+  const h = DASH_HOF && dashHofStats(), a = acadReleased()[0];
   return (h ? `<button class="dash-hof" onclick="openHallOfFame()">
       <span class="dash-hof-k">🏆 HALL OF FAME</span>
       <span class="dash-hof-n"><span><b>${h.win}</b>Juara 1</span><span><b>${h.n}</b>Prestasi</span></span>
@@ -86,7 +88,7 @@ const dashDays = d => (Date.now() - new Date(d)) / 864e5;
 function dashNewHtml() {
   const gNew = guideFiles ? [...guideFiles.values()].flat().filter(guideIsNew).length : 0;
   const glNew = glItems ? glLive().filter(it => it.published && it.created_at && dashDays(it.created_at) < DASH_NEW_DAYS).length : 0;
-  const a = acadReleased()[0], h = dashHofStats();
+  const a = acadReleased()[0], h = DASH_HOF && dashHofStats();
   const item = (ic, t, s, isNew, fn) => `<button class="dash-new-c" onclick="${fn}"><span class="dash-new-i">${ic}</span>
     <span class="dash-new-t"><b>${t}</b><span>${s}</span></span>${isNew ? '<em>BARU</em>' : ''}</button>`;
   return item('📘', 'Panduan Partner', gNew ? `${gNew} file baru diunggah` : 'Materi penjualan & produk', gNew > 0, 'openGuides()')
@@ -109,6 +111,7 @@ function dashRender() {
   dashSet('dash-hero', dashHeroHtml());
   dashSet('dash-cta', dashCtaHtml());
   dashSet('dash-pair', dashPairHtml());
+  document.getElementById('dash-pair')?.classList.toggle('one', !DASH_HOF);
   dashSet('dash-paket', dashPaketHtml());
   dashSet('dash-hello', dashHelloHtml());
   dashSet('dashboard-brands', dashBrandsHtml());
