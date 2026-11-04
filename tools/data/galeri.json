@@ -24,7 +24,9 @@
     {
      "path": "fbf13fba-adfc-46b0-a7dd-94e42f997b70/1793680739097-0.mov",
      "type": "video",
-     "area": "Tampak Luar"
+     "area": "Tampak Luar",
+     "wa": true,
+     "waT": 0.5
     }
    ]
   },
@@ -51,7 +53,9 @@
     {
      "path": "4cde33f8-0ddc-435d-8385-148af4588883/1793678790788-0.mp4",
      "type": "video",
-     "area": "Tampak Luar"
+     "area": "Tampak Luar",
+     "wa": true,
+     "waT": 0.5
     }
    ]
   },
@@ -73,6 +77,8 @@
      "path": "06fb39f3-0fae-448e-bfff-b83527d154d0/1793678469343-0.mp4",
      "type": "video",
      "area": "Tampak Luar",
+     "wa": true,
+     "waT": 1.5,
      "pos": "50 57"
     }
    ]
