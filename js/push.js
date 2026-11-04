@@ -3,6 +3,7 @@
 //   staff = pengingat khusus Editor 5 menit SEBELUM Concerto Way terjadwal tayang (kotak "Pengingat tayang", js/cway.js)
 //   cway  = partner: "Concerto Way Day n sudah tayang" saat tayang (tanpa judul) — hanya bisa dipilih yang login
 //   news  = semua pengunjung: News baru diterbitkan
+//   acad  = semua pengunjung: materi Concerto Academy baru tayang (4 Nov 2026)
 // Semua lewat Edge Function supabase/functions/cway-push (aksi key/get/set/test/notify + jadwal pg_cron tiap menit).
 // sw.js menampilkan notifikasi & membuka link-nya. iPhone: hanya bila CAI Hub dipasang di Layar Utama (iOS 16.4+).
 const PUSH_FN = 'cway-push';
@@ -27,6 +28,9 @@ alter table public.cway_push_subs add column if not exists cway boolean default 
 alter table public.cway_push_subs add column if not exists news boolean default false;
 alter table public.concerto_way add column if not exists push_live_at timestamptz;   -- notifikasi partner "sudah tayang" terkirim
 alter table if exists public.cai_news add column if not exists push_at timestamptz;   -- notifikasi News terkirim
+alter table public.cway_push_subs add column if not exists acad boolean default false;   -- notifikasi materi Academy baru
+create table if not exists public.academy_push (no int primary key, sent_at timestamptz default now());   -- materi Academy yang sudah dikirimi notifikasi
+alter table public.academy_push enable row level security;
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated
@@ -51,7 +55,7 @@ $$);
 -- Mematikan jadwal: select cron.unschedule('cway-push');`;
 const PN_DISMISS_KEY = 'cai-pn-dismiss';
 let pushSt = '?';          // ? | … | ok | unsupported | denied | nosql | nofn | busy
-let pushFlags = null;      // { staff, cway, news } milik HP ini (null = belum diketahui)
+let pushFlags = null;      // { staff, cway, news, acad } milik HP ini (null = belum diketahui)
 let pushEp = null;         // endpoint langganan HP ini
 let pnSel = null;          // pilihan centang sebelum diaktifkan
 const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -134,7 +138,7 @@ async function pushTest() {
   } catch (e) { showToast('⚠ Tes gagal: ' + (e.message || e), 7000); }
 }
 // Editor/Admin: kirim "sudah tayang"/berita baru setelah menyimpan (sekali per item, dicek server)
-function pushNotify(type, id) { if (isAdmin()) pushFn({ action: 'notify', type, id }).catch(() => {}); }
+function pushNotify(type, id) { if (isEditor()) pushFn({ action: 'notify', type, id }).catch(() => {}); }   // id = array nomor materi untuk 'acad'
 function pushCopySql() {
   (navigator.clipboard?.writeText(CWAY_PUSH_SQL) || Promise.reject()).then(
     () => showToast('📋 SQL notifikasi disalin — tempel di Supabase → SQL Editor → Run', 7000),
@@ -172,37 +176,37 @@ function pnHtml(where) {
   const wrap = h => where === 'dash' ? h : `<div data-pn="${where}">${h}</div>`;
   if (where === 'cway' && (!authUser || isEditor())) return wrap('');   // Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
   pushInit();
-  const st = pushSt, f = pushFlags || {}, active = st === 'ok' && (f.cway || f.news);
-  const canCw = !!authUser;
+  const st = pushSt, f = pushFlags || {}, active = st === 'ok' && (f.cway || f.news || f.acad);
+  const canCw = !!authUser && !isEditor();   // Editor sudah punya Pengingat tayang 5 menit
   if (where === 'dash') {   // ajakan: hanya di CAI Hub yang dibuka dari Layar Utama, belum aktif, belum ditutup
     let dis = false; try { dis = localStorage.getItem(PN_DISMISS_KEY) === '1'; } catch (e) {}
     if (dis || !pushOk() || !pushStandalone() || st !== 'ok' || active || Notification.permission === 'denied') return '';
   }
-  if (!pnSel) pnSel = { cway: true, news: true };
-  const sel = active ? { cway: !!f.cway, news: !!f.news } : pnSel;
+  if (!pnSel) pnSel = { cway: true, news: true, acad: true };
+  const sel = active ? { cway: !!f.cway, news: !!f.news, acad: !!f.acad } : pnSel;
   const chk = (k, ico, lbl, sub) => `<label class="pn-chk"><input type="checkbox" ${sel[k] ? 'checked' : ''} ${st === 'busy' ? 'disabled' : ''} onchange="pnToggle('${k}', this.checked)"><span>${ico} ${lbl}${sub ? ` <small>· ${sub}</small>` : ''}</span></label>`;
-  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + chk('news', '📰', 'News CAI terbaru');
+  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru');
   let title, text = '', btn = '';
   if (st === 'unsupported') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = pushUnsupportedMsg(); }
   else if (st === 'denied') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP, lalu muat ulang.'; }
   else if (st === 'nofn' || st === 'nosql') { if (where === 'dash' || !isAdmin()) return wrap(''); title = '🔔 Notifikasi'; text = st === 'nosql' ? 'SQL notifikasi belum dijalankan.' : 'Edge Function cway-push belum versi terbaru.'; }
   else if (st === '…' || st === '?') return wrap('');
   else if (active) { title = '🔔 Notifikasi · ✅ aktif di HP ini'; btn = `<button class="gt-btn ghost" onclick="pnOff()">Matikan di HP ini</button>`; }
-  else { title = where === 'dash' ? '🔔 Jangan lewatkan materi baru' : '🔔 Notifikasi'; text = `Dapat notifikasi di HP ini saat ${canCw ? 'ada yang baru' : 'ada berita baru'} — walau CAI Hub sedang tertutup.`;
+  else { title = where === 'dash' ? '🔔 Jangan lewatkan materi baru' : '🔔 Notifikasi'; text = 'Dapat notifikasi di HP ini saat ada yang baru — walau CAI Hub sedang tertutup.';
     btn = `<button class="gt-btn" onclick="pnOn()" ${st === 'busy' ? 'disabled' : ''}>${st === 'busy' ? 'Mengaktifkan…' : 'Aktifkan notifikasi'}</button>`; }
   const showOpts = !['unsupported', 'denied', 'nofn', 'nosql'].includes(st);
   return wrap(`<div class="pn-box${active ? ' on' : ''}${where === 'dash' ? ' invite' : ''}">${where === 'dash' ? '<button class="pn-x" onclick="pnDismiss()" aria-label="Tutup">✕</button>' : ''}
     <b class="pn-h">${title}</b>${text ? `<p>${text}</p>` : ''}${showOpts ? `<div class="pn-opts">${opts}</div>` : ''}${btn ? `<div class="pn-b">${btn}</div>` : ''}</div>`);
 }
 function pnToggle(k, v) {
-  if (pushSt === 'ok' && (pushFlags?.cway || pushFlags?.news)) pushSet({ [k]: v });
-  else { pnSel = { ...(pnSel || { cway: true, news: true }), [k]: v }; }
+  if (pushSt === 'ok' && (pushFlags?.cway || pushFlags?.news || pushFlags?.acad)) pushSet({ [k]: v });
+  else { pnSel = { ...(pnSel || { cway: true, news: true, acad: true }), [k]: v }; }
 }
 function pnOn() {
-  const s = pnSel || { cway: true, news: true };
-  const flags = { cway: !!authUser && s.cway, news: s.news };
-  if (!flags.cway && !flags.news) return showToast('Centang minimal satu jenis notifikasi.');
+  const s = pnSel || { cway: true, news: true, acad: true };
+  const flags = { cway: !!authUser && s.cway, news: s.news, acad: s.acad };
+  if (!flags.cway && !flags.news && !flags.acad) return showToast('Centang minimal satu jenis notifikasi.');
   pushSet(flags, true).then(r => { if (r && !r.deleted) showToast('✅ Notifikasi aktif di HP ini'); });
 }
-function pnOff() { pushSet({ cway: false, news: false }).then(r => { if (r) showToast('Notifikasi dimatikan di HP ini'); }); }
+function pnOff() { pushSet({ cway: false, news: false, acad: false }).then(r => { if (r) showToast('Notifikasi dimatikan di HP ini'); }); }
 function pnDismiss() { try { localStorage.setItem(PN_DISMISS_KEY, '1'); } catch (e) {} const el = document.getElementById('pn-invite'); if (el) el.innerHTML = ''; }

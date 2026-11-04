@@ -1319,8 +1319,14 @@ const acadImg = (a, thumb) => a.img ? dashPublicUrl(thumb ? (a.thumb || a.img) :
 const todayWIB = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });   // YYYY-MM-DD
 const acadDaysSince = d => Math.round((Date.parse(todayWIB()) - Date.parse(d)) / 864e5);
 const acadAll = () => [...ACADEMY, ...acadExtra];
-const acadReleased = () => acadAll().filter(a => a.date <= todayWIB()).sort((x, y) => y.no - x.no);
-const acadIsNew = a => { const d = acadDaysSince(a.date); return d >= 0 && d < ACADEMY_NEW_DAYS; };
+// Jadwal tayang (4 Nov 2026, permintaan pemilik — seperti Concerto Way): item boleh punya `at` (ISO, jam tayang WIB);
+// tanpa `at` = tayang sejak `date`. Sebelum waktunya hanya Editor yang melihat (⏰ TERJADWAL + Antrian tayang).
+const acadDue = a => a.at ? Date.parse(a.at) <= Date.now() : a.date <= todayWIB();
+const acadReleased = () => acadAll().filter(acadDue).sort((x, y) => y.no - x.no);
+const acadScheduled = () => acadAll().filter(a => !acadDue(a)).sort((x, y) => (Date.parse(x.at || x.date) - Date.parse(y.at || y.date)) || x.no - y.no);
+const acadWhen = a => a.at ? cwWhen(a.at) : fmtAcadDate(a.date);
+const acadShown = () => isEditor() ? [...acadScheduled().slice().reverse(), ...acadReleased()] : acadReleased();
+const acadIsNew = a => { const d = acadDaysSince(a.date); return acadDue(a) && d >= 0 && d < ACADEMY_NEW_DAYS; };
 const fmtAcadDate = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 let acadCurrent = null;
 
@@ -1343,6 +1349,21 @@ async function loadAcadExtra() {
   } catch (e) { acadExtra = []; }
   updateAcademyStar();
   if (document.getElementById('view-academy')?.classList.contains('active')) openAcademy(true);
+  acadSchedTimer();
+}
+// Materi terjadwal muncul tepat waktu tanpa memuat ulang halaman (cek tiap 30 dtk)
+let acadTick = null, acadDueSet = '';
+function acadSchedTimer() {
+  clearInterval(acadTick);
+  acadDueSet = acadReleased().map(a => a.no).join();
+  if (!acadAll().some(a => !acadDue(a))) return;
+  acadTick = setInterval(() => {
+    const now = acadReleased().map(a => a.no).join(); if (now === acadDueSet) return;
+    acadDueSet = now; updateAcademyStar();
+    if (document.getElementById('view-academy')?.classList.contains('active')) openAcademy(true);
+    if (typeof dashRender === 'function') dashRender();
+    if (!acadAll().some(a => !acadDue(a))) clearInterval(acadTick);
+  }, 30000);
 }
 async function acadSaveManifest(items) {
   const blob = new Blob([JSON.stringify({ items })], { type: 'application/json' });
@@ -1380,7 +1401,8 @@ const acadTitleFromName = n => n.replace(/\.(pdf|jpe?g|png|webp)$/i, '').replace
 function openAcadForm() {
   if (!isEditor()) return;
   const last = acadAll().filter(a => a.series).slice(-1)[0];
-  acadForm = { series: last?.series || 'Fundamental', items: [], busy: false };
+  const tm = new Date(Date.now() + 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+  acadForm = { series: last?.series || 'Fundamental', items: [], busy: false, mode: 'now', sd: tm, st: '09:00', stag: false, per: 1 };
   let ov = document.getElementById('acad-form');
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'acad-form'; ov.className = 'rk-pick gl-ov';
@@ -1398,9 +1420,14 @@ function renderAcadForm() {
       <label class="acf-l">Nama seri<input value="${escHtml(f.series)}" placeholder="mis. Fundamental" oninput="acadForm.series=this.value"></label>
       <label class="gt-btn acf-pick">📄 Pilih gambar / PDF<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" multiple hidden onchange="acadAddFiles(this)"></label>
       <div class="gl-hint">Satu gambar = satu materi (sebaiknya tegak, seperti materi yang sudah ada). PDF: setiap halaman jadi satu materi. Materi baru otomatis bertanda <b>★ Baru</b> selama ${ACADEMY_NEW_DAYS} hari.</div>
-      <div class="acf-list">${f.items.map((x, i) => `<div class="acf-it"><img src="${x.url}" alt=""><div><span>${escHtml(f.series || 'Fundamental')} #${next + i}</span><input value="${escHtml(x.title)}" placeholder="Judul materi" oninput="acadForm.items[${i}].title=this.value"></div><button title="Hapus" onclick="acadDropItem(${i})">🗑</button></div>`).join('') || '<div class="stock-empty">Belum ada file dipilih.</div>'}</div>
+      <div class="acf-l">Tayang</div>
+      <div class="cwf-seg"><button type="button" class="${f.mode === 'now' ? 'on' : ''}" onclick="acadSchedSet('mode','now')">Tayang sekarang</button><button type="button" class="${f.mode === 'sched' ? 'on' : ''}" onclick="acadSchedSet('mode','sched')">⏰ Jadwalkan</button></div>
+      ${f.mode === 'sched' ? `<div class="cwf-sched"><input type="date" value="${f.sd}" onchange="acadSchedSet('sd',this.value)"><input type="time" value="${f.st}" onchange="acadSchedSet('st',this.value)"><span>WIB</span></div>
+      <label class="acf-stag"><input type="checkbox" ${f.stag ? 'checked' : ''} onchange="acadSchedSet('stag',this.checked)"> Rilis bertahap: <input type="number" min="1" max="50" value="${f.per}" onclick="event.stopPropagation()" onchange="acadSchedSet('per',this.value)"> materi per hari, mulai tanggal ini</label>
+      <div class="cwf-snote">${acadSchedNote(f)}</div>` : ''}
+      <div class="acf-list">${f.items.map((x, i) => `<div class="acf-it"><img src="${x.url}" alt=""><div><span>${escHtml(f.series || 'Fundamental')} #${next + i}${f.mode === 'sched' ? ` · <em class="acf-when">⏰ ${escHtml(cwWhen(acadSchedAt(f, i)))}</em>` : ''}</span><input value="${escHtml(x.title)}" placeholder="Judul materi" oninput="acadForm.items[${i}].title=this.value"></div><button title="Hapus" onclick="acadDropItem(${i})">🗑</button></div>`).join('') || '<div class="stock-empty">Belum ada file dipilih.</div>'}</div>
     </div>
-    <div class="acf-foot"><button class="gt-btn ghost" onclick="closeAcadForm()">Batal</button><button class="gt-btn" id="acf-save" onclick="saveAcadItems()"${f.items.length && !f.busy ? '' : ' disabled'}>${f.busy ? '⏳ Menyimpan…' : '💾 Simpan & Terbitkan'}</button></div>`;
+    <div class="acf-foot"><button class="gt-btn ghost" onclick="closeAcadForm()">Batal</button><button class="gt-btn" id="acf-save" onclick="saveAcadItems()"${f.items.length && !f.busy ? '' : ' disabled'}>${f.busy ? '⏳ Menyimpan…' : f.mode === 'sched' ? '⏰ Simpan Jadwal' : '💾 Simpan & Terbitkan'}</button></div>`;
 }
 async function acadAddFiles(input) {
   const files = [...(input.files || [])]; input.value = '';
@@ -1416,15 +1443,28 @@ async function acadAddFiles(input) {
   showToast(`${acadForm.items.length} materi siap — periksa judulnya lalu Simpan.`, 3000);
   renderAcadForm();
 }
+// Jam tayang materi ke-i: tanggal + jam WIB, rilis bertahap = per materi per hari
+function acadSchedAt(f, i) {
+  const day = f.stag ? Math.floor(i / Math.max(1, +f.per || 1)) : 0;
+  return new Date(Date.parse(`${f.sd}T${f.st || '09:00'}:00+07:00`) + day * 864e5).toISOString();
+}
+function acadSchedNote(f) {
+  if (!f.sd || !f.st) return 'Isi tanggal & jam tayang.';
+  if (Date.parse(acadSchedAt(f, 0)) <= Date.now()) return '⚠ Jam tayang sudah lewat — pilih waktu yang akan datang, atau Tayang sekarang.';
+  const n = f.items.length, last = n ? acadSchedAt(f, n - 1) : null;
+  return `⏰ ${n > 1 && f.stag ? `Mulai ${cwWhen(acadSchedAt(f, 0))} sampai ${cwWhen(last)}` : `Tayang ${cwWhen(acadSchedAt(f, 0))}`}. Sebelum jamnya hanya Editor yang melihat; pengunjung yang mengaktifkan notifikasi Academy diberi tahu saat tayang.`;
+}
+function acadSchedSet(k, v) { if (!acadForm) return; acadForm[k] = k === 'stag' ? !!v : k === 'per' ? Math.max(1, Math.min(50, parseInt(v) || 1)) : v; renderAcadForm(); }
 function acadDropItem(i) { const [x] = acadForm.items.splice(i, 1); if (x) URL.revokeObjectURL(x.url); renderAcadForm(); }
 async function saveAcadItems() {
   const f = acadForm; if (!f || f.busy || !f.items.length || !isEditor()) return;
   if (f.items.some(x => !x.title.trim())) { showToast('⚠ Isi judul untuk setiap materi.', 4000); return; }
+  if (f.mode === 'sched' && !(Date.parse(acadSchedAt(f, 0)) > Date.now())) { showToast('⚠ Jam tayang sudah lewat — ubah tanggal/jam.', 5000); return; }
   f.busy = true; renderAcadForm();
   const store = supabase.storage.from('showcase'), uploaded = [], added = [];
   let no = Math.max(0, ...acadAll().map(a => a.no)) + 1;
   try {
-    for (const x of f.items) {
+    for (const [i, x] of f.items.entries()) {
       const b = await acadImgBlobs(x.blob), ext = b.img.type === 'image/webp' ? 'webp' : 'jpg', ts = Date.now();
       const img = `${ACAD_DIR}/${acadPad(no)}-${ts}.${ext}`, thumb = `${ACAD_DIR}/${acadPad(no)}-${ts}-thumb.${ext}`;
       for (const [path, blob] of [[img, b.img], [thumb, b.thumb]]) {
@@ -1432,14 +1472,17 @@ async function saveAcadItems() {
         if (error) throw error;
         uploaded.push(path);
       }
-      added.push({ no, date: todayWIB(), title: x.title.trim(), series: (f.series || '').trim() || 'Fundamental', img, thumb });
+      const at = f.mode === 'sched' ? acadSchedAt(f, i) : null;
+      added.push({ no, date: at ? new Date(at).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) : todayWIB(), ...(at ? { at } : {}), title: x.title.trim(), series: (f.series || '').trim() || 'Fundamental', img, thumb });
       no++;
     }
     const items = [...acadExtra, ...added];
     await acadSaveManifest(items);
     acadExtra = items;
-    showToast(`✓ ${added.length} materi baru diterbitkan`, 3500);
-    closeAcadForm(); updateAcademyStar(); openAcademy(true);
+    const sched = added.filter(a => a.at);
+    showToast(sched.length ? `⏰ ${added.length} materi dijadwalkan — mulai ${cwWhen(sched[0].at)}` : `✓ ${added.length} materi baru diterbitkan`, 5000);
+    if (!sched.length && typeof pushNotify === 'function') pushNotify('acad', added.map(a => a.no));   // notifikasi HP "Materi Academy baru"
+    closeAcadForm(); updateAcademyStar(); openAcademy(true); acadSchedTimer();
   } catch (e) {
     if (uploaded.length) store.remove(uploaded);
     f.busy = false; renderAcadForm(); dashErr(e, 'menyimpan materi');
@@ -1450,6 +1493,26 @@ async function acadEditTitle(no) {
   const t = prompt('Judul materi:', a.title); if (t == null || !t.trim() || t.trim() === a.title) return;
   const items = acadExtra.map(x => x.no === no ? { ...x, title: t.trim() } : x);
   try { await acadSaveManifest(items); acadExtra = items; openAcademy(true); showToast('✓ Judul diperbarui', 2500); } catch (e) { dashErr(e, 'menyimpan judul'); }
+}
+// Ubah jadwal materi dari portal (Editor): "YYYY-MM-DD HH:MM" WIB, kosong/"sekarang" = tayang sekarang
+async function acadReschedule(no) {
+  const a = acadExtra.find(x => x.no === no); if (!a || !isEditor()) return;
+  const cur = a.at ? new Date(a.at).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16) : '';
+  const v = prompt(`Jadwal tayang materi #${no} (WIB), format YYYY-MM-DD HH:MM.\nKetik "sekarang" untuk langsung tayang.`, cur); if (v == null) return;
+  let at = null;
+  if (!/^\s*(sekarang)?\s*$/i.test(v)) {
+    const m = v.trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})$/);
+    if (!m) return showToast('⚠ Format salah. Contoh: 2026-11-06 09:00', 5000);
+    at = new Date(Date.parse(`${m[1]}T${m[2].padStart(2, '0')}:${m[3]}:00+07:00`)).toISOString();
+    if (!(Date.parse(at) > Date.now())) return showToast('⚠ Waktu sudah lewat — pilih waktu yang akan datang.', 5000);
+  }
+  const items = acadExtra.map(x => { if (x.no !== no) return x; const y = { ...x }; delete y.at;
+    return at ? { ...y, at, date: new Date(at).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) } : { ...y, date: todayWIB() }; });
+  try {
+    await acadSaveManifest(items); acadExtra = items; openAcademy(true); acadSchedTimer();
+    if (!at && typeof pushNotify === 'function') pushNotify('acad', [no]);
+    showToast(at ? `⏰ Dijadwalkan ${cwWhen(at)}` : '✓ Materi tayang sekarang', 3500);
+  } catch (e) { dashErr(e, 'menyimpan jadwal'); }
 }
 async function acadDelete(no) {
   const a = acadExtra.find(x => x.no === no); if (!a || !isEditor()) return;
@@ -1465,18 +1528,23 @@ async function acadDelete(no) {
 function openAcademy(keepScroll) {
   // Terbuka untuk umum tanpa Kode Akses (31 Okt 2026, permintaan pemilik — dulu dikunci sejak 25 Okt 2026)
   if (keepScroll !== true) { showView('academy'); document.querySelector('.main')?.scrollTo(0, 0); }
-  const list = acadReleased();
-  const upcoming = acadAll().filter(a => a.date > todayWIB()).sort((x, y) => x.date.localeCompare(y.date))[0];
+  const list = acadShown(), rel = acadReleased();
+  const upcoming = acadScheduled()[0];
   document.getElementById('acad-next').innerHTML =
-    `<b>${list.length}</b> materi tersedia` + (upcoming ? ` · materi berikutnya rilis <b>${fmtAcadDate(upcoming.date)}</b>` : '') + `<span class="acad-views" data-acadv="all">${acadViewsText('all', true)}</span>`;
+    `<b>${rel.length}</b> materi tersedia` + (upcoming ? ` · materi berikutnya rilis <b>${acadWhen(upcoming)}</b>` : '') + `<span class="acad-views" data-acadv="all">${acadViewsText('all', true)}</span>`;
+  const q = isEditor() ? acadScheduled() : [];
+  const qEl = document.getElementById('acad-queue');
+  if (qEl) qEl.innerHTML = (typeof pnHtml === 'function' ? pnHtml('acad') : '') + (q.length ? `<div class="cw-queue"><div class="cw-queue-h">⏰ Antrian tayang <span>${q.length} materi · otomatis muncul pada jamnya</span></div>
+    ${q.map(a => `<button class="cw-queue-r" onclick="openAcademyItem(${a.no})"><span class="cw-queue-t">${escHtml(acadWhen(a))}</span>
+      <span class="cw-queue-d">#${a.no}</span><b>${escHtml(a.title)}</b>${a.img ? `<span class="cw-queue-e" onclick="event.stopPropagation();acadReschedule(${a.no})">✏️ Ubah jadwal</span>` : ''}</button>`).join('')}</div>` : '');
   document.getElementById('acad-grid').innerHTML = list.map(a => `
-    <button class="acad-card" onclick="openAcademyItem(${a.no})">
+    <button class="acad-card${acadDue(a) ? '' : ' sched'}" onclick="openAcademyItem(${a.no})">${acadDue(a) ? '' : '<span class="acad-sched">⏰ TERJADWAL</span>'}
       ${a.img ? `<span class="acad-ed editor-only" onclick="event.stopPropagation()"><i role="button" title="Ubah judul" onclick="acadEditTitle(${a.no})">✏️</i><i role="button" title="Hapus materi" onclick="acadDelete(${a.no})">🗑</i></span>` : ''}
       <div class="acad-thumb"><img src="${acadImg(a, true)}" alt="" loading="lazy"></div>
       <div class="acad-body">
         <div class="acad-kicker">${escHtml(a.series || 'Fundamental')} #${a.no}${acadIsNew(a) ? '<span class="acad-star" title="Materi baru">★ Baru</span>' : ''}</div>
         <div class="acad-title">${escHtml(a.title)}</div>
-        <div class="acad-date">${fmtAcadDate(a.date)}<span class="acad-views" data-acadv="${a.no}">${acadViewsText(a.no, true)}</span></div>
+        <div class="acad-date">${acadDue(a) ? fmtAcadDate(a.date) : 'Tayang ' + escHtml(acadWhen(a))}<span class="acad-views" data-acadv="${a.no}">${acadViewsText(a.no, true)}</span></div>
       </div>
     </button>`).join('') || `<div class="stock-empty">Materi pertama segera hadir.</div>`;
   updateAcademyStar();
@@ -1484,7 +1552,7 @@ function openAcademy(keepScroll) {
 }
 
 function openAcademyItem(no) {
-  const a = acadReleased().find(x => x.no === no);
+  const a = acadShown().find(x => x.no === no);
   if (!a) return;
   acadCurrent = no;
   document.getElementById('acad-viewer-kicker').innerHTML = `Concerto Academy · ${escHtml(a.series || 'Fundamental')} #${a.no}${acadIsNew(a) ? ' <span class="acad-star">★ Baru</span>' : ''}<span class="acad-views" data-acadv="${a.no}"></span>`;
@@ -1495,7 +1563,7 @@ function openAcademyItem(no) {
   const dl = document.getElementById('acad-viewer-dl');
   dl.href = acadImg(a); dl.setAttribute('download', `Concerto-Academy-${acadPad(a.no)}.webp`);
   sharePrep('a:' + a.no, acadImg(a), `Concerto-Academy-${acadPad(a.no)}`);
-  const nos = acadReleased().map(x => x.no).sort((x, y) => x - y), i = nos.indexOf(no);
+  const nos = acadShown().map(x => x.no).sort((x, y) => x - y), i = nos.indexOf(no);
   document.getElementById('acad-prev').disabled = i <= 0;
   document.getElementById('acad-next-btn').disabled = i < 0 || i >= nos.length - 1;
   document.getElementById('acad-viewer-body').scrollTop = 0;
@@ -1592,7 +1660,7 @@ function acadRecapHtml() {
 }
 function stepAcademy(d) {
   if (!acadCurrent) return;
-  const nos = acadReleased().map(x => x.no).sort((x, y) => x - y), n = nos[nos.indexOf(acadCurrent) + d];
+  const nos = acadShown().map(x => x.no).sort((x, y) => x - y), n = nos[nos.indexOf(acadCurrent) + d];
   if (n) openAcademyItem(n);
 }
 function closeAcademyItem() {

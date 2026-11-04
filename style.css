@@ -3408,7 +3408,8 @@ img.gl-drag.dragging { cursor: grabbing; }
 .acad-ed { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; gap: 4px; }
 .acad-ed i { font-style: normal; font-size: 13px; background: rgba(0,0,0,.65); border-radius: 8px; padding: 4px 7px; cursor: pointer; }
 body:not(.is-editor) .acad-ed { display: none; }
-.acf { padding: 16px; display: grid; gap: 12px; overflow-y: auto; }
+.acf { padding: 16px; display: grid; gap: 12px; overflow-y: auto; grid-auto-rows: max-content; }
+.acf .cwf-seg { justify-self: start; margin: 0; }
 .acf-l { display: grid; gap: 4px; font: 600 12px var(--f-body); color: var(--fg-muted); }
 .acf-l input, .acf-it input { border: 1px solid var(--border); background: var(--surface2); color: var(--fg); border-radius: 9px; padding: 9px 11px; font: 15px var(--f-body); }
 .acf-pick { justify-self: start; cursor: pointer; }
@@ -3988,6 +3989,18 @@ body.logged-in .guest-only { display: none !important; }
 .pn-x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--fg-2, #9aa0ad); font-size: 15px; cursor: pointer; padding: 4px 6px; }
 .cw-push-h small { font: 500 11px var(--f-body); color: var(--fg-2, #9aa0ad); }
 @media (max-width: 720px) { .pn-chk { flex: 1 1 100%; } }
+/* Jadwal tayang Academy (4 Nov 2026) */
+.acad-card { position: relative; }
+.acad-card.sched { outline: 1.5px dashed #2aa6bd; outline-offset: -1.5px; }
+.acad-card.sched .acad-thumb img { filter: saturate(.6) brightness(.9); }
+.acad-sched { position: absolute; top: 8px; left: 8px; z-index: 2; font: 800 10px var(--f-display); letter-spacing: .12em; padding: 4px 9px; border-radius: 999px; background: #0b1219; color: #6fd3e6; border: 1px solid #6fd3e6; }
+#acad-queue .cw-queue { margin: 0 0 16px; }
+.acf-stag { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; margin-top: 10px; color: var(--fg); }
+.acf-stag input[type=number] { width: 60px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--fg); font-size: 14px; }
+.acf .cwf-sched { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.acf .cwf-sched input { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--fg); font-size: 14px; }
+.acf .cwf-snote { margin-top: 8px; }
+.acf-when { font-style: normal; color: #2aa6bd; font-weight: 600; }
 /* Pengingat tayang Concerto Way — notifikasi HP (4 Nov 2026) */
 .cw-push { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 0 0 18px; border: 1px dashed var(--border); border-radius: 14px; background: var(--surface); padding: 12px 14px; }
 .cw-push.on { border-style: solid; border-color: rgba(31,157,85,.45); }

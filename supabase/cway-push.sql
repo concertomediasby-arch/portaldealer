@@ -19,6 +19,9 @@ alter table public.cway_push_subs add column if not exists cway boolean default 
 alter table public.cway_push_subs add column if not exists news boolean default false;
 alter table public.concerto_way add column if not exists push_live_at timestamptz;   -- notifikasi partner "sudah tayang" terkirim
 alter table if exists public.cai_news add column if not exists push_at timestamptz;   -- notifikasi News terkirim
+alter table public.cway_push_subs add column if not exists acad boolean default false;   -- notifikasi materi Academy baru
+create table if not exists public.academy_push (no int primary key, sent_at timestamptz default now());   -- materi Academy yang sudah dikirimi notifikasi
+alter table public.academy_push enable row level security;
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated
