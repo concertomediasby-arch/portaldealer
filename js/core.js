@@ -2510,7 +2510,7 @@ function renderCatalog() {
 // Kembali dari detail produk ke halaman asal (katalog/brand/stok/…) di posisi scroll yang sama, tanpa merender ulang (30 Okt 2026, permintaan pemilik).
 // Tombol back HP / browser juga kembali ke halaman asal (history.pushState saat detail produk dibuka).
 let productFrom = null;
-const PRODUCT_FROM_LABEL = { compare: 'Bandingkan Produk', halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'System Simulator', updates: 'Update Terbaru', dashboard: 'Dashboard' };
+const PRODUCT_FROM_LABEL = { week: 'Minggu ini', compare: 'Bandingkan Produk', halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'System Simulator', updates: 'Update Terbaru', dashboard: 'Dashboard' };
 function showProduct(brandId, productId) {
   const curView = document.querySelector('.view.active');
   if (curView && curView.id !== 'view-product') {

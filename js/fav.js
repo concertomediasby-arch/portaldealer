@@ -123,7 +123,44 @@ function weekHtml() {
     it.push(nc(ph ? `<img src="${glUrl(ph.path)}" alt="">` : ico('🚗'), 'GALERI INSTALASI', escHtml(glTitle(g)), escHtml([g.dealer, g.city].filter(Boolean).join(' · ')), `openGaleri(); openGlDetail('${g.id}')`)); }
   const n = typeof nwLive === 'function' && nwItems ? nwLive().find(x => weekAgo(x.post_date) <= WEEK_DAYS) : null;
   if (n) { const th = nwThumb(n); it.push(nc(th ? `<img src="${th}" alt="">` : ico('📰'), 'NEWS', escHtml(n.title), escHtml(n.category || ''), `openNews('${n.id}')`)); }
-  return it.length ? `<div class="d-sec"><div class="d-sec-h"><b>🆕 Baru minggu ini</b></div><div class="d-new">${it.join('')}</div></div>` : '';
+  return it.length ? `<div class="d-sec"><div class="d-sec-h"><b>🆕 Baru minggu ini</b><button class="d-more" onclick="openWeek()">Lihat semua ›</button></div><div class="d-new">${it.join('')}</div></div>` : '';
+}
+/* 🗓 Halaman "Minggu ini di CAI Hub" (Tahap 6 C, 4 Nov 2026) — dibuka dari notifikasi Ringkasan mingguan (/?minggu) &
+   "Lihat semua" di kotak Baru minggu ini. Semua yang tayang ≤ WEEK_DAYS hari: produk diperbarui (RECENT_UPDATES), Galeri,
+   Academy, News; untuk yang login + Concerto Way (judul tampil — hanya bagi yang login) & tautan Panduan Partner. */
+function openWeek() {
+  showView('week'); document.querySelector('.main')?.scrollTo(0, 0);
+  renderWeek();
+  if (typeof supabase !== 'undefined' && supabase) {
+    if (typeof loadGaleri === 'function' && !glItems) loadGaleri().then(renderWeek, () => {});
+    if (typeof loadNews === 'function' && !nwItems) Promise.resolve(loadNews()).then(renderWeek, () => {});
+  }
+  setTimeout(renderWeek, 3500);   // data yang dimuat di latar (News, Concerto Way)
+}
+function renderWeek() {
+  const el = document.getElementById('week-body'); if (!el || !document.getElementById('view-week')?.classList.contains('active')) return;
+  const ico = c => `<span class="ic">${c}</span>`;
+  const row = (img, t, e, fn) => `<button class="wk-it" onclick="${fn}">${img}<div><b>${t}</b><small>${e}</small></div><i>›</i></button>`;
+  const sec = (h, rows, more) => rows.length ? `<div class="wk-sec"><div class="wk-h"><b>${h}</b><span>${rows.length}</span></div>${rows.join('')}${more || ''}</div>` : '';
+  const seen = new Set(), prods = (typeof RECENT_UPDATES !== 'undefined' ? RECENT_UPDATES : [])
+    .filter(x => weekAgo(x.date) <= WEEK_DAYS && !seen.has(x.productId) && seen.add(x.productId) && findProductAny(x.productId).product);
+  const P = prods.map(u => { const { brand: b, product: p } = findProductAny(u.productId);
+    return row(favImg(p) ? `<img src="${favImg(p)}" alt="">` : ico(p.emoji || '📦'), `${escHtml(b.name)} ${escHtml(p.name)}`, escHtml(u.note || p.category), `showProduct('${b.id}','${p.id}')`); });
+  const G = (typeof glLive === 'function' ? glLive() : []).filter(x => weekAgo(x.publish_at || x.created_at) <= WEEK_DAYS)
+    .sort((x, y) => Date.parse(y.publish_at || y.created_at) - Date.parse(x.publish_at || x.created_at))
+    .map(g => { const ph = (g.photos || []).find(p => !glIsVid(p)); return row(ph ? `<img src="${glUrl(ph.path)}" alt="">` : ico('🚗'), escHtml(glTitle(g)), escHtml([g.dealer, g.city].filter(Boolean).join(' · ')), `openGaleri(); openGlDetail('${g.id}')`); });
+  const A = (typeof acadReleased === 'function' ? acadReleased() : []).filter(a => weekAgo(a.at || a.date) <= WEEK_DAYS)
+    .map(a => row(`<img src="${acadImg(a, true)}" alt="">`, escHtml(a.title), `Concerto Academy #${a.no}`, `openAcademyItem(${a.no})`));
+  const N = (typeof nwLive === 'function' && nwItems ? nwLive() : []).filter(x => weekAgo(x.post_date) <= WEEK_DAYS)
+    .map(n => { const th = nwThumb(n); return row(th ? `<img src="${th}" alt="">` : ico('📰'), escHtml(n.title), escHtml([n.category, nwDate(n.post_date)].filter(Boolean).join(' · ')), `openNews('${n.id}')`); });
+  const C = authUser && typeof cwLive === 'function' ? cwLive().filter(x => weekAgo(x.publish_at || x.post_date) <= WEEK_DAYS)
+    .map(x => row(`<span class="ic day">${x.day ?? '•'}</span>`, escHtml(x.title), `Concerto Way${x.day != null ? ' · Day ' + x.day : ''}`, `openCway('${x.id}')`)) : [];
+  const html = sec('🆕 Produk baru / diperbarui', P) + sec('🚗 Galeri Instalasi', G) + sec('🎓 Concerto Academy', A) + sec('📰 News', N)
+    + (authUser ? sec('☕ Concerto Way', C) + `<div class="wk-sec"><button class="wk-it" onclick="openGuides()">${ico('📘')}<div><b>Panduan Partner</b><small>Materi penjualan & produk khusus partner</small></div><i>›</i></button></div>` : '');
+  const d = new Date(), from = new Date(d.getTime() - (WEEK_DAYS - 1) * 864e5), f = o => o.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta' });
+  const sub = document.getElementById('week-sub'); if (sub) sub.textContent = `${f(from)} – ${f(d)} · semua yang baru di CAI Hub`;
+  const none = !P.length && !G.length && !A.length && !N.length && !C.length;
+  el.innerHTML = (none ? `<div class="stock-empty">Belum ada yang baru 7 hari terakhir.${authUser ? '' : ' Aktifkan 🗓 Ringkasan mingguan di menu Setting untuk dikabari tiap Senin.'}</div>` : '') + html;
 }
 let weekTry = 0;
 function favRenderDash() {

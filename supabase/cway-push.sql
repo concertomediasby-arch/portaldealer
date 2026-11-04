@@ -124,6 +124,12 @@ alter table public.guide_schedule add column if not exists remind_at timestamptz
 create table if not exists public.academy_remind (no int primary key, sent_at timestamptz default now());
 alter table public.academy_remind enable row level security;
 
+-- 🗓 Ringkasan mingguan (Tahap 6 C, 4 Nov 2026): Senin 08.00 WIB, satu notifikasi berisi semua yang baru 7 hari terakhir.
+-- Bawaan aktif — termasuk HP yang sudah berlangganan (pilihan pemilik "a"); bisa dimatikan di menu Setting.
+alter table public.cway_push_subs add column if not exists weekly boolean not null default true;
+create table if not exists public.weekly_push (week date primary key, sent_at timestamptz default now(), counts jsonb);
+alter table public.weekly_push enable row level security;
+
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated

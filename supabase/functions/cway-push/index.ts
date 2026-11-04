@@ -7,6 +7,9 @@
 //  • Partner       : "Stok tersedia lagi" untuk produk yang dipantau HP itu (tabel stock_watch; antrian stock_ready_q dari trigger stok).
 //  • Semua (publik): "Instalasi baru di Galeri" (jadwal tayang showcase_installs) & "Produk baru" (pengumuman Editor, tabel product_push).
 //  • Editor        : pengingat 5 menit sebelum SEMUA konten terjadwal (Concerto Way, Galeri, pengumuman produk, Academy, Panduan).
+//  • Semua         : 🗓 Ringkasan mingguan — Senin 08.00 WIB, satu notifikasi: jumlah produk diperbarui, instalasi Galeri, materi Academy,
+//                    berita 7 hari terakhir (+ jumlah Concerto Way & Panduan Partner TANPA judul bagi HP partner). Kolom weekly,
+//                    sekali per minggu lewat tabel weekly_push; minggu tanpa isi = tidak dikirim. Ketuk = /?minggu (halaman "Minggu ini").
 // Tiap HP memilih sendiri (kolom staff / cway / news / acad / guide / stock / gallery / product di tabel cway_push_subs).
 //
 // Deploy: Supabase Dashboard → Edge Functions → cway-push → Code → tempel file ini → Deploy ("Verify JWT" tetap MATI).
@@ -49,8 +52,8 @@ const ACAD_MANIFEST = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
 type Sub = { endpoint: string; p256dh: string; auth: string };
-type Col = 'staff' | 'cway' | 'news' | 'acad' | 'guide' | 'stock' | 'gallery' | 'product';
-const FLAGS: Col[] = ['staff', 'cway', 'news', 'acad', 'guide', 'stock', 'gallery', 'product'];
+type Col = 'staff' | 'cway' | 'news' | 'acad' | 'guide' | 'stock' | 'gallery' | 'product' | 'weekly';
+const FLAGS: Col[] = ['staff', 'cway', 'news', 'acad', 'guide', 'stock', 'gallery', 'product', 'weekly'];
 type Key = { pub: string; priv: string };
 
 async function vapid(): Promise<Key> {
@@ -234,6 +237,56 @@ async function staffReminders(key: Key, acad: Acad[]) {
   return n;
 }
 
+// 🗓 Ringkasan mingguan — Senin 08.00–11.59 WIB (dicoba tiap menit sampai terkirim), sekali per minggu (weekly_push)
+const CATALOG_JS = Deno.env.get('CATALOG_URL') || 'https://hub.concerto.id/katalog.js';
+const GUIDE_SKIP = new Set(['gathering', 'thumbs', 'pending']);
+async function weeklyDigest(key: Key, acadAll: Acad[]) {
+  const nowMs = Date.now(), w = new Date(nowMs + 7 * 3600e3);   // jam WIB dibaca sebagai UTC
+  if (w.getUTCDay() !== 1 || w.getUTCHours() < 8 || w.getUTCHours() >= 12) return 0;
+  const week = w.toISOString().slice(0, 10);
+  const { data: mark, error } = await db.from('weekly_push').upsert({ week }, { onConflict: 'week', ignoreDuplicates: true }).select('week');
+  if (error || !mark?.length) return 0;   // sudah dikirim minggu ini (atau tabel belum dibuat)
+  const since = nowMs - 7 * 864e5, sinceDay = new Date(since + 7 * 3600e3).toISOString().slice(0, 10), inWeek = (iso?: string | null) => !!iso && Date.parse(iso) > since && Date.parse(iso) <= nowMs;
+  // Produk diperbarui: RECENT_UPDATES di katalog.js (data murni) + pengumuman produk yang terkirim
+  const prods = new Set<string>();
+  try {
+    const txt = await (await fetch(CATALOG_JS + '?t=' + nowMs)).text(), i = txt.indexOf('const RECENT_UPDATES = ['), j = txt.indexOf('];', i);
+    if (i >= 0) for (const m of txt.slice(i, j).matchAll(/date:\s*'(\d{4}-\d{2}-\d{2})'[^}]*?productId:\s*'([^']+)'/g)) if (m[1] >= sinceDay) prods.add(m[2]);
+  } catch (_) { /* katalog tak terjangkau → lewati */ }
+  const { data: pp } = await db.from('product_push').select('product_id').gte('sent_at', new Date(since).toISOString());
+  (pp || []).forEach(r => prods.add(r.product_id));
+  const { data: gl } = await db.from('showcase_installs').select('id, created_at, publish_at, photos, car_make, car_model, car_year').eq('published', true);
+  const gals = (gl || []).filter(g => inWeek(g.publish_at || g.created_at)).sort((a, b) => Date.parse(b.publish_at || b.created_at) - Date.parse(a.publish_at || a.created_at));
+  const { count: news } = await db.from('cai_news').select('id', { count: 'exact', head: true }).eq('published', true).gte('post_date', sinceDay);
+  const acad = acadAll.filter(a => inWeek(a.at || (a as { date?: string }).date)).length;
+  const { data: cw } = await db.from('concerto_way').select('id, publish_at, created_at').eq('published', true).gte('post_date', sinceDay);
+  const cway = (cw || []).filter(p => !p.publish_at || Date.parse(p.publish_at) <= nowMs).length;
+  let guides = 0;
+  try {
+    const store = db.storage.from('guides'), { data: root } = await store.list('', { limit: 1000 });
+    for (const f of root || []) {
+      if (f.id == null) { if (GUIDE_SKIP.has(f.name)) continue; const { data: sub } = await store.list(f.name, { limit: 1000 });
+        guides += (sub || []).filter(x => /\.pdf$/i.test(x.name) && inWeek(x.updated_at || x.created_at)).length; }
+      else if (/\.pdf$/i.test(f.name) && inWeek(f.updated_at || f.created_at)) guides++;
+    }
+  } catch (_) { /* lewati */ }
+  const counts = { products: prods.size, gallery: gals.length, acad, news: news || 0, cway, guides };
+  await db.from('weekly_push').update({ counts }).eq('week', week);
+  const base = [prods.size && `${prods.size} produk baru/diperbarui`, gals.length && `${gals.length} instalasi Galeri`, acad && `${acad} materi Academy`, news && `${news} berita`].filter(Boolean).join(' · ');
+  const extra = [cway && `☕ ${cway} Concerto Way`, guides && `📘 ${guides} Panduan Partner`].filter(Boolean).join(' · ');
+  if (!base && !extra) return 0;
+  const g0 = gals[0] as Gl | undefined, image = g0 ? glImg(g0) : undefined;
+  const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth, cway, guide').eq('weekly', true);
+  let sent = 0;
+  for (const s of subs || []) {
+    const partner = s.cway || s.guide, body = [base, partner ? extra : ''].filter(Boolean).join('\n');
+    if (!body) continue;
+    const st = await send(s, { title: '🗓 Minggu ini di CAI Hub', body: body + '\nKetuk untuk melihat.', url: '/?minggu=1', tag: `weekly-${week}`, image }, key).catch(() => 0);
+    if (st > 0 && st < 300) sent++;
+  }
+  return sent;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   let body: Record<string, any> = {};
@@ -383,7 +436,9 @@ Deno.serve(async (req) => {
     // 7) Stok pantauan yang baru Ready  8) Pengingat Editor untuk konten terjadwal lain
     const stockSent = await stockLive(key);
     staffSent += await staffReminders(key, acadAll);
-    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent });
+    // 9) Ringkasan mingguan (Senin pagi)
+    const weeklySent = await weeklyDigest(key, acadAll);
+    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent });
   } catch (e) {
     return json({ error: String((e as Error)?.message || e) }, 500);
   }

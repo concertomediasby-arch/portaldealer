@@ -137,6 +137,12 @@ alter table public.guide_schedule add column if not exists remind_at timestamptz
 create table if not exists public.academy_remind (no int primary key, sent_at timestamptz default now());
 alter table public.academy_remind enable row level security;
 
+-- 🗓 Ringkasan mingguan (Tahap 6 C, 4 Nov 2026): Senin 08.00 WIB, satu notifikasi berisi semua yang baru 7 hari terakhir.
+-- Bawaan aktif — termasuk HP yang sudah berlangganan (pilihan pemilik "a"); bisa dimatikan di menu Setting.
+alter table public.cway_push_subs add column if not exists weekly boolean not null default true;
+create table if not exists public.weekly_push (week date primary key, sent_at timestamptz default now(), counts jsonb);
+alter table public.weekly_push enable row level security;
+
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated
@@ -164,7 +170,7 @@ let pushSt = '?';          // ? | … | ok | unsupported | denied | nosql | nofn
 let pushFlags = null;      // { staff, cway, news, acad, guide } milik HP ini (null = belum diketahui)
 let pushEp = null;         // endpoint langganan HP ini
 let pnSel = null;          // pilihan centang sebelum diaktifkan
-const PN_KEYS = ['cway', 'guide', 'stock', 'news', 'acad', 'product', 'gallery'];   // pilihan kotak 🔔 Notifikasi (selain staff)
+const PN_KEYS = ['weekly', 'cway', 'guide', 'stock', 'news', 'acad', 'product', 'gallery'];   // weekly = 🗓 Ringkasan mingguan (Tahap 6 C)   // pilihan kotak 🔔 Notifikasi (selain staff)
 const PN_DEF = () => Object.fromEntries(PN_KEYS.map(k => [k, true]));
 const pnActive = f => pushSt === 'ok' && PN_KEYS.some(k => f?.[k]);
 const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -296,7 +302,7 @@ function pnHtml(where) {
   if (!pnSel) pnSel = PN_DEF();
   const sel = active ? Object.fromEntries(PN_KEYS.map(k => [k, !!f[k]])) : pnSel;
   const chk = (k, ico, lbl, sub) => `<label class="pn-chk"><input type="checkbox" ${sel[k] ? 'checked' : ''} ${st === 'busy' ? 'disabled' : ''} onchange="pnToggle('${k}', this.checked)"><span>${ico} ${lbl}${sub ? ` <small>· ${sub}</small>` : ''}</span></label>`;
-  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + (canGd ? chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') + chk('stock', '📦', 'Stok produk pantauan', 'khusus partner') : '')
+  const opts = chk('weekly', '🗓', 'Ringkasan mingguan', 'Senin 08.00 · semua yang baru dalam satu notifikasi') + (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + (canGd ? chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') + chk('stock', '📦', 'Stok produk pantauan', 'khusus partner') : '')
     + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru') + chk('product', '🆕', 'Produk baru') + chk('gallery', '🚗', 'Galeri Instalasi baru');
   let title, text = '', btn = '';
   if (st === 'unsupported') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = pushUnsupportedMsg(); }
