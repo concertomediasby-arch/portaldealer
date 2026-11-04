@@ -89,6 +89,12 @@ const TYPES = [
     card: { t: 't', v: 'gl', kick: 'GALERI INSTALASI', h: 'Instalasi audio mobil dari partner resmi CAI', sub: 'Foto & video pemasangan Audiocircle · STEG · Zelos dan brand resmi CAI lainnya.' } },
 ];
 for (const t of TYPES) items.push({ kind: '', id: t.id, target: '/?', title: t.title, desc: t.desc, card: t.card });
+// Concerto Way per Day (4 Nov 2026, permintaan pemilik — sampul WA cocok dengan Day yang dibagikan): /cway/<n>/ untuk Day 1..CW_DAYS.
+// Hanya nomor Day — judul & isi tetap di database khusus login. cwLink() di js/cway.js memakai halaman ini bila Day ≤ CW_DAYS.
+const CW_DAYS = 60;   // samakan dengan CWAY_SHARE_DAYS di js/cway.js; tambah bila Day sudah mendekati batas
+for (let n = 1; n <= CW_DAYS; n++) items.push({ kind: 'cway', id: String(n), target: '/?',
+  title: `Concerto Way — Day ${n} · khusus partner CAI`, desc: TYPES.find(t => t.id === 'cway').desc,
+  card: { ...TYPES.find(t => t.id === 'cway').card, day: n, h: `Concerto Way · Day ${n}` } });
 
 /* ── Tampilan kartu (HTML → screenshot) ── */
 const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
@@ -146,7 +152,8 @@ const LOGO = `<img src="${LOGO_WHITE}">`;
 function cardHtml(c) {
   if (c.t === 't') {
     const svg = (d, col) => `<svg width="104" height="104" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-    const ic = c.v === 'cw' ? '<div class="day"><i>DAY</i><b>1</b></div>'
+    const ic = c.v === 'cw' ? (c.day ? `<div class="day"><i>DAY</i><b${c.day > 99 ? ' style="font-size:68px"' : ''}>${c.day}</b></div>`
+        : svg('<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3c0 1.5-1 1.5-1 3M12 3c0 1.5-1 1.5-1 3"/>', '#f0cf8a'))
       : c.v === 'pd' ? svg('<path d="M4 5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v5h5"/><path d="M8 13h8M8 17h5"/>', '#f0cf8a')
       : c.v === 'nw' ? svg('<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/>', '#6fd3e6')
       : svg('<path d="M3 13l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5v4a1 1 0 0 1-1 1h-1a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H4a1 1 0 0 1-1-1z"/><path d="M3 13h18"/>', '#f0cf8a');
