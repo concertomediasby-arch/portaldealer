@@ -291,7 +291,7 @@ function renderNews() {
   const list = nwShown(), cats = [...new Set(list.map(x => x.category).filter(Boolean))];
   body.innerHTML = `<div class="cw-tools"><input type="search" class="cw-search" placeholder="Cari berita…" value="${escHtml(nwQ)}" oninput="nwQ=this.value;nwListOnly()">
     ${cats.length > 1 ? `<div class="cw-chips"><button class="cw-chip${nwCat ? '' : ' on'}" onclick="nwCat='';renderNews()">Semua</button>${cats.map(c => `<button class="cw-chip${nwCat === c ? ' on' : ''}" onclick="nwCat=${escHtml(JSON.stringify(c))};renderNews()">${escHtml(c)}</button>`).join('')}</div>` : ''}</div>
-    <div id="nw-list">${nwListHtml()}</div>`;
+    ${pnHtml('news')}<div id="nw-list">${nwListHtml()}</div>`;
 }
 function nwListOnly() { const el = document.getElementById('nw-list'); if (el) el.innerHTML = nwListHtml(); }
 function nwListHtml() {
@@ -454,8 +454,10 @@ async function saveNw() {
     if (image) image += nwFrSuffix(f.fr);
     const row = { title: f.title.trim(), summary: f.summary.trim() || null, body: f.body.trim() || null, category: f.category.trim() || null, image,
       link_url: f.link_url.trim() || null, link_label: f.link_label.trim() || null, post_date: f.post_date || todayWIB(), published: !!f.published, updated_at: new Date().toISOString() };
+    const wasPub = !!(f.id && nwItems?.find(x => x.id === f.id)?.published);
     const q = f.id ? supabase.from(NEWS_TABLE).update(row).eq('id', f.id).select().single() : supabase.from(NEWS_TABLE).insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
+    if (data.published && !wasPub) pushNotify('news', data.id);   // notifikasi HP "CAI Hub News" (sekali per berita, js/push.js)
     if (old && old !== path && /^news\//.test(old)) supabase.storage.from('showcase').remove([old]).catch(() => {});
     closeNwForm(); showToast(f.id ? '✓ Berita diperbarui' : '✓ Berita diterbitkan');
     await loadNews(true); openNews(data.id);

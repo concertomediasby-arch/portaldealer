@@ -114,6 +114,7 @@ function dashRender() {
   document.getElementById('dash-pair')?.classList.toggle('one', !DASH_HOF);
   dashSet('dash-paket', dashPaketHtml());
   dashSet('dash-hello', dashHelloHtml());
+  if (typeof pnHtml === 'function') dashSet('pn-invite', pnHtml('dash'));   // ajakan notifikasi HP (js/push.js)
   dashSet('dashboard-brands', dashBrandsHtml());
   dashNewRender();
   ['dash-q', 'dash-q2'].forEach((id, i) => { const el = document.getElementById(id); if (el && keepQ[i]) el.value = keepQ[i]; });

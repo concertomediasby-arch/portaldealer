@@ -1,4 +1,5 @@
--- Concerto Way: notifikasi HP 5 menit sebelum tayang (Edge Function "cway-push"). 4 Nov 2026, permintaan pemilik.
+-- Notifikasi HP CAI Hub (Edge Function "cway-push"). 4 Nov 2026, permintaan pemilik:
+-- pengingat Editor/Admin 5 menit sebelum Concerto Way tayang + notifikasi partner saat tayang + News baru (semua pengunjung).
 -- Jalankan sekali di Supabase → SQL Editor → Run SETELAH fungsi cway-push di-deploy (Verify JWT dimatikan).
 -- Sama dengan tombol "📋 Salin SQL Notifikasi" di menu Concerto Way (konstanta CWAY_PUSH_SQL di js/cway.js). Tidak berisi rahasia.
 alter table public.concerto_way add column if not exists push_notified_at timestamptz;
@@ -11,6 +12,13 @@ create table if not exists public.cway_push_subs (
   ua text,
   created_at timestamptz default now()
 );
+-- Jenis notifikasi per HP. Baris lama (dibuat sebelum kolom ini ada) = pengingat Editor/Admin → staff true.
+alter table public.cway_push_subs add column if not exists staff boolean default true;
+alter table public.cway_push_subs alter column staff set default false;
+alter table public.cway_push_subs add column if not exists cway boolean default false;
+alter table public.cway_push_subs add column if not exists news boolean default false;
+alter table public.concerto_way add column if not exists push_live_at timestamptz;   -- notifikasi partner "sudah tayang" terkirim
+alter table if exists public.cai_news add column if not exists push_at timestamptz;   -- notifikasi News terkirim
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated

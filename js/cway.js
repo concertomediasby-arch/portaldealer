@@ -221,7 +221,7 @@ function renderCway() {
   body.innerHTML = `<div class="cw-tools"><input type="search" class="cw-search" placeholder="Cari topik, mis. papan nama…" value="${escHtml(cwQ)}" oninput="cwQ=this.value;cwRenderListOnly()">
       <div class="cw-sort" role="group" aria-label="Urutan"><button class="cw-chip${cwSort === 'new' ? ' on' : ''}" onclick="cwSetSort('new')">Terbaru dulu</button><button class="cw-chip${cwSort === 'old' ? ' on' : ''}" onclick="cwSetSort('old')">Day 1 dulu</button></div>
       ${sers.length > 1 ? `<div class="cw-chips"><button class="cw-chip${cwSer ? '' : ' on'}" onclick="cwSer='';renderCway()">Semua</button>${sers.map(s => `<button class="cw-chip${cwSer === s ? ' on' : ''}" onclick="cwSer=${escHtml(JSON.stringify(s))};renderCway()">${escHtml(s)}</button>`).join('')}</div>` : ''}</div>
-    ${cwQueueHtml()}${cwPushHtml()}<div id="cw-list">${cwListHtml(groups, list.length)}</div>`;
+    ${cwQueueHtml()}${cwPushHtml()}${pnHtml('cway')}<div id="cw-list">${cwListHtml(groups, list.length)}</div>`;
 }
 // Antrian tayang (Admin/Editor): postingan terjadwal, urut waktu tayang terdekat
 function cwQueueHtml() {
@@ -231,126 +231,6 @@ function cwQueueHtml() {
   return `<div class="cw-queue"><div class="cw-queue-h">⏰ Antrian tayang <span>${q.length} postingan · otomatis muncul untuk partner pada jamnya</span></div>
     ${q.map(x => `<button class="cw-queue-r" onclick="openCway('${x.id}')"><span class="cw-queue-t">${escHtml(cwWhen(x.publish_at))}</span>
       <span class="cw-queue-d">${x.day != null ? 'DAY ' + x.day : '•'}</span><b>${escHtml(x.title)}</b><span class="cw-queue-e" onclick="event.stopPropagation();openCwForm('${x.id}')">✏️ Ubah jadwal</span></button>`).join('')}</div>`;
-}
-// ── Notifikasi HP 5 menit sebelum tayang (4 Nov 2026, permintaan pemilik — gratis, Web Push, khusus Editor/Admin) ──
-// Edge Function supabase/functions/cway-push (pg_cron tiap menit) mengirim ke HP yang mengaktifkan di sini; sw.js menampilkan
-// notifikasinya & membuka /?cw=<id> saat diketuk. iPhone: hanya bila CAI Hub dipasang di Layar Utama (iOS 16.4+).
-const CWAY_PUSH_FN = 'cway-push';
-const CWAY_PUSH_SQL = `-- Concerto Way: notifikasi HP 5 menit sebelum tayang (Edge Function "cway-push"). 4 Nov 2026, permintaan pemilik.
--- Jalankan sekali di Supabase → SQL Editor → Run SETELAH fungsi cway-push di-deploy (Verify JWT dimatikan).
--- Sama dengan tombol "📋 Salin SQL Notifikasi" di menu Concerto Way (konstanta CWAY_PUSH_SQL di js/cway.js). Tidak berisi rahasia.
-alter table public.concerto_way add column if not exists push_notified_at timestamptz;
-
-create table if not exists public.cway_push_subs (
-  endpoint text primary key,
-  p256dh text not null,
-  auth text not null,
-  user_id uuid default auth.uid(),
-  ua text,
-  created_at timestamptz default now()
-);
-alter table public.cway_push_subs enable row level security;
-drop policy if exists "cway push own" on public.cway_push_subs;
-create policy "cway push own" on public.cway_push_subs for all to authenticated
-  using (user_id = auth.uid() and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'))
-  with check (user_id = auth.uid() and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));
-
--- Kunci VAPID dibuat otomatis oleh fungsi; RLS tanpa policy = hanya fungsi (service role) yang bisa membaca
-create table if not exists public.cway_push_config (id int primary key default 1 check (id = 1), public_key text, private_key text);
-alter table public.cway_push_config enable row level security;
-
-create extension if not exists pg_cron;
-create extension if not exists pg_net;
-select cron.unschedule('cway-push') where exists (select 1 from cron.job where jobname = 'cway-push');
-select cron.schedule('cway-push', '* * * * *', $$
-  select net.http_post(
-    url := 'https://cvffltbxsaiugccexmtf.supabase.co/functions/v1/cway-push',
-    headers := jsonb_build_object('Content-Type', 'application/json'),
-    body := '{}'::jsonb,
-    timeout_milliseconds := 30000
-  );
-$$);
--- Mematikan jadwal: select cron.unschedule('cway-push');`;
-let cwPush = { st: '?' };   // ? | unsupported | denied | off | on | busy | nosql | nofn
-const cwPushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
-const cwIsIos = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-async function cwPushReg() {
-  let r = await navigator.serviceWorker.getRegistration();
-  if (!r) r = await navigator.serviceWorker.register('sw.js');
-  return r.active ? r : navigator.serviceWorker.ready;
-}
-async function cwPushCheck() {
-  if (!isAdmin()) return;
-  if (!cwPushOk()) cwPush = { st: 'unsupported' };
-  else if (Notification.permission === 'denied') cwPush = { st: 'denied' };
-  else {
-    try { const r = await navigator.serviceWorker.getRegistration(); const sub = r && await r.pushManager.getSubscription();
-      cwPush = sub && Notification.permission === 'granted' ? { st: 'on', ep: sub.endpoint } : { st: 'off' }; } catch (e) { cwPush = { st: 'off' }; }
-  }
-  const el = document.getElementById('cw-push'); if (el) el.outerHTML = cwPushHtml();
-}
-function cwPushHtml() {
-  if (!isAdmin()) return '';
-  if (cwPush.st === '?') { setTimeout(cwPushCheck, 0); cwPush = { st: '…' }; }
-  const st = cwPush.st;
-  const msg = {
-    '…': 'Memeriksa…',
-    unsupported: cwIsIos() ? 'Di iPhone, notifikasi hanya bisa bila CAI Hub <b>dipasang di Layar Utama</b> (Safari → Bagikan → <i>Tambah ke Layar Utama</i>) lalu dibuka dari ikonnya — iOS 16.4 ke atas.' : 'Browser ini belum mendukung notifikasi. Pakai Chrome terbaru, atau pasang CAI Hub di Layar Utama.',
-    denied: 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP (Notifikasi → CAI Hub), lalu muat ulang.',
-    off: 'Dapat notifikasi di HP ini <b>5 menit sebelum</b> setiap Day yang dijadwalkan tayang — walau CAI Hub sedang tertutup.',
-    on: '<b>✅ Aktif di HP ini.</b> Notifikasi masuk 5 menit sebelum Day terjadwal tayang. Ketuk notifikasinya untuk membuka Day itu & membagikannya.',
-    busy: 'Mengaktifkan…',
-    nosql: 'Tabel notifikasi belum dibuat. Klik <b>📋 Salin SQL Notifikasi</b>, jalankan sekali di Supabase → SQL Editor → Run, lalu coba lagi.',
-    nofn: 'Edge Function <b>cway-push</b> belum di-deploy di Supabase (lihat <code>supabase/functions/cway-push</code>; Verify JWT dimatikan), lalu coba lagi.',
-  }[st] || '';
-  const btn = st === 'on' ? `<button class="gt-btn ghost" onclick="cwPushTest()">🔔 Kirim tes</button><button class="gt-btn ghost" onclick="cwPushOffBtn()">Matikan</button>`
-    : ['off', 'nosql', 'nofn'].includes(st) ? `<button class="gt-btn" onclick="cwPushOn()">Aktifkan di HP ini</button>` : '';
-  return `<div class="cw-push${st === 'on' ? ' on' : ''}" id="cw-push"><div class="cw-push-tx"><b class="cw-push-h">🔔 Pengingat tayang</b><span>${msg}</span></div>
-    <div class="cw-push-b">${btn}${st === 'nosql' ? '<button class="gt-btn ghost" onclick="cwCopyPushSql()">📋 Salin SQL Notifikasi</button>' : ''}</div></div>`;
-}
-const cwB64 = s => { const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); };
-async function cwPushFn(body) {
-  const { data, error } = await supabase.functions.invoke(CWAY_PUSH_FN, { body });
-  if (error) { const st = error.context?.status; const e = new Error(error.message); e.nofn = !st || st === 404; e.status = st; throw e; }
-  return data;
-}
-async function cwPushOn() {
-  if (!cwPushOk()) return cwPushCheck();
-  const perm = await Notification.requestPermission();   // langsung dari klik (wajib di iPhone)
-  if (perm !== 'granted') return cwPushCheck();
-  cwPush = { st: 'busy' }; const el = document.getElementById('cw-push'); if (el) el.outerHTML = cwPushHtml();
-  try {
-    const reg = await cwPushReg();
-    const { key } = await cwPushFn({ action: 'key' });
-    if (!key) throw Object.assign(new Error('kunci kosong'), { nofn: true });
-    let sub = await reg.pushManager.getSubscription();
-    if (sub && sub.options?.applicationServerKey && btoa(String.fromCharCode(...new Uint8Array(sub.options.applicationServerKey))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') !== key) { await sub.unsubscribe(); sub = null; }
-    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: cwB64(key) });
-    const j = sub.toJSON();
-    const { error } = await supabase.from('cway_push_subs').upsert({ endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, ua: navigator.userAgent.slice(0, 200) }, { onConflict: 'endpoint' });
-    if (error) { if (/does not exist|schema cache|42P01|PGRST205/i.test(error.message + ' ' + error.code)) { cwPush = { st: 'nosql' }; cwCopyPushSql(); } else throw error; }
-    else { cwPush = { st: 'on', ep: j.endpoint }; showToast('✅ Pengingat tayang aktif di HP ini'); }
-  } catch (e) {
-    if (e.nofn && !(e.status >= 500)) cwPush = { st: 'nofn' };
-    else if (/cway_push_config|does not exist|42P01/i.test(e.message)) { cwPush = { st: 'nosql' }; cwCopyPushSql(); }
-    else { cwPush = { st: 'off' }; showToast('⚠ Gagal mengaktifkan notifikasi: ' + (e.message || e), 7000); }
-  }
-  const el2 = document.getElementById('cw-push'); if (el2) el2.outerHTML = cwPushHtml();
-}
-async function cwPushOffBtn() {
-  try { const r = await navigator.serviceWorker.getRegistration(); const sub = r && await r.pushManager.getSubscription();
-    if (sub) { await supabase.from('cway_push_subs').delete().eq('endpoint', sub.endpoint); await sub.unsubscribe(); } } catch (e) {}
-  showToast('Pengingat tayang dimatikan di HP ini'); cwPushCheck();
-}
-async function cwPushTest() {
-  try { const r = await cwPushFn({ action: 'test', endpoint: cwPush.ep });
-    showToast(r?.ok ? '🔔 Tes terkirim — notifikasi muncul dalam beberapa detik' : '⚠ Tes gagal (status ' + (r?.status || '?') + ')', 6000);
-  } catch (e) { showToast('⚠ Tes gagal: ' + (e.message || e), 7000); }
-}
-function cwCopyPushSql() {
-  (navigator.clipboard?.writeText(CWAY_PUSH_SQL) || Promise.reject()).then(
-    () => showToast('📋 SQL notifikasi disalin — tempel di Supabase → SQL Editor → Run', 7000),
-    () => prompt('Jalankan SQL ini sekali di Supabase → SQL Editor → Run:', CWAY_PUSH_SQL));
 }
 function cwRenderListOnly() {   // pencarian: jangan render ulang kotak input (fokus & kursor tetap)
   const q = cwQ.trim().toLowerCase(), list = cwShown(), groups = [];
@@ -504,8 +384,10 @@ async function saveCw() {
   else if (f.id && cwItems?.find(x => x.id === f.id)?.publish_at) row.publish_at = null;   // jadwal dibatalkan → tayang sekarang
   f.busy = true; renderCwForm();
   try {
+    const prev = f.id && cwItems?.find(x => x.id === f.id), wasLive = !!(prev && prev.published && cwDue(prev));
     const q = f.id ? supabase.from(CWAY_TABLE).update(row).eq('id', f.id).select().single() : supabase.from(CWAY_TABLE).insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
+    if (data.published && cwDue(data) && !wasLive) pushNotify('cway', data.id);   // partner: "Day n sudah tayang" (terjadwal → dikirim jadwal server)
     closeCwForm(); showToast(row.publish_at ? `⏰ Dijadwalkan — tampil untuk partner ${cwWhen(row.publish_at)}` : f.id ? '✓ Concerto Way diperbarui' : '✓ Concerto Way diterbitkan', 6000);
     await loadCway(true);
     openCway(data.id);
