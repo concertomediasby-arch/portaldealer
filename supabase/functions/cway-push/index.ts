@@ -9,7 +9,9 @@
 //  • Editor        : pengingat sebelum SEMUA konten terjadwal (Concerto Way, Galeri, pengumuman produk, Academy, Panduan) — waktunya
 //                    dipilih Editor per HP (4 Nov 2026, kolom remind jsonb: { all: [60, 5], live: true, cway?: [...], gallery?: [...], … };
 //                    pilihan REMIND_LEADS = 1 hari · 3 jam · 1 jam · 30 · 15 · 5 menit; kosong = bawaan 5 menit) + opsional "✅ sudah tayang".
-//                    Sekali per konten per waktu lewat tabel staff_remind_log.
+//                    Sekali per konten per waktu lewat tabel staff_remind_log. Pilihan IKUT AKUN (4 Nov 2026, permintaan pemilik):
+//                    disimpan ke SEMUA HP yang pengingatnya aktif (kolom staff — hanya Editor yang bisa menyalakannya), dan HP Editor
+//                    yang baru mengaktifkan pengingat otomatis memakai pilihan yang sama.
 //  • Semua         : 🗓 Ringkasan mingguan — Senin 08.00 WIB, satu notifikasi: jumlah produk diperbarui, instalasi Galeri, materi Academy,
 //                    berita 7 hari terakhir (+ jumlah Concerto Way & Panduan Partner TANPA judul bagi HP partner). Kolom weekly,
 //                    sekali per minggu lewat tabel weekly_push; minggu tanpa isi = tidak dikirim. Ketuk = /?minggu (halaman "Minggu ini").
@@ -32,7 +34,7 @@
 //   { action: 'notify', type: 'product', id }        → kirim pengumuman produk (baris product_push) sekarang (hanya Editor)
 //   { action: 'watch', endpoint, product_id, name, on } → pantau / batal pantau stok produk di HP ini (hanya yang login; maks. 30)
 //   { action: 'watches', endpoint }                  → { items: [{product_id, name}] } produk yang dipantau HP ini
-//   { action: 'remind', endpoint, remind }           → simpan pilihan waktu pengingat Editor di HP ini (hanya Editor)
+//   { action: 'remind', endpoint, remind }           → simpan pilihan waktu pengingat Editor untuk semua HP Editor (ikut akun; hanya Editor)
 //   {} (pg_cron tiap menit)                          → pengingat Editor sesuai pilihan waktunya + notifikasi partner saat jadwal tiba
 //                                                      + materi Academy terjadwal (field `at` di showcase/academy/items.json) saat tiba
 //                                                      + PDF Panduan terjadwal (tabel guide_schedule): dipindah dari folder tunggu `pending/`
@@ -50,6 +52,11 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const REMIND_LEADS = [1440, 180, 60, 30, 15, 5];   // menit sebelum tayang yang bisa dipilih Editor (pengingat tayang)
 const REMIND_DEFAULT = [5];                         // HP Editor yang belum memilih = seperti dulu (5 menit)
 const REMIND_KINDS = ['cway', 'gallery', 'acad', 'guide', 'product'] as const;
+// Pilihan waktu pengingat bersama (ikut akun Editor): diambil dari HP pengingat mana pun yang sudah memilih
+async function sharedRemind(): Promise<unknown> {
+  const { data, error } = await db.from('cway_push_subs').select('remind').eq('staff', true).not('remind', 'is', null).limit(1);
+  return error ? null : (data?.[0]?.remind ?? null);
+}
 const SUBJECT = 'https://hub.concerto.id/';
 const SUBS = 'cway_push_subs';
 const PUB_STORAGE = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/`;
@@ -331,7 +338,8 @@ Deno.serve(async (req) => {
       if (error && /remind/.test(error.message)) ({ data, error } = await db.from(SUBS).select(FLAGS.join(', ')).eq('endpoint', ep).maybeSingle());   // kolom remind belum ada
       if (error) return json({ error: error.message }, 500);
       const d = data as Record<string, unknown> | null;
-      return json({ flags: d ? Object.fromEntries(FLAGS.map(k => [k, d[k]])) : null, remind: d?.remind ?? null, remindCol: !!d && 'remind' in d });
+      const remind = d?.remind ?? (d?.staff && 'remind' in d ? await sharedRemind() : null);
+      return json({ flags: d ? Object.fromEntries(FLAGS.map(k => [k, d[k]])) : null, remind, remindCol: !!d && 'remind' in d });
     }
 
     if (a === 'set') {
@@ -357,6 +365,7 @@ Deno.serve(async (req) => {
       const row: Record<string, unknown> = { endpoint: ep, ...f };
       if (k.p256dh && k.auth) { row.p256dh = String(k.p256dh); row.auth = String(k.auth); }
       if (body.ua) row.ua = String(body.ua).slice(0, 200);
+      if (f.staff && !cur?.staff) { const r = await sharedRemind(); if (r) row.remind = r; }   // HP Editor baru: ikut pilihan waktu akun
       const { error: e2 } = cur ? await db.from(SUBS).update(row).eq('endpoint', ep) : await db.from(SUBS).insert(row);
       if (e2) return json({ error: e2.message }, 500);
       return json({ flags: f });
@@ -369,10 +378,13 @@ Deno.serve(async (req) => {
       const clean = (v: unknown) => Array.isArray(v) ? [...new Set(v.map(Number).filter(n => REMIND_LEADS.includes(n)))].sort((x, y) => y - x) : undefined;
       const out: Record<string, unknown> = { all: clean(r.all) ?? REMIND_DEFAULT, live: !!r.live };
       for (const k of REMIND_KINDS) { const v = clean(r[k]); if (v) out[k] = v; }
-      const { data, error } = await db.from(SUBS).update({ remind: out }).eq('endpoint', ep).select('endpoint');
-      if (error) return json({ error: error.message, nosql: /remind/.test(error.message) }, 500);
-      if (!data?.length) return json({ error: 'HP ini belum terdaftar' }, 404);
-      return json({ remind: out });
+      const { data: me } = await db.from(SUBS).select('staff').eq('endpoint', ep).maybeSingle();
+      if (!me) return json({ error: 'HP ini belum terdaftar' }, 404);
+      // Ikut akun: semua HP yang pengingat tayangnya aktif (hanya Editor yang bisa menyalakan kolom staff) + HP ini
+      const { error: e0 } = await db.from(SUBS).update({ remind: out }).eq('endpoint', ep);
+      if (e0) return json({ error: e0.message, nosql: /remind/.test(e0.message) }, 500);
+      const { data } = await db.from(SUBS).update({ remind: out }).eq('staff', true).select('endpoint');
+      return json({ remind: out, devices: Math.max(1, data?.length || 0) });
     }
 
     if (a === 'test') {

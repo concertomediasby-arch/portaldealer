@@ -315,13 +315,13 @@ function rmHtml() {
     <div class="rm-chips">${RM_LEADS.map(([L, t]) => chip('all', L, t + (L === 1440 ? ' sebelum' : ''))).join('')}</div>
     <label class="rm-live"><input type="checkbox" ${r.live ? 'checked' : ''} onchange="rmLive(this.checked)"> Juga kabari saya <b>saat sudah tayang</b> ✅</label>
     <details class="rm-per" ${rmOpen ? 'open' : ''} ontoggle="rmOpen = this.open"><summary>Atur berbeda per menu <small>(opsional)</small></summary>${per}</details>
-    <div class="rm-note">Tersimpan langsung saat diklik. Konten yang dijadwalkan lebih dekat dari waktu pengingat (mis. tayang 20 menit lagi, pengingat 1 jam) → pengingat itu dilewati; yang lebih dekat tetap dikirim.</div></div>`;
+    <div class="rm-note">Tersimpan langsung saat diklik dan <b>ikut akun</b> — berlaku untuk semua HP/perangkat Editor yang pengingatnya aktif${rmDevices > 1 ? ` (${rmDevices} perangkat)` : ''}; perangkat Editor yang baru mengaktifkan pengingat otomatis memakai pilihan ini. Konten yang dijadwalkan lebih dekat dari waktu pengingat (mis. tayang 20 menit lagi, pengingat 1 jam) → pengingat itu dilewati; yang lebih dekat tetap dikirim.</div></div>`;
 }
-let rmBusy = null;
+let rmBusy = null, rmDevices = 0;
 async function rmSave(next) {
   const prev = pushRemind; pushRemind = next; pushPaint();
   const my = rmBusy = {};
-  try { const r = await pushFn({ action: 'remind', endpoint: pushEp, remind: next }); if (rmBusy === my && r?.remind) { pushRemind = r.remind; pushPaint(); } }
+  try { const r = await pushFn({ action: 'remind', endpoint: pushEp, remind: next }); if (rmBusy === my && r?.remind) { pushRemind = r.remind; rmDevices = r.devices || 0; pushPaint(); } }
   catch (e) { pushRemind = prev; if (/remind|column/i.test(e.message || '')) pushRemindCol = false; else showToast('⚠ Gagal menyimpan pengingat: ' + (e.message || e), 6000); pushPaint(); }
 }
 function rmToggle(k, L) {
