@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-11-04T13:29:54Z">
+<link rel="stylesheet" href="style.css?b=2026-11-04T14:01:17Z">
 <!-- Layar pembuka bermerek (Tahap 3, 4 Nov 2026): hanya saat dibuka dari ikon Layar Utama, sekali per sesi -->
 <script>try{if((matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)&&!sessionStorage.getItem('cai-spl')){document.documentElement.classList.add('spl-on');sessionStorage.setItem('cai-spl','1');}}catch(e){}</script>
 </head>
@@ -263,7 +263,7 @@
       </button>
       <button class="sidebar-item staff-nav" id="nav-sheet" onclick="staffSyncSheet()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
-        Update Stok (Sheet)
+        Update Stok (Sheet)<i class="nav-badge" id="nav-sheet-badge" hidden></i>
       </button>
       <button class="sidebar-item editor-only" id="nav-dealers" onclick="openDealers()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
@@ -857,7 +857,7 @@
     </button>
     <button class="mobile-nav-item staff-nav" id="mnav-sheet" onclick="staffSyncSheet()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
-      <span>Sheet</span>
+      <span>Sheet</span><i class="mnav-badge" id="mnav-sheet-badge" hidden></i>
     </button>
     <button class="mobile-nav-item staff-nav" id="mnav-visitors" onclick="openVisitors()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -1017,6 +1017,7 @@
         </div>
         <div class="sheet-link" id="sheet-link"></div>
         <div class="sheet-link" id="auto-sync"></div>
+        <div id="stock-upd"></div>
         <div class="admin-import" id="admin-import" style="display:none">
           <div class="imp-help">
             Unggah file stok gudang CAI apa adanya (kolom <b>Kode Barang</b> + <b>Baru</b>), daftar <b>barang OTW</b>, atau <b>Template Excel</b>.
@@ -1049,24 +1050,24 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/core.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/stock.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/dealers.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/gathering.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/rundown.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/videotron.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/showcase.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/cway.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/news.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/push.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/install.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/settings.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/dash.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/fav.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/cars.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/finder.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/interest.js?b=2026-11-04T13:29:54Z"></script>
-<script src="js/main.js?b=2026-11-04T13:29:54Z"></script>
+<script src="katalog.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/core.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/stock.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/dealers.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/gathering.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/rundown.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/videotron.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/showcase.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/cway.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/news.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/push.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/install.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/settings.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/dash.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/fav.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/cars.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/finder.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/interest.js?b=2026-11-04T14:01:17Z"></script>
+<script src="js/main.js?b=2026-11-04T14:01:17Z"></script>
 </body>
 </html>

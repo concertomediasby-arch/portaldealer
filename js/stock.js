@@ -322,6 +322,8 @@ function updateAuthUI() {
   document.body.classList.toggle('logged-in', !!authUser);
   document.body.classList.toggle('is-editor', isEditor());
   document.body.classList.toggle('is-staff', isAdmin());
+  if (isAdmin() && typeof QA_SCREEN_MODE !== 'undefined' && !QA_SCREEN_MODE) setTimeout(() => loadStockLog(false), 3000);   // badge 🔔 menu Update Stok
+  else slogBadge();
   if (isAdmin()) qsRegisterSW();   // panel Admin/Editor juga bisa dibuka ulang tanpa internet (mode offline videotron)
   updateWaAccess();
   if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
@@ -563,7 +565,7 @@ function showAdminStockSection() {
   document.getElementById('admin-footer').style.display = 'block';
   document.getElementById('admin-user-email').textContent = authUser ? `${accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Partner'}` : '';
   document.getElementById('admin-subtitle').textContent = admin ? 'Kelola ketersediaan produk' : 'Akun ini tidak punya akses admin';
-  if (admin) { renderAdminList(); renderSheetLink(); loadAutoSync(); }
+  if (admin) { renderAdminList(); renderSheetLink(); loadAutoSync(); loadStockLog(true); }
 }
 // Sinkron otomatis di server (Edge Function sync-stock-sheet + pg_cron, tiap 15 menit) — status terakhir dari tabel stock_sync
 async function loadAutoSync() {
@@ -585,7 +587,7 @@ async function runAutoSync() {
     showToast(data?.ok ? 'Stok tersinkron — ' + data.message : 'Sinkron gagal: ' + (data?.error || ''));
     await loadStock();
   } catch (e) { showToast('Sinkron gagal: ' + (e.message || e)); }
-  loadAutoSync();
+  loadAutoSync(); loadStockLog(true);
 }
 
 function resetAdminLoginUI() {
@@ -1040,3 +1042,78 @@ async function saveImport() {
       : 'Gagal menyimpan: ' + m, 'err');
   }
 }
+
+/* ═══ 🔔 Update terbaru di panel Admin (4 Nov 2026, permintaan pemilik — pratinjau .mockup/stok-update/; hanya Admin & Editor) ═══
+   Isi HANYA: 📦 update stok (status/qty sebelum → sesudah, dari tabel stock_log yang diisi pemicu di tabel stock — sinkron sheet di
+   server, Import Excel, ketikan Admin/Editor) dan 🆕 produk baru (produk katalog di RECENT_UPDATES ber-type 'new' + kode barang baru
+   dari Google Sheet = baris x: yang baru muncul). OTW, foto, video & spesifikasi sengaja tidak ditampilkan. 7 hari terakhir.
+   Badge angka di menu "Update Stok (Sheet)" = perubahan sejak panel terakhir dibuka di perangkat itu (localStorage cai-stocklog-seen).
+   SQL sekali jalan: supabase/stock-log.sql (= STOCK_LOG_SQL). */
+const STOCK_LOG_SQL = '-- CAI Hub — 🔔 Update terbaru di panel Admin (4 Nov 2026, permintaan pemilik): catatan perubahan stok (sebelum → sesudah).\n-- Pemicu di tabel stock mencatat setiap perubahan status/qty dari mana pun (sinkron sheet di server, Import Excel, ketikan Admin/Editor).\n-- Baris varian panjang kabel (v:...) & perubahan yang hanya mengubah catatan/OTW tidak dicatat. Catatan > 60 hari dihapus otomatis.\n-- Baca: hanya Admin/Editor. Aman dijalankan ulang. Sama dengan konstanta STOCK_LOG_SQL di js/stock.js.\ncreate table if not exists public.stock_log (\n  id bigint generated always as identity primary key,\n  at timestamptz not null default now(),\n  product_id text not null,\n  old_status text, new_status text,\n  old_qty integer, new_qty integer,\n  src text\n);\ncreate index if not exists stock_log_at on public.stock_log (at desc);\nalter table public.stock_log enable row level security;\ndrop policy if exists "stock log staff read" on public.stock_log;\ncreate policy "stock log staff read" on public.stock_log for select to authenticated\n  using ((auth.jwt() -> \'app_metadata\' ->> \'role\') in (\'admin\', \'editor\'));\ngrant select on public.stock_log to authenticated;\n\ncreate or replace function public.stock_log_mark() returns trigger language plpgsql security definer set search_path = public as $$\ndeclare\n  who text := coalesce(auth.jwt() -> \'app_metadata\' ->> \'role\', \'\');\n  src text := case when who in (\'admin\', \'editor\') then who else \'server\' end;\nbegin\n  if tg_op = \'DELETE\' then\n    if old.product_id not like \'v:%\' then\n      insert into stock_log (product_id, old_status, new_status, old_qty, new_qty, src) values (old.product_id, old.status, null, old.qty, null, src);\n    end if;\n    return old;\n  end if;\n  if new.product_id like \'v:%\' then return new; end if;\n  if tg_op = \'UPDATE\' and old.status is not distinct from new.status and old.qty is not distinct from new.qty then return new; end if;\n  insert into stock_log (product_id, old_status, new_status, old_qty, new_qty, src)\n    values (new.product_id, case when tg_op = \'UPDATE\' then old.status end, new.status, case when tg_op = \'UPDATE\' then old.qty end, new.qty, src);\n  if random() < 0.05 then delete from stock_log where at < now() - interval \'60 days\'; end if;\n  return new;\nend $$;\ndrop trigger if exists stock_log_mark on public.stock;\ncreate trigger stock_log_mark after insert or update or delete on public.stock for each row execute function public.stock_log_mark();\n';
+const SLOG_DAYS = 7, SLOG_SHOW = 8, SLOG_SEEN = 'cai-stocklog-seen';
+let slogRows = null, slogErr = '', slogTab = 'all', slogAll = false;
+const slogStatus = s => ({ ready: 'Ready', indent: 'Indent', habis: 'Habis' })[s] || '—';
+function slogName(id) {
+  if (String(id).startsWith('x:')) return 'Produk lain: ' + String(id).slice(2);
+  const { brand: b, product: p } = findProductAny(id); return p ? `${b.name} ${p.name}` : id;
+}
+const slogSrc = s => ({ server: 'sinkron sheet otomatis', admin: 'Admin Staff', editor: 'Editor' })[s] || (s || '');
+function slogTime(iso) {
+  const d = new Date(iso), w = x => x.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+  const jam = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace(':', '.');
+  const today = w(new Date()), yest = w(new Date(Date.now() - 864e5)), day = w(d);
+  return day === today ? 'Hari ini ' + jam : day === yest ? 'Kemarin ' + jam : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' }) + ' ' + jam;
+}
+// Gabungan: update stok + produk baru (urut terbaru)
+function slogItems() {
+  const out = [];
+  for (const r of slogRows || []) {
+    const x = String(r.product_id).startsWith('x:');
+    if (x && r.old_status == null && r.old_qty == null && r.new_status != null) {   // kode barang baru dari sheet
+      out.push({ kind: 'new', at: r.at, name: slogName(r.product_id), sub: `${slogTime(r.at)} · ${slogSrc(r.src)} · kode baru di sheet`, val: `🆕 Baru${r.new_qty != null ? ' · ' + r.new_qty : ''}`, cls: 'nw' });
+      continue;
+    }
+    const b = r.old_status == null && r.old_qty == null ? '—' : `${r.old_status && r.old_status !== r.new_status ? slogStatus(r.old_status) + ' ' : ''}${r.old_qty ?? ''}`.trim() || slogStatus(r.old_status);
+    const a = r.new_status == null ? 'Belum diatur' : `${r.new_status !== r.old_status || r.new_qty == null ? slogStatus(r.new_status) + ' ' : ''}${r.new_qty ?? ''}`.trim();
+    const down = r.new_status === 'habis' || (r.new_qty != null && r.old_qty != null && r.new_qty < r.old_qty) || r.new_status == null;
+    out.push({ kind: 'stock', at: r.at, name: slogName(r.product_id), sub: `${slogTime(r.at)} · ${slogSrc(r.src)}`, val: `${b} → ${a}`, cls: down ? 'dn' : 'up' });
+  }
+  const since = Date.now() - SLOG_DAYS * 864e5;
+  for (const u of typeof RECENT_UPDATES !== 'undefined' ? RECENT_UPDATES : []) {
+    if (u.type !== 'new') continue;
+    const at = Date.parse(u.date + 'T08:00:00+07:00'); if (at < since) continue;
+    out.push({ kind: 'new', at: new Date(at).toISOString(), name: slogName(u.productId), sub: `${slogTime(new Date(at).toISOString()).replace(/ \d\d\.\d\d$/, '')} · produk baru di katalog`, val: '🆕 Produk baru', cls: 'nw' });
+  }
+  return out.sort((x, y) => Date.parse(y.at) - Date.parse(x.at));
+}
+async function loadStockLog(render) {
+  if (typeof supabase === 'undefined' || !supabase || !isAdmin()) return;
+  const since = new Date(Date.now() - SLOG_DAYS * 864e5).toISOString();
+  const { data, error } = await supabase.from('stock_log').select('*').gte('at', since).order('at', { ascending: false }).limit(500);
+  if (error) { slogRows = null; slogErr = /relation|does not exist|schema cache|PGRST205|404/i.test(error.message || '') ? 'setup' : error.message; }
+  else { slogRows = data || []; slogErr = ''; }
+  slogBadge();
+  if (render) renderStockLog();
+}
+function renderStockLog() {
+  const el = document.getElementById('stock-upd'); if (!el) return;
+  if (slogErr === 'setup') { el.innerHTML = `<div class="su-box"><div class="su-h">🔔 Update terbaru</div><div class="su-empty">Catatan perubahan stok belum aktif — jalankan SQL sekali di Supabase → SQL Editor. <button class="gt-btn" onclick="slogCopySql()">📋 Salin SQL Update Stok</button></div></div>`; return; }
+  if (slogRows === null) { el.innerHTML = slogErr ? `<div class="su-box"><div class="su-empty">Update terbaru tidak bisa dimuat: ${escHtml(slogErr)}</div></div>` : ''; return; }
+  const all = slogItems(), cnt = k => all.filter(i => i.kind === k).length;
+  const rows = all.filter(i => slogTab === 'all' || i.kind === slogTab), show = slogAll ? rows : rows.slice(0, SLOG_SHOW);
+  const tab = (k, t) => `<button class="${slogTab === k ? 'on' : ''}" onclick="slogTab='${k}';slogAll=false;renderStockLog()">${t}</button>`;
+  el.innerHTML = `<div class="su-box"><div class="su-h">🔔 Update terbaru <span class="su-pill">${all.length}</span><i>${SLOG_DAYS} hari terakhir</i></div>
+    <div class="su-tabs">${tab('all', 'Semua')}${tab('stock', `📦 Update stok ${cnt('stock')}`)}${tab('new', `🆕 Produk baru ${cnt('new')}`)}</div>
+    ${show.length ? show.map(i => `<div class="su-it"><b>${escHtml(i.name)}</b><small>${escHtml(i.sub)}</small><em class="${i.cls}">${escHtml(i.val)}</em></div>`).join('')
+      : `<div class="su-empty">${slogTab === 'new' ? 'Belum ada produk baru' : 'Belum ada perubahan stok'} dalam ${SLOG_DAYS} hari terakhir.</div>`}
+    ${rows.length > SLOG_SHOW ? `<button class="su-more" onclick="slogAll=!slogAll;renderStockLog()">${slogAll ? 'Tampilkan lebih sedikit' : `Lihat semua ${rows.length} perubahan ›`}</button>` : ''}</div>`;
+  try { localStorage.setItem(SLOG_SEEN, String(Date.now())); } catch (e) {}
+  slogBadge();
+}
+// Badge di menu "Update Stok (Sheet)": jumlah perubahan sejak panel terakhir dibuka di perangkat ini
+function slogBadge() {
+  let seen = 0; try { seen = +localStorage.getItem(SLOG_SEEN) || 0; } catch (e) {}
+  const n = isAdmin() && slogRows ? slogItems().filter(i => Date.parse(i.at) > seen).length : 0;
+  for (const id of ['nav-sheet-badge', 'mnav-sheet-badge']) { const b = document.getElementById(id); if (b) { b.hidden = !n; b.textContent = n > 99 ? '99+' : n; } }
+}
+function slogCopySql() { (navigator.clipboard?.writeText(STOCK_LOG_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => prompt('Salin SQL ini:', STOCK_LOG_SQL)); }
