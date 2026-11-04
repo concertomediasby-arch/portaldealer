@@ -84,6 +84,7 @@ function carsRerender() {
   const v = document.body.dataset.view;
   const dc = document.getElementById('dash-car'); if (dc) dc.innerHTML = carDashHtml();
   if (v === 'mobil') renderCars();
+  if (v === 'finder' && typeof renderFinder === 'function') { if (fd.step >= 4 && fd.stage) fdCompute(); renderFinder(); }
   if (v === 'partner' && pfSel) renderPartner();
 }
 function setCarMake(m) { carMake = m; renderCars(); }
@@ -144,6 +145,7 @@ function renderCar() {
       return `<button onclick="openGlDetail('${g.id}')"><span class="car-mw">${carMedia(g, CAR_ICON(g.body))}</span><div><b>${escHtml(glTitle(g))}${g.car_year ? ' · ' + g.car_year : ''}</b><small>${escHtml([g.dealer, g.city].filter(Boolean).join(' · '))} · ${(g.photos || []).length} foto/video</small></div></button>`; }).join('')}</div>` : ''}
     ${prods.length ? `<div class="car-h">🔧 Perangkat yang dipasang di ${escHtml(c.name)}${sets.size > 1 ? ` <span>dari ${sets.size} mobil</span>` : ''}</div><div class="d-row car-prods">${prods.slice(0, 12).map(favMini).join('')}</div>
       <button class="car-btn g" onclick="carRakit('${c.slug}')">🔧 Rakit sistem seperti ${escHtml(c.name)} ini</button>` : ''}
+    <button class="car-btn o" onclick="openFinder('${c.slug}')">🎯 Rekomendasi sistem untuk ${escHtml(c.name)} sesuai anggaran</button>
     ${c.partners.length ? `<div class="car-h">🏪 Partner yang pernah mengerjakan</div><div class="car-list">${c.partners.map((n, i) => { const d = partners[i];
       return `<div class="car-pp"><button class="car-pp-m" onclick="${d ? `openPartner('${shareSlug(d.n)}')` : ''}" ${d ? '' : 'disabled'}><span class="pf-av sm">${escHtml(pfInit(n))}</span><div><b>${escHtml(n)}</b><small>${d ? '📍 ' + escHtml(d.c || d.r) + ' · ' : ''}${pfStats(n).wins ? '🏆 ' + pfStats(n).wins + ' prestasi' : (pfStats(n).gl ? pfStats(n).gl + ' instalasi Galeri' : '')}</small></div>${d ? '<i>Profil ›</i>' : ''}</button>
         ${d?.wa ? `<a class="car-wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(msg(d))}" target="_blank" rel="noopener">💬 Tanya</a>` : ''}</div>`; }).join('')}</div>` : ''}
@@ -155,7 +157,17 @@ function carRakit(slug) {
   const el = document.getElementById('mobil-body'); const ids = (el?.dataset.rich || '').split(',').filter(id => findProductAny(id).product);
   if (ids.length && typeof coRakit === 'function') coRakit(ids);
 }
-const carLink = slug => location.origin + '/?mobil=' + encodeURIComponent(slug);
+// Link berbagi: kartu WA per mobil (/m/<slug>/, dibuat bot GitHub tools/gen-live-cards.js) bila sudah ada, selain itu /?mobil=
+const carLink = slug => (typeof liveLink === 'function' && liveLink('m', slug)) || location.origin + '/?mobil=' + encodeURIComponent(slug);
+const pfLink = slug => (typeof liveLink === 'function' && liveLink('pp', slug)) || location.origin + '/?partner=' + encodeURIComponent(slug);
+function pfShare(slug) {
+  const d = pfFind(slug); if (!d) return;
+  const x = pfData(d.n), j1 = x.hof.filter(e => e.place === 1).length;
+  const t = `🏪 ${d.n} — Partner Resmi Concerto Audio Indonesia\n📍 ${[d.c, d.r].filter(Boolean).join(', ')}` +
+    (x.hof.length ? `\n🏆 ${x.hof.length} prestasi kompetisi${j1 ? ` (${j1} Juara 1)` : ''}` : '') + (x.gl.length ? `\n📷 ${x.gl.length} instalasi di Galeri CAI Hub` : '') +
+    `\n\nLihat profil, hasil pemasangan & kontaknya:\n${pfLink(slug)}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(waText(t)), '_blank', 'noopener');
+}
 function carShare(slug) {
   const c = carBySlug(slug); if (!c) return;
   const t = `🚗 ${c.name} — contoh pemasangan audio di CAI Hub\n${c.cars} mobil dikerjakan partner resmi Concerto Audio Indonesia${c.wins ? ` · 🏆 ${c.wins} prestasi kompetisi` : ''}\n\nLihat foto, perangkat & partnernya:\n${carLink(slug)}`;
@@ -163,7 +175,7 @@ function carShare(slug) {
 }
 // Link /?mobil=… · /?partner=…: buka langsung; Supabase siap beberapa saat setelah halaman dimuat → coba muat Galeri sampai bisa
 // (setelah Galeri / daftar partner termuat, carsRerender() menggambar ulang halaman yang sedang terbuka)
-function carOpenLinked(slug) { openCar(slug); carEnsureLater(); }
+function carOpenLinked(slug) { if (slug) openCar(slug); else openCars(); carEnsureLater(); }
 function carEnsureLater(n = 0) { if (glItems || n > 20) return; carEnsure(); setTimeout(() => carEnsureLater(n + 1), 500); }
 // ── 🏪 Profil partner ──
 let pfSel = null;
@@ -194,7 +206,7 @@ function renderPartner() {
     <div class="pf-hd"><span class="pf-av">${escHtml(pfInit(d.n))}</span><div><h2>${escHtml(d.n)}</h2>
       <small>📍 ${escHtml([d.c, d.r].filter(Boolean).join(', '))}${d.a ? ' · ' + escHtml(d.a) : ''}</small>
       <div class="pf-badges"><span class="pf-ok">✓ Partner resmi CAI</span>${hof.length ? `<span class="pf-tr">🏆 ${hof.length} prestasi${cnt(1) ? ' · ' + cnt(1) + ' Juara 1' : ''}</span>` : ''}</div></div>
-      <button class="car-share" onclick="adShare(${escHtml(JSON.stringify(d.n))})" title="Bagikan ke WhatsApp" aria-label="Bagikan">${SHARE_ICON}</button></div>
+      <button class="car-share" onclick="pfShare('${pfSel}')" title="Bagikan ke WhatsApp" aria-label="Bagikan">${SHARE_ICON}</button></div>
     <div class="pf-acts">${d.wa ? `<a class="wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}<a href="${adMaps(d)}" target="_blank" rel="noopener">📍 Maps</a>${d.ig ? `<a href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">📸 Instagram</a>` : ''}</div>
     <div class="car-stats"><div><b>${gl.length}</b><small>instalasi Galeri</small></div><div><b>${hof.length}</b><small>prestasi kompetisi</small></div><div><b>${cars.size}</b><small>model mobil</small></div></div>
     ${gl.length ? `<div class="car-h">📷 Hasil pemasangan <span>Galeri</span></div><div class="car-gal">${gl.map(g => {
@@ -206,7 +218,7 @@ function renderPartner() {
       return `<button onclick="showBrand('${bid}')"><span>${escHtml(b?.name || bid)}</span><em style="--w:${Math.round(n / gl.length * 100)}%"></em><b>${n}/${gl.length}</b></button>`; }).join('')}</div>` : ''}
     ${!gl.length && !hof.length ? `<div class="stock-empty">Hasil pemasangan ${escHtml(d.n)} belum ada di Galeri CAI Hub. Hubungi langsung lewat tombol di atas untuk melihat contoh kerjanya.</div>` : ''}`;
 }
-function partnerOpenLinked(slug) { openPartner(slug); carEnsureLater(); }
+function partnerOpenLinked(slug) { if (slug) openPartner(slug); else openAuthDealers(); carEnsureLater(); }
 // Tombol "Profil" kecil untuk kartu partner di menu lain
 const pfBtn = (d, close) => d ? `<button class="ad-btn pf" onclick="${close ? close + ';' : ''}openPartner('${shareSlug(d.n)}')">🏪 Profil</button>` : '';
 
@@ -215,5 +227,6 @@ function carDashHtml() {
   const top = carList().slice(0, 4);
   return `<div class="car-dash"><div class="car-dash-t"><b>🚗 Mobil Anda apa?</b><span>Lihat contoh pemasangan & perangkat yang dipakai di mobil yang sama.</span></div>
     <form class="car-dash-f" onsubmit="event.preventDefault();openCars(this.q.value)"><input name="q" type="search" placeholder="Ketik merek / model mobil, mis. “Innova”" autocomplete="off"><button>Cari</button></form>
-    ${top.length ? `<div class="chips-row">${top.map(c => `<button class="filter-chip" onclick="openCar('${c.slug}')">${CAR_ICON(c.body)} ${escHtml(c.name)}${c.wins ? ' · 🏆 ' + c.wins : ''}</button>`).join('')}<button class="filter-chip" onclick="openCars('')">Semua mobil ›</button></div>` : ''}</div>`;
+    ${top.length ? `<div class="chips-row">${top.map(c => `<button class="filter-chip" onclick="openCar('${c.slug}')">${CAR_ICON(c.body)} ${escHtml(c.name)}${c.wins ? ' · 🏆 ' + c.wins : ''}</button>`).join('')}<button class="filter-chip" onclick="openCars('')">Semua mobil ›</button></div>` : ''}
+    <button class="car-dash-fd" onclick="openFinder()">🎯 Belum tahu pilih apa? <b>Temukan sistem yang cocok ›</b></button></div>`;
 }

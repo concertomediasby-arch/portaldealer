@@ -53,7 +53,8 @@ function dashCtaHtml() {
   const card = (ic, t, s, fn) => `<button class="dash-cta-c" onclick="${fn}"><span class="dash-cta-i">${ic}</span><span class="dash-cta-t"><b>${t}</b><span>${s}</span></span><span class="dash-cta-ar">›</span></button>`;
   return card('📍', 'Cari partner resmi', `${ads.length} partner · ${regions} provinsi`, 'openAuthDealers()')
     + card('🎛', 'System Simulator', 'Rakit sistem, lihat total SRP', 'openRakit()')
-    + card('🧩', 'Paket Audio', 'Paket siap pasang', 'openPaketAudio()');
+    + card('🧩', 'Paket Audio', 'Paket siap pasang', 'openPaketAudio()')
+    + card('🎯', 'Temukan sistem yang cocok', '4 pertanyaan · rekomendasi', 'openFinder()');
 }
 function dashHofStats() {
   const list = typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME : [];

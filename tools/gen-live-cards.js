@@ -10,7 +10,12 @@
        hanya bila kartunya sudah ada (sebelum itu tetap link lama /news/?news= · /galeri/?gl= = kartu umum)
    Item yang dihapus / dijadikan draf → halaman & gambarnya ikut dihapus. Hanya kartu yang datanya berubah yang digambar ulang.
    Uji lokal tanpa internet ke Supabase: LIVE_FIXTURE=file.json node tools/gen-live-cards.js  (file = { news: [...], gallery: [...] }).
-   Concerto Way & Panduan Partner TIDAK di sini (isinya khusus partner). Jangan memuat harga dealer/diskon di kartu. */
+   Concerto Way & Panduan Partner TIDAK di sini (isinya khusus partner). Jangan memuat harga dealer/diskon di kartu.
+   Tahap 8 B (4 Nov 2026): juga kartu per MOBIL (m/<slug>/ → /?mobil=, share/img/m-<slug>.jpg) & per PARTNER (pp/<slug>/ → /?partner=,
+   share/img/pp-<slug>.jpg) dari Galeri + Hall of Fame + daftar partner (logika sama dengan js/cars.js lewat tools/lib/cars-data.js).
+   Foto kartu mobil HANYA sampul kartu WA pilihan Editor (field wa, aman plat nomor); tanpa pilihan → ikon mobil.
+   Data publik juga disalin ke tools/data/galeri.json & tools/data/partners.json (bila berubah) → dipakai tools/gen-seo-pages.js
+   (halaman Google /mobil/ & profil di /partner/), yang dijalankan workflow setelah skrip ini. */
 const fs = require('fs'), path = require('path'), crypto = require('crypto'), os = require('os');
 const { execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
@@ -27,6 +32,7 @@ const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'O
 const tgl = d => { const m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${+m[3]} ${BULAN[+m[2] - 1]} ${m[1]}` : ''; };
 const ytId = u => (String(u || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/) || [])[1] || '';
 const isVid = p => p?.type === 'video' || /\.(mp4|mov|webm|m4v)$/i.test(p?.path || '');
+const CARS = require('./lib/cars-data.js');
 const hash = o => crypto.createHash('md5').update(VER + JSON.stringify(o)).digest('hex').slice(0, 8);
 
 async function rest(q) {
@@ -38,8 +44,10 @@ async function loadData() {
   if (process.env.LIVE_FIXTURE) return JSON.parse(fs.readFileSync(process.env.LIVE_FIXTURE, 'utf8'));
   const news = await rest('cai_news?select=id,title,summary,category,image,link_url,post_date&published=eq.true&order=post_date.desc');
   // RLS publik sudah menyaring draf, kiriman tertunda & yang masih terjadwal
-  const gallery = await rest('showcase_installs?select=id,car_make,car_model,car_year,dealer,city,products,photos,hof_id&published=eq.true');
-  return { news, gallery };
+  const gallery = await rest('showcase_installs?select=id,car_make,car_model,car_year,body,dealer,city,products,photos,hof_id,created_at&published=eq.true&order=created_at.desc');
+  const partners = (await rest('auth_dealers?select=region,name,city,address,wa,ig,map,sort&order=region,sort,name'))
+    .map(r => Object.fromEntries(Object.entries({ r: r.region, n: r.name, c: r.city, a: r.address, wa: r.wa, ig: r.ig, map: r.map }).filter(([, v]) => v)));
+  return { news, gallery, partners };
 }
 
 const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
@@ -65,7 +73,18 @@ const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
 .g p{margin:0;font:600 27px Inter;color:#e3e6eb}.g p b{color:#f0cf8a}
 .g .play{position:absolute;right:70px;bottom:118px;width:96px;height:96px;border-radius:50%;background:rgba(0,0,0,.4);border:3px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center}
 .g .play::after{content:"";border-left:30px solid #fff;border-top:19px solid transparent;border-bottom:19px solid transparent;margin-left:7px}
-.g .u{color:#d8b26a}`;
+.g .u{color:#d8b26a}
+.m .img,.pp .img{position:absolute;top:0;bottom:0;left:0;width:54%;overflow:hidden;background:radial-gradient(circle at 45% 45%,#3d3527,#101114 75%);display:flex;align-items:center;justify-content:center}
+.m .img img{width:100%;height:100%;object-fit:cover}.m .img .ic{font-size:210px;opacity:.9}
+.m .img::after,.pp .img::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 45%,#07080a 98%)}
+.pp .img .in{font:800 210px Sora;color:#d8b26a;letter-spacing:-6px}
+.m .l,.pp .l{position:absolute;left:52%;right:56px;top:60px}
+.m .pill,.pp .pill{background:rgba(216,178,106,.16);color:#e9c98a;border:2px solid rgba(216,178,106,.55);font-size:16px}
+.m h1,.pp h1{font:800 60px/1.06 Sora;margin:22px 0 10px}.m h1.sm,.pp h1.sm{font-size:46px}
+.m p,.pp p{margin:0;font:600 24px Inter;color:#c9ced6}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.chips span{font:700 20px Inter;border-radius:30px;padding:8px 16px;background:rgba(216,178,106,.16);color:#f0cf8a}
+.chips span.ok{background:rgba(62,207,142,.16);color:#5fe0a6}
+.m .foot,.pp .foot{left:52%}.m .u,.pp .u{color:#d8b26a}`;
 const LOGO = `<img src="${LOGO_WHITE}">`;
 function newsCard(n) {
   const yt = !n.image && ytId(n.link_url), img = n.image ? pub(n.image) : yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : '';
@@ -85,6 +104,20 @@ function galleryCard(g, imgSrc, video) {
       <h1${name.length > 24 ? ' class="sm"' : ''}>${esc(name)}</h1>${g.dealer ? `<p>Dipasang oleh <b>${esc(g.dealer)}</b>${g.city ? ' · ' + esc(g.city) : ''}</p>` : ''}</div>
     ${video ? '<span class="play"></span>' : ''}
     <div class="foot"><b>CAI Hub</b> · Partner resmi Concerto Audio Indonesia<span class="u">hub.concerto.id</span></div></div>`;
+}
+const CAR_IC = b => /listrik|hybrid|\bev\b/i.test(b || '') ? '⚡' : /mpv|van/i.test(b || '') ? '🚐' : /sedan|hatch/i.test(b || '') ? '🚗' : '🚙';
+const initials = n => String(n || '').replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/).filter(w => !/^(the|dan|and)$/i.test(w)).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '★';
+function carCard(c, imgSrc) {
+  return `<div class="c m" id="c"><div class="img">${imgSrc ? `<img src="${esc(imgSrc)}" style="object-position:${esc(c._pos || '50% 50%')}">` : `<span class="ic">${CAR_IC(c.body)}</span>`}</div>
+    <div class="l"><span class="pill">CARI PER MOBIL · CAI HUB</span><h1${c.name.length > 18 ? ' class="sm"' : ''}>${esc(c.name)}</h1><p>Contoh pemasangan audio oleh partner resmi CAI</p>
+      <div class="chips">${c.wins ? `<span>🏆 ${c.wins} prestasi</span>` : ''}<span>${c.cars} mobil</span>${c.partners.length ? `<span class="ok">${c.partners.length} partner resmi</span>` : ''}</div></div>
+    <div class="foot">${LOGO}<span class="u">hub.concerto.id</span></div></div>`;
+}
+function partnerCard(d, x) {
+  return `<div class="c pp" id="c"><div class="img"><span class="in">${esc(initials(d.n))}</span></div>
+    <div class="l"><span class="pill">PROFIL PARTNER · CAI HUB</span><h1${d.n.length > 18 ? ' class="sm"' : ''}>${esc(d.n)}</h1><p>${esc([d.c, d.r].filter(Boolean).join(', '))}</p>
+      <div class="chips"><span class="ok">✓ Partner resmi CAI</span>${x.hof.length ? `<span>🏆 ${x.hof.length} prestasi${x.j1 ? ' · ' + x.j1 + ' Juara 1' : ''}</span>` : ''}${x.gl.length ? `<span>${x.gl.length} instalasi Galeri</span>` : ''}</div></div>
+    <div class="foot">${LOGO}<span class="u">hub.concerto.id</span></div></div>`;
 }
 function pageHtml({ dir, id, title, desc, img, target }) {
   const url = `${SITE}/${dir}/${encodeURIComponent(id)}/`;
@@ -148,18 +181,47 @@ function videoFrame(url, out, at) {
       desc: clip(`Galeri Instalasi partner resmi Concerto Audio Indonesia${g.city ? ' — ' + g.city : ''}. Foto & video pemasangan di CAI Hub.`, 200),
       sig: [name, g.dealer, g.city, g.hof_id, photo?.path, photo?.pos, video?.path, video?.waT], g, photo, video });
   }
+  // ── Mobil & partner (Tahap 8 B) ──
+  const partners = Array.isArray(data.partners) && data.partners.length ? data.partners
+    : JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/partners.json'), 'utf8')).partners;
+  const glPub = (data.gallery || []).filter(g => g.id && g.car_make);
+  const { cars, partnerData } = CARS.build(glPub, partners);
+  for (const c of cars) {
+    // foto kartu: hanya sampul kartu WA pilihan Editor (aman plat nomor)
+    let pick = null; for (const g of c.gl) { const p = (g.photos || []).find(x => x?.wa && x.path && !String(x.path).startsWith('pending/')); if (p) { pick = p; break; } }
+    items.push({ dir: 'm', id: c.slug, target: `/?mobil=${encodeURIComponent(c.slug)}`, title: `${c.name} — contoh pemasangan audio`,
+      desc: clip(`${c.cars} mobil ${c.name} dikerjakan partner resmi Concerto Audio Indonesia${c.wins ? ` · ${c.wins} prestasi kompetisi` : ''}. Lihat foto, perangkat & partnernya di CAI Hub.`, 200),
+      sig: ['m', c.name, c.body, c.cars, c.wins, c.partners.length, pick?.path, pick?.pos, pick?.waT], c,
+      photo: pick && !isVid(pick) ? pick : null, video: pick && isVid(pick) ? pick : null });
+  }
+  for (const d of partners) {
+    const x = partnerData(d), slug = CARS.shareSlug(d.n); if (!slug) continue;
+    items.push({ dir: 'pp', id: slug, target: `/?partner=${encodeURIComponent(slug)}`, title: `${d.n} — Partner Resmi CAI${d.c ? ' di ' + d.c : ''}`,
+      desc: clip(`Partner resmi Concerto Audio Indonesia${d.c ? ' di ' + d.c : ''}${x.hof.length ? ` · ${x.hof.length} prestasi kompetisi` : ''}${x.gl.length ? ` · ${x.gl.length} instalasi di Galeri` : ''}. Kontak, hasil pemasangan & prestasi di CAI Hub.`, 200),
+      sig: ['pp', d.n, d.c, d.r, x.gl.length, x.hof.length, x.j1], d, x });
+  }
+  // Salinan data publik untuk halaman Google (tools/gen-seo-pages.js) — ditulis hanya bila isinya berubah
+  const dataFiles = [
+    ['tools/data/galeri.json', { _note: 'Salinan Galeri Instalasi yang tayang (data publik) — ditulis otomatis oleh tools/gen-live-cards.js (GitHub Actions). Jangan diedit manual.',
+      gallery: glPub.map(g => ({ id: g.id, car_make: g.car_make, car_model: g.car_model, car_year: g.car_year, body: g.body, dealer: g.dealer, city: g.city, products: g.products || [], hof_id: g.hof_id || null,
+        photos: (g.photos || []).filter(p => p?.path && !String(p.path).startsWith('pending/')).map(p => Object.fromEntries(Object.entries({ path: p.path, type: p.type, area: p.area, wa: p.wa, waT: p.waT, pos: p.pos }).filter(([, v]) => v != null && v !== '' && v !== false))) })) }, 'gallery'],
+    ['tools/data/partners.json', { _note: 'Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.',
+      updated: new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10), partners }, 'partners'],
+  ].filter(() => !process.env.LIVE_FIXTURE || process.env.LIVE_WRITE_DATA);
+  const dataChanged = dataFiles.filter(([f, obj, key]) => { try { return JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'))[key]) !== JSON.stringify(obj[key]); } catch (e) { return true; } });
   const livePath = path.join(ROOT, 'share/live.json');
-  const old = fs.existsSync(livePath) ? JSON.parse(fs.readFileSync(livePath, 'utf8')) : { n: {}, g: {} };
-  const next = { n: {}, g: {} };
+  const old = fs.existsSync(livePath) ? JSON.parse(fs.readFileSync(livePath, 'utf8')) : {};
+  const DIRS = ['n', 'g', 'm', 'pp'], next = Object.fromEntries(DIRS.map(d => [d, {}]));
   // --check (dipakai GitHub Actions): hanya cek apakah ada kartu baru/berubah/terhapus — tanpa browser, supaya jadwal tetap ringan
   const ids = new Set(items.map(it => it.dir + '/' + it.id));
   const changed = items.some(it => old[it.dir]?.[it.id] !== hash(it.sig) || !fs.existsSync(path.join(ROOT, `share/img/${it.dir}-${it.id}.jpg`)))
-    || ['n', 'g'].some(d => Object.keys(old[d] || {}).some(id => !ids.has(d + '/' + id)));
+    || DIRS.some(d => Object.keys(old[d] || {}).some(id => !ids.has(d + '/' + id))) || dataChanged.length > 0;
   if (process.argv.includes('--check')) {
     console.log(changed ? 'Ada kartu baru / berubah / terhapus' : 'Tidak ada perubahan');
     if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
     return;
   }
+  for (const [f, obj] of dataChanged) fs.writeFileSync(path.join(ROOT, f), JSON.stringify(obj, null, 1) + '\n');
   fs.mkdirSync(path.join(ROOT, 'share/img'), { recursive: true });
   const { chromium } = require('playwright');
   const browser = await chromium.launch(); const pg = await browser.newPage({ viewport: { width: 1200, height: 630 } });
@@ -171,12 +233,13 @@ function videoFrame(url, out, at) {
       if (old[it.dir]?.[it.id] !== h || !fs.existsSync(img)) {
         let html;
         if (it.dir === 'n') html = it.html();
+        else if (it.dir === 'pp') html = partnerCard(it.d, it.x);
         else {
           let src = it.photo ? pub(it.photo.path) : '';
-          if (it.photo?.pos) it.g._pos = String(it.photo.pos).split(' ').map(v => /%$/.test(v) ? v : v + '%').join(' ');
+          if (it.photo?.pos) (it.g || (it.g = {}))._pos = String(it.photo.pos).split(' ').map(v => /%$/.test(v) ? v : v + '%').join(' ');
           if (!src && it.video && TEST_IMG) src = TEST_IMG;
           if (!src && it.video) { const f = path.join(tmp, it.id + '.jpg'); if (videoFrame(pub(it.video.path), f, it.video.waT)) src = 'data:image/jpeg;base64,' + fs.readFileSync(f).toString('base64'); }
-          html = galleryCard(it.g, src, !!it.video);
+          html = it.dir === 'm' ? carCard(Object.assign(it.c, { _pos: it.g?._pos }), src) : galleryCard(it.g, src, !!it.video);
         }
         await pg.setContent(`<!doctype html><html><head><link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>${CSS}</style></head><body>${html}</body></html>`, { waitUntil: 'networkidle', timeout: 60000 });
         await pg.evaluate(() => Promise.all([document.fonts.ready, ...[...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))]));
@@ -189,12 +252,12 @@ function videoFrame(url, out, at) {
     } catch (e) { failed++; console.warn('gagal', it.dir, it.id, e.message); if (old[it.dir]?.[it.id] && fs.existsSync(img)) next[it.dir][it.id] = old[it.dir][it.id]; }
   }
   // Hapus halaman & gambar item yang sudah tidak tayang
-  for (const dir of ['n', 'g']) {
+  for (const dir of DIRS) {
     const base = path.join(ROOT, dir); if (!fs.existsSync(base)) continue;
     for (const id of fs.readdirSync(base)) if (!next[dir][id]) { fs.rmSync(path.join(base, id), { recursive: true, force: true }); fs.rmSync(path.join(ROOT, `share/img/${dir}-${id}.jpg`), { force: true }); }
   }
   const sorted = o => Object.fromEntries(Object.keys(o).sort().map(k => [k, o[k]]));
-  fs.writeFileSync(livePath, JSON.stringify({ n: sorted(next.n), g: sorted(next.g) }) + '\n');
+  fs.writeFileSync(livePath, JSON.stringify(Object.fromEntries(DIRS.map(d => [d, sorted(next[d])]))) + '\n');
   await browser.close(); fs.rmSync(tmp, { recursive: true, force: true });
-  console.log(`News ${Object.keys(next.n).length} · Galeri ${Object.keys(next.g).length} · ${drawn} kartu digambar · ${failed} gagal`);
+  console.log(`News ${Object.keys(next.n).length} · Galeri ${Object.keys(next.g).length} · Mobil ${Object.keys(next.m).length} · Partner ${Object.keys(next.pp).length} · ${drawn} kartu digambar · ${failed} gagal${dataChanged.length ? ' · data: ' + dataChanged.map(x => x[0]).join(', ') : ''}`);
 })().catch(e => { console.error(e); process.exit(1); });

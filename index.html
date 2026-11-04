@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-11-04T10:49:52Z">
+<link rel="stylesheet" href="style.css?b=2026-11-04T11:20:59Z">
 <!-- Layar pembuka bermerek (Tahap 3, 4 Nov 2026): hanya saat dibuka dari ikon Layar Utama, sekali per sesi -->
 <script>try{if((matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)&&!sessionStorage.getItem('cai-spl')){document.documentElement.classList.add('spl-on');sessionStorage.setItem('cai-spl','1');}}catch(e){}</script>
 </head>
@@ -190,6 +190,10 @@
       <button class="sidebar-item" id="nav-mobil" onclick="openCars()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-4.5l-1.8-4.6A2 2 0 0 0 15.3 6.6H8.7a2 2 0 0 0-1.9 1.3L5 12.5z"/><path d="M5 12.5h14"/><circle cx="8" cy="17" r="1.8"/><circle cx="16" cy="17" r="1.8"/></svg>
         Cari per Mobil
+      </button>
+      <button class="sidebar-item" id="nav-finder" onclick="openFinder()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+        Temukan Sistem
       </button>
       <button class="sidebar-item login-only" id="nav-stock" onclick="openStockView()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><polyline points="9 14 11 16 15 12"/></svg>
@@ -387,6 +391,7 @@
 
     <!-- VIEW: Cari berdasarkan mobil + Profil partner (Tahap 7, js/cars.js) -->
     <div class="view" id="view-mobil"><div class="page-header"><div class="page-title">🚗 Cari berdasarkan mobil</div><div class="page-subtitle">Contoh pemasangan, prestasi & perangkat di mobil yang sama — dikerjakan partner resmi CAI.</div></div><div id="mobil-body" class="car-body"></div></div>
+    <div class="view" id="view-finder"><div class="page-header"><div class="page-title">🎯 Temukan sistem yang cocok</div><div class="page-subtitle">4 pertanyaan singkat · ±1 menit — rekomendasi dari katalog resmi, Paket Audio &amp; Galeri Instalasi.</div></div><div id="finder-body" class="car-body fd-body"></div></div>
     <div class="view" id="view-partner"><div class="page-header"><div class="page-title">🏪 Profil Partner</div><div class="page-subtitle">Partner resmi Concerto Audio Indonesia — kontak, hasil pemasangan & prestasi.</div></div><div id="partner-body" class="car-body"></div></div>
     <!-- VIEW: Bandingkan Produk (js/fav.js) -->
     <!-- VIEW: Minggu ini di CAI Hub (Tahap 6 C — dibuka dari notifikasi Ringkasan mingguan /?minggu, js/fav.js) -->
@@ -625,6 +630,7 @@
       <div class="page-header">
         <div class="page-title">Paket Audio</div>
         <div class="page-subtitle">Rekomendasi paket sistem audio lengkap dari Concerto Audio Indonesia untuk berbagai kebutuhan dan segmen.</div>
+        <button class="fd-link" onclick="openFinder()">🎯 Belum yakin paket mana? <b>Temukan sistem yang cocok ›</b></button>
         <div class="paket-staff" id="paket-staff"><b>📺 Tayangan layar videotron (Admin &amp; Editor)</b><span class="pk-now" id="pk-now"></span>
           <button class="gt-btn ghost" onclick="paketStep(-1)">◀ Sebelumnya</button><button class="gt-btn ghost" onclick="paketStep(1)">Berikutnya ▶</button>
           <button class="gt-btn ghost" onclick="paketOnScreen('')">☰ Daftar paket</button><button class="gt-btn ghost" onclick="paketOffScreen()">⏹ Tutup tayangan</button>
@@ -1043,23 +1049,24 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/core.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/stock.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/dealers.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/gathering.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/rundown.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/videotron.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/showcase.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/cway.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/news.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/push.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/install.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/settings.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/dash.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/fav.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/cars.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/interest.js?b=2026-11-04T10:49:52Z"></script>
-<script src="js/main.js?b=2026-11-04T10:49:52Z"></script>
+<script src="katalog.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/core.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/stock.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/dealers.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/gathering.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/rundown.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/videotron.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/showcase.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/cway.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/news.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/push.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/install.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/settings.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/dash.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/fav.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/cars.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/finder.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/interest.js?b=2026-11-04T11:20:59Z"></script>
+<script src="js/main.js?b=2026-11-04T11:20:59Z"></script>
 </body>
 </html>

@@ -6,7 +6,11 @@
      • /kategori/<slug>/     — produk semua brand di kategori itu     → /?kat=<slug>
      • /partner/             — daftar provinsi & kota partner resmi
      • /partner/<slug>/      — partner per kota DAN per provinsi      → /?kota=<slug>
-   lalu menulis ulang sitemap.xml (beranda + semua halaman ini).
+     • /mobil/ & /mobil/<slug>/ (Tahap 8 B) — contoh pemasangan per model mobil (Galeri + Hall of Fame) → /?mobil=<slug>
+   lalu menulis ulang sitemap.xml (beranda + semua halaman ini; lastmod hanya berubah bila isi halaman berubah).
+   Kartu partner di /partner/ memuat prestasi, instalasi & mobil yang dikerjakan + link profil /?partner=<slug>.
+   Data Galeri dari tools/data/galeri.json (ditulis bot GitHub tools/gen-live-cards.js); workflow live-cards menjalankan skrip ini
+   setelah kartu WA, jadi halaman mobil & partner ikut terbarui otomatis.
    Data: BRANDS dari katalog.js; partner dari tools/data/partners.json (salinan tabel Supabase auth_dealers — pilihan pemilik:
    diperbarui Claude setiap ada perubahan partner), cadangan AUTH_DEALERS di js/core.js bila file itu tidak ada.
    JALANKAN ULANG setiap produk/harga/foto atau daftar partner berubah:   node tools/gen-seo-pages.js
@@ -40,7 +44,12 @@ const srp = p => {
 };
 const photo = p => p.photo || p.photos?.[0] || '';
 const abs = u => !u ? '' : /^https?:/.test(u) ? u : '/' + u.replace(/^\//, '');
-const today = new Date().toISOString().slice(0, 10);
+const today = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+const CARS = require('./lib/cars-data.js');
+let GALLERY = []; try { GALLERY = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/galeri.json'), 'utf8')).gallery || []; } catch (e) { console.log('ℹ tools/data/galeri.json belum ada — halaman mobil hanya dari Hall of Fame'); }
+const CD = CARS.build(GALLERY, PARTNERS);
+const medal = pl => ['🥇', '🥈', '🥉'][pl - 1] || '🏅';
+const hofLine = e => `${medal(e.place)} ${e.place >= 1 && e.place <= 3 ? 'Juara ' + e.place : esc(e.award || 'Penghargaan')}${e.cls ? ' · ' + esc(e.cls) : ''}`;
 // Sama dengan KAT_SLUGS di js/fav.js
 const KAT = [
   { slug: 'speaker', cat: 'Speaker', h: 'Speaker Mobil', d: 'speaker komponen & coaxial' },
@@ -77,6 +86,9 @@ h2 small{font:600 12px Inter;color:#8b92a1;border:1px solid rgba(255,255,255,.12
 .pt .c{color:#8b92a1;font-size:13px;margin:2px 0 6px}.pt .a{font-size:13.5px;color:#cfd3da}.pt .ok{color:#52c38a;font:600 11.5px Inter;margin-left:6px}
 .pt .bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.pt .bt a{border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:6px 11px;font:600 12.5px Inter;text-decoration:none}
 .pt .bt a.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}
+.pt .x{margin-top:8px;font-size:13px;color:#e9c98a}.pt .x a{color:#e9c98a}
+.st{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 4px}.st span{border:1px solid rgba(216,178,106,.35);border-radius:12px;padding:8px 14px;font:600 13px Inter;color:#cfd3da}.st b{font:800 20px Sora;color:#d8b26a;margin-right:6px}
+.hl{list-style:none;padding:0;margin:0;display:grid;gap:8px}.hl li{border:1px solid rgba(255,255,255,.09);border-radius:12px;background:#111317;padding:10px 14px;font-size:14px}.hl li small{display:block;color:#8b92a1;font-size:12.5px}
 .cta{margin-top:34px;border:1px solid rgba(216,178,106,.4);border-radius:16px;padding:18px;background:linear-gradient(160deg,rgba(216,178,106,.12),rgba(216,178,106,.02));display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
 .cta p{margin:0;max-width:640px;color:#d6d9df}
 footer{border-top:1px solid rgba(255,255,255,.08);padding:20px;text-align:center;color:#8b92a1;font-size:12.5px}
@@ -138,10 +150,12 @@ for (const k of KAT) {
     crumbs: [['CAI Hub', '/'], ['Kategori', url], [k.h, url]], open: `/?kat=${k.slug}`, body }) });
 }
 // ── Partner ──
-const pt = d => `<div class="pt"><b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}
+const ptx = d => { const x = CD.partnerData(d); return (x.hof.length || x.gl.length) ? `<div class="x">${x.hof.length ? `🏆 ${x.hof.length} prestasi kompetisi${x.j1 ? ` (${x.j1} Juara 1)` : ''}` : ''}${x.hof.length && x.gl.length ? ' · ' : ''}${x.gl.length ? `${x.gl.length} instalasi di Galeri` : ''}${x.cars.length ? `<br>Mobil: ${x.cars.slice(0, 5).map(c => `<a href="/mobil/${c.slug}/">${esc(c.name)}</a>`).join(', ')}` : ''}</div>` : ''; };
+const pt = d => `<div class="pt"><b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}${ptx(d)}
   <div class="bt">${d.wa ? `<a class="wa" data-k="wa" data-n="${esc(d.n)}" href="https://wa.me/${esc(d.wa)}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" rel="nofollow">WhatsApp</a>` : ''}
   ${d.ig ? `<a data-k="ig" data-n="${esc(d.n)}" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" rel="nofollow">Instagram</a>` : ''}
-  <a data-k="maps" data-n="${esc(d.n)}" href="${esc(d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', ')))}" rel="nofollow">Maps</a></div></div>`;
+  <a data-k="maps" data-n="${esc(d.n)}" href="${esc(d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', ')))}" rel="nofollow">Maps</a>
+  <a href="/?partner=${CARS.shareSlug(d.n)}">Profil di CAI Hub ›</a></div></div>`;
 const provs = [...new Set(PARTNERS.map(d => d.r))];
 const cities = [...new Set(PARTNERS.map(d => d.c).filter(Boolean))];
 const citySlug = c => shareSlug(c), provSlug = r => shareSlug(r);
@@ -171,14 +185,45 @@ for (const c of cities) {
       <div class="pl">${ds.map(pt).join('')}</div>${near.length ? `<h2>Kota lain di ${esc(r)}</h2><div class="chips">${near.map(x => `<a href="/partner/${citySlug(x)}/">${esc(x)}</a>`).join('')}</div>` : ''}` }) });
 }
 
+// ── Mobil (Tahap 8 B) ──
+const glName = g => [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ');
+for (const c of CD.cars) {
+  const url = `/mobil/${c.slug}/`, ps = c.products.map(id => CARS.prod(id)).filter(Boolean);
+  const parts = c.partners.filter(d => d.r || d.c);
+  const brandsUsed = [...new Set(ps.map(x => x.b.name))];
+  const body = `<h1>Audio Mobil ${esc(c.name)} — Contoh Pemasangan &amp; Partner Resmi</h1>
+    <p class="lead">${c.cars} mobil ${esc(c.name)} dikerjakan partner resmi Concerto Audio Indonesia${c.wins ? `, dengan ${c.wins} prestasi kompetisi` : ''}${brandsUsed.length ? ` — memakai perangkat ${esc(brandsUsed.join(', '))}` : ''}.</p>
+    <div class="st"><span><b>${c.cars}</b>mobil</span><span><b>${c.wins}</b>prestasi</span><span><b>${c.partners.length}</b>partner</span></div>
+    ${c.hof.length ? `<h2>Prestasi kompetisi ${esc(c.name)} <small>${c.hof.length}</small></h2><ul class="hl">${c.hof.map(e => `<li>${hofLine(e)}<small>${esc([e.event, e.city, e.year, e.name, e.dealer].filter(Boolean).join(' · '))}</small></li>`).join('')}</ul>` : ''}
+    ${c.gl.length ? `<h2>Contoh pemasangan di Galeri <small>${c.gl.length}</small></h2><ul class="hl">${c.gl.map(g => `<li><a href="/?gl=${encodeURIComponent(g.id)}">${esc(glName(g))}</a><small>Dipasang oleh ${esc(g.dealer || 'partner resmi')}${g.city ? ' · ' + esc(g.city) : ''} · ${(g.products || []).length} produk CAI · ${(g.photos || []).length} foto/video</small></li>`).join('')}</ul>` : ''}
+    ${ps.length ? `<h2>Perangkat yang dipasang di ${esc(c.name)} <small>${ps.length}</small></h2><div class="grid">${ps.slice(0, 16).map(x => card(x.b, x.p)).join('')}</div>` : ''}
+    ${parts.length ? `<h2>Partner resmi yang pernah mengerjakan</h2><div class="pl">${parts.map(pt).join('')}</div>` : ''}
+    <h2>Mobil lainnya</h2><div class="chips">${CD.cars.filter(x => x !== c).slice(0, 24).map(x => `<a href="/mobil/${x.slug}/">${esc(x.name)}</a>`).join('')}</div>`;
+  pages.push({ url, html: page({ url, title: `Audio Mobil ${c.name} — Contoh Pemasangan & Partner Resmi | CAI Hub`,
+    desc: `${c.cars} contoh pemasangan sistem audio di ${c.name} oleh partner resmi Concerto Audio Indonesia${c.wins ? ` · ${c.wins} prestasi kompetisi` : ''}${brandsUsed.length ? ` · perangkat ${brandsUsed.join(', ')}` : ''}.`,
+    crumbs: [['CAI Hub', '/'], ['Cari per mobil', '/mobil/'], [c.name, url]], open: `/?mobil=${c.slug}`, log: true, body }) });
+}
+if (CD.cars.length) {
+  const makes = [...new Set(CD.cars.map(c => c.make))].sort();
+  pages.push({ url: '/mobil/', html: page({ url: '/mobil/', title: `Audio Mobil per Model — ${CD.cars.length} Contoh Pemasangan Partner Resmi | CAI Hub`,
+    desc: `Contoh pemasangan sistem audio di ${CD.cars.length} model mobil (${makes.slice(0, 8).join(', ')}…) oleh partner resmi Concerto Audio Indonesia — prestasi, perangkat & partner.`,
+    crumbs: [['CAI Hub', '/'], ['Cari per mobil', '/mobil/']], open: '/?mobil=',
+    body: `<h1>Audio Mobil per Model — Contoh Pemasangan Partner Resmi</h1><p class="lead">${CD.cars.length} model mobil dengan contoh pemasangan sistem audio oleh partner resmi Concerto Audio Indonesia — lihat prestasi kompetisi, perangkat yang dipakai & partner yang mengerjakan.</p>
+      ${makes.map(m => `<h2>${esc(m)}</h2><div class="chips">${CD.cars.filter(c => c.make === m).map(c => `<a href="/mobil/${c.slug}/">${esc(c.name)}${c.wins ? ' · 🏆 ' + c.wins : ''}</a>`).join('')}</div>`).join('')}` }) });
+}
+
 // ── Tulis: hapus halaman lama di folder milik skrip ini, lalu tulis semua ──
-for (const dir of ['brand', 'kategori', 'partner']) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
+// lastmod sitemap hanya berubah untuk halaman yang isinya berubah (skrip ini juga dijalankan bot tiap ±15 menit)
+const oldHtml = new Map(), oldMod = new Map();
+try { for (const m of fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>([^<]+)<\/loc><lastmod>([^<]+)<\/lastmod>/g)) oldMod.set(m[1].replace(SITE, ''), m[2]); } catch (e) {}
+for (const pg of pages) { try { oldHtml.set(pg.url, fs.readFileSync(path.join(ROOT, pg.url, 'index.html'), 'utf8')); } catch (e) {} }
+for (const dir of ['brand', 'kategori', 'partner', 'mobil']) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
 for (const pg of pages) { const d = path.join(ROOT, pg.url); fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'index.html'), pg.html); }
 const sm = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-${pages.map(pg => `  <url><loc>${SITE}${pg.url}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${/^\/(brand|kategori)\//.test(pg.url) ? '0.8' : '0.6'}</priority></url>`).join('\n')}
+  <url><loc>${SITE}/</loc><lastmod>${oldMod.get('/') || today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+${pages.map(pg => `  <url><loc>${SITE}${pg.url}</loc><lastmod>${oldHtml.get(pg.url) === pg.html && oldMod.get(pg.url) ? oldMod.get(pg.url) : today}</lastmod><changefreq>weekly</changefreq><priority>${/^\/(brand|kategori|mobil)\//.test(pg.url) ? '0.8' : '0.6'}</priority></url>`).join('\n')}
 </urlset>
 `;
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sm);
-console.log(`${pages.length} halaman: ${pages.filter(p => p.url.startsWith('/brand/')).length} brand · ${pages.filter(p => p.url.startsWith('/kategori/')).length} kategori · ${pages.filter(p => p.url.startsWith('/partner/')).length} partner (index + provinsi + kota) · sitemap.xml diperbarui (${PARTNERS.length} partner)`);
+console.log(`${pages.length} halaman: ${pages.filter(p => p.url.startsWith('/brand/')).length} brand · ${pages.filter(p => p.url.startsWith('/kategori/')).length} kategori · ${pages.filter(p => p.url.startsWith('/partner/')).length} partner (index + provinsi + kota) · ${pages.filter(p => p.url.startsWith('/mobil/')).length} mobil · sitemap.xml diperbarui (${PARTNERS.length} partner)`);

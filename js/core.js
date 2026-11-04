@@ -1353,6 +1353,7 @@ function renderRakitSide() {
       ${a.notes.length ? `<div class="rk-notes">${a.notes.map(n => `<div class="rk-note ${n.t}"><i>${ic[n.t]}</i><span>${n.m}</span></div>`).join('')}</div>` : '<div class="rk-note info"><i>ℹ</i><span>Mulai dengan menambahkan speaker, subwoofer, amplifier, atau DSP.</span></div>'}
       <div class="rk-fine">Cek channel = perkiraan sederhana: 2 channel per set speaker/midrange/tweeter, 1 channel per subwoofer pasif. Konsultasikan konfigurasi final (crossover, bridge, impedansi) dengan installer / CAI.</div>
     </div>
+    <button class="rk-card rk-fd" onclick="openFinder()"><b>🎯 Bingung mulai dari mana?</b><small>Jawab 4 pertanyaan — dapatkan rekomendasi sistem sesuai mobil, anggaran &amp; selera suara.</small><i>›</i></button>
     <div class="rk-card rk-send-card"><div class="rk-send"><b>📍 Kirim rakitan ke partner resmi</b><small>Pilih partner resmi CAI di kota Anda — daftar barang &amp; total SRP langsung terkirim lewat WhatsApp untuk ditanyakan biaya pasang &amp; ketersediaan.</small>
       <button onclick="rkSendOpen()" ${rk.items.length ? '' : 'disabled'}>💬 Kirim ke partner resmi</button></div></div>
     <div class="rk-card">
@@ -2291,6 +2292,7 @@ function showView(viewId) {
   if (viewId === 'brands') document.getElementById('nav-brandresmi')?.classList.add('active');
   if (viewId === 'authdealer' || viewId === 'partner') document.getElementById('nav-authdealer')?.classList.add('active');
   if (viewId === 'mobil') document.getElementById('nav-mobil')?.classList.add('active');
+  if (viewId === 'finder') document.getElementById('nav-finder')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('nav-updates')?.classList.add('active');
   if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
@@ -2514,7 +2516,7 @@ function renderCatalog() {
 // Kembali dari detail produk ke halaman asal (katalog/brand/stok/…) di posisi scroll yang sama, tanpa merender ulang (30 Okt 2026, permintaan pemilik).
 // Tombol back HP / browser juga kembali ke halaman asal (history.pushState saat detail produk dibuka).
 let productFrom = null;
-const PRODUCT_FROM_LABEL = { mobil: 'Cari per Mobil', partner: 'Profil Partner', week: 'Minggu ini', compare: 'Bandingkan Produk', halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'System Simulator', updates: 'Update Terbaru', dashboard: 'Dashboard' };
+const PRODUCT_FROM_LABEL = { finder: 'Rekomendasi Sistem', mobil: 'Cari per Mobil', partner: 'Profil Partner', week: 'Minggu ini', compare: 'Bandingkan Produk', halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'System Simulator', updates: 'Update Terbaru', dashboard: 'Dashboard' };
 function showProduct(brandId, productId) {
   const curView = document.querySelector('.view.active');
   if (curView && curView.id !== 'view-product') {

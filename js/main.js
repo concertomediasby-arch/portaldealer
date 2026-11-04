@@ -65,6 +65,7 @@ function openDeepLink() {
   if (q.get('paket')) { enterPortal(); paketOpenLinked(q.get('paket')); return; }   // link Paket Audio
   if (q.get('sorotan')) { enterPortal(); dvOpenLinked(q.get('sorotan')); return; }   // link Sorotan Brand → jendela video brand itu
   if (q.get('hof')) { enterPortal(); hofOpenLinked(q.get('hof')); return; }
+  if (q.has('temukan')) { enterPortal(); openFinder(q.get('temukan') || ''); return; }   // Tahap 8 A (js/finder.js)
   if (q.has('mobil')) { enterPortal(); carOpenLinked(q.get('mobil')); return; }       // Tahap 7 (js/cars.js)
   if (q.has('partner')) { enterPortal(); partnerOpenLinked(q.get('partner')); return; }
   if (q.has('minggu')) { enterPortal(); openWeek(); return; }   // notifikasi 🗓 Ringkasan mingguan (js/fav.js)
