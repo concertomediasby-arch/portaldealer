@@ -1,0 +1,177 @@
+#!/usr/bin/env node
+/* CAI Hub — HALAMAN UNTUK GOOGLE (Tahap 3, 4 Nov 2026, permintaan pemilik — pratinjau .mockup/tahap3/ disetujui).
+   Portal adalah satu halaman JavaScript, jadi isinya sulit dibaca mesin pencari. Skrip ini membuat halaman statis berisi
+   teks asli (bisa diindeks Google, BUKAN noindex & tanpa pengalihan otomatis):
+     • /brand/<id>/          — produk per line + harga SRP            → tombol "Buka di CAI Hub" = /?brand=<id>
+     • /kategori/<slug>/     — produk semua brand di kategori itu     → /?kat=<slug>
+     • /partner/             — daftar provinsi & kota partner resmi
+     • /partner/<slug>/      — partner per kota DAN per provinsi      → /?kota=<slug>
+   lalu menulis ulang sitemap.xml (beranda + semua halaman ini).
+   Data: BRANDS dari katalog.js; partner dari tools/data/partners.json (salinan tabel Supabase auth_dealers — pilihan pemilik:
+   diperbarui Claude setiap ada perubahan partner), cadangan AUTH_DEALERS di js/core.js bila file itu tidak ada.
+   JALANKAN ULANG setiap produk/harga/foto atau daftar partner berubah:   node tools/gen-seo-pages.js
+   Hanya SRP — jangan pernah menambah harga dealer/diskon. Tanpa klaim garansi. */
+const fs = require('fs'), path = require('path'), vm = require('vm');
+const ROOT = path.resolve(__dirname, '..');
+const SITE = 'https://hub.concerto.id';
+const ctx = {}; vm.createContext(ctx);
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'katalog.js'), 'utf8') + ';this.BRANDS=BRANDS;', ctx);
+const BRANDS = ctx.BRANDS;
+let PARTNERS;
+try { PARTNERS = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/partners.json'), 'utf8')).partners; }
+catch (e) {
+  const core = fs.readFileSync(path.join(ROOT, 'js/core.js'), 'utf8'), m = core.match(/const AUTH_DEALERS = (\[[\s\S]*?\n\]);/);
+  PARTNERS = vm.runInNewContext('(' + m[1] + ')');
+  console.log('⚠ tools/data/partners.json tidak ada — memakai AUTH_DEALERS di js/core.js');
+}
+const shareSlug = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmtRp = n => 'Rp ' + Number(n).toLocaleString('id-ID');
+const srp = p => {
+  if (p.priceList) { const v = Object.values(p.priceList).filter(Number); return v.length ? 'mulai ' + fmtRp(Math.min(...v)) : ''; }
+  return p.price ? fmtRp(p.price) + (p.priceUnit ? ' / ' + p.priceUnit : '') : '';
+};
+const photo = p => p.photo || p.photos?.[0] || '';
+const abs = u => !u ? '' : /^https?:/.test(u) ? u : '/' + u.replace(/^\//, '');
+const today = new Date().toISOString().slice(0, 10);
+// Sama dengan KAT_SLUGS di js/fav.js
+const KAT = [
+  { slug: 'speaker', cat: 'Speaker', h: 'Speaker Mobil', d: 'speaker komponen & coaxial' },
+  { slug: 'subwoofer', cat: 'Subwoofer', h: 'Subwoofer Mobil', d: 'subwoofer pasif & aktif' },
+  { slug: 'amplifier', cat: 'Amplifier', h: 'Power Amplifier Mobil', d: 'power amplifier mobil' },
+  { slug: 'dsp', cat: 'DSP', h: 'DSP Audio Mobil', d: 'digital sound processor (DSP) & DSP amplifier' },
+  { slug: 'tweeter', cat: 'Tweeter', h: 'Tweeter Mobil', d: 'tweeter' },
+  { slug: 'midrange', cat: 'Midrange', h: 'Midrange Mobil', d: 'midrange' },
+  { slug: 'kabel', cat: 'Cable', h: 'Kabel Audio Mobil', d: 'kabel RCA, power & speaker' },
+  { slug: 'aksesoris', cat: 'Accessories', h: 'Aksesoris Audio Mobil', d: 'aksesoris & peredam' },
+];
+const BRAND_NAMES = BRANDS.map(b => b.name).join(', ').replace(/, ([^,]*)$/, ' & $1');
+
+const CSS = `*{box-sizing:border-box}body{margin:0;background:#07080a;color:#eceef2;font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.55}
+a{color:inherit}.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 20px;background:rgba(9,10,13,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08)}
+.top img{height:22px}.top span{flex:1;font:700 12px/1 Sora,sans-serif;letter-spacing:.14em;color:#d8b26a}
+.btn{display:inline-block;background:#d8b26a;color:#111;border-radius:10px;padding:9px 14px;font:700 13.5px Inter,sans-serif;text-decoration:none;white-space:nowrap}
+.btn.ghost{background:none;border:1px solid #d8b26a;color:#d8b26a}
+main{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+.bc{font-size:12.5px;color:#8b92a1}.bc a{color:#8b92a1;text-decoration:none}.bc a:hover{color:#d8b26a}
+h1{font:800 clamp(26px,4.4vw,40px)/1.15 Sora,sans-serif;margin:10px 0 8px}h2{font:700 19px Sora,sans-serif;margin:28px 0 12px;display:flex;align-items:center;gap:10px}
+h2 small{font:600 12px Inter;color:#8b92a1;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:2px 9px}
+.lead{color:#c6cad2;max-width:820px;margin:0 0 6px}.blogo{height:40px;margin:6px 0 4px;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px}
+.card{display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#111317;overflow:hidden;text-decoration:none}
+.card:hover{border-color:#d8b26a}.card .ph{aspect-ratio:4/3;background:#fff;display:flex;align-items:center;justify-content:center}
+.card .ph img{max-width:88%;max-height:88%;object-fit:contain}.card .ph span{font-size:46px}
+.card .in{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;flex:1}.card small{font:600 10.5px Inter;letter-spacing:.06em;color:#8b92a1;text-transform:uppercase}
+.card b{font:700 14.5px Sora,sans-serif}.card .m{font-size:12px;color:#d8b26a;opacity:.85}.card .pr{margin-top:auto;padding-top:6px;font:700 14px Sora,sans-serif;color:#d8b26a}
+.card .pr.no{font:500 12px Inter;color:#8b92a1}.soon{display:inline-block;margin-left:6px;background:#2f6bff;color:#fff;border-radius:5px;padding:1px 6px;font:700 9.5px Inter;letter-spacing:.06em;vertical-align:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chips a{border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:6px 12px;font-size:13px;text-decoration:none;color:#cfd3da}.chips a:hover{border-color:#d8b26a;color:#d8b26a}
+.pl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.pt{border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#111317;padding:14px 16px}.pt b{display:block;font:700 16px Sora,sans-serif}
+.pt .c{color:#8b92a1;font-size:13px;margin:2px 0 6px}.pt .a{font-size:13.5px;color:#cfd3da}.pt .ok{color:#52c38a;font:600 11.5px Inter;margin-left:6px}
+.pt .bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.pt .bt a{border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:6px 11px;font:600 12.5px Inter;text-decoration:none}
+.pt .bt a.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}
+.cta{margin-top:34px;border:1px solid rgba(216,178,106,.4);border-radius:16px;padding:18px;background:linear-gradient(160deg,rgba(216,178,106,.12),rgba(216,178,106,.02));display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.cta p{margin:0;max-width:640px;color:#d6d9df}
+footer{border-top:1px solid rgba(255,255,255,.08);padding:20px;text-align:center;color:#8b92a1;font-size:12.5px}
+@media(max-width:560px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.top span{display:none}main{padding:16px 14px 50px}}`;
+
+function page({ url, title, desc, crumbs, open, body }) {
+  const ld = { '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c[0], item: SITE + c[1] })) };
+  return `<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(desc)}">
+<link rel="canonical" href="${SITE}${url}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="CAI Hub">
+<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">
+<meta property="og:url" content="${SITE}${url}"><meta property="og:image" content="${SITE}/assets/og-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">${JSON.stringify(ld)}</script>
+<style>${CSS}</style></head><body>
+<header class="top"><a href="/"><img src="/assets/intro/logo-white.png" alt="CAI — Concerto Audio Indonesia"></a><span>CAI HUB</span><a class="btn" href="${esc(open)}">Buka di CAI Hub ›</a></header>
+<main><nav class="bc">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${esc(c[1])}">${esc(c[0])}</a>` : esc(c[0])).join(' › ')}</nav>
+${body}
+<div class="cta"><p><b>Cari partner resmi terdekat?</b> Beli &amp; pasang produk resmi Concerto Audio Indonesia di partner resmi di kota Anda.</p><a class="btn ghost" href="/partner/">Partner resmi per kota ›</a></div>
+</main><footer>© ${today.slice(0, 4)} Concerto Audio Indonesia · <a href="/">hub.concerto.id</a> · Harga = SRP (harga jual resmi yang disarankan)</footer>
+</body></html>`;
+}
+const card = (b, p) => `<a class="card" href="/p/${encodeURIComponent(p.id)}/"><div class="ph">${photo(p) ? `<img src="${esc(abs(photo(p)))}" alt="${esc(b.name + ' ' + p.name)}" loading="lazy">` : `<span>${p.emoji || '🔊'}</span>`}</div>
+  <div class="in"><small>${esc(b.name)} · ${esc(p.category)}</small><b>${esc(p.name)}${p.soon ? '<span class="soon">COMING SOON</span>' : ''}</b>${p.model && p.model !== p.name ? `<span class="m">${esc(p.model)}</span>` : ''}
+  ${srp(p) ? `<span class="pr">${esc(srp(p))}</span>` : '<span class="pr no">Harga: hubungi partner resmi</span>'}</div></a>`;
+const brandChips = cur => `<div class="chips">${BRANDS.filter(b => b.id !== cur).map(b => `<a href="/brand/${b.id}/">${esc(b.name)}</a>`).join('')}</div>`;
+const katChips = cur => `<div class="chips">${KAT.filter(k => k.slug !== cur && count(k.cat)).map(k => `<a href="/kategori/${k.slug}/">${esc(k.h)}</a>`).join('')}</div>`;
+const allProds = BRANDS.flatMap(b => b.lines.flatMap(l => l.products.map(p => ({ b, l, p }))));
+const count = cat => allProds.filter(x => x.p.category === cat).length;
+
+const pages = [];   // { dir, html, url }
+// ── Brand ──
+for (const b of BRANDS) {
+  const ps = b.lines.flatMap(l => l.products), cats = [...new Set(ps.map(p => p.category))];
+  const url = `/brand/${b.id}/`;
+  const body = `<h1>${esc(b.name)} — Katalog Resmi</h1>${b.logo ? `<img class="blogo" src="${esc(abs(b.logo))}" alt="Logo ${esc(b.name)}">` : ''}
+    <p class="lead">${esc(b.desc || b.tagline || '')}</p><p class="lead">${ps.length} produk resmi ${esc(b.name)} (${esc(cats.join(', '))}) yang didistribusikan Concerto Audio Indonesia — spesifikasi lengkap & harga SRP.</p>
+    ${b.lines.filter(l => l.products.length).map(l => `<h2>${esc(l.name)} <small>${l.products.length}</small></h2><div class="grid">${l.products.map(p => card(b, p)).join('')}</div>`).join('')}
+    <h2>Brand resmi lainnya</h2>${brandChips(b.id)}<h2>Kategori</h2>${katChips('')}`;
+  pages.push({ url, html: page({ url, title: `${b.name} — Katalog Resmi ${cats.slice(0, 3).join(', ')} | CAI Hub`,
+    desc: `${ps.length} produk ${b.name} resmi: ${cats.join(', ').toLowerCase()} — spesifikasi lengkap & harga SRP. Distributor resmi Concerto Audio Indonesia.`,
+    crumbs: [['CAI Hub', '/'], ['Brand', '/brand/' + b.id + '/'], [b.name, url]], open: `/?brand=${b.id}`, body }) });
+}
+// ── Kategori ──
+for (const k of KAT) {
+  const xs = allProds.filter(x => x.p.category === k.cat); if (!xs.length) continue;
+  const bs = BRANDS.filter(b => xs.some(x => x.b === b)), url = `/kategori/${k.slug}/`;
+  const body = `<h1>${esc(k.h)} — Katalog Resmi</h1><p class="lead">${xs.length} ${esc(k.d)} resmi dari ${bs.length} brand (${esc(bs.map(b => b.name).join(', '))}) — spesifikasi lengkap & harga SRP. Bandingkan berdampingan & cari partner pemasang terdekat di CAI Hub.</p>
+    ${bs.map(b => { const ps = xs.filter(x => x.b === b); return `<h2>${esc(b.name)} <small>${ps.length}</small></h2><div class="grid">${ps.map(x => card(b, x.p)).join('')}</div>`; }).join('')}
+    <h2>Kategori lainnya</h2>${katChips(k.slug)}<h2>Brand resmi</h2>${brandChips('')}`;
+  pages.push({ url, html: page({ url, title: `${k.h} — Katalog Resmi ${bs.length} Brand | CAI Hub`,
+    desc: `${xs.length} ${k.d} resmi dari ${bs.map(b => b.name).join(', ')} — spesifikasi & harga SRP, cari partner pemasang terdekat.`,
+    crumbs: [['CAI Hub', '/'], ['Kategori', url], [k.h, url]], open: `/?kat=${k.slug}`, body }) });
+}
+// ── Partner ──
+const pt = d => `<div class="pt"><b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}
+  <div class="bt">${d.wa ? `<a class="wa" href="https://wa.me/${esc(d.wa)}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" rel="nofollow">WhatsApp</a>` : ''}
+  ${d.ig ? `<a href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" rel="nofollow">Instagram</a>` : ''}
+  <a href="${esc(d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', ')))}" rel="nofollow">Maps</a></div></div>`;
+const provs = [...new Set(PARTNERS.map(d => d.r))];
+const cities = [...new Set(PARTNERS.map(d => d.c).filter(Boolean))];
+const citySlug = c => shareSlug(c), provSlug = r => shareSlug(r);
+const used = new Set(cities.map(citySlug));
+const provUrl = r => `/partner/${used.has(provSlug(r)) ? 'provinsi-' + provSlug(r) : provSlug(r)}/`;
+pages.push({ url: '/partner/', html: page({ url: '/partner/', title: `Partner Car Audio Resmi di ${provs.length} Provinsi | CAI Hub`,
+  desc: `${PARTNERS.length} partner resmi Concerto Audio Indonesia di ${cities.length} kota — beli & pasang ${BRAND_NAMES}.`,
+  crumbs: [['CAI Hub', '/'], ['Partner resmi', '/partner/']], open: '/?kota=semua',
+  body: `<h1>Partner Car Audio Resmi Concerto Audio Indonesia</h1><p class="lead">${PARTNERS.length} partner resmi di ${cities.length} kota, ${provs.length} provinsi — beli & pasang produk ${esc(BRAND_NAMES)}.</p>
+  ${provs.map(r => { const cs = [...new Set(PARTNERS.filter(d => d.r === r).map(d => d.c).filter(Boolean))];
+    return `<h2><a href="${provUrl(r)}" style="text-decoration:none">${esc(r)}</a> <small>${PARTNERS.filter(d => d.r === r).length}</small></h2><div class="chips">${cs.map(c => `<a href="/partner/${citySlug(c)}/">${esc(c)} (${PARTNERS.filter(d => d.c === c).length})</a>`).join('')}</div>`; }).join('')}` }) });
+for (const r of provs) {
+  const ds = PARTNERS.filter(d => d.r === r), url = provUrl(r);
+  pages.push({ url, html: page({ url, title: `Partner Car Audio Resmi di ${r} | CAI Hub`,
+    desc: `${ds.length} partner resmi Concerto Audio Indonesia di ${r}: ${ds.slice(0, 6).map(d => d.n).join(', ')}${ds.length > 6 ? ' dan lainnya' : ''} — alamat, WhatsApp & Maps.`,
+    crumbs: [['CAI Hub', '/'], ['Partner resmi', '/partner/'], [r, url]], open: `/?kota=${provSlug(r)}`,
+    body: `<h1>Partner Car Audio Resmi di ${esc(r)}</h1><p class="lead">${ds.length} partner resmi Concerto Audio Indonesia — beli & pasang produk ${esc(BRAND_NAMES)}.</p>
+      <div class="pl">${ds.map(pt).join('')}</div>` }) });
+}
+for (const c of cities) {
+  const ds = PARTNERS.filter(d => d.c === c), r = ds[0].r, url = `/partner/${citySlug(c)}/`;
+  const near = [...new Set(PARTNERS.filter(d => d.r === r && d.c !== c).map(d => d.c).filter(Boolean))];
+  pages.push({ url, html: page({ url, title: `Partner Car Audio Resmi di ${c} | CAI Hub`,
+    desc: `${ds.length} partner resmi Concerto Audio Indonesia di ${c}: ${ds.map(d => d.n).join(', ')} — alamat, WhatsApp & Maps.`,
+    crumbs: [['CAI Hub', '/'], ['Partner resmi', '/partner/'], [r, provUrl(r)], [c, url]], open: `/?kota=${citySlug(c)}`,
+    body: `<h1>Partner Car Audio Resmi di ${esc(c)}</h1><p class="lead">${ds.length} partner resmi Concerto Audio Indonesia di ${esc(c)}, ${esc(r)} — beli & pasang produk ${esc(BRAND_NAMES)}.</p>
+      <div class="pl">${ds.map(pt).join('')}</div>${near.length ? `<h2>Kota lain di ${esc(r)}</h2><div class="chips">${near.map(x => `<a href="/partner/${citySlug(x)}/">${esc(x)}</a>`).join('')}</div>` : ''}` }) });
+}
+
+// ── Tulis: hapus halaman lama di folder milik skrip ini, lalu tulis semua ──
+for (const dir of ['brand', 'kategori', 'partner']) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
+for (const pg of pages) { const d = path.join(ROOT, pg.url); fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'index.html'), pg.html); }
+const sm = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+${pages.map(pg => `  <url><loc>${SITE}${pg.url}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${/^\/(brand|kategori)\//.test(pg.url) ? '0.8' : '0.6'}</priority></url>`).join('\n')}
+</urlset>
+`;
+fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sm);
+console.log(`${pages.length} halaman: ${pages.filter(p => p.url.startsWith('/brand/')).length} brand · ${pages.filter(p => p.url.startsWith('/kategori/')).length} kategori · ${pages.filter(p => p.url.startsWith('/partner/')).length} partner (index + provinsi + kota) · sitemap.xml diperbarui (${PARTNERS.length} partner)`);

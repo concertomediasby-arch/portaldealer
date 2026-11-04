@@ -4263,3 +4263,26 @@ body.logged-in:not(.is-staff) .pd-near-btn { display: none !important; }
 #dash-check .cp-box { margin: 18px 0 0; }
 #dash-week:empty, #dash-mine:empty, #dash-mine2:empty { display: none; }
 @media (max-width: 720px) { .dash-trust { margin: 16px 16px 0; } #dash-check, #dash-week, #dash-mine, #dash-mine2 { padding: 0 16px; } }
+/* Tahap 3 (4 Nov 2026): bagikan perbandingan & rakitan */
+.cmp-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 28px 12px; }
+.cmp-top .cmp-note { margin: 0; }
+.cmp-share, .rk-share { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--accent); color: var(--accent); background: var(--accent-lo); border-radius: 11px; padding: 9px 14px; font: 600 13.5px var(--f-body); cursor: pointer; }
+.cmp-share svg, .rk-share svg { width: 16px; height: 16px; }
+.rk-share { width: 100%; margin-top: 8px; }
+.rk-share:disabled { opacity: .45; cursor: default; }
+@media (max-width: 720px) { .cmp-top { margin: 0 16px 12px; } .cmp-share { width: 100%; } }
+/* Layar pembuka bermerek (Tahap 3, 4 Nov 2026) — hanya html.spl-on (dibuka dari ikon Layar Utama) */
+#app-splash { display: none; }
+html.spl-on #app-splash { position: fixed; inset: 0; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 42%, rgba(216,178,106,.2), transparent 60%), #070809; color: #eceef2; transition: opacity .45s ease; }
+html.spl-on #app-splash.out { opacity: 0; pointer-events: none; }
+.spl-hx { width: 96px; height: 96px; position: relative; }
+.spl-hx img { width: 100%; height: 100%; border-radius: 22px; }
+.spl-ring { position: absolute; inset: -14px; border-radius: 50%; border: 2px solid rgba(216,178,106,.3); border-top-color: #d8b26a; animation: splSpin 1.1s linear infinite; }
+@keyframes splSpin { to { transform: rotate(360deg); } }
+#app-splash b { margin-top: 24px; font: 800 26px var(--f-display, Sora, sans-serif); letter-spacing: .02em; }
+#app-splash b i { font-style: normal; color: #efcd8b; }
+#app-splash small { color: #8b92a1; font-size: 12px; margin-top: 6px; letter-spacing: .04em; }
+.spl-bot { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 14px; opacity: .75; align-items: center; }
+.spl-bot img { height: 12px; max-width: 70px; object-fit: contain; }
+@media (prefers-reduced-motion: reduce) { .spl-ring { animation: none; } }

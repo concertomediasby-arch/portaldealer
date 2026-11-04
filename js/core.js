@@ -1280,6 +1280,7 @@ function renderRakitSide() {
       ${f('cust', 'Nama customer', 'mis. Bapak Andi')}${f('car', 'Mobil', 'mis. Toyota Fortuner 2024')}${f('by', 'Disiapkan oleh', 'nama toko / partner')}
       <label class="rk-f"><span>Catatan</span><textarea rows="2" placeholder="mis. termasuk pemasangan" oninput="rk.note=this.value;rkSave()">${escHtml(rk.note || '')}</textarea></label>
       <button class="gt-btn confirm rk-pdf" onclick="rkPdf()" ${rk.items.length ? '' : 'disabled'}>⬇ Unduh PDF Penawaran</button>
+      <button class="gt-btn rk-share" onclick="rkShare()" ${rk.items.length ? '' : 'disabled'}>${SHARE_ICON} Bagikan rakitan</button>
       <button class="gt-btn ghost rk-clear" onclick="rkClear()" ${rk.items.length ? '' : 'disabled'}>Kosongkan sistem</button>
     </div>`;
 }
@@ -1295,6 +1296,24 @@ function rkQty(i, d) { const it = rk.items[i]; if (!it) return; it.qty = Math.ma
 function rkDel(i) { rk.items.splice(i, 1); rkSave(); renderRakit(); }
 function rkSetVar(i, v) { if (rk.items[i]) { rk.items[i].v = v; rkSave(); renderRakit(); } }
 function rkClear() { if (!confirm('Kosongkan semua produk di sistem ini?')) return; rk.items = []; rkSave(); renderRakit(); }
+/* Bagikan rakitan sebagai link (Tahap 3, 4 Nov 2026, permintaan pemilik): isi rakitan (produk · qty · panjang) disimpan di link
+   /rakitan/?rk=<pid*qty*panjang~…> — tanpa database; data customer/mobil/catatan TIDAK ikut. Hanya SRP. */
+const rkEnc = () => rk.items.map(it => [it.pid, it.qty, it.v || ''].join('*').replace(/\*$/, '')).join('~');
+const rkLink = () => `${location.origin}/rakitan/?rk=${encodeURIComponent(rkEnc())}`;
+function rkShare() {
+  if (!rk.items.length) return showToast('Tambahkan produk dulu.');
+  const a = rkAnalyze();
+  const lines = rk.items.map(it => { const { brand, product: p } = findProductAny(it.pid); return `• ${brand.name} ${p.name}${it.v ? ' ' + it.v : ''}${it.qty > 1 ? ' ×' + it.qty : ''}`; });
+  shareWa(`🔊 Rakitan audio dari CAI Hub (${rk.items.length} produk):\n${lines.join('\n')}\nTotal SRP ${fmtRp(a.total)} — ${RK_EXCL}\n\nLihat & ubah rakitannya di CAI Hub:\n${rkLink()}`);
+}
+function rkOpenLinked(str) {
+  const items = String(str || '').split('~').map(x => x.split('*')).map(([pid, q, v]) => ({ pid, qty: Math.max(1, Math.min(99, +q || 1)), ...(v ? { v } : {}) }))
+    .filter(it => { const p = findProductAny(it.pid).product; return p && (!it.v || p.priceList?.[it.v] !== undefined); });
+  if (!items.length) { showToast('Link rakitan tidak valid.'); return; }
+  rkLoad(); rk.items = items; rkSave();
+  openRakit();
+  showToast(`✓ Rakitan dari link dimuat (${items.length} produk) — bisa Anda ubah`, 5000);
+}
 
 function rkOpenPick(slot) {
   rkPickSlot = RK_SLOTS.find(s => s.id === slot); rkPickQ = ''; rkPickBrand = '';

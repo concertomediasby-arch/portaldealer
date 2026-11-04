@@ -64,7 +64,12 @@ function openDeepLink() {
   if (q.get('dealer')) { enterPortal(); adOpenLinked(q.get('dealer')); return; }   // link Authorized Dealer
   if (q.get('paket')) { enterPortal(); paketOpenLinked(q.get('paket')); return; }   // link Paket Audio
   if (q.get('sorotan')) { enterPortal(); dvOpenLinked(q.get('sorotan')); return; }   // link Sorotan Brand → jendela video brand itu
-  if (q.get('hof')) { enterPortal(); hofOpenLinked(q.get('hof')); return; }   // link prestasi Hall of Fame (data statis di katalog.js)
+  if (q.get('hof')) { enterPortal(); hofOpenLinked(q.get('hof')); return; }
+  if (q.get('cmp')) { enterPortal(); cmpOpenLinked(q.get('cmp')); return; }   // link perbandingan produk (js/fav.js)
+  if (q.get('rk')) { enterPortal(); rkOpenLinked(q.get('rk')); return; }   // link rakitan System Simulator
+  if (q.get('brand')) { const b = BRANDS.find(x => x.id === q.get('brand')); if (b) { enterPortal(); showBrand(b.id); return; } }   // halaman /brand/<id>/
+  if (q.get('kat')) { enterPortal(); katOpenLinked(q.get('kat')); return; }   // halaman /kategori/<slug>/
+  if (q.get('kota')) { enterPortal(); kotaOpenLinked(q.get('kota')); return; }   // halaman /partner/<kota atau provinsi>/
   if (q.get('guide')) { enterPortal(); guidePending = q.get('guide'); return; }   // link Panduan Dealer → setelah status login diketahui
   const pid = q.get('p');
   const { brand, product } = pid ? findProductAny(pid) : {};
@@ -91,4 +96,10 @@ if (!QA_SCREEN_MODE) loadAcadExtra().then(() => { if (typeof dashRender === 'fun
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui
 if (!QA_SCREEN_MODE) { pmIcon(); pmArm(); }   // musik latar portal: tunggu klik pertama
 idleInit();   // keluar otomatis bila tidak ada aktivitas
+// Layar pembuka bermerek: tampil min. ±1,1 dtk sejak halaman dibuka (performance.now), lalu memudar (kelas spl-on dipasang skrip kecil di <head>)
+if (document.documentElement.classList.contains('spl-on')) {
+  const splDone = () => setTimeout(() => { const el = document.getElementById('app-splash'); el?.classList.add('out'); setTimeout(() => { document.documentElement.classList.remove('spl-on'); el?.remove(); }, 450); }, Math.max(0, 1100 - performance.now()));
+  if (document.readyState === 'complete') splDone(); else addEventListener('load', splDone, { once: true });
+  setTimeout(splDone, 3000);   // cadangan bila gambar lambat dimuat
+}
 insInit();   // ajakan "Pasang CAI Hub" di Layar Utama (js/install.js)

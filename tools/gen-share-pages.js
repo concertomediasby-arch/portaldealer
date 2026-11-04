@@ -100,6 +100,11 @@ const TYPES = [
     card: { t: 't', v: 'nw', kick: 'CAI HUB NEWS', h: 'Berita terbaru Concerto Audio Indonesia', sub: 'Produk baru, event & info dari Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System.' } },
   { id: 'galeri', title: 'Galeri Instalasi — CAI Hub', desc: 'Foto & video pemasangan audio mobil dari partner resmi Concerto Audio Indonesia.',
     card: { t: 't', v: 'gl', kick: 'GALERI INSTALASI', h: 'Instalasi audio mobil dari partner resmi CAI', sub: 'Foto & video pemasangan Audiocircle · STEG · Zelos dan brand resmi CAI lainnya.' } },
+  // Tahap 3 (4 Nov 2026): link perbandingan & rakitan System Simulator (isi ada di link, kartu umum per jenis)
+  { id: 'bandingkan', title: 'Bandingkan produk — CAI Hub', desc: 'Spesifikasi & harga SRP produk resmi Concerto Audio Indonesia berdampingan.',
+    card: { t: 't', v: 'bd', kick: 'BANDINGKAN PRODUK', h: 'Bandingkan produk resmi berdampingan', sub: 'Spesifikasi & harga SRP Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System.' } },
+  { id: 'rakitan', title: 'Rakitan sistem audio — CAI Hub', desc: 'Rakitan sistem audio mobil dari System Simulator CAI Hub — produk resmi, total harga SRP & cek channel.',
+    card: { t: 't', v: 'rk', kick: 'SYSTEM SIMULATOR', h: 'Rakitan sistem audio mobil', sub: 'Produk resmi CAI, total harga SRP & cek channel — buka, ubah, lalu tanya partner resmi.' } },
 ];
 for (const t of TYPES) items.push({ kind: '', id: t.id, target: '/?', title: t.title, desc: t.desc, card: t.card });
 // Concerto Way per Day (4 Nov 2026, permintaan pemilik — sampul WA cocok dengan Day yang dibagikan): /cway/<n>/ untuk Day 1..CW_DAYS.
@@ -178,6 +183,8 @@ function cardHtml(c) {
     const ic = c.v === 'cw' ? (c.day ? `<div class="day"><i>DAY</i><b${c.day > 99 ? ' style="font-size:68px"' : ''}>${c.day}</b></div>`
         : svg('<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3c0 1.5-1 1.5-1 3M12 3c0 1.5-1 1.5-1 3"/>', '#f0cf8a'))
       : c.v === 'pd' ? svg('<path d="M4 5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v5h5"/><path d="M8 13h8M8 17h5"/>', '#f0cf8a')
+      : c.v === 'bd' ? svg('<path d="M7 4v16M17 4v16"/><path d="M3 8l4-4 4 4M13 16l4 4 4-4"/>', '#f0cf8a')
+      : c.v === 'rk' ? svg('<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="14" r="3.5"/><circle cx="12" cy="7.5" r="1.5"/>', '#f0cf8a')
       : c.v === 'nw' ? svg('<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/>', '#6fd3e6')
       : svg('<path d="M3 13l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5v4a1 1 0 0 1-1 1h-1a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H4a1 1 0 0 1-1-1z"/><path d="M3 13h18"/>', '#f0cf8a');
     return `<div class="c ty ${c.v === 'nw' ? 'nw' : 'gold'}" id="c"><div class="top">${LOGO}<span class="k">${esc(c.kick)}</span></div>

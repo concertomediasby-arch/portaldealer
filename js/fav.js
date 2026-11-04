@@ -67,7 +67,7 @@ function renderCompare() {
   const keys = [...new Set(rs.flatMap(r => Object.keys(r.product.specs || {})))];
   const row = (k, vals, cls = '') => `<tr class="${cls}"><td>${k}</td>${vals.map(v => `<td>${v}</td>`).join('')}</tr>`;
   const specs = keys.map(k => { const v = rs.map(r => r.product.specs?.[k] ?? '—'); return row(escHtml(k), v.map(x => escHtml(String(x))), new Set(v.map(String)).size > 1 ? 'diff' : ''); }).join('');
-  el.innerHTML = `<div class="cmp-note"><i></i>Baris berwarna = nilainya berbeda. Spesifikasi dari data resmi CAI.</div>
+  el.innerHTML = `<div class="cmp-top"><div class="cmp-note"><i></i>Baris berwarna = nilainya berbeda. Spesifikasi dari data resmi CAI.</div><button class="cmp-share" onclick="cmpShare()">${SHARE_ICON} Bagikan perbandingan</button></div>
   <div class="cmp-wrap"><table class="cmp-t"><thead><tr><td></td>${rs.map(({ brand: b, product: p }) => `<td><div class="cmp-p">
       ${favImg(p) ? `<img src="${favImg(p)}" alt="" onclick="showProduct('${b.id}','${p.id}')">` : `<span class="cmp-em">${p.emoji || '📦'}</span>`}
       <small>${escHtml(b.name.toUpperCase())}</small><b>${escHtml(p.name)}${eolTag(p)}</b><button class="x" onclick="cmpRemove('${p.id}')">✕ Hapus</button></div></td>`).join('')}</tr></thead><tbody>
@@ -76,6 +76,20 @@ function renderCompare() {
     ${specs}
     <tr><td></td>${rs.map(({ brand: b, product: p }) => `<td class="cmp-acts"><button onclick="showProduct('${b.id}','${p.id}')">Lihat produk ›</button><button class="g pd-near-btn" onclick="cmpNear('${b.id}','${p.id}')">📍 Partner terdekat</button></td>`).join('')}</tr>
   </tbody></table></div>`;
+}
+// Bagikan perbandingan (Tahap 3): link /bandingkan/?cmp=a,b,c → halaman /bandingkan/ (kartu pratinjau umum) → /?cmp=… → cmpOpenLinked()
+const cmpLink = () => `${location.origin}/bandingkan/?cmp=${cmpList().map(encodeURIComponent).join(',')}`;
+function cmpShare() {
+  const rs = cmpList().map(findProductAny); if (rs.length < 2) return;
+  const names = rs.map(r => `${r.brand.name} ${r.product.name}${hasPrice(r.product) ? ' (SRP ' + srpText(r.product) + ')' : ''}`);
+  shareWa(`⇄ Bandingkan di CAI Hub — ${rs[0].product.category}:\n${names.map(n => '• ' + n).join('\n')}\n\nLihat spesifikasi berdampingan:\n${cmpLink()}`);
+}
+function cmpOpenLinked(str) {
+  const ids = String(str || '').split(',').map(s => s.trim()).filter(id => findProductAny(id).product);
+  const cat = ids.length ? findProductAny(ids[0]).product.category : '';
+  const ok = ids.filter(id => findProductAny(id).product.category === cat).slice(0, CMP_MAX);
+  if (ok.length < 2) { showToast('Link perbandingan tidak valid.'); return; }
+  favSave(CMP_KEY, ok); openCompare();
 }
 function cmpNear(b, p) { showProduct(b, p); setTimeout(() => document.getElementById('pd-near')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 350); }
 
@@ -125,4 +139,22 @@ function favPaint() {
   document.querySelectorAll('.f-heart[data-fav]').forEach(b => { const on = favHas(b.dataset.fav); b.classList.toggle('on', on); b.textContent = on ? HEART_ON : HEART_OFF; });
   favPaintProduct(); cmpTrayPaint();
   if (document.getElementById('view-dashboard')?.classList.contains('active')) favRenderDash();
+}
+
+// ── Halaman Google (Tahap 3): /kategori/<slug>/ → /?kat= · /partner/<kota>/ → /?kota= (tools/gen-seo-pages.js) ──
+const KAT_SLUGS = { speaker: 'Speaker', subwoofer: 'Subwoofer', amplifier: 'Amplifier', dsp: 'DSP', tweeter: 'Tweeter', midrange: 'Midrange', kabel: 'Cable', aksesoris: 'Accessories' };
+function katOpenLinked(slug) {
+  const cat = KAT_SLUGS[String(slug).toLowerCase()]; openCatalog();
+  if (!cat) return;
+  const s = document.getElementById('catalog-search'); if (s) { s.value = cat; renderCatalog(); }
+}
+function kotaOpenLinked(slug, tries = 0) {
+  if (!tries) openAuthDealers();
+  if (!slug || slug === 'semua') return;
+  const ds = adPublic(), city = [...new Set(ds.map(d => d.c).filter(Boolean))].find(c => shareSlug(c) === slug);
+  const prov = [...new Set(ds.map(d => d.r))].find(r => shareSlug(r) === slug || 'provinsi-' + shareSlug(r) === slug);
+  if (city) { const s = document.getElementById('ad-search'); if (s) s.value = city; renderAuthDealers(); }
+  else if (prov) setAdRegion(prov);
+  // Data tabel auth_dealers bisa belum termuat (partner baru belum ada di cadangan) — coba lagi sebentar
+  else if (tries < 16) setTimeout(() => kotaOpenLinked(slug, tries + 1), 500);
 }
