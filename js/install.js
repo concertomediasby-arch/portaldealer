@@ -67,6 +67,7 @@ function insLog(kind) {
 function insInit() {
   if (QA_SCREEN_MODE) return;
   const s = insState();
+  if (s.v !== 2) { delete s.snooze; s.v = 2; }   // sekali: hapus penundaan dari versi awal (tutup kartu yang dibuka lewat pil ikut menunda)
   let ses = ''; try { ses = sessionStorage.getItem(INS_SES) || ''; } catch (e) {}
   if (!ses) { s.visits = (s.visits || 0) + 1; try { sessionStorage.setItem(INS_SES, '1'); } catch (e) {} }
   if (insStandalone()) {
@@ -122,6 +123,7 @@ function insOpen(manual) {
   let el = document.getElementById('ins-sheet');
   if (!el) { el = document.createElement('div'); el.id = 'ins-sheet'; el.className = 'ins-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Pasang CAI Hub'); document.body.appendChild(el); }
   el.className = 'ins-sheet' + (insIosSafari() && !insBip ? ' ios' : '');
+  el.dataset.auto = manual ? '' : '1';   // dibuka sendiri lewat pil/ajakan kecil → menutupnya tidak menunda ajakan otomatis
   el.innerHTML = insSheetHtml();
   requestAnimationFrame(() => el.classList.add('open'));
   try { sessionStorage.setItem(INS_SES + '-shown', '1'); } catch (e) {}
@@ -130,7 +132,7 @@ function insOpen(manual) {
 function insClose(silent) {
   const el = document.getElementById('ins-sheet'); if (!el?.classList.contains('open')) return;
   el.classList.remove('open');
-  if (silent) return;
+  if (silent || !el.dataset.auto) return;
   const s = insState(); s.snooze = Date.now() + INS_SNOOZE_DAYS * 864e5; insSave(s);
   insLog('dismiss');
 }
