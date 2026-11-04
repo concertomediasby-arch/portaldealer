@@ -119,6 +119,7 @@ function dashRender() {
   if (typeof pnHtml === 'function') dashSet('pn-invite', pnHtml('dash'));   // ajakan notifikasi HP (js/push.js)
   dashSet('dashboard-brands', dashBrandsHtml());
   dashNewRender();
+  if (typeof favRenderDash === 'function') favRenderDash();   // Terakhir dilihat · Favorit · Baru minggu ini (js/fav.js)
   ['dash-q', 'dash-q2'].forEach((id, i) => { const el = document.getElementById(id); if (el && keepQ[i]) el.value = keepQ[i]; });
 }
 // Dipanggil onAuthChanged(): sapaan & "Baru untuk Anda" (Galeri dimuat di latar untuk menghitung mobil baru)
