@@ -21,3 +21,20 @@ self.addEventListener('fetch', e => {
     return hit || net;
   }));
 });
+// Notifikasi HP Concerto Way (4 Nov 2026): Edge Function cway-push mengirim pengingat 5 menit sebelum tayang (khusus Editor/Admin)
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'CAI Hub', {
+    body: d.body || '', icon: '/assets/icons/icon-192.png', badge: '/assets/icons/icon-192.png',
+    tag: d.tag || 'cai', renotify: true, data: { url: d.url || '/' } }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    const c = cs.find(c => c.url.startsWith(self.location.origin));
+    if (c && c.navigate) return c.navigate(url).then(w => (w || c).focus()).catch(() => self.clients.openWindow(url));
+    return self.clients.openWindow(url);
+  }));
+});

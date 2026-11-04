@@ -34,6 +34,14 @@ create policy "cway write" on public.concerto_way for all to authenticated
 revoke all on public.concerto_way from anon;
 grant select, insert, update, delete on public.concerto_way to authenticated;`;
 
+// Jadwal tayang (4 Nov 2026, permintaan pemilik): kolom publish_at (tanggal + jam WIB). Sebelum waktunya, postingan tidak
+// terkirim ke partner (dikunci RLS) & tidak tampil; Admin/Editor melihatnya dengan label ⏰ Terjadwal + daftar Antrian tayang.
+const CWAY_SCHED_SQL = `-- Concerto Way: jadwal tayang (tanggal + jam) — jalankan sekali di Supabase → SQL Editor → Run
+alter table public.concerto_way add column if not exists publish_at timestamptz;
+drop policy if exists "cway read" on public.concerto_way;
+create policy "cway read" on public.concerto_way for select to authenticated
+  using ((published and (publish_at is null or publish_at <= now())) or (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));`;
+let cwSchedMissing = false;
 let cwItems = null, cwMissing = false, cwErr = '', cwLoading = null;
 let cwCur = null, cwQ = '', cwSer = '', cwForm = null, cwPending = null;
 // Urutan daftar: selalu mulai 'new' = terbaru dulu (Day 3, 2, 1 — permintaan pemilik 3 Nov 2026); 'old' = Day 1 dulu hanya selama halaman terbuka (tidak diingat)
@@ -53,10 +61,25 @@ const cwLink = id => { const d = +cwItems?.find(x => x.id === id)?.day;
   return `${PORTAL_URL}/cway/${d >= 1 && d <= CWAY_SHARE_DAYS && Number.isInteger(d) ? d + '/' : ''}?cw=${encodeURIComponent(id)}`; };   // /cway/ = kartu pratinjau WA Concerto Way, lalu diteruskan ke /?cw=
 const cwDate = d => d ? new Date(d + 'T12:00:00+07:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }) : '';
 const cwSorted = () => (cwItems || []).slice().sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || (b.day || 0) - (a.day || 0) || String(b.created_at).localeCompare(String(a.created_at)));
-const cwLive = () => cwSorted().filter(x => x.published);
+const cwDue = x => !x.publish_at || Date.parse(x.publish_at) <= Date.now();
+const cwSched = x => x.published && !cwDue(x);   // terbit tapi menunggu jam tayang
+const cwLive = () => cwSorted().filter(x => x.published && cwDue(x));
+const cwWhen = iso => new Date(iso).toLocaleString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace(/\./g, ':').replace(/(\d{2}):(\d{2})$/, '$1.$2') + ' WIB';
+const cwSchedBadge = x => cwSched(x) ? `<span class="cw-sched">⏰ TERJADWAL · ${escHtml(cwWhen(x.publish_at))}</span>` : '';
+let cwTick = null;
+function cwSchedTimer() {   // postingan terjadwal muncul tepat waktu: cek tiap 30 dtk (partner: muat ulang dari database tiap 5 menit)
+  clearInterval(cwTick); if (!authUser) return;
+  let n = 0, wasDue = new Set((cwItems || []).filter(x => x.published && cwDue(x)).map(x => x.id));
+  cwTick = setInterval(() => {
+    if (document.hidden) return; n++;
+    const due = (cwItems || []).filter(x => x.published && cwDue(x)).map(x => x.id);
+    if (due.some(id => !wasDue.has(id))) { wasDue = new Set(due); cwRefresh(); }
+    if (!isAdmin() && n % 10 === 0) loadCway(true);
+  }, 30000);
+}
 const cwShown = () => isAdmin() ? cwSorted() : cwLive();
 const cwDaysAgo = d => Math.round((Date.parse(todayWIB() + 'T00:00:00Z') - Date.parse(String(d) + 'T00:00:00Z')) / 864e5);
-const cwIsNew = it => it?.published && cwDaysAgo(it.post_date) < CWAY_NEW_DAYS && !cwLS(CWAY_SEEN_KEY)[it.id];
+const cwIsNew = it => it?.published && cwDue(it) && cwDaysAgo(it.post_date) < CWAY_NEW_DAYS && !cwLS(CWAY_SEEN_KEY)[it.id];
 
 /* ── Teks WA → struktur postingan ──
    Pola contoh pemilik: CONCERTO WAY · DAY n · <SERI: …> · judul (+ subjudul) · paragraf … · "Resume hari ini:" · "Tugas Hari Ini" · penutup.
@@ -127,7 +150,7 @@ async function loadCway(force) {
       cwErr = m; cwItems = [];
     }
     cwLoading = null;
-    cwRefresh();
+    cwRefresh(); cwSchedTimer();
   })();
   return cwLoading;
 }
@@ -198,7 +221,136 @@ function renderCway() {
   body.innerHTML = `<div class="cw-tools"><input type="search" class="cw-search" placeholder="Cari topik, mis. papan nama…" value="${escHtml(cwQ)}" oninput="cwQ=this.value;cwRenderListOnly()">
       <div class="cw-sort" role="group" aria-label="Urutan"><button class="cw-chip${cwSort === 'new' ? ' on' : ''}" onclick="cwSetSort('new')">Terbaru dulu</button><button class="cw-chip${cwSort === 'old' ? ' on' : ''}" onclick="cwSetSort('old')">Day 1 dulu</button></div>
       ${sers.length > 1 ? `<div class="cw-chips"><button class="cw-chip${cwSer ? '' : ' on'}" onclick="cwSer='';renderCway()">Semua</button>${sers.map(s => `<button class="cw-chip${cwSer === s ? ' on' : ''}" onclick="cwSer=${escHtml(JSON.stringify(s))};renderCway()">${escHtml(s)}</button>`).join('')}</div>` : ''}</div>
-    <div id="cw-list">${cwListHtml(groups, list.length)}</div>`;
+    ${cwQueueHtml()}${cwPushHtml()}<div id="cw-list">${cwListHtml(groups, list.length)}</div>`;
+}
+// Antrian tayang (Admin/Editor): postingan terjadwal, urut waktu tayang terdekat
+function cwQueueHtml() {
+  if (!isAdmin()) return '';
+  const q = (cwItems || []).filter(cwSched).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at));
+  if (!q.length) return '';
+  return `<div class="cw-queue"><div class="cw-queue-h">⏰ Antrian tayang <span>${q.length} postingan · otomatis muncul untuk partner pada jamnya</span></div>
+    ${q.map(x => `<button class="cw-queue-r" onclick="openCway('${x.id}')"><span class="cw-queue-t">${escHtml(cwWhen(x.publish_at))}</span>
+      <span class="cw-queue-d">${x.day != null ? 'DAY ' + x.day : '•'}</span><b>${escHtml(x.title)}</b><span class="cw-queue-e" onclick="event.stopPropagation();openCwForm('${x.id}')">✏️ Ubah jadwal</span></button>`).join('')}</div>`;
+}
+// ── Notifikasi HP 5 menit sebelum tayang (4 Nov 2026, permintaan pemilik — gratis, Web Push, khusus Editor/Admin) ──
+// Edge Function supabase/functions/cway-push (pg_cron tiap menit) mengirim ke HP yang mengaktifkan di sini; sw.js menampilkan
+// notifikasinya & membuka /?cw=<id> saat diketuk. iPhone: hanya bila CAI Hub dipasang di Layar Utama (iOS 16.4+).
+const CWAY_PUSH_FN = 'cway-push';
+const CWAY_PUSH_SQL = `-- Concerto Way: notifikasi HP 5 menit sebelum tayang (Edge Function "cway-push"). 4 Nov 2026, permintaan pemilik.
+-- Jalankan sekali di Supabase → SQL Editor → Run SETELAH fungsi cway-push di-deploy (Verify JWT dimatikan).
+-- Sama dengan tombol "📋 Salin SQL Notifikasi" di menu Concerto Way (konstanta CWAY_PUSH_SQL di js/cway.js). Tidak berisi rahasia.
+alter table public.concerto_way add column if not exists push_notified_at timestamptz;
+
+create table if not exists public.cway_push_subs (
+  endpoint text primary key,
+  p256dh text not null,
+  auth text not null,
+  user_id uuid default auth.uid(),
+  ua text,
+  created_at timestamptz default now()
+);
+alter table public.cway_push_subs enable row level security;
+drop policy if exists "cway push own" on public.cway_push_subs;
+create policy "cway push own" on public.cway_push_subs for all to authenticated
+  using (user_id = auth.uid() and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'))
+  with check (user_id = auth.uid() and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));
+
+-- Kunci VAPID dibuat otomatis oleh fungsi; RLS tanpa policy = hanya fungsi (service role) yang bisa membaca
+create table if not exists public.cway_push_config (id int primary key default 1 check (id = 1), public_key text, private_key text);
+alter table public.cway_push_config enable row level security;
+
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+select cron.unschedule('cway-push') where exists (select 1 from cron.job where jobname = 'cway-push');
+select cron.schedule('cway-push', '* * * * *', $$
+  select net.http_post(
+    url := 'https://cvffltbxsaiugccexmtf.supabase.co/functions/v1/cway-push',
+    headers := jsonb_build_object('Content-Type', 'application/json'),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 30000
+  );
+$$);
+-- Mematikan jadwal: select cron.unschedule('cway-push');`;
+let cwPush = { st: '?' };   // ? | unsupported | denied | off | on | busy | nosql | nofn
+const cwPushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const cwIsIos = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+async function cwPushReg() {
+  let r = await navigator.serviceWorker.getRegistration();
+  if (!r) r = await navigator.serviceWorker.register('sw.js');
+  return r.active ? r : navigator.serviceWorker.ready;
+}
+async function cwPushCheck() {
+  if (!isAdmin()) return;
+  if (!cwPushOk()) cwPush = { st: 'unsupported' };
+  else if (Notification.permission === 'denied') cwPush = { st: 'denied' };
+  else {
+    try { const r = await navigator.serviceWorker.getRegistration(); const sub = r && await r.pushManager.getSubscription();
+      cwPush = sub && Notification.permission === 'granted' ? { st: 'on', ep: sub.endpoint } : { st: 'off' }; } catch (e) { cwPush = { st: 'off' }; }
+  }
+  const el = document.getElementById('cw-push'); if (el) el.outerHTML = cwPushHtml();
+}
+function cwPushHtml() {
+  if (!isAdmin()) return '';
+  if (cwPush.st === '?') { setTimeout(cwPushCheck, 0); cwPush = { st: '…' }; }
+  const st = cwPush.st;
+  const msg = {
+    '…': 'Memeriksa…',
+    unsupported: cwIsIos() ? 'Di iPhone, notifikasi hanya bisa bila CAI Hub <b>dipasang di Layar Utama</b> (Safari → Bagikan → <i>Tambah ke Layar Utama</i>) lalu dibuka dari ikonnya — iOS 16.4 ke atas.' : 'Browser ini belum mendukung notifikasi. Pakai Chrome terbaru, atau pasang CAI Hub di Layar Utama.',
+    denied: 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP (Notifikasi → CAI Hub), lalu muat ulang.',
+    off: 'Dapat notifikasi di HP ini <b>5 menit sebelum</b> setiap Day yang dijadwalkan tayang — walau CAI Hub sedang tertutup.',
+    on: '<b>✅ Aktif di HP ini.</b> Notifikasi masuk 5 menit sebelum Day terjadwal tayang. Ketuk notifikasinya untuk membuka Day itu & membagikannya.',
+    busy: 'Mengaktifkan…',
+    nosql: 'Tabel notifikasi belum dibuat. Klik <b>📋 Salin SQL Notifikasi</b>, jalankan sekali di Supabase → SQL Editor → Run, lalu coba lagi.',
+    nofn: 'Edge Function <b>cway-push</b> belum di-deploy di Supabase (lihat <code>supabase/functions/cway-push</code>; Verify JWT dimatikan), lalu coba lagi.',
+  }[st] || '';
+  const btn = st === 'on' ? `<button class="gt-btn ghost" onclick="cwPushTest()">🔔 Kirim tes</button><button class="gt-btn ghost" onclick="cwPushOffBtn()">Matikan</button>`
+    : ['off', 'nosql', 'nofn'].includes(st) ? `<button class="gt-btn" onclick="cwPushOn()">Aktifkan di HP ini</button>` : '';
+  return `<div class="cw-push${st === 'on' ? ' on' : ''}" id="cw-push"><div class="cw-push-tx"><b class="cw-push-h">🔔 Pengingat tayang</b><span>${msg}</span></div>
+    <div class="cw-push-b">${btn}${st === 'nosql' ? '<button class="gt-btn ghost" onclick="cwCopyPushSql()">📋 Salin SQL Notifikasi</button>' : ''}</div></div>`;
+}
+const cwB64 = s => { const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+async function cwPushFn(body) {
+  const { data, error } = await supabase.functions.invoke(CWAY_PUSH_FN, { body });
+  if (error) { const st = error.context?.status; const e = new Error(error.message); e.nofn = !st || st === 404; e.status = st; throw e; }
+  return data;
+}
+async function cwPushOn() {
+  if (!cwPushOk()) return cwPushCheck();
+  const perm = await Notification.requestPermission();   // langsung dari klik (wajib di iPhone)
+  if (perm !== 'granted') return cwPushCheck();
+  cwPush = { st: 'busy' }; const el = document.getElementById('cw-push'); if (el) el.outerHTML = cwPushHtml();
+  try {
+    const reg = await cwPushReg();
+    const { key } = await cwPushFn({ action: 'key' });
+    if (!key) throw Object.assign(new Error('kunci kosong'), { nofn: true });
+    let sub = await reg.pushManager.getSubscription();
+    if (sub && sub.options?.applicationServerKey && btoa(String.fromCharCode(...new Uint8Array(sub.options.applicationServerKey))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') !== key) { await sub.unsubscribe(); sub = null; }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: cwB64(key) });
+    const j = sub.toJSON();
+    const { error } = await supabase.from('cway_push_subs').upsert({ endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, ua: navigator.userAgent.slice(0, 200) }, { onConflict: 'endpoint' });
+    if (error) { if (/does not exist|schema cache|42P01|PGRST205/i.test(error.message + ' ' + error.code)) { cwPush = { st: 'nosql' }; cwCopyPushSql(); } else throw error; }
+    else { cwPush = { st: 'on', ep: j.endpoint }; showToast('✅ Pengingat tayang aktif di HP ini'); }
+  } catch (e) {
+    if (e.nofn && !(e.status >= 500)) cwPush = { st: 'nofn' };
+    else if (/cway_push_config|does not exist|42P01/i.test(e.message)) { cwPush = { st: 'nosql' }; cwCopyPushSql(); }
+    else { cwPush = { st: 'off' }; showToast('⚠ Gagal mengaktifkan notifikasi: ' + (e.message || e), 7000); }
+  }
+  const el2 = document.getElementById('cw-push'); if (el2) el2.outerHTML = cwPushHtml();
+}
+async function cwPushOffBtn() {
+  try { const r = await navigator.serviceWorker.getRegistration(); const sub = r && await r.pushManager.getSubscription();
+    if (sub) { await supabase.from('cway_push_subs').delete().eq('endpoint', sub.endpoint); await sub.unsubscribe(); } } catch (e) {}
+  showToast('Pengingat tayang dimatikan di HP ini'); cwPushCheck();
+}
+async function cwPushTest() {
+  try { const r = await cwPushFn({ action: 'test', endpoint: cwPush.ep });
+    showToast(r?.ok ? '🔔 Tes terkirim — notifikasi muncul dalam beberapa detik' : '⚠ Tes gagal (status ' + (r?.status || '?') + ')', 6000);
+  } catch (e) { showToast('⚠ Tes gagal: ' + (e.message || e), 7000); }
+}
+function cwCopyPushSql() {
+  (navigator.clipboard?.writeText(CWAY_PUSH_SQL) || Promise.reject()).then(
+    () => showToast('📋 SQL notifikasi disalin — tempel di Supabase → SQL Editor → Run', 7000),
+    () => prompt('Jalankan SQL ini sekali di Supabase → SQL Editor → Run:', CWAY_PUSH_SQL));
 }
 function cwRenderListOnly() {   // pencarian: jangan render ulang kotak input (fokus & kursor tetap)
   const q = cwQ.trim().toLowerCase(), list = cwShown(), groups = [];
@@ -215,14 +367,14 @@ function cwListHtml(groups, total) {
   if (cwSort === 'old') items.sort((a, b) => (a.day ?? 1e9) - (b.day ?? 1e9) || String(a.post_date).localeCompare(String(b.post_date)));
   return `<div class="cw-grid">${items.map(x => {
     const tot = cwTaskCount(x), done = (cwLS(CWAY_TASK_KEY)[x.id] || []).filter(Boolean).length;
-    return `<button class="cw-card${x.published ? '' : ' draft'}" onclick="openCway('${x.id}')">${cwIsNew(x) ? '<span class="cw-new abs">★ BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}
+    return `<button class="cw-card${x.published ? '' : ' draft'}" onclick="openCway('${x.id}')">${cwIsNew(x) ? '<span class="cw-new abs">★ BARU</span>' : ''}${x.published ? (cwSched(x) ? '<span class="cw-draft sched">⏰ TERJADWAL</span>' : '') : '<span class="cw-draft">DRAF</span>'}
       <div class="cw-card-day"><span>DAY</span><b>${x.day ?? '•'}</b></div>
       ${x.series ? `<div class="cw-card-ser">${escHtml(x.series)}</div>` : ''}<div class="cw-card-t">${escHtml(x.title)}</div>${x.subtitle ? `<div class="cw-card-s">${escHtml(x.subtitle)}</div>` : ''}
-      <div class="cw-card-m"><span>${escHtml(cwDate(x.post_date))}</span>${tot ? `<span>${done === tot ? '✅' : '☐'} ${done}/${tot} tugas</span>` : ''}</div></button>`;
+      <div class="cw-card-m"><span>${cwSched(x) ? '⏰ ' + escHtml(cwWhen(x.publish_at)) : escHtml(cwDate(x.post_date))}</span>${tot ? `<span>${done === tot ? '✅' : '☐'} ${done}/${tot} tugas</span>` : ''}</div></button>`;
   }).join('')}</div>`;
 }
 function renderCwPost(body, it) {
-  const s = cwLS(CWAY_SEEN_KEY); if (it.published && !s[it.id]) { s[it.id] = 1; cwLS(CWAY_SEEN_KEY, s); renderCwayHl(); cwStar(); }
+  const s = cwLS(CWAY_SEEN_KEY); if (it.published && cwDue(it) && !s[it.id]) { s[it.id] = 1; cwLS(CWAY_SEEN_KEY, s); renderCwayHl(); cwStar(); }
   const asc = cwShown().slice().reverse(), i = asc.findIndex(x => x.id === it.id), prev = asc[i - 1], next = asc[i + 1];
   const lbl = x => x.day != null ? 'Day ' + x.day : 'Sebelumnya';
   const tot = cwTaskCount(it), done = (cwLS(CWAY_TASK_KEY)[it.id] || []).filter(Boolean).length;
@@ -236,7 +388,7 @@ function renderCwPost(body, it) {
     <article class="cw-art">
     <div class="cw-hero"><div class="cw-hero-top"><span class="cw-badge">☕ CONCERTO WAY</span>${it.day != null ? `<span class="cw-dnum">DAY ${it.day}</span>` : ''}</div>
       ${it.series ? `<div class="cw-ser">${escHtml(it.series)}</div>` : ''}<h2 class="cw-title">${escHtml(it.title)}</h2>${it.subtitle ? `<p class="cw-sub">${escHtml(it.subtitle)}</p>` : ''}
-      ${it.published ? '' : '<div class="cw-draft-note">DRAF — belum tampil untuk partner</div>'}</div>
+      ${it.published ? (cwSched(it) ? `<div class="cw-draft-note sched">⏰ TERJADWAL — tampil untuk partner ${escHtml(cwWhen(it.publish_at))}</div>` : '') : '<div class="cw-draft-note">DRAF — belum tampil untuk partner</div>'}</div>
     <div class="cw-body">${cwBodyHtml(it)}</div>
     <div class="cw-foot"><span class="cw-date">${escHtml(cwDate(it.post_date))}</span>
       <div class="cw-acts">${acts}</div></div>
@@ -267,8 +419,8 @@ function openCwForm(id) {
   if (!isAdmin()) return;
   if (cwMissing) { cwCopySql(); return; }
   const it = id && cwItems?.find(x => x.id === id);
-  cwForm = it ? { id: it.id, body: it.body, day: it.day ?? '', series: it.series || '', title: it.title, subtitle: it.subtitle || '', post_date: it.post_date, published: it.published, touched: {}, busy: false }
-    : { id: null, body: '', day: '', series: '', title: '', subtitle: '', post_date: todayWIB(), published: true, touched: {}, busy: false };
+  cwForm = it ? { id: it.id, body: it.body, day: it.day ?? '', series: it.series || '', title: it.title, subtitle: it.subtitle || '', post_date: it.post_date, published: it.published, touched: {}, busy: false, ...cwSchedInit(it) }
+    : { id: null, body: '', day: '', series: '', title: '', subtitle: '', post_date: todayWIB(), published: true, touched: {}, busy: false, ...cwSchedInit(null) };
   if (it) Object.assign(cwForm.touched, { day: 1, series: 1, title: 1, subtitle: 1 });
   let ov = document.getElementById('cw-form');
   if (!ov) {
@@ -279,6 +431,25 @@ function openCwForm(id) {
   }
   renderCwForm(); ov.classList.add('open');
   setTimeout(() => document.getElementById('cwf-body')?.focus(), 50);
+}
+// Jadwal di form: 'now' = langsung tayang, 'at' = tanggal + jam WIB (bawaan: besok 09.00)
+function cwSchedInit(it) {
+  if (it?.publish_at && !cwDue(it)) {
+    const w = new Date(Date.parse(it.publish_at) + 7 * 3600e3).toISOString();
+    return { mode: 'at', sd: w.slice(0, 10), st: w.slice(11, 16) };
+  }
+  const t = new Date(Date.parse(todayWIB() + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
+  return { mode: 'now', sd: t, st: '09:00' };
+}
+const cwSchedIso = f => f.mode === 'at' && f.sd && f.st ? new Date(`${f.sd}T${f.st}:00+07:00`).toISOString() : null;
+function cwSchedSet(k, v) { if (!cwForm) return; cwForm[k] = v; if (k === 'mode') renderCwForm(); else cwSchedNote(); }
+function cwSchedNote() {
+  const f = cwForm, el = document.getElementById('cwf-snote'), btn = document.getElementById('cwf-save'); if (!f) return;
+  const iso = cwSchedIso(f), past = iso && Date.parse(iso) <= Date.now();
+  if (el) el.innerHTML = f.mode !== 'at' ? 'Tampil untuk partner begitu disimpan.'
+    : past ? '⚠ Waktu ini sudah lewat — postingan langsung tampil saat disimpan.'
+    : `Otomatis tampil untuk partner <b>${escHtml(cwWhen(iso))}</b>. Sebelum itu hanya Admin/Editor yang bisa melihatnya.`;
+  if (btn && !f.busy) btn.textContent = f.mode === 'at' && !past ? '⏰ Simpan Jadwal' : '💾 Simpan & Terbitkan';
 }
 function closeCwForm() { cwForm = null; document.getElementById('cw-form')?.classList.remove('open'); }
 function renderCwForm() {
@@ -292,17 +463,21 @@ function renderCwForm() {
       </div>
       <div class="cwf-col">
         <div class="cwf-h">2 · Periksa hasil</div>
-        <div class="cwf-row"><label>Day<input type="number" min="0" value="${escHtml(f.day)}" oninput="cwFormSet('day',this.value)"></label><label>Tanggal<input type="date" value="${escHtml(f.post_date)}" oninput="cwFormSet('post_date',this.value)"></label></div>
+        <div class="cwf-row"><label>Day<input type="number" min="0" value="${escHtml(f.day)}" oninput="cwFormSet('day',this.value)"></label>${f.published && f.mode === 'at' ? '' : `<label>Tanggal<input type="date" value="${escHtml(f.post_date)}" oninput="cwFormSet('post_date',this.value)"></label>`}</div>
         <label class="cwf-l">Seri<input value="${escHtml(f.series)}" placeholder="mis. BASIC: Kalau Saya Jadi Customer" oninput="cwFormSet('series',this.value)"></label>
         <label class="cwf-l">Judul<input value="${escHtml(f.title)}" oninput="cwFormSet('title',this.value)"></label>
         <label class="cwf-l">Subjudul<input value="${escHtml(f.subtitle)}" oninput="cwFormSet('subtitle',this.value)"></label>
-        <label class="cwf-chk"><input type="checkbox"${f.published ? ' checked' : ''} onchange="cwForm.published=this.checked"> Tampilkan untuk partner (hapus centang = simpan sebagai draf)</label>
+        <label class="cwf-chk"><input type="checkbox"${f.published ? ' checked' : ''} onchange="cwForm.published=this.checked;renderCwForm()"> Tampilkan untuk partner (hapus centang = simpan sebagai draf)</label>
+        ${f.published ? `<div class="cwf-sched"><div class="cwf-h">⏰ Jadwal tayang</div>
+          <div class="cwf-seg"><button type="button" class="${f.mode !== 'at' ? 'on' : ''}" onclick="cwSchedSet('mode','now')">Tayang sekarang</button><button type="button" class="${f.mode === 'at' ? 'on' : ''}" onclick="cwSchedSet('mode','at')">Jadwalkan</button></div>
+          ${f.mode === 'at' ? `<div class="cwf-row"><label>Tanggal<input type="date" value="${escHtml(f.sd)}" min="${todayWIB()}" oninput="cwSchedSet('sd',this.value)"></label><label>Jam (WIB)<input type="time" value="${escHtml(f.st)}" step="300" oninput="cwSchedSet('st',this.value)"></label></div>` : ''}
+          <div class="cwf-snote" id="cwf-snote"></div></div>` : ''}
         <div class="cwf-h">Pratinjau</div>
         <div class="cwf-prev" id="cwf-prev"></div>
       </div>
     </div>
     <div class="acf-foot"><button class="gt-btn ghost" onclick="closeCwForm()">Batal</button><button class="gt-btn" id="cwf-save" onclick="saveCw()"${f.busy ? ' disabled' : ''}>${f.busy ? '⏳ Menyimpan…' : '💾 Simpan & Terbitkan'}</button></div>`;
-  cwFormPreview();
+  cwFormPreview(); cwSchedNote();
 }
 function cwFormBody(v) {
   const f = cwForm; if (!f) return; f.body = v;
@@ -324,17 +499,21 @@ async function saveCw() {
   if (!f.title.trim()) return showToast('Judul belum terisi.');
   const row = { body: f.body.trim(), day: f.day === '' ? null : parseInt(f.day, 10), series: f.series.trim() || null, title: f.title.trim(), subtitle: f.subtitle.trim() || null,
     post_date: f.post_date || todayWIB(), published: !!f.published, updated_at: new Date().toISOString() };
+  const iso = f.published ? cwSchedIso(f) : null;
+  if (iso && Date.parse(iso) > Date.now()) { row.publish_at = iso; row.post_date = f.sd; }
+  else if (f.id && cwItems?.find(x => x.id === f.id)?.publish_at) row.publish_at = null;   // jadwal dibatalkan → tayang sekarang
   f.busy = true; renderCwForm();
   try {
     const q = f.id ? supabase.from(CWAY_TABLE).update(row).eq('id', f.id).select().single() : supabase.from(CWAY_TABLE).insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
-    closeCwForm(); showToast(f.id ? '✓ Concerto Way diperbarui' : '✓ Concerto Way diterbitkan');
+    closeCwForm(); showToast(row.publish_at ? `⏰ Dijadwalkan — tampil untuk partner ${cwWhen(row.publish_at)}` : f.id ? '✓ Concerto Way diperbarui' : '✓ Concerto Way diterbitkan', 6000);
     await loadCway(true);
     openCway(data.id);
   } catch (e) {
     f.busy = false; renderCwForm();
     const m = e?.message || String(e);
-    if (/does not exist|schema cache/i.test(m)) { cwMissing = true; cwCopySql(); } else showToast('⚠ Gagal menyimpan: ' + m, 7000);
+    if (/publish_at/i.test(m)) { cwSchedMissing = true; cwCopySchedSql(); }
+    else if (/does not exist|schema cache/i.test(m)) { cwMissing = true; cwCopySql(); } else showToast('⚠ Gagal menyimpan: ' + m, 7000);
   }
 }
 async function deleteCw(id) {
@@ -343,6 +522,11 @@ async function deleteCw(id) {
   const { error } = await supabase.from(CWAY_TABLE).delete().eq('id', id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
   showToast('Postingan dihapus'); cwCur = null; await loadCway(true);
+}
+function cwCopySchedSql() {
+  (navigator.clipboard?.writeText(CWAY_SCHED_SQL) || Promise.reject()).then(
+    () => showToast('📋 Jadwal tayang butuh SQL sekali — SQL sudah DISALIN. Tempel di Supabase → SQL Editor → Run, lalu simpan lagi.', 10000),
+    () => prompt('Jalankan SQL ini sekali di Supabase → SQL Editor → Run, lalu simpan lagi:', CWAY_SCHED_SQL));
 }
 function cwCopySql() {
   (navigator.clipboard?.writeText(CWAY_SQL) || Promise.reject()).then(

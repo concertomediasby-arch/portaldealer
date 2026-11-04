@@ -3961,3 +3961,30 @@ body.logged-in .guest-only { display: none !important; }
 .nw-play::after { content: ''; position: absolute; left: 17px; top: 13px; border-left: 14px solid #fff; border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
 .nw-oimg { position: relative; } .nw-oimg .nw-play { width: 26px; height: 26px; margin: -13px 0 0 -13px; border-width: 1.5px; } .nw-oimg .nw-play::after { left: 9px; top: 6px; border-left-width: 9px; border-top-width: 5px; border-bottom-width: 5px; }
 .nw-ythint { display: block; margin-top: 6px; font-size: 12px; color: var(--fg-2, #9aa0ad); }
+
+/* Concerto Way: jadwal tayang (4 Nov 2026) */
+.cw-draft.sched { color: #6fd3e6; border-color: #6fd3e6; }
+.cw-draft-note.sched { color: #6fd3e6; }
+.cwf-sched { margin-top: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: rgba(111,211,230,.06); }
+.cwf-sched .cwf-h { margin-top: 0; }
+.cwf-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 4px 0 10px; }
+.cwf-seg button { border: 0; background: transparent; color: var(--fg); padding: 8px 14px; font: 600 13px var(--f-body); cursor: pointer; }
+.cwf-seg button.on { background: #6fd3e6; color: #0b1219; }
+.cwf-snote { font-size: 12.5px; color: var(--fg-2, #9aa0ad); line-height: 1.45; }
+.cwf-snote b { color: var(--fg); }
+/* Pengingat tayang Concerto Way — notifikasi HP (4 Nov 2026) */
+.cw-push { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 0 0 18px; border: 1px dashed var(--border); border-radius: 14px; background: var(--surface); padding: 12px 14px; }
+.cw-push.on { border-style: solid; border-color: rgba(31,157,85,.45); }
+.cw-push-tx { flex: 1 1 320px; min-width: 0; font-size: 13px; line-height: 1.5; color: var(--fg-2, #9aa0ad); }
+.cw-push-tx b { color: var(--fg); }
+.cw-push-h { display: block; font: 700 14px var(--f-display); margin-bottom: 2px; }
+.cw-push-b { display: flex; gap: 8px; flex-wrap: wrap; }
+.cw-queue { margin: 0 0 18px; border: 1px solid rgba(111,211,230,.35); border-radius: 14px; background: rgba(111,211,230,.06); padding: 12px 14px; }
+.cw-queue-h { font: 700 14px var(--f-display); margin-bottom: 8px; }
+.cw-queue-h span { font: 400 12px var(--f-body); color: var(--fg-2, #9aa0ad); margin-left: 6px; }
+.cw-queue-r { display: grid; grid-template-columns: auto auto 1fr auto; gap: 12px; align-items: center; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; margin-top: 6px; color: var(--fg); font: inherit; cursor: pointer; }
+.cw-queue-t { font: 700 12.5px var(--f-mono); color: #6fd3e6; white-space: nowrap; }
+.cw-queue-d { font: 800 11px var(--f-display); letter-spacing: .1em; color: var(--accent); white-space: nowrap; }
+.cw-queue-r b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cw-queue-e { font-size: 12px; color: var(--fg-2, #9aa0ad); white-space: nowrap; }
+@media (max-width: 720px) { .cw-queue-r { grid-template-columns: auto 1fr; } .cw-queue-r b { grid-column: 1 / -1; white-space: normal; } .cw-queue-e { display: none; } }
