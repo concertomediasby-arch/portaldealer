@@ -14,6 +14,7 @@ const HEART_ON = '❤', HEART_OFF = '♡';
 function favToggle(id) {
   const a = favLoad(FAV_KEY), on = !a.includes(id);
   favSave(FAV_KEY, on ? [id, ...a] : a.filter(x => x !== id));
+  if (on && typeof intLog === 'function') intLog('fav', id);
   const { brand, product } = findProductAny(id);
   showToast(on ? `❤ ${brand.name} ${product.name} disimpan ke Favorit` : 'Dihapus dari Favorit');
   favPaint();
@@ -64,6 +65,7 @@ function renderCompare() {
   const el = document.getElementById('compare-body'); if (!el) return;
   const rs = cmpList().map(findProductAny);
   if (rs.length < 2) { el.innerHTML = `<div class="stock-empty">Pilih minimal 2 produk sekategori dengan tombol <b>⇄ Bandingkan</b> di halaman produk.</div>`; return; }
+  if (typeof intLog === 'function') intLog('cmp', cmpList().slice().sort().join(','), '', true);
   const keys = [...new Set(rs.flatMap(r => Object.keys(r.product.specs || {})))];
   const row = (k, vals, cls = '') => `<tr class="${cls}"><td>${k}</td>${vals.map(v => `<td>${v}</td>`).join('')}</tr>`;
   const specs = keys.map(k => { const v = rs.map(r => r.product.specs?.[k] ?? '—'); return row(escHtml(k), v.map(x => escHtml(String(x))), new Set(v.map(String)).size > 1 ? 'diff' : ''); }).join('');
@@ -81,6 +83,7 @@ function renderCompare() {
 const cmpLink = () => `${location.origin}/bandingkan/?cmp=${cmpList().map(encodeURIComponent).join(',')}`;
 function cmpShare() {
   const rs = cmpList().map(findProductAny); if (rs.length < 2) return;
+  if (typeof intLog === 'function') intLog('share', 'cmp');
   const names = rs.map(r => `${r.brand.name} ${r.product.name}${hasPrice(r.product) ? ' (SRP ' + srpText(r.product) + ')' : ''}`);
   shareWa(`⇄ Bandingkan di CAI Hub — ${rs[0].product.category}:\n${names.map(n => '• ' + n).join('\n')}\n\nLihat spesifikasi berdampingan:\n${cmpLink()}`);
 }

@@ -26,6 +26,7 @@ function dashSearch(q) {
     (p.name + ' ' + p.model + ' ' + p.category + ' ' + b.name + ' ' + (p.desc || '')).toLowerCase().includes(k))));
   const dlHit = adPublic().some(d => [d.n, d.c, d.r, d.a].join(' ').toLowerCase().includes(k));
   if (!prodHit && dlHit) {
+    if (typeof intCity === 'function') intCity(q);
     openAuthDealers();
     const s = document.getElementById('ad-search');
     if (s) { s.value = q; renderAuthDealers(); }
@@ -210,5 +211,5 @@ function pdNearRender(reshuffle) {
     : `<div class="pd-near-f">Pilih provinsi untuk melihat partner resmi CAI terdekat yang bisa menjual &amp; memasang produk ini.</div>`}`;
   if (reshuffle) adEnsure();   // hanya saat dibuka/diganti (adRerender → trustRefresh memanggil ulang tanpa adEnsure — cegah putaran)
 }
-function pdSetProv(v) { try { localStorage.setItem(PD_PROV_KEY, v); } catch (e) {} pdNearRender(true); }
+function pdSetProv(v) { try { localStorage.setItem(PD_PROV_KEY, v); } catch (e) {} pdNearRender(true); if (typeof intCity === 'function') intCity(v); }
 function pdAll() { const prov = pdProv(); openAuthDealers(); if (prov) setAdRegion(prov); }

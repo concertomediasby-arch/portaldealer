@@ -1290,6 +1290,7 @@ function rkAdd(pid) {
   const ex = rk.items.find(it => it.pid === pid && it.v === v);
   if (ex) ex.qty++; else rk.items.push({ pid, qty: 1, ...(v ? { v } : {}) });
   rkSave(); renderRakit(); renderRkPick();
+  if (typeof intLog === 'function') intLog('rk', pid);
   showToast(`✓ ${p.name} ditambahkan`);
 }
 function rkQty(i, d) { const it = rk.items[i]; if (!it) return; it.qty = Math.max(1, Math.min(99, it.qty + d)); rkSave(); renderRakit(); }
@@ -1302,6 +1303,7 @@ const rkEnc = () => rk.items.map(it => [it.pid, it.qty, it.v || ''].join('*').re
 const rkLink = () => `${location.origin}/rakitan/?rk=${encodeURIComponent(rkEnc())}`;
 function rkShare() {
   if (!rk.items.length) return showToast('Tambahkan produk dulu.');
+  if (typeof intLog === 'function') intLog('share', 'rk');
   const a = rkAnalyze();
   const lines = rk.items.map(it => { const { brand, product: p } = findProductAny(it.pid); return `• ${brand.name} ${p.name}${it.v ? ' ' + it.v : ''}${it.qty > 1 ? ' ×' + it.qty : ''}`; });
   shareWa(`🔊 Rakitan audio dari CAI Hub (${rk.items.length} produk):\n${lines.join('\n')}\nTotal SRP ${fmtRp(a.total)} — ${RK_EXCL}\n\nLihat & ubah rakitannya di CAI Hub:\n${rkLink()}`);
@@ -1901,7 +1903,7 @@ function openAuthDealers() {
   renderAuthDealers();
   adEnsure();
 }
-function setAdRegion(r) { adRegion = r; renderAuthDealers(); }
+function setAdRegion(r) { adRegion = r; renderAuthDealers(); if (r !== 'all' && typeof intCity === 'function') intCity(r); }
 function renderAuthDealers() {
   const ed = isEditor() && adRows;
   const list = ed ? adRows : adPublic();
@@ -2341,6 +2343,7 @@ function renderCatalog() {
     if (!q) return true;
     return (p.name + ' ' + p.model + ' ' + p.category + ' ' + brand.name + ' ' + (p.desc||'')).toLowerCase().includes(q);
   });
+  if (q && typeof intSearch === 'function') intSearch(q, filtered.length > 0);   // Laporan Minat Pengunjung
 
   // Urutkan: ikuti UPDATE_LOG (terbaru dulu), sisanya di belakang
   if (!filterBrand && !q) {
@@ -2460,7 +2463,8 @@ function showProduct(brandId, productId) {
 
   // Stock badge in detail panel
   renderProductStockBadge(product.id);
-  if (typeof recentAdd === 'function') { recentAdd(product.id); favPaintProduct(); }   // ❤ Simpan / ⇄ Bandingkan + riwayat (js/fav.js)
+  if (typeof recentAdd === 'function') { recentAdd(product.id); favPaintProduct(); }
+  if (typeof intLog === 'function') intLog('view', product.id, '', true);   // Laporan Minat Pengunjung (js/interest.js)   // ❤ Simpan / ⇄ Bandingkan + riwayat (js/fav.js)
   if (typeof pdNearRender === 'function') pdNearRender(true);   // partner resmi terdekat untuk produk ini (js/dash.js)
   if (typeof insInterest === 'function') { insPaint(); insInterest('prod'); }   // ajakan "Pasang CAI Hub" (js/install.js)
   if (typeof renderProductShowcase === 'function') renderProductShowcase(product, line, brand);   // Showcase: Achievement + Contoh pemasangan

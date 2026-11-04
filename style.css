@@ -4286,3 +4286,36 @@ html.spl-on #app-splash.out { opacity: 0; pointer-events: none; }
 .spl-bot { position: absolute; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 14px; opacity: .75; align-items: center; }
 .spl-bot img { height: 12px; max-width: 70px; object-fit: contain; }
 @media (prefers-reduced-motion: reduce) { .spl-ring { animation: none; } }
+
+/* Laporan Minat Pengunjung (Tahap 4, 4 Nov 2026) — tab di menu Pengunjung Portal (js/interest.js) */
+.vs-tabs { margin-bottom: 6px; }
+.int-g2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; align-items: start; }
+.int-g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.int-g2 > div > .vs-box + .vs-box { margin-top: 16px; }
+.int-up { color: #3fb37a; font-weight: 600; } .int-dn { color: #e2685f; font-weight: 600; }
+.int-pr { display: grid; grid-template-columns: 22px 42px minmax(0, 1fr) 110px 58px; gap: 10px; align-items: center; width: 100%; padding: 7px 0;
+  background: none; border: 0; border-top: 1px solid var(--border); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.int-pr:first-of-type { border-top: 0; } .int-pr:hover .nm b { color: var(--accent); }
+.int-pr .rk { font: 700 13px var(--f-display); color: var(--fg-muted); text-align: center; } .int-pr .rk.g { color: var(--accent); }
+.int-pr .ph { width: 42px; height: 42px; background: #fff; border-radius: 9px; display: grid; place-items: center; overflow: hidden; }
+.int-pr .ph img { max-width: 88%; max-height: 88%; object-fit: contain; } .int-pr .ph i { font-style: normal; font-size: 20px; }
+.int-pr .nm b { display: block; font: 600 13.5px var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.int-pr .nm small { color: var(--fg-muted); font-size: 11.5px; }
+.int-bar { height: 8px; background: color-mix(in srgb, var(--fg) 8%, transparent); border-radius: 5px; overflow: hidden; }
+.int-bar i { display: block; height: 100%; background: var(--accent); border-radius: 5px; }
+.int-pr .v { text-align: right; font: 700 13px var(--f-display); } .int-pr .v small { display: block; font: 500 10.5px var(--f-body); }
+.int-pt { display: grid; grid-template-columns: minmax(0, 1fr) 44px 44px 44px 52px; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.int-pt.h { border-top: 0; color: var(--fg-muted); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding-top: 0; font-weight: 600; }
+.int-pt b { display: block; font: 600 13.5px var(--f-display); } .int-pt small { color: var(--fg-muted); font-size: 11.5px; }
+.int-pt > span { text-align: center; } .int-pt.h > span:first-child { text-align: left; } .int-pt > span:last-child { text-align: right; } .int-pt .t { font: 800 14px var(--f-display); color: var(--accent); }
+.int-src { display: flex; height: 12px; border-radius: 7px; overflow: hidden; margin: 6px 0 8px; } .int-src i { display: block; height: 100%; }
+.int-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--fg-muted); }
+.int-leg span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 6px; background: var(--c); }
+.int-kw { display: flex; flex-wrap: wrap; gap: 7px; }
+.int-kw span { border: 1px solid var(--border); border-radius: 20px; padding: 5px 11px; font-size: 12.5px; }
+.int-kw span b { color: var(--accent); margin-left: 6px; font: 700 12px var(--f-display); }
+.int-kw.miss span { border-color: rgba(226,104,95,.45); background: rgba(226,104,95,.08); } .int-kw.miss span b { color: #e2685f; }
+.int-li { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 7px 0; border-top: 1px solid var(--border); }
+.int-li:first-of-type { border-top: 0; } .int-li b { font: 700 12.5px var(--f-display); color: var(--accent); }
+@media (max-width: 1000px) { .int-g2, .int-g3 { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .int-pr { grid-template-columns: 20px 38px minmax(0, 1fr) 54px; } .int-pr .int-bar { display: none; } .int-pr .ph { width: 38px; height: 38px; } }

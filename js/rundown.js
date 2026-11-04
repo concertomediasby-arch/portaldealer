@@ -111,6 +111,7 @@ async function loadVisitStats(quiet) {
     visitErr = /function|does not exist|schema cache|404|relation/i.test(m) ? 'setup' : 'Data pengunjung tidak bisa dimuat: ' + m;
   }
   if (typeof loadAppStats === 'function') await loadAppStats();
+  if (typeof vsTab !== 'undefined' && vsTab === 'int' && isEditor()) await loadIntStats();
   renderVisitStat();
   if (!quiet || document.getElementById('view-visitors')?.classList.contains('active')) { renderVisitors(); loadAcadViews().then(() => { if (document.getElementById('view-visitors')?.classList.contains('active')) renderVisitors(); }); }
 }
@@ -131,6 +132,7 @@ function renderVisitors() {
   const box = document.getElementById('vs-body'); if (!box) return;
   const sub = document.getElementById('vs-subtitle');
   if (sub) sub.textContent = 'Jumlah orang yang membuka portal — khusus Admin & Editor.' + (visitAt ? ` Diperbarui pukul ${visitAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })}.` : '');
+  if (typeof vsTab !== 'undefined' && vsTab === 'int' && isEditor()) { if (sub) sub.textContent = 'Produk, partner & kata pencarian yang paling diminati pengunjung — khusus Admin & Editor.'; box.innerHTML = intHtml(); return; }   // tab 📈 Minat Pengunjung (js/interest.js)
   if (visitErr === 'setup') {
     box.innerHTML = `<div class="vs-warn">Penghitung pengunjung belum diaktifkan. Jalankan SQL ini sekali di Supabase → SQL Editor → Run, lalu tekan ↻ Muat ulang. Kunjungan mulai dihitung setelah SQL dijalankan.<br><br><button class="gt-btn" onclick="visitCopySql()">📋 Salin SQL</button></div>`;
     return;

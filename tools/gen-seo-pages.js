@@ -24,6 +24,13 @@ catch (e) {
   PARTNERS = vm.runInNewContext('(' + m[1] + ')');
   console.log('⚠ tools/data/partners.json tidak ada — memakai AUTH_DEALERS di js/core.js');
 }
+// Klik WA/IG/Maps partner di halaman /partner/ ikut Laporan Minat Pengunjung (sumber "google"; RPC log_interest, ID browser sama
+// dengan portal = localStorage cai-vid — domain sama). Key Supabase = publishable (publik, sama dengan js/stock.js).
+const SUPA_URL = 'https://cvffltbxsaiugccexmtf.supabase.co', SUPA_KEY = 'sb_publishable_Y4AMvOdGfunEZhvvpsMzbg_NBbxNqGW';
+const LOG_JS = `document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[data-k]');if(!a)return;var v;
+try{v=localStorage.getItem('cai-vid');if(!v||v.length<8){v=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));localStorage.setItem('cai-vid',v);}}catch(x){return;}
+fetch('${SUPA_URL}/rest/v1/rpc/log_interest',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json',apikey:'${SUPA_KEY}',Authorization:'Bearer ${SUPA_KEY}'},
+body:JSON.stringify({p_vid:v,p_kind:a.dataset.k,p_ref:a.dataset.n,p_src:'google'})}).catch(function(){});},true);`;
 const shareSlug = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtRp = n => 'Rp ' + Number(n).toLocaleString('id-ID');
@@ -75,7 +82,7 @@ h2 small{font:600 12px Inter;color:#8b92a1;border:1px solid rgba(255,255,255,.12
 footer{border-top:1px solid rgba(255,255,255,.08);padding:20px;text-align:center;color:#8b92a1;font-size:12.5px}
 @media(max-width:560px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.top span{display:none}main{padding:16px 14px 50px}}`;
 
-function page({ url, title, desc, crumbs, open, body }) {
+function page({ url, title, desc, crumbs, open, body, log }) {
   const ld = { '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c[0], item: SITE + c[1] })) };
   return `<!doctype html>
@@ -95,7 +102,7 @@ function page({ url, title, desc, crumbs, open, body }) {
 <main><nav class="bc">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${esc(c[1])}">${esc(c[0])}</a>` : esc(c[0])).join(' › ')}</nav>
 ${body}
 <div class="cta"><p><b>Cari partner resmi terdekat?</b> Beli &amp; pasang produk resmi Concerto Audio Indonesia di partner resmi di kota Anda.</p><a class="btn ghost" href="/partner/">Partner resmi per kota ›</a></div>
-</main><footer>© ${today.slice(0, 4)} Concerto Audio Indonesia · <a href="/">hub.concerto.id</a> · Harga = SRP (harga jual resmi yang disarankan)</footer>
+</main>${log ? `<script>${LOG_JS}</script>` : ''}<footer>© ${today.slice(0, 4)} Concerto Audio Indonesia · <a href="/">hub.concerto.id</a> · Harga = SRP (harga jual resmi yang disarankan)</footer>
 </body></html>`;
 }
 const card = (b, p) => `<a class="card" href="/p/${encodeURIComponent(p.id)}/"><div class="ph">${photo(p) ? `<img src="${esc(abs(photo(p)))}" alt="${esc(b.name + ' ' + p.name)}" loading="lazy">` : `<span>${p.emoji || '🔊'}</span>`}</div>
@@ -132,9 +139,9 @@ for (const k of KAT) {
 }
 // ── Partner ──
 const pt = d => `<div class="pt"><b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}
-  <div class="bt">${d.wa ? `<a class="wa" href="https://wa.me/${esc(d.wa)}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" rel="nofollow">WhatsApp</a>` : ''}
-  ${d.ig ? `<a href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" rel="nofollow">Instagram</a>` : ''}
-  <a href="${esc(d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', ')))}" rel="nofollow">Maps</a></div></div>`;
+  <div class="bt">${d.wa ? `<a class="wa" data-k="wa" data-n="${esc(d.n)}" href="https://wa.me/${esc(d.wa)}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" rel="nofollow">WhatsApp</a>` : ''}
+  ${d.ig ? `<a data-k="ig" data-n="${esc(d.n)}" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" rel="nofollow">Instagram</a>` : ''}
+  <a data-k="maps" data-n="${esc(d.n)}" href="${esc(d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', ')))}" rel="nofollow">Maps</a></div></div>`;
 const provs = [...new Set(PARTNERS.map(d => d.r))];
 const cities = [...new Set(PARTNERS.map(d => d.c).filter(Boolean))];
 const citySlug = c => shareSlug(c), provSlug = r => shareSlug(r);
@@ -150,7 +157,7 @@ for (const r of provs) {
   const ds = PARTNERS.filter(d => d.r === r), url = provUrl(r);
   pages.push({ url, html: page({ url, title: `Partner Car Audio Resmi di ${r} | CAI Hub`,
     desc: `${ds.length} partner resmi Concerto Audio Indonesia di ${r}: ${ds.slice(0, 6).map(d => d.n).join(', ')}${ds.length > 6 ? ' dan lainnya' : ''} — alamat, WhatsApp & Maps.`,
-    crumbs: [['CAI Hub', '/'], ['Partner resmi', '/partner/'], [r, url]], open: `/?kota=${provSlug(r)}`,
+    crumbs: [['CAI Hub', '/'], ['Partner resmi', '/partner/'], [r, url]], open: `/?kota=${provSlug(r)}`, log: true,
     body: `<h1>Partner Car Audio Resmi di ${esc(r)}</h1><p class="lead">${ds.length} partner resmi Concerto Audio Indonesia — beli & pasang produk ${esc(BRAND_NAMES)}.</p>
       <div class="pl">${ds.map(pt).join('')}</div>` }) });
 }
@@ -159,7 +166,7 @@ for (const c of cities) {
   const near = [...new Set(PARTNERS.filter(d => d.r === r && d.c !== c).map(d => d.c).filter(Boolean))];
   pages.push({ url, html: page({ url, title: `Partner Car Audio Resmi di ${c} | CAI Hub`,
     desc: `${ds.length} partner resmi Concerto Audio Indonesia di ${c}: ${ds.map(d => d.n).join(', ')} — alamat, WhatsApp & Maps.`,
-    crumbs: [['CAI Hub', '/'], ['Partner resmi', '/partner/'], [r, provUrl(r)], [c, url]], open: `/?kota=${citySlug(c)}`,
+    crumbs: [['CAI Hub', '/'], ['Partner resmi', '/partner/'], [r, provUrl(r)], [c, url]], open: `/?kota=${citySlug(c)}`, log: true,
     body: `<h1>Partner Car Audio Resmi di ${esc(c)}</h1><p class="lead">${ds.length} partner resmi Concerto Audio Indonesia di ${esc(c)}, ${esc(r)} — beli & pasang produk ${esc(BRAND_NAMES)}.</p>
       <div class="pl">${ds.map(pt).join('')}</div>${near.length ? `<h2>Kota lain di ${esc(r)}</h2><div class="chips">${near.map(x => `<a href="/partner/${citySlug(x)}/">${esc(x)}</a>`).join('')}</div>` : ''}` }) });
 }
