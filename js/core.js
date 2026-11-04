@@ -16,6 +16,12 @@ const shareFiles = {};
 // Halaman kartu pratinjau link per item (tools/gen-share-pages.js): /p/ produk · /h/ Hall of Fame · /a/ Academy · /k/ Paket · /d/ dealer
 const shareSlug = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const sharePage = (kind, id) => `${PORTAL_URL}/${kind}/${encodeURIComponent(id)}/`;
+/* Kartu WA per berita & per mobil Galeri (Tahap 5 C, 4 Nov 2026): share/live.json dibuat jadwal GitHub (tools/gen-live-cards.js)
+   = { n: {id: hash}, g: {id: hash} }. Bila kartu item itu sudah ada → link /n/<id>/?v=<hash> · /g/<id>/?v=<hash>; belum → null
+   (pemanggil memakai link lama = kartu umum). ?build= agar tidak disimpan service worker. */
+let liveCards = null;
+function liveLoad() { fetch('/share/live.json?build=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j) liveCards = j; }, () => {}); }
+const liveLink = (kind, id) => { const h = liveCards?.[kind]?.[id]; return h ? `${sharePage(kind, id)}?v=${h}` : null; };
 // Teks untuk link wa.me: emoji dibuang — WhatsApp Web/Desktop menampilkan emoji dari link wa.me sebagai "�" (laporan pemilik 3 Nov 2026).
 // Berbagi lewat menu berbagi HP (navigator.share) tetap memakai teks asli lengkap dengan emoji.
 const waText = t => encodeURIComponent(String(t).replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}][\uFE0F\u200D\p{Extended_Pictographic}\p{Emoji_Modifier}]*[ \t]?/gu, ''));

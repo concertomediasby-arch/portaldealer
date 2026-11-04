@@ -73,7 +73,7 @@ function nwYtPlay(el, id) {
 const nwSorted = () => (nwItems || []).slice().sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || String(b.created_at).localeCompare(String(a.created_at)));
 const nwLive = () => nwSorted().filter(x => x.published);
 const nwShown = () => isEditor() ? nwSorted() : nwLive();
-const nwLink = id => `${PORTAL_URL}/news/?news=${encodeURIComponent(id)}`;   // /news/ = kartu pratinjau WA News, lalu diteruskan ke /?news=
+const nwLink = id => liveLink('n', id) || `${PORTAL_URL}/news/?news=${encodeURIComponent(id)}`;   // /n/<id>/ = kartu WA berita itu (bila sudah dibuat jadwal GitHub)   // /news/ = kartu pratinjau WA News, lalu diteruskan ke /?news=
 const nwIsNew = it => it?.published && cwDaysAgo(it.post_date) < NEWS_NEW_DAYS && !cwLS(NEWS_SEEN_KEY)[it.id];
 const nwDate = d => cwDate(d);
 

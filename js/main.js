@@ -90,7 +90,7 @@ initQaScreen();
 if (!QA_SCREEN_MODE) openDeepLink();
 updateAcademyStar();
 initSupabase();
-if (!QA_SCREEN_MODE) loadNews();   // News publik (headline Dashboard)
+if (!QA_SCREEN_MODE) { loadNews(); liveLoad(); document.addEventListener('visibilitychange', () => { if (!document.hidden) liveLoad(); }); }   // News publik (headline Dashboard)
 if (glLinkPending) { const id = glLinkPending; glLinkPending = null; glOpenLinked(id); }
 if (!QA_SCREEN_MODE) loadAcadExtra().then(() => { if (typeof dashRender === 'function') dashRender(); if (acadPending) { const n = acadPending; acadPending = null; acadOpenLinked(n); } });
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui

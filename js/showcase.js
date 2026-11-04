@@ -1191,7 +1191,7 @@ function scAuthChanged() {
 
 /* ── 📤 Bagikan project Galeri ke WA (3 Nov 2026, permintaan pemilik): foto pertama + teks + link publik ?gl=<id> ── */
 let glLinkPending = null;   // link ?gl=<id> dibuka setelah Supabase siap (js/main.js)
-const glLink = id => `${PORTAL_URL}/galeri/?gl=${encodeURIComponent(id)}`;   // /galeri/ = kartu pratinjau WA Galeri, lalu diteruskan ke /?gl=
+const glLink = id => liveLink('g', id) || `${PORTAL_URL}/galeri/?gl=${encodeURIComponent(id)}`;   // /g/<id>/ = kartu WA mobil itu (bila sudah dibuat jadwal GitHub)   // /galeri/ = kartu pratinjau WA Galeri, lalu diteruskan ke /?gl=
 const glShareCache = {};
 function glPrepShare(it) {
   const ph = (it.photos || []).find(p => !glIsVid(p)); const src = ph ? glUrl(ph.path) : '';
