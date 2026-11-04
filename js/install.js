@@ -86,10 +86,12 @@ function insInterest(kind) {
   const s = insState(); s[kind] = (s[kind] || 0) + 1; insSave(s);
   if ((s.prod || 0) >= 2 || (s.acad || 0) >= 1 || (s.gl || 0) >= 1) setTimeout(() => insMaybe(kind), 1500);
 }
-function insMaybe() {
+function insMaybe(kind, tries = 0) {
   if (!insEligible() || document.getElementById('ins-sheet')?.classList.contains('open')) return;
-  if (document.getElementById('landing') && !document.getElementById('landing').hidden) return;   // belum masuk portal
-  if (document.querySelector('.rk-pick.open, .gl-ov.open, #gdr.open, #dash-video')) return;          // jangan menimpa jendela lain
+  // belum masuk portal / ada jendela lain terbuka → coba lagi nanti (maks. ±1 menit)
+  const busy = (document.getElementById('landing') && !document.getElementById('landing').hidden)
+    || document.querySelector('.rk-pick.open, .gl-ov.open, #gdr.open, #dash-video.open, .ins-video.open, #login-overlay.open');
+  if (busy) { if (tries < 15) setTimeout(() => insMaybe(kind, tries + 1), 4000); return; }
   const s = insState();
   if (s.snooze && Date.now() < s.snooze) return;
   let shown = ''; try { shown = sessionStorage.getItem(INS_SES + '-shown'); } catch (e) {}
