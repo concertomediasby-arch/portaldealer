@@ -1967,6 +1967,7 @@ function loadAuthDealers(force) {
   return adLoading;
 }
 function adRerender() {
+  if (typeof trustRefresh === 'function') trustRefresh();   // angka & daftar partner di Dashboard / halaman produk (js/dash.js)
   const on = id => document.getElementById(id)?.classList.contains('active');
   if (on('view-authdealer')) renderAuthDealers();
   if (on('view-halloffame') && typeof renderHallOfFame === 'function') renderHallOfFame();
@@ -2438,6 +2439,7 @@ function showProduct(brandId, productId) {
 
   // Stock badge in detail panel
   renderProductStockBadge(product.id);
+  if (typeof pdNearRender === 'function') pdNearRender(true);   // partner resmi terdekat untuk produk ini (js/dash.js)
   if (typeof insInterest === 'function') { insPaint(); insInterest('prod'); }   // ajakan "Pasang CAI Hub" (js/install.js)
   if (typeof renderProductShowcase === 'function') renderProductShowcase(product, line, brand);   // Showcase: Achievement + Contoh pemasangan
 

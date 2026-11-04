@@ -109,7 +109,9 @@ function dashNewRender() { if (authUser) dashSet('dash-new', dashNewHtml()); }
 function dashRender() {
   const keepQ = ['dash-q', 'dash-q2'].map(id => document.getElementById(id)?.value || '');
   dashSet('dash-hero', dashHeroHtml());
+  dashSet('dash-trust', trustHtml());
   dashSet('dash-cta', dashCtaHtml());
+  dashSet('dash-check', cpHtml());
   dashSet('dash-pair', dashPairHtml());
   document.getElementById('dash-pair')?.classList.toggle('one', !DASH_HOF);
   dashSet('dash-paket', dashPaketHtml());
@@ -125,3 +127,81 @@ function dashAuthChanged() {
   if (typeof dashShareSync === 'function') setTimeout(() => dashShareSync(), 4000);   // Editor: sampul pratinjau WA Sorotan Brand
   if (authUser && typeof loadGaleri === 'function' && !glItems) Promise.resolve(loadGaleri()).then(dashNewRender, () => {});
 }
+
+
+/* ── TAHAP 1 KEPERCAYAAN (4 Nov 2026, permintaan pemilik — pratinjau .mockup/tahap1/ disetujui) ──
+   1) Bukti kepercayaan di Dashboard pengunjung (angka otomatis dari data) · 2) Cek Partner Resmi
+   3) "Beli & pasang di partner resmi" di halaman produk — urutan partner DIACAK tiap kali tampil (agar semua partner bergiliran di atas). */
+function trustHtml() {
+  const parts = adPublic(), provs = new Set(parts.map(d => d.r));
+  const nProd = BRANDS.reduce((a, b) => a + brandProducts(b).length, 0);
+  const wins = (typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME : []).filter(e => e.place === 1);
+  const evs = [...new Set(wins.map(e => e.event || ''))], yr = Math.max(0, ...wins.map(e => +e.year || 0));
+  const winLbl = evs.length && evs.every(e => /EMMA/i.test(e)) ? `Juara 1 EMMA${yr ? ' ' + yr : ''}` : 'Juara 1 kompetisi';
+  const n = (v, l) => `<div class="tr-n"><b>${v}</b><span>${l}</span></div>`;
+  return `<div class="tr-nums${wins.length ? '' : ' c3'}">${n(BRANDS.length, 'brand resmi')}${n(nProd, 'produk')}${n(parts.length, `partner di ${provs.size} provinsi`)}${wins.length ? n(wins.length + '×', winLbl) : ''}</div>
+    <div class="tr-prom"><span>Produk resmi distributor</span><span>Harga SRP transparan</span><span>Partner resmi terdaftar</span></div>`;
+}
+function trustRefresh() {
+  dashSet('dash-trust', trustHtml());
+  const cta = document.getElementById('dash-cta'); if (cta && typeof dashCtaHtml === 'function') cta.innerHTML = dashCtaHtml();
+  if (cpQ) cpRun(true);
+  if (document.getElementById('view-product')?.classList.contains('active')) pdNearRender(false);
+}
+
+// ── Cek Partner Resmi ──
+let cpQ = '', cpRes = null;
+const cpWaMsg = d => `Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`;
+function cpResHtml() {
+  let res = '';
+  if (cpRes && cpRes.length) res = cpRes.map(d => `<div class="cp-res ok"><b class="t ok-t">✅ ${escHtml(d.n)} — Partner Resmi CAI</b>
+      <span class="meta">📍 ${escHtml([d.c, d.r].filter(Boolean).join(', '))}${d.a ? ' · ' + escHtml(d.a) : ''}</span>
+      <div class="cp-acts">${d.wa ? `<a class="wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(cpWaMsg(d))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<a href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a><button onclick='adOpenLinked(${escHtml(JSON.stringify(d.n))})'>Lihat di Authorized Partner ›</button></div></div>`).join('');
+  else if (cpRes) res = `<div class="cp-res no"><b class="t no-t">Nama “${escHtml(cpQ)}” belum ada di daftar partner resmi CAI</b>
+      <span class="meta">Bisa jadi namanya berbeda. Agar dapat produk resmi &amp; harga sesuai, belanja di partner resmi terdekat.</span>
+      <div class="cp-acts"><button onclick="openAuthDealers()">Lihat partner resmi terdekat ›</button></div></div>`;
+  return res;
+}
+function cpHtml() {
+  return `<div class="cp-box"><div class="cp-h"><i>🛡️</i><div><b>Cek Partner Resmi</b><small>Toko ini partner resmi Concerto Audio Indonesia? Cek di sini.</small></div></div>
+    <form class="cp-in" onsubmit="event.preventDefault(); cpRun()"><input id="cp-q" value="${escHtml(cpQ)}" placeholder="Ketik nama toko…" autocomplete="off" enterkeyhint="search"><button type="submit">Cek</button></form>
+    <div id="cp-out">${cpResHtml()}</div></div>`;
+}
+function cpRun(silent) {
+  const inp = document.getElementById('cp-q');
+  if (inp && !silent) cpQ = inp.value.trim();
+  const q = normKey(cpQ);
+  if (q.length < 3) { if (!silent) showToast('Ketik minimal 3 huruf nama toko.'); cpRes = null; }
+  else {
+    const list = adPublic().map(d => ({ d, k: normKey(d.n) }));
+    cpRes = list.filter(x => x.k === q).map(x => x.d);
+    if (!cpRes.length) cpRes = list.filter(x => x.k.includes(q) || (x.k.length >= 4 && q.includes(x.k))).map(x => x.d).slice(0, 3);
+  }
+  const out = document.getElementById('cp-out');
+  if (out) out.innerHTML = cpResHtml();
+  if (!silent) adEnsure();   // pakai daftar terbaru dari database (hasil diperbarui otomatis setelah dimuat)
+}
+
+// ── Partner resmi terdekat untuk produk ini (urutan diacak) ──
+const PD_PROV_KEY = 'cai-prov';
+let pdOrder = null;
+function pdProv() { try { return localStorage.getItem(PD_PROV_KEY) || ''; } catch (e) { return ''; } }
+function pdShuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function pdNearRender(reshuffle) {
+  const el = document.getElementById('pd-near'); if (!el) return;
+  const { brand, product: p } = findProduct(currentBrandId, currentProductId); if (!p) { el.innerHTML = ''; return; }
+  const parts = adPublic(), provs = [...new Set(parts.map(d => d.r))], prov = provs.includes(pdProv()) ? pdProv() : '';
+  if (reshuffle || !pdOrder) pdOrder = pdShuffle(parts.map(d => d.n));
+  const rank = n => { const i = pdOrder.indexOf(n); return i < 0 ? 1e9 : i; };
+  const list = prov ? parts.filter(d => d.r === prov).sort((a, b) => rank(a.n) - rank(b.n)) : [], show = list.slice(0, 3);
+  const msg = d => `Halo ${d.n}, saya lihat ${brand.name} ${p.name} di CAI Hub. Apakah tersedia dan bisa bantu pemasangan?`;
+  el.innerHTML = `<div class="pd-near-h"><b>📍 Beli &amp; pasang di partner resmi</b>
+      <select onchange="pdSetProv(this.value)" aria-label="Pilih provinsi"><option value="">Pilih provinsi Anda…</option>${provs.map(r => `<option ${r === prov ? 'selected' : ''}>${escHtml(r)}</option>`).join('')}</select></div>
+    ${prov ? `<div class="pd-near-l">${show.map(d => `<div class="pd-it"><div><b>${escHtml(d.n)}</b><small>📍 ${escHtml(d.c || d.r)}</small></div>${d.wa
+      ? `<a href="https://wa.me/${d.wa}?text=${encodeURIComponent(msg(d))}" target="_blank" rel="noopener">💬 Tanya</a>` : `<a class="mp" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>`}</div>`).join('')}</div>
+    <div class="pd-near-f">${list.length > 3 ? `<button onclick="pdAll()">Lihat semua ${list.length} partner di ${escHtml(prov)} ›</button> · ` : ''}Pesan WA otomatis menyebut produk ini.</div>`
+    : `<div class="pd-near-f">Pilih provinsi untuk melihat partner resmi CAI terdekat yang bisa menjual &amp; memasang produk ini.</div>`}`;
+  if (reshuffle) adEnsure();   // hanya saat dibuka/diganti (adRerender → trustRefresh memanggil ulang tanpa adEnsure — cegah putaran)
+}
+function pdSetProv(v) { try { localStorage.setItem(PD_PROV_KEY, v); } catch (e) {} pdNearRender(true); }
+function pdAll() { const prov = pdProv(); openAuthDealers(); if (prov) setAdRegion(prov); }
