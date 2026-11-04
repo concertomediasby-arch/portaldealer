@@ -289,7 +289,6 @@ function nwListHtml() {
 }
 function renderNwPost(body, it) {
   const s = cwLS(NEWS_SEEN_KEY); if (it.published && !s[it.id]) { s[it.id] = 1; cwLS(NEWS_SEEN_KEY, s); hlRender(); nwStar(); }
-  nwPrepImage(it);
   const img = nwImgUrl(it.image);
   const paras = String(it.body || '').replace(/\r/g, '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
   const others = nwLive().filter(x => x.id !== it.id).slice(0, 5);
@@ -469,12 +468,10 @@ function nwPrepImage(it) {
   nwImgCache[it.id] = { src, file: null };
   fetch(src).then(r => r.ok ? r.blob() : null).then(b => { if (b && nwImgCache[it.id]?.src === src) nwImgCache[it.id].file = new File([b], 'CAI-Hub-News.' + (b.type.includes('png') ? 'png' : b.type.includes('webp') ? 'webp' : 'jpg'), { type: b.type }); }).catch(() => {});
 }
-async function nwShare(id) {
+// Bagikan = teks + link saja (4 Nov 2026, permintaan pemilik — sama seperti Concerto Way & Panduan Partner): WhatsApp lalu
+// menampilkan kartu pratinjau link /news/ (CAI Hub News). Dulu gambar sampul ikut dilampirkan sehingga WA tidak menampilkan kartu.
+function nwShare(id) {
   const it = nwItems?.find(x => x.id === id); if (!it) return;
-  const text = `📰 *${it.title}*${it.summary ? '\n' + it.summary : ''}\n\nBaca selengkapnya di CAI Hub:\n${nwLink(it.id)}`;
-  const file = nwImgCache[it.id]?.src === nwImgUrl(it.image) ? nwImgCache[it.id].file : null;
-  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e?.name === 'AbortError') return; }
-  }
+  const text = `📰 *CAI Hub News: ${it.title}*${it.summary ? '\n' + it.summary : ''}\nBaca selengkapnya di CAI Hub:\n${nwLink(it.id)}`;
   window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
 }
