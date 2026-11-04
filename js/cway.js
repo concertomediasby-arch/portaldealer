@@ -254,6 +254,7 @@ function cwListHtml(groups, total) {
   }).join('')}</div>`;
 }
 function renderCwPost(body, it) {
+  if (it.published && cwDue(it)) if (typeof intLog === 'function') intLog('open', 'cw:' + it.id, '', true);   // ⭐ Konten paling dibuka (Rapor Bulanan)
   const s = cwLS(CWAY_SEEN_KEY); if (it.published && cwDue(it) && !s[it.id]) { s[it.id] = 1; cwLS(CWAY_SEEN_KEY, s); renderCwayHl(); cwStar(); }
   const asc = cwShown().slice().reverse(), i = asc.findIndex(x => x.id === it.id), prev = asc[i - 1], next = asc[i + 1];
   const lbl = x => x.day != null ? 'Day ' + x.day : 'Sebelumnya';

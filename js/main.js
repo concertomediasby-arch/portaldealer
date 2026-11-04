@@ -69,7 +69,8 @@ function openDeepLink() {
   if (q.has('mobil')) { enterPortal(); carOpenLinked(q.get('mobil')); return; }       // Tahap 7 (js/cars.js)
   if (q.has('partner')) { enterPortal(); partnerOpenLinked(q.get('partner')); return; }
   if (q.has('acara')) { enterPortal(); evOpenLinked(q.get('acara')); return; }   // 📅 Kalender Acara (js/events.js)
-  if (q.has('minggu')) { enterPortal(); openWeek(); return; }   // notifikasi 🗓 Ringkasan mingguan (js/fav.js)
+  if (q.has('minggu')) { enterPortal(); openWeek(); return; }
+  if (q.has('rapor')) { enterPortal(); rpPending = q.get('rapor') || rpDefault(); return; }   // notifikasi 📊 Rapor Bulanan (js/report.js) → setelah status login diketahui   // notifikasi 🗓 Ringkasan mingguan (js/fav.js)
   if (q.get('cmp')) { enterPortal(); cmpOpenLinked(q.get('cmp')); return; }   // link perbandingan produk (js/fav.js)
   if (q.get('rk')) { enterPortal(); rkOpenLinked(q.get('rk')); return; }   // link rakitan System Simulator
   if (q.get('brand')) { const b = BRANDS.find(x => x.id === q.get('brand')); if (b) { enterPortal(); showBrand(b.id); return; } }   // halaman /brand/<id>/

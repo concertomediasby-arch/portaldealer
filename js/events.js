@@ -219,6 +219,7 @@ function evArcHtml(arc) {
 function openEvDetail(id) {
   const e = evItems?.find(x => x.id === id); if (!e) return;
   evDetailId = id;
+  if (e.published) if (typeof intLog === 'function') intLog('open', 'ev:' + id, '', true);   // ⭐ Konten paling dibuka (Rapor Bulanan)
   let ov = document.getElementById('ev-detail');
   if (!ov) { ov = document.createElement('div'); ov.id = 'ev-detail'; ov.className = 'ev-ov'; ov.onclick = ev => { if (ev.target === ov) closeEvDetail(); }; document.body.appendChild(ov); }
   const past = evPast(e), hof = evHofCount(e), ds = typeof adPublic === 'function' ? adPublic() : [];

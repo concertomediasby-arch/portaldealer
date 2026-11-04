@@ -9,7 +9,7 @@ const INT_SQL = `-- Laporan Minat Pengunjung (Tahap 4, 4 Nov 2026) — jalankan 
 create table if not exists public.site_interest (
   day date not null,
   vid text not null,
-  kind text not null,   -- view (produk dibuka) | wa | maps | ig (klik partner) | city (kota/provinsi dicari) | search | fav | cmp | rk | share | car | carq | finder | fdgo
+  kind text not null,   -- view (produk dibuka) | wa | maps | ig (klik partner) | city (kota/provinsi dicari) | search | fav | cmp | rk | share | car | carq | finder | fdgo | open (konten dibuka: news:/gl:/acad:/cw:/ev:<id>)
   ref text not null,    -- id produk / nama partner / kota / kata dicari / pasangan id dibandingkan / cmp|rk (share)
   src text not null default '',   -- sumber klik partner (produk, partner, cek, hof, galeri, google, lain) · hit|miss (search)
   n int not null default 1,
@@ -23,11 +23,11 @@ returns void language plpgsql security definer set search_path = public as $$
 declare r text := left(btrim(coalesce(p_ref, '')), 120); s text := left(coalesce(p_src, ''), 20);
 begin
   if p_vid is null or length(p_vid) < 8 or length(p_vid) > 64 or r = '' then return; end if;
-  if p_kind not in ('view', 'wa', 'maps', 'ig', 'city', 'search', 'fav', 'cmp', 'rk', 'share', 'car', 'carq', 'finder', 'fdgo') then return; end if;
+  if p_kind not in ('view', 'wa', 'maps', 'ig', 'city', 'search', 'fav', 'cmp', 'rk', 'share', 'car', 'carq', 'finder', 'fdgo', 'open') then return; end if;
   if p_kind in ('search', 'carq') then r := lower(r); end if;
   insert into site_interest (day, vid, kind, ref, src) values ((now() at time zone 'Asia/Jakarta')::date, p_vid, p_kind, r, s)
   on conflict (day, vid, kind, ref, src) do update set n = least(site_interest.n + 1, 50)
-    where site_interest.kind not in ('view', 'car', 'finder');   -- lihat produk: 1× per orang per hari
+    where site_interest.kind not in ('view', 'car', 'finder', 'open');   -- lihat produk: 1× per orang per hari
 end $$;
 grant execute on function public.log_interest(text, text, text, text) to anon, authenticated;
 

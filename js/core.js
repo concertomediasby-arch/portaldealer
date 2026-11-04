@@ -1830,6 +1830,7 @@ function openAcademyItem(no) {
   const a = acadShown().find(x => x.no === no);
   if (!a) return;
   acadCurrent = no;
+  if (typeof intLog === 'function') intLog('open', 'acad:' + no, '', true);   // ⭐ Konten paling dibuka (Rapor Bulanan)
   document.getElementById('acad-viewer-kicker').innerHTML = `Concerto Academy · ${escHtml(a.series || 'Fundamental')} #${a.no}${acadIsNew(a) ? ' <span class="acad-star">★ Baru</span>' : ''}<span class="acad-views" data-acadv="${a.no}"></span>`;
   logAcadView(a.no);
   document.getElementById('acad-viewer-title').textContent = a.title;
@@ -2307,6 +2308,7 @@ function showView(viewId) {
   if (viewId === 'dealers') document.getElementById('nav-dealers')?.classList.add('active');
   if (viewId === 'rundown') document.getElementById('nav-rundown')?.classList.add('active');
   if (viewId === 'visitors') document.getElementById('nav-visitors')?.classList.add('active');
+  if (viewId === 'rapor') document.getElementById('nav-rapor')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('nav-stock')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
@@ -2329,6 +2331,7 @@ function showView(viewId) {
   if (viewId === 'dealers') document.getElementById('mnav-dealers')?.classList.add('active');
   if (viewId === 'rundown') document.getElementById('mnav-rundown')?.classList.add('active');
   if (viewId === 'visitors') document.getElementById('mnav-visitors')?.classList.add('active');
+  if (viewId === 'rapor') document.getElementById('mnav-rapor')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('mnav-stock')?.classList.add('active');
   if (typeof cmpTrayPaint === 'function') { cmpTrayPaint(); if (viewId === 'dashboard') favRenderDash(); }   // bilah Bandingkan + Terakhir dilihat/Favorit (js/fav.js)
 }

@@ -542,6 +542,7 @@ function glDealer(name) { const n = normKey(name); return n ? adPublic().find(d 
 function openGlDetail(id, photoIdx = 0) {
   const it = glItems?.find(x => x.id === id); if (!it) return;
   if (!photoIdx && typeof insInterest === 'function') insInterest('gl');
+  if (!photoIdx && it.published) if (typeof intLog === 'function') intLog('open', 'gl:' + id, '', true);   // ⭐ Konten paling dibuka (Rapor Bulanan)
   const ov = document.getElementById('gl-detail');
   const photos = it.photos || [];
   const cur = photos[photoIdx];

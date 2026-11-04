@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-11-04T16:19:12Z">
+<link rel="stylesheet" href="style.css?b=2026-11-04T17:27:15Z">
 <!-- Layar pembuka bermerek (Tahap 3, 4 Nov 2026): hanya saat dibuka dari ikon Layar Utama, sekali per sesi -->
 <script>try{if((matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)&&!sessionStorage.getItem('cai-spl')){document.documentElement.classList.add('spl-on');sessionStorage.setItem('cai-spl','1');}}catch(e){}</script>
 </head>
@@ -281,6 +281,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
         Pengunjung Portal
       </button>
+      <button class="sidebar-item editor-only" id="nav-rapor" onclick="openRapor()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="5" y="11" width="3" height="7"/><rect x="10.5" y="6" width="3" height="12"/><rect x="16" y="13" width="3" height="5"/></svg>
+        Rapor Bulanan
+      </button>
     </div>
   </aside>
 
@@ -487,6 +491,11 @@
         </div>
       </div>
       <div class="vs-wrap" id="vs-body"></div>
+    </div>
+
+    <!-- VIEW: Rapor Bulanan (khusus Editor; js/report.js, RPC monthly_report) -->
+    <div class="view" id="view-rapor">
+      <div class="rp-wrap" id="rapor-body"></div>
     </div>
 
     <!-- VIEW: Kelola Dealer (khusus Editor) -->
@@ -869,6 +878,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
       <span>Pengunjung</span>
     </button>
+    <button class="mobile-nav-item editor-only" id="mnav-rapor" onclick="openRapor()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="5" y="11" width="3" height="7"/><rect x="10.5" y="6" width="3" height="12"/><rect x="16" y="13" width="3" height="5"/></svg>
+      <span>Rapor</span>
+    </button>
     <button class="mobile-nav-item" id="mnav-dsp" onclick="openDspSoftware()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
       <span>DSP</span>
@@ -1060,26 +1073,27 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/core.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/stock.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/dealers.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/gathering.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/rundown.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/videotron.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/showcase.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/cway.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/news.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/push.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/install.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/settings.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/dash.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/fav.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/cars.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/finder.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/gsearch.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/events.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/interest.js?b=2026-11-04T16:19:12Z"></script>
-<script src="js/main.js?b=2026-11-04T16:19:12Z"></script>
+<script src="katalog.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/core.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/stock.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/dealers.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/gathering.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/rundown.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/videotron.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/showcase.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/cway.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/news.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/push.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/install.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/settings.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/dash.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/fav.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/cars.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/finder.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/gsearch.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/events.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/interest.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/report.js?b=2026-11-04T17:27:15Z"></script>
+<script src="js/main.js?b=2026-11-04T17:27:15Z"></script>
 </body>
 </html>

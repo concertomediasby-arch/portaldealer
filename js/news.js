@@ -305,6 +305,7 @@ function nwListHtml() {
       <div class="nw-ct">${escHtml(x.title)}</div>${x.summary ? `<div class="nw-cs">${escHtml(x.summary)}</div>` : ''}</div></button>`; }).join('')}</div>`;
 }
 function renderNwPost(body, it) {
+  if (it.published) if (typeof intLog === 'function') intLog('open', 'news:' + it.id, '', true);   // ⭐ Konten paling dibuka (Rapor Bulanan)
   const s = cwLS(NEWS_SEEN_KEY); if (it.published && !s[it.id]) { s[it.id] = 1; cwLS(NEWS_SEEN_KEY, s); hlRender(); nwStar(); }
   const img = nwImgUrl(it.image), yt = nwYt(it.link_url);
   const lbl = escHtml(it.link_label || (yt ? 'Tonton di YouTube' : 'Lihat selengkapnya'));

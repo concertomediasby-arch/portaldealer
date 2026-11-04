@@ -378,6 +378,30 @@ async function weeklyDigest(key: Key, acadAll: Acad[]) {
   return sent;
 }
 
+// 📊 Rapor Bulanan: tanggal 1 pukul 08.00–11.59 WIB, sekali per bulan (tabel monthly_push), hanya ke HP Editor (staff = true).
+const RP_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+async function monthlyReport(key: Key) {
+  const w = new Date(Date.now() + 7 * 3600e3);   // jam WIB dibaca sebagai UTC
+  if (w.getUTCDate() !== 1 || w.getUTCHours() < 8 || w.getUTCHours() >= 12) return 0;
+  const from = new Date(Date.UTC(w.getUTCFullYear(), w.getUTCMonth() - 1, 1)), to = new Date(Date.UTC(w.getUTCFullYear(), w.getUTCMonth(), 0));
+  const f = from.toISOString().slice(0, 10), t = to.toISOString().slice(0, 10), ym = f.slice(0, 7);
+  const { data: mark, error } = await db.from('monthly_push').upsert({ month: f }, { onConflict: 'month', ignoreDuplicates: true }).select('month');
+  if (error || !mark?.length) return 0;   // sudah dikirim bulan ini (atau SQL rapor belum dijalankan)
+  const { data: r, error: e2 } = await db.rpc('monthly_report', { p_from: f, p_to: t });
+  if (e2 || !r) { await db.from('monthly_push').delete().eq('month', f); return 0; }   // dicoba lagi menit berikutnya
+  const v = r.vis || {}, c = r.click || {}, people = v.people || 0, clicks = (c.wa || 0) + (c.maps || 0) + (c.ig || 0), install = r.app?.install || 0;
+  const pct = v.people0 ? Math.round((people - v.people0) / v.people0 * 100) : null, nf = (n: number) => n.toLocaleString('id-ID');
+  await db.from('monthly_push').update({ counts: { people, people0: v.people0 || 0, clicks, install } }).eq('month', f);
+  const body = `${nf(people)} pengunjung${pct == null ? '' : ` (${pct >= 0 ? '▲' : '▼'}${Math.abs(pct)}%)`} · ${nf(clicks)} klik ke partner · ${nf(install)} pasang di HP\nKetuk untuk lihat rapor lengkap.`;
+  const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').eq('staff', true);
+  let sent = 0;
+  for (const s of subs || []) {
+    const st = await send(s, { title: `📊 Rapor CAI Hub · ${RP_MONTHS[from.getUTCMonth()]} ${from.getUTCFullYear()}`, body, url: `/?rapor=${ym}`, tag: `rapor-${ym}` }, key).catch(() => 0);
+    if (st > 0 && st < 300) sent++;
+  }
+  return sent;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   let body: Record<string, any> = {};
@@ -592,7 +616,9 @@ Deno.serve(async (req) => {
     // 9) Ringkasan mingguan (Senin pagi)  10) 📅 Pengingat acara H-1
     const weeklySent = await weeklyDigest(key, acadAll);
     let eventSent = 0; try { eventSent = await eventReminders(key); } catch (_) { /* tabel acara belum dibuat */ }
-    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent, eventSent });
+    // 11) 📊 Rapor Bulanan untuk Editor (tanggal 1 pagi)
+    let raporSent = 0; try { raporSent = await monthlyReport(key); } catch (_) { /* SQL rapor belum dijalankan */ }
+    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent, eventSent, raporSent });
   } catch (e) {
     return json({ error: String((e as Error)?.message || e) }, 500);
   }
