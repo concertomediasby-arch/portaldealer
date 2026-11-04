@@ -31,6 +31,7 @@ function literal(name) {
     else if (c === ']' || c === '}') { depth--; if (!depth) return vm.runInNewContext('(' + core.slice(j, k + 1) + ')'); }
   }
 }
+const SUPA_URL = fs.readFileSync(path.join(ROOT, 'js/stock.js'), 'utf8').match(/const SUPA_URL\s*=\s*'([^']+)'/)[1];
 const LOGO_WHITE = core.match(/const LOGO_WHITE = "([^"]+)"/)[1];
 const DASH_TILES = literal('DASH_TILES');
 const ACADEMY = literal('ACADEMY'), PAKET_AUDIO = literal('PAKET_AUDIO'), AUTH_DEALERS = literal('AUTH_DEALERS');
@@ -80,7 +81,9 @@ for (const d of AUTH_DEALERS) items.push({ kind: 'd', id: shareSlug(d.n), target
 // Label bawaan DASH_TILES dipakai di kartu; bila Editor mengganti label dari portal, kartu tetap memakai label bawaan.
 for (const t of DASH_TILES) {
   const b = ctx.BRANDS.find(x => x.id === t.id); if (!b) continue;
-  items.push({ kind: 's', id: t.id, target: `/?sorotan=${encodeURIComponent(t.id)}`,
+  // og:image = sampul di Storage yang digambar ulang otomatis oleh browser Editor (dashShareSync() di js/core.js) setiap
+  // label/tag/video kotak berubah; gambar repo s-<brand>.jpg jadi og:image cadangan kedua.
+  items.push({ kind: 's', id: t.id, target: `/?sorotan=${encodeURIComponent(t.id)}`, ogImage: `${SUPA_URL}/storage/v1/object/public/showcase/dashboard/share-${t.id}.jpg`,
     title: `Sorotan Brand: ${b.name}${t.label ? ' — ' + t.label : ''}`, desc: clip(`${b.tagline || b.name}. Tonton videonya di CAI Hub — Concerto Audio Indonesia.`, 200),
     card: { t: 's', img: (t.poster || (t.photos || [])[0] || '').split('?')[0], logo: b.logo || '', brand: b.name, label: t.label || '', tag: t.tag || '', tagline: b.tagline || '', color: b.color || '#d8b26a' } });
 }
@@ -225,14 +228,14 @@ function pageHtml(it, imgUrl) {
 <meta property="og:title" content="${esc(it.title)}">
 <meta property="og:description" content="${esc(it.desc)}">
 <meta property="og:url" content="${url}">
-<meta property="og:image" content="${imgUrl}">
+<meta property="og:image" content="${it.ogImage || imgUrl}">${it.ogImage ? `\n<meta property="og:image" content="${imgUrl}">` : ''}
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="${esc(it.title)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(it.title)}">
 <meta name="twitter:description" content="${esc(it.desc)}">
-<meta name="twitter:image" content="${imgUrl}">
+<meta name="twitter:image" content="${it.ogImage || imgUrl}">
 <link rel="icon" href="/favicon.ico">
 <meta http-equiv="refresh" content="0; url=${esc(it.target)}">
 <script>location.replace(${JSON.stringify(it.target)} + (location.search ? (${JSON.stringify(it.target)}.endsWith('?') ? '' : '&') + location.search.slice(1) : '') + location.hash);</script>

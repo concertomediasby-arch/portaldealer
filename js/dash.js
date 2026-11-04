@@ -121,5 +121,6 @@ function dashRender() {
 // Dipanggil onAuthChanged(): sapaan & "Baru untuk Anda" (Galeri dimuat di latar untuk menghitung mobil baru)
 function dashAuthChanged() {
   dashRender();
+  if (typeof dashShareSync === 'function') setTimeout(() => dashShareSync(), 4000);   // Editor: sampul pratinjau WA Sorotan Brand
   if (authUser && typeof loadGaleri === 'function' && !glItems) Promise.resolve(loadGaleri()).then(dashNewRender, () => {});
 }

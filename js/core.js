@@ -318,7 +318,7 @@ function closeDashVideo(after) {
 }
 // Bagikan Sorotan Brand (4 Nov 2026, permintaan pemilik): teks + link /s/<brand>/ (kartu pratinjau WA dari tools/gen-share-pages.js)
 // → /?sorotan=<brand> membuka Dashboard lalu jendela video brand itu (openDeepLink → dvOpenLinked).
-const dvLink = id => `${PORTAL_URL}/s/${encodeURIComponent(id)}/`;
+const dvLink = id => { const v = (dashOverrides._share || {})[id]; return `${PORTAL_URL}/s/${encodeURIComponent(id)}/${v ? '?v=' + v : ''}`; };
 function dvShare() {
   const d = dvTile(dvCur); if (!d) return;
   const tg = dvTarget(d);
@@ -373,7 +373,7 @@ async function uploadDashVideo(id, input) {
     catch (e) { supabase.storage.from('showcase').remove([path]).catch(() => {}); throw e; }   // catatan gagal → buang video yang baru diunggah
     dashOverrides = next;
     if (old) supabase.storage.from('showcase').remove([old]).catch(() => {});
-    renderDashTiles(); showToast('✓ Video kotak diganti — langsung tampil untuk semua pengunjung');
+    renderDashTiles(); showToast('✓ Video kotak diganti — langsung tampil untuk semua pengunjung'); dashShareSync([id]);
   } catch (e) { dashErr(e, 'mengunggah'); }
 }
 async function editDashLabel(id) {
@@ -385,14 +385,107 @@ async function editDashLabel(id) {
   if (lab.trim()) n.label = lab.trim(); else delete n.label;
   if (tg.trim() === '-') n.tag = ''; else if (tg.trim() && tg.trim() !== (t?.tag || '')) n.tag = tg.trim(); else delete n.tag;
   const next = { ...dashOverrides }; if (Object.keys(n).length) next[id] = n; else delete next[id];
-  try { await saveDashManifest(next); dashOverrides = next; renderDashTiles(); showToast('✓ Disimpan'); } catch (e) { dashErr(e, 'menyimpan'); }
+  try { await saveDashManifest(next); dashOverrides = next; renderDashTiles(); showToast('✓ Disimpan'); dashShareSync([id]); } catch (e) { dashErr(e, 'menyimpan'); }
 }
 async function resetDashVideo(id) {
   if (!isEditor() || !supabase || !confirm('Kembalikan kotak ini ke video/foto bawaan?')) return;
   const old = dashOverrides[id]?.path;
   const next = { ...dashOverrides }; if (next[id]) { next[id] = { ...next[id] }; delete next[id].path; if (!Object.keys(next[id]).length) delete next[id]; }
-  try { await saveDashManifest(next); dashOverrides = next; if (old) await supabase.storage.from('showcase').remove([old]); renderDashTiles(); showToast('✓ Kembali ke tampilan bawaan'); }
+  try { await saveDashManifest(next); dashOverrides = next; if (old) await supabase.storage.from('showcase').remove([old]); renderDashTiles(); showToast('✓ Kembali ke tampilan bawaan'); dashShareSync([id]); }
   catch (e) { dashErr(e, 'menyimpan'); }
+}
+
+// ── Sampul pratinjau WA Sorotan Brand ikut otomatis (4 Nov 2026, permintaan pemilik) ──
+// Halaman /s/<brand>/ (tools/gen-share-pages.js) memakai og:image tetap di Storage publik: showcase/dashboard/share-<brand>.jpg.
+// Gambar itu digambar di browser Editor (canvas 1200×630, gaya sama dengan kartu repo) setiap label/tag/video kotak berubah,
+// dan saat Editor membuka portal bila belum ada / sudah tidak cocok. Versi dicatat di tiles.json `_share: { <brand>: hash }`;
+// dvLink() menambah ?v=<hash> agar WhatsApp mengambil pratinjau baru (WA menyimpan cache per URL).
+const DASH_SHARE_VER = 1;
+const dashSharePath = id => `${DASH_DIR}/share-${id}.jpg`;
+function dashShareHash(id) {
+  const d = dvTile(id); if (!d) return '';
+  const s = [DASH_SHARE_VER, d.label, d.tag, (dashOverrides[id] || {}).path || 'bawaan'].join('|');
+  let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0;
+  return (h >>> 0).toString(36);
+}
+const dsImg = src => new Promise((ok, no) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => ok(i); i.onerror = () => no(new Error('gambar gagal dimuat')); i.src = src; });
+const dsFrame = src => new Promise((ok, no) => {
+  const v = document.createElement('video'); v.crossOrigin = 'anonymous'; v.muted = true; v.playsInline = true; v.preload = 'auto';
+  const t = setTimeout(() => no(new Error('video terlalu lama dimuat')), 25000);
+  v.onloadeddata = () => { v.currentTime = Math.min(1.5, (v.duration || 3) / 3); };
+  v.onseeked = () => { clearTimeout(t); ok(v); };
+  v.onerror = () => { clearTimeout(t); no(new Error('video gagal dimuat')); };
+  v.src = src;
+});
+async function dashShareImage(id) {
+  const d = dvTile(id); if (!d) return null;
+  const o = dashOverrides[id] || {};
+  try { await Promise.all(['800 64px Sora', '700 16px Sora', '800 14px Sora', '400 21px Inter', '700 19px Sora'].map(f => document.fonts.load(f))); } catch (e) {}
+  let bg = null;
+  try { bg = o.path ? await dsFrame(dashPublicUrl(o.path)) : await dsImg(d.t.poster || d.photos[0]); } catch (e) { bg = null; }
+  const [logo, cai] = await Promise.all([d.b.logo ? dsImg(d.b.logo).catch(() => null) : null, dsImg(LOGO_WHITE).catch(() => null)]);
+  const W = 1200, H = 630, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d');
+  x.fillStyle = '#07080a'; x.fillRect(0, 0, W, H);
+  if (bg) { const bw = bg.videoWidth || bg.naturalWidth, bh = bg.videoHeight || bg.naturalHeight, sc = Math.max(W / bw, H / bh);
+    x.drawImage(bg, (W - bw * sc) / 2, (H - bh * sc) / 2, bw * sc, bh * sc); }
+  let g = x.createLinearGradient(0, 0, W, 0);
+  g.addColorStop(0, 'rgba(7,8,10,.95)'); g.addColorStop(.42, 'rgba(7,8,10,.82)'); g.addColorStop(.75, 'rgba(7,8,10,.15)'); g.addColorStop(1, 'rgba(7,8,10,0)');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.fillStyle = d.b.color || '#d8b26a'; x.fillRect(0, 0, W, 8);
+  // tombol putar
+  x.beginPath(); x.arc(W - 126, H / 2, 56, 0, Math.PI * 2); x.fillStyle = 'rgba(0,0,0,.45)'; x.fill(); x.lineWidth = 3; x.strokeStyle = 'rgba(255,255,255,.85)'; x.stroke();
+  x.beginPath(); x.moveTo(W - 134, H / 2 - 21); x.lineTo(W - 100, H / 2); x.lineTo(W - 134, H / 2 + 21); x.closePath(); x.fillStyle = '#fff'; x.fill();
+  const L = 64, ls = v => { if ('letterSpacing' in x) x.letterSpacing = v; };
+  if (logo) { const h = 54, w = Math.min(280, logo.naturalWidth * h / logo.naturalHeight); x.drawImage(logo, L, 52, w, w * logo.naturalHeight / logo.naturalWidth); }
+  else { x.font = '800 38px Sora'; x.fillStyle = '#fff'; x.textBaseline = 'top'; x.fillText(d.b.name, L, 52); }
+  x.textBaseline = 'alphabetic';
+  // tagline (maks. 2 baris), label, kicker — dari bawah ke atas
+  x.font = '400 21px Inter'; const words = (d.b.tagline || '').split(' '), lines = [''];
+  for (const w of words) { const t = (lines[lines.length - 1] + ' ' + w).trim(); if (x.measureText(t).width > 600 && lines[lines.length - 1]) lines.push(w); else lines[lines.length - 1] = t; }
+  const tl = lines.slice(0, 2); let y = 506 - (tl.length - 1) * 28;
+  const subTop = y - 21;
+  x.fillStyle = '#c9cdd5'; tl.forEach((t, i) => x.fillText(t, L, y + i * 28));
+  const label = d.label || d.b.name; let fs = 64; x.font = `800 ${fs}px Sora`;
+  while (x.measureText(label).width > 640 && fs > 36) { fs -= 2; x.font = `800 ${fs}px Sora`; }
+  const ly = subTop - 16; x.fillStyle = '#fff'; x.fillText(label, L, ly);
+  const ky = ly - fs - 14; x.font = '700 16px Sora'; ls('4px'); x.fillStyle = '#d8b26a'; x.fillText('SOROTAN BRAND', L, ky);
+  const kw = x.measureText('SOROTAN BRAND').width; ls('0px');
+  if (d.tag) {
+    x.font = '800 14px Sora'; ls('1.7px'); const tt = d.tag.toUpperCase(), tw = x.measureText(tt).width + 20;
+    const tx = L + kw + 12, ty = ky - 17;
+    x.fillStyle = /new|baru/i.test(d.tag) ? '#e5484d' : /soon/i.test(d.tag) ? '#2f6bff' : '#d8b26a';
+    x.beginPath(); x.roundRect ? x.roundRect(tx, ty, tw, 26, 6) : x.rect(tx, ty, tw, 26); x.fill();
+    x.fillStyle = /new|baru|soon/i.test(d.tag) ? '#fff' : '#111'; x.fillText(tt, tx + 10, ty + 19); ls('0px');
+  }
+  // kaki
+  x.fillStyle = 'rgba(255,255,255,.12)'; x.fillRect(L, 537, 592, 1);
+  if (cai) { const h = 30; x.drawImage(cai, L, 556, cai.naturalWidth * h / cai.naturalHeight, h); }
+  x.font = '700 19px Sora'; x.fillStyle = '#d8b26a'; x.textAlign = 'right'; x.fillText('hub.concerto.id', L + 592, 578); x.textAlign = 'left';
+  return new Promise(ok => cv.toBlob(ok, 'image/jpeg', .86));
+}
+let dashShareBusy = null;
+// Editor saja: buat ulang sampul yang belum ada / sudah tidak cocok dengan label·tag·video terbaru.
+function dashShareSync(ids) {
+  if (!isEditor() || !supabase || QA_SCREEN_MODE) return Promise.resolve();
+  dashShareBusy = (dashShareBusy || Promise.resolve()).then(async () => {
+    await Promise.resolve(dashOvP).catch(() => {});
+    const todo = (ids || DASH_TILES.map(t => t.id)).filter(id => dvTile(id) && (dashOverrides._share || {})[id] !== dashShareHash(id));
+    if (!todo.length) return;
+    const done = {};
+    for (const id of todo) {
+      try {
+        const blob = await dashShareImage(id); if (!blob) continue;
+        const { error } = await supabase.storage.from('showcase').upload(dashSharePath(id), blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '60' });
+        if (error) throw error;
+        done[id] = dashShareHash(id);
+      } catch (e) { console.warn('Sampul Sorotan gagal dibuat:', id, e); }
+    }
+    if (!Object.keys(done).length) return;
+    const next = { ...dashOverrides, _share: { ...(dashOverrides._share || {}), ...done } };
+    try { await saveDashManifest(next); dashOverrides = next; } catch (e) { console.warn('tiles.json gagal disimpan (sampul):', e); }
+  });
+  return dashShareBusy;
 }
 
 function init() {
