@@ -53,6 +53,23 @@ function nwImgFr(v) {
 const nwFrStyle = f => (f.x === 50 && f.y === 50 && f.z === 1) ? '' : ` style="object-position:${f.x}% ${f.y}%;transform-origin:${f.x}% ${f.y}%;scale:${f.z}"`;
 const nwImgStyle = v => nwFrStyle(nwImgFr(v));
 const nwImgUrl = p => { p = nwImgPath(p); return !p ? '' : /^https?:/i.test(p) ? p : dashPublicUrl(p); };
+// Video YouTube di News (4 Nov 2026, permintaan pemilik): link YouTube di "Tombol link" otomatis jadi pemutar video di halaman baca
+// (klik → iframe youtube-nocookie, dimuat hanya saat diputar) dan thumbnail-nya dipakai bila berita tanpa gambar sampul (+ ikon ▶).
+function nwYt(u) {
+  let x; try { x = new URL(String(u || '').trim()); } catch (e) { return ''; }
+  const h = x.hostname.replace(/^(www|m|music)\./, '');
+  let id = '';
+  if (h === 'youtu.be') id = x.pathname.slice(1).split('/')[0];
+  else if (/^youtube(-nocookie)?\.com$/.test(h)) id = x.searchParams.get('v') || (x.pathname.match(/^\/(?:shorts|embed|live|v)\/([^/?#]+)/) || [])[1] || '';
+  return /^[\w-]{11}$/.test(id) ? id : '';
+}
+const nwYtThumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+const nwThumb = it => nwImgUrl(it.image) || (nwYt(it.link_url) ? nwYtThumb(nwYt(it.link_url)) : '');
+const nwPlayIc = it => nwYt(it.link_url) ? '<span class="nw-play" aria-label="Video"></span>' : '';
+function nwYtPlay(el, id) {
+  el.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1" title="Video YouTube" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  el.classList.add('on'); el.onclick = null;
+}
 const nwSorted = () => (nwItems || []).slice().sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || String(b.created_at).localeCompare(String(a.created_at)));
 const nwLive = () => nwSorted().filter(x => x.published);
 const nwShown = () => isEditor() ? nwSorted() : nwLive();
@@ -95,9 +112,9 @@ function hlSlides() {
   return s;
 }
 function nwHlHtml(n) {
-  const img = nwImgUrl(n.image);
+  const img = nwThumb(n);
   return `<div class="nw-hl" role="button" tabindex="0" onclick="openNews('${n.id}')" onkeydown="if(event.key==='Enter')openNews('${n.id}')">
-    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async" draggable="false"${nwImgStyle(n.image)}>` : '<span>📰</span>'}</div>
+    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async" draggable="false"${nwImgStyle(n.image)}>` : '<span>📰</span>'}${nwPlayIc(n)}</div>
     <div class="nw-main"><div class="nw-top">📰 News${nwIsNew(n) ? ' <span class="nw-new">BARU</span>' : ''}${n.category ? ` <span class="nw-cat">${escHtml(n.category)}</span>` : ''}</div>
       <div class="nw-t">${escHtml(n.title)}</div>${n.summary ? `<div class="nw-s">${escHtml(n.summary)}</div>` : ''}
       <div class="nw-foot"><span class="nw-date">${escHtml(nwDate(n.post_date))}</span>
@@ -127,7 +144,7 @@ function hlRender() {
   hlBusy = false; hlTarget = -1; clearTimeout(hlFixT);
   hlPos = hlN > 1 ? hlIdx + 1 : 0;
   hlSet(0, false); hlMark();
-  slides.forEach(x => { const u = x.t === 'news' && nwImgUrl(x.n.image); if (u && !hlPre[u]) { hlPre[u] = new Image(); hlPre[u].src = u; } });
+  slides.forEach(x => { const u = x.t === 'news' && nwThumb(x.n); if (u && !hlPre[u]) { hlPre[u] = new Image(); hlPre[u].src = u; } });
   hlArm(slides.length);
 }
 const hlPre = {};
@@ -282,14 +299,15 @@ function nwListHtml() {
   const q = nwQ.trim().toLowerCase();
   const list = all.filter(x => (!nwCat || x.category === nwCat) && (!q || [x.title, x.summary, x.body, x.category].join(' ').toLowerCase().includes(q)));
   if (!list.length) return '<div class="stock-empty">Tidak ada berita yang cocok.</div>';
-  return `<div class="nw-grid">${list.map(x => { const img = nwImgUrl(x.image); return `<button class="nw-card${x.published ? '' : ' draft'}" onclick="openNews('${x.id}')">
-    <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '<span>📰</span>'}${nwIsNew(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}</div>
+  return `<div class="nw-grid">${list.map(x => { const img = nwThumb(x); return `<button class="nw-card${x.published ? '' : ' draft'}" onclick="openNews('${x.id}')">
+    <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '<span>📰</span>'}${nwPlayIc(x)}${nwIsNew(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}</div>
     <div class="nw-cb"><div class="nw-cm">${x.category ? `<span class="nw-cat">${escHtml(x.category)}</span>` : ''}<span>${escHtml(nwDate(x.post_date))}</span></div>
       <div class="nw-ct">${escHtml(x.title)}</div>${x.summary ? `<div class="nw-cs">${escHtml(x.summary)}</div>` : ''}</div></button>`; }).join('')}</div>`;
 }
 function renderNwPost(body, it) {
   const s = cwLS(NEWS_SEEN_KEY); if (it.published && !s[it.id]) { s[it.id] = 1; cwLS(NEWS_SEEN_KEY, s); hlRender(); nwStar(); }
-  const img = nwImgUrl(it.image);
+  const img = nwImgUrl(it.image), yt = nwYt(it.link_url);
+  const lbl = escHtml(it.link_label || (yt ? 'Tonton di YouTube' : 'Lihat selengkapnya'));
   const paras = String(it.body || '').replace(/\r/g, '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
   const others = nwLive().filter(x => x.id !== it.id).slice(0, 5);
   const acts = `<button class="gt-btn ghost" onclick="nwShare('${it.id}')">${SHARE_ICON} Bagikan</button>
@@ -298,12 +316,13 @@ function renderNwPost(body, it) {
     <button class="cw-back" onclick="nwBack()">← Semua berita</button>
     <div class="nw-layout">
     <article class="nw-art">
-    ${img ? `<div class="nw-hero-img"><img src="${escHtml(img)}" alt=""${nwImgStyle(it.image)}></div>` : ''}
+    ${yt ? `<div class="nw-yt" role="button" tabindex="0" aria-label="Putar video" onclick="nwYtPlay(this,'${yt}')"><img src="${escHtml(nwYtThumb(yt))}" alt=""><span class="nw-ytbtn"></span><span class="nw-ytlbl">▶ Putar video</span></div>`
+      : img ? `<div class="nw-hero-img"><img src="${escHtml(img)}" alt=""${nwImgStyle(it.image)}></div>` : ''}
     <div class="nw-meta">📰 News${it.category ? ` · <b>${escHtml(it.category)}</b>` : ''} · ${escHtml(nwDate(it.post_date))}${it.published ? '' : ' · <span class="cw-draft-note">DRAF — belum tampil untuk publik</span>'}</div>
     <h2 class="nw-title">${escHtml(it.title)}</h2>
     ${it.summary ? `<p class="nw-lead">${escHtml(it.summary)}</p>` : ''}
     <div class="cw-body">${paras.map(p => `<p>${p.split('\n').map(cwWa).join('<br>')}</p>`).join('')}</div>
-    ${it.link_url ? `<div class="nw-cta"><button class="gt-btn" onclick="nwOpenLink('${it.id}')">${escHtml(it.link_label || 'Lihat selengkapnya')} ›</button></div>` : ''}
+    ${it.link_url ? `<div class="nw-cta"><button class="gt-btn" onclick="nwOpenLink('${it.id}')">${lbl} ›</button></div>` : ''}
     <div class="cw-foot"><span class="cw-date">CAI Hub · Concerto Audio Indonesia</span>
       <div class="cw-acts">${acts}</div></div>
     </article>
@@ -311,12 +330,12 @@ function renderNwPost(body, it) {
       <div class="nw-sbox nw-sact">
         <div class="nw-sh">Berita ini</div>
         <div class="nw-sinfo">${it.category ? `<b>${escHtml(it.category)}</b> · ` : ''}${escHtml(nwDate(it.post_date))}</div>
-        ${it.link_url ? `<button class="gt-btn" onclick="nwOpenLink('${it.id}')">${escHtml(it.link_label || 'Lihat selengkapnya')} ›</button>` : ''}
+        ${it.link_url ? `<button class="gt-btn" onclick="nwOpenLink('${it.id}')">${lbl} ›</button>` : ''}
         <div class="nw-sbtns">${acts}</div>
       </div>
       ${others.length ? `<div class="nw-sbox"><div class="nw-sh">Berita lainnya</div>
-        ${others.map(x => { const im = nwImgUrl(x.image); return `<button class="nw-oth" onclick="openNews('${x.id}')">
-          <span class="nw-oimg${im ? '' : ' ph'}">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '📰'}</span>
+        ${others.map(x => { const im = nwThumb(x); return `<button class="nw-oth" onclick="openNews('${x.id}')">
+          <span class="nw-oimg${im ? '' : ' ph'}">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '📰'}${nwPlayIc(x)}</span>
           <span class="nw-otx"><b>${escHtml(x.title)}</b><small>${x.category ? escHtml(x.category) + ' · ' : ''}${escHtml(nwDate(x.post_date))}</small></span></button>`; }).join('')}
         <button class="nw-sall" onclick="nwBack()">Lihat semua berita ›</button></div>` : ''}
     </aside>
@@ -376,7 +395,7 @@ function renderNwForm() {
           <label>Tanggal<input type="date" value="${escHtml(f.post_date)}" oninput="nwForm.post_date=this.value"></label></div>
         <label class="cwf-l">Tombol link (opsional)
           <select onchange="nwPickProduct(this.value)"><option value="">— Pilih produk katalog —</option>${prods}</select>
-          <input value="${escHtml(f.link_url)}" placeholder="atau tempel link, mis. https://…" oninput="nwForm.link_url=this.value"></label>
+          <input value="${escHtml(f.link_url)}" placeholder="atau tempel link, mis. https://… / link YouTube" oninput="nwForm.link_url=this.value"><small class="nw-ythint">▶ Link YouTube otomatis jadi video di halaman berita (thumbnail-nya dipakai bila tanpa gambar sampul).</small></label>
         <label class="cwf-l">Teks tombol<input value="${escHtml(f.link_label)}" placeholder="mis. Lihat Produk" oninput="nwForm.link_label=this.value"></label>
         <label class="cwf-chk"><input type="checkbox"${f.published ? ' checked' : ''} onchange="nwForm.published=this.checked"> Tampilkan untuk publik (hapus centang = draf)</label>
       </div>
