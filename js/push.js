@@ -213,10 +213,11 @@ function cwPushHtml() {
 // ── Kotak partner/pengunjung: Concerto Way baru tayang + News (Dashboard = ajakan, menu Concerto Way & News = pengaturan) ──
 function pnHtml(where) {
   const wrap = h => where === 'dash' ? h : `<div data-pn="${where}">${h}</div>`;
-  if ((where === 'cway' || where === 'guides') && (!authUser || isEditor())) return wrap('');   // Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
+  if ((where === 'cway' && (!authUser || isEditor())) || (where === 'guides' && !authUser)) return wrap('');   // Concerto Way: Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
   pushInit();
   const st = pushSt, f = pushFlags || {}, active = st === 'ok' && (f.cway || f.news || f.acad || f.guide);
   const canCw = !!authUser && !isEditor();   // Editor sudah punya Pengingat tayang 5 menit
+  const canGd = !!authUser;                   // 📘 Panduan: partner yang login + Editor (permintaan pemilik 4 Nov 2026)
   if (where === 'dash') {   // ajakan: hanya di CAI Hub yang dibuka dari Layar Utama, belum aktif, belum ditutup
     let dis = false; try { dis = localStorage.getItem(PN_DISMISS_KEY) === '1'; } catch (e) {}
     if (dis || !pushOk() || !pushStandalone() || st !== 'ok' || active || Notification.permission === 'denied') return '';
@@ -224,7 +225,7 @@ function pnHtml(where) {
   if (!pnSel) pnSel = { cway: true, news: true, acad: true, guide: true };
   const sel = active ? { cway: !!f.cway, news: !!f.news, acad: !!f.acad, guide: !!f.guide } : pnSel;
   const chk = (k, ico, lbl, sub) => `<label class="pn-chk"><input type="checkbox" ${sel[k] ? 'checked' : ''} ${st === 'busy' ? 'disabled' : ''} onchange="pnToggle('${k}', this.checked)"><span>${ico} ${lbl}${sub ? ` <small>· ${sub}</small>` : ''}</span></label>`;
-  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') + chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') : '') + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru');
+  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + (canGd ? chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') : '') + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru');
   let title, text = '', btn = '';
   if (st === 'unsupported') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = pushUnsupportedMsg(); }
   else if (st === 'denied') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP, lalu muat ulang.'; }
@@ -244,7 +245,7 @@ function pnToggle(k, v) {
 function pnOn() {
   const s = pnSel || { cway: true, news: true, acad: true, guide: true };
   const part = !!authUser && !isEditor();
-  const flags = { cway: part && s.cway, guide: part && s.guide, news: s.news, acad: s.acad };
+  const flags = { cway: part && s.cway, guide: !!authUser && s.guide, news: s.news, acad: s.acad };
   if (!flags.cway && !flags.news && !flags.acad && !flags.guide) return showToast('Centang minimal satu jenis notifikasi.');
   pushSet(flags, true).then(r => { if (r && !r.deleted) showToast('✅ Notifikasi aktif di HP ini'); });
 }
