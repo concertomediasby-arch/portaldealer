@@ -4181,3 +4181,13 @@ body.logged-in:not(.is-staff) .pd-near { display: none; }   /* partner yang logi
 .pd-near-f { margin-top: 10px; font-size: 12.5px; color: var(--fg-muted); line-height: 1.5; }
 .pd-near-f button { background: none; border: 0; padding: 0; color: var(--accent); font: 600 12.5px var(--f-body); cursor: pointer; }
 @media (max-width: 560px) { .tr-nums, .tr-nums.c3 { grid-template-columns: repeat(2, 1fr); row-gap: 12px; } .tr-n b { font-size: 22px; } }
+/* Langkah 2 "Cek dulu di CAI Hub" (4 Nov 2026): tanda Produk resmi, chip Data resmi CAI, ajakan Cek dulu */
+.pd-official { display: flex; gap: 10px; align-items: center; margin: 14px 0 0; padding: 10px 12px; border-radius: 12px; background: rgba(31,157,85,.08); border: 1px solid rgba(31,157,85,.35); font-size: 13px; line-height: 1.4; }
+.pd-official i { font-style: normal; flex: none; width: 28px; height: 28px; border-radius: 50%; background: #1f9d55; color: #fff; display: grid; place-items: center; font-weight: 800; }
+.pd-official b { display: block; font: 700 13.5px var(--f-display); color: var(--fg); }
+.pd-official small { color: var(--fg-muted); font-size: 12px; }
+.spec-chip { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 20px; background: rgba(31,157,85,.12); color: var(--green); font: 600 10.5px var(--f-body); letter-spacing: .02em; text-transform: none; vertical-align: 1px; }
+.ad-chk { display: flex; align-items: center; gap: 10px; margin: 16px 28px 0; max-width: 720px; padding: 11px 13px; border: 1px dashed rgba(216,178,106,.5); border-radius: 12px; font-size: 13.5px; background: var(--accent-lo); color: var(--fg); }
+.ad-chk span { flex: 1; }
+.ad-chk button { flex: none; border: 0; border-radius: 9px; background: var(--accent); color: #111; font: 600 13px var(--f-body); padding: 8px 12px; cursor: pointer; }
+@media (max-width: 720px) { .ad-chk { margin: 14px 16px 0; } }

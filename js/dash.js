@@ -182,6 +182,12 @@ function cpRun(silent) {
   if (!silent) adEnsure();   // pakai daftar terbaru dari database (hasil diperbarui otomatis setelah dimuat)
 }
 
+// Ajakan "Cek dulu" di Authorized Partner → kotak Cek Partner Resmi di Dashboard (Langkah 2, 4 Nov 2026)
+function cpGo() {
+  showView('dashboard');
+  setTimeout(() => { const b = document.getElementById('dash-check'); b?.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => document.getElementById('cp-q')?.focus({ preventScroll: true }), 450); }, 60);
+}
+
 // ── Partner resmi terdekat untuk produk ini (urutan diacak) ──
 const PD_PROV_KEY = 'cai-prov';
 let pdOrder = null;
