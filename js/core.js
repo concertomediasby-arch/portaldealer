@@ -2309,6 +2309,7 @@ function showView(viewId) {
   if (viewId === 'rundown') document.getElementById('nav-rundown')?.classList.add('active');
   if (viewId === 'visitors') document.getElementById('nav-visitors')?.classList.add('active');
   if (viewId === 'rapor') document.getElementById('nav-rapor')?.classList.add('active');
+  if (viewId === 'jadwal') document.getElementById('nav-jadwal')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('nav-stock')?.classList.add('active');
   // Mobile nav active
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
@@ -2332,6 +2333,7 @@ function showView(viewId) {
   if (viewId === 'rundown') document.getElementById('mnav-rundown')?.classList.add('active');
   if (viewId === 'visitors') document.getElementById('mnav-visitors')?.classList.add('active');
   if (viewId === 'rapor') document.getElementById('mnav-rapor')?.classList.add('active');
+  if (viewId === 'jadwal') document.getElementById('mnav-jadwal')?.classList.add('active');
   if (viewId === 'stock') document.getElementById('mnav-stock')?.classList.add('active');
   if (typeof cmpTrayPaint === 'function') { cmpTrayPaint(); if (viewId === 'dashboard') favRenderDash(); }   // bilah Bandingkan + Terakhir dilihat/Favorit (js/fav.js)
 }

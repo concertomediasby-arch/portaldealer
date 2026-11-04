@@ -4730,3 +4730,41 @@ textarea.ev-in { resize: vertical; }
 @media (max-width: 1100px) { .rp-kpi { grid-template-columns: repeat(3, minmax(0, 1fr)); } .rp-g2, .rp-g3 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 720px) { .rp-wrap { padding: 4px 16px 30px; } .rp-h { font-size: 24px; } .rp-kpi { grid-template-columns: 1fr 1fr; } .rp-kpi .rp-c:last-child { grid-column: 1 / -1; } .rp-cnt { grid-template-columns: 1fr 1fr; } .rp-chart { height: 100px; gap: 2px; } }
 body[data-view="rapor"] .wa-float { display: none !important; }   /* Rapor Bulanan: tombol WA tidak menutupi angka */
+
+/* ── ⏰ JADWAL TAYANG (khusus Editor, js/schedule.js) ── */
+.jd-wrap { padding: 18px 28px 40px; max-width: 1240px; }
+.jd-top { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+.jd-k { color: var(--accent); font: 600 11.5px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; }
+.jd-h { font: 700 28px/1.15 var(--f-display); margin: 8px 0 4px; } .jd-h em { color: var(--accent); font-style: normal; } .jd-sub { color: var(--fg-muted); margin: 0; }
+.jd-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 16px 0 14px; } .jd-chips b { margin-left: 3px; }
+.jd-lay { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px; align-items: start; }
+.jd-warn { display: flex; gap: 12px; align-items: center; background: rgba(229,103,94,.08); border: 1px solid rgba(229,103,94,.45); border-radius: 14px; padding: 12px 15px; margin-bottom: 12px; font-size: 13.5px; }
+.jd-warn b { color: #e98a83; } .jd-warn .gt-btn { margin-left: auto; white-space: nowrap; }
+.jd-filter { font-size: 13px; color: var(--fg-muted); margin: 0 2px 6px; } .jd-filter button { background: none; border: 0; color: var(--accent); font: 600 12.5px var(--f-body); cursor: pointer; }
+.jd-day { margin: 16px 2px 8px; display: flex; align-items: baseline; gap: 10px; } .jd-day b { font: 700 15px var(--f-display); } .jd-day small { color: var(--fg-muted); }
+.jd-day .tod { background: var(--accent); color: #1a1408; font: 700 11px var(--f-body); border-radius: 99px; padding: 2px 8px; }
+.jd-it { display: grid; grid-template-columns: 58px 4px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+.jd-it .tm { font: 700 17px var(--f-mono); } .jd-it .tm small { display: block; font: 500 11px var(--f-body); color: var(--fg-muted); }
+.jd-it .bar { align-self: stretch; border-radius: 3px; background: var(--jc, var(--accent)); }
+.jd-it .mn { font: 600 11px var(--f-body); letter-spacing: .04em; text-transform: uppercase; color: var(--jc, var(--accent)); }
+.jd-it .tt { font: 600 14.5px var(--f-body); margin: 2px 0; } .jd-it .meta { color: var(--fg-muted); font-size: 12.5px; display: flex; gap: 4px 12px; flex-wrap: wrap; }
+.jd-it .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.jd-it.dr { border-style: dashed; --jc: var(--fg-muted); } .jd-it.dr .tm { font-size: 18px; }
+.jd-side { display: grid; gap: 14px; }
+.jd-c { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 15px 16px; } .jd-c h3 { margin: 0 0 10px; font: 700 15px var(--f-display); }
+.jd-calh { display: flex; align-items: center; justify-content: space-between; } .jd-calh h3 { margin: 0; } .jd-calh button { background: none; border: 1px solid var(--border); color: var(--fg); border-radius: 8px; width: 28px; height: 28px; cursor: pointer; }
+.jd-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 12px; margin-top: 10px; }
+.jd-cal .h { color: var(--fg-muted); font-size: 11px; } .jd-cal button { background: none; border: 0; color: var(--fg); padding: 6px 0 3px; border-radius: 8px; font: 500 12px var(--f-body); min-height: 34px; }
+.jd-cal button:disabled { color: var(--fg-muted); cursor: default; } .jd-cal button.has { background: var(--surface2, rgba(255,255,255,.06)); font-weight: 700; cursor: pointer; }
+.jd-cal button.tod { outline: 1.5px solid var(--accent); } .jd-cal button.on { background: var(--accent); color: #1a1408; }
+.jd-cal i { display: flex; justify-content: center; gap: 2px; height: 6px; margin-top: 2px; } .jd-cal i em { width: 5px; height: 5px; border-radius: 50%; }
+.jd-lg { display: flex; gap: 6px 10px; flex-wrap: wrap; font-size: 11.5px; color: var(--fg-muted); margin-top: 10px; } .jd-lg em { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.jd-q { display: grid; gap: 8px; } .jd-q div { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px; align-items: center; font-size: 13px; } .jd-q em { font-style: normal; color: var(--fg-muted); font-size: 12px; } .jd-q em.ok { color: var(--green, #52c38a); } .jd-q em.bad { color: var(--red, #e5675e); }
+.jd-rm p { margin: 4px 0; font-size: 12.5px; color: var(--fg-muted); } .jd-rm b { color: var(--fg); } .jd-rm .gt-btn { margin-top: 8px; }
+.jd-mini { font-size: 12.5px; color: var(--fg-muted); margin: 0 0 8px; } .jd-mini.ok { color: var(--green, #52c38a); }
+.jd-hl { display: grid; gap: 6px; margin-bottom: 8px; }
+.jd-hl button { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: center; text-align: left; background: var(--surface2, rgba(255,255,255,.05)); border: 1px solid var(--border); border-radius: 10px; padding: 7px 10px; color: var(--fg); font: inherit; cursor: pointer; }
+.jd-hl b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .jd-hl small { color: var(--fg-muted); font-size: 11.5px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .jd-hl em { font-style: normal; color: var(--accent); font: 600 12px var(--f-body); white-space: nowrap; }
+@media (max-width: 980px) { .jd-lay { grid-template-columns: minmax(0, 1fr); } .jd-side { order: -1; } }
+@media (max-width: 720px) { .jd-wrap { padding: 14px 16px 30px; } .jd-h { font-size: 23px; } .jd-it { grid-template-columns: 50px 4px minmax(0, 1fr); } .jd-it .acts { grid-column: 3; justify-content: flex-start; } .jd-warn { flex-wrap: wrap; } .jd-warn .gt-btn { margin-left: 0; } }
+body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tayang: tombol WA tidak menutupi kalender */
