@@ -221,7 +221,6 @@ function renderCwPost(body, it) {
   const s = cwLS(CWAY_SEEN_KEY); if (it.published && !s[it.id]) { s[it.id] = 1; cwLS(CWAY_SEEN_KEY, s); renderCwayHl(); cwStar(); }
   const asc = cwShown().slice().reverse(), i = asc.findIndex(x => x.id === it.id), prev = asc[i - 1], next = asc[i + 1];
   const lbl = x => x.day != null ? 'Day ' + x.day : 'Sebelumnya';
-  cwPrepImage(it);
   const tot = cwTaskCount(it), done = (cwLS(CWAY_TASK_KEY)[it.id] || []).filter(Boolean).length;
   const others = cwShown().filter(x => x.id !== it.id).slice(0, 8);
   const acts = `<button class="gt-btn ghost" onclick="cwShare('${it.id}')">${SHARE_ICON} Bagikan</button><button class="gt-btn ghost" onclick="cwPngDownload('${it.id}', this)">⬇ Unduh PNG</button>
@@ -397,18 +396,13 @@ function cwPrepImage(it) {
   cwImgCache[it.id] = { k, file: null };
   cwImage(it).then(b => { if (b && cwImgCache[it.id]?.k === k) cwImgCache[it.id].file = new File([b], cwImgName(it), { type: 'image/png' }); }).catch(() => {});
 }
-async function cwShare(id) {
+// Bagikan = teks + link saja (4 Nov 2026, permintaan pemilik — sama seperti Panduan Partner): WhatsApp lalu menampilkan
+// kartu pratinjau link /cway/ (gambar t-cway.jpg + "Concerto Way — khusus partner CAI"). Dulu gambar 1080×1080 ikut dilampirkan,
+// sehingga WA menampilkan gambar tanpa kartu pratinjau. Gambar materi tetap bisa diambil lewat ⬇ Unduh PNG.
+function cwShare(id) {
   const it = cwItems?.find(x => x.id === id); if (!it) return;
-  const text = `☕ *CONCERTO WAY${it.day != null ? ' — DAY ' + it.day : ''}*\n${it.series ? `_${it.series}_\n` : ''}\n*${it.title}*${it.subtitle ? '\n' + it.subtitle : ''}\n\nBaca lengkap di CAI Hub (khusus partner CAI, masuk dengan Kode Akses):\n${cwLink(it.id)}`;
-  let file = cwImgCache[it.id]?.k === cwImgKey(it) ? cwImgCache[it.id].file : null;
-  if (!file) try { const b = await cwImage(it); if (b) file = new File([b], cwImgName(it), { type: 'image/png' }); } catch (e) {}
-  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], text }); return; }
-    catch (e) { if (e?.name === 'AbortError') return; }
-  }
-  if (file) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+  const text = `☕ *Concerto Way${it.day != null ? ' — Day ' + it.day : ''}: ${it.title}*\nKhusus partner CAI — buka di CAI Hub dengan Kode Akses:\n${cwLink(it.id)}`;
   window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
-  showToast(file ? 'Gambar diunduh — lampirkan di WhatsApp yang terbuka (teks & link sudah terisi).' : 'WhatsApp dibuka dengan teks & link.', 7000);
 }
 
 /* ── ⬇ Unduh PNG: materi lengkap sebagai satu gambar memanjang (lebar 1080 px, dibuat 2×) — 3 Nov 2026, permintaan pemilik ── */
