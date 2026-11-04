@@ -758,6 +758,7 @@ async function loadGuideFiles() {
     guideFiles = new Map();
     if (isAdmin()) showToast('Daftar panduan tidak bisa dibaca: ' + (e.message || e) + ' — pastikan SQL bucket "guides" sudah dijalankan.', 10000);
   }
+  await loadGuideSchedule();
   renderGuides();
   loadGuideThumbs();
   updateGuideStar();
@@ -800,16 +801,17 @@ function renderGuides() {
   const el = document.getElementById('guides-list');
   if (!el) return;
   const catColor = { 'Penjualan':'#d8b26a', 'Produk':'#6fd3e6', 'Instalasi':'#52c38a' };
-  const admin = isAdmin();
+  const admin = isEditor();   // tambah / hapus / jadwal PDF panduan khusus Editor (4 Nov 2026, permintaan pemilik)
   const ICON_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
   const ICON_VIEW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
-  el.innerHTML = DEALER_GUIDES.filter(g => !g.hidden).map(g => {
+  el.innerHTML = guideTopHtml() + DEALER_GUIDES.filter(g => !g.hidden).map(g => {
     const color = catColor[g.category] || 'var(--accent)';
     const files = guideFiles?.get(g.id) || [];
+    const sched = admin ? (guideSched || []).filter(r => r.folder === g.folder) : [];
     const list = guideFiles === null
       ? `<div class="res-actions"><span class="res-btn res-btn-soon">Memuat…</span></div>`
-      : files.length
-        ? `<div class="gf-grid">${files.map(f => `
+      : files.length || sched.length
+        ? `<div class="gf-grid">${sched.map(guideSchedCard).join('')}${files.map(f => `
             <div class="gf-card">
               <button class="gf-cover" data-thumb="${escHtml(f.key)}" onclick="openGuideReader('${f.key}')" title="Buka ${escHtml(f.title)}">
                 <span class="gf-ph"><b>📄</b>PDF</span><img alt="Cover ${escHtml(f.title)}">
@@ -827,9 +829,9 @@ function renderGuides() {
             </div>`).join('')}</div>`
         : `<div class="res-actions"><span class="res-btn res-btn-soon">Segera Hadir</span></div>`;
     const up = admin && g.folder
-      ? `<div class="res-actions gf-admin"><label class="res-btn res-btn-view guide-upload" title="Admin: tambah satu atau beberapa PDF">＋ Tambah PDF
-           <input type="file" accept="application/pdf,.pdf" multiple hidden onchange="uploadGuideFiles('${g.id}', this)"></label>
-           <span class="gf-hint">Bisa pilih beberapa file sekaligus · nama file sama = menggantikan file lama</span></div>`
+      ? `<div class="res-actions gf-admin"><label class="res-btn res-btn-view guide-upload" title="Editor: tambah satu atau beberapa PDF — tayang sekarang atau dijadwalkan">＋ Tambah PDF
+           <input type="file" accept="application/pdf,.pdf" multiple hidden onchange="openGuideUpload('${g.id}', this)"></label>
+           <span class="gf-hint">Bisa pilih beberapa file sekaligus · tayang sekarang atau ⏰ dijadwalkan · judul sama = menggantikan file lama</span></div>`
       : '';
     const latest = files[0] ? fmtGuideDate(files[0].date) : '';
     return `<div class="res-card">
@@ -933,7 +935,7 @@ async function openGuideFile(key, download) {
 
 function guideErrorHint(m) {
   return /bucket not found/i.test(m) ? ' — bucket "guides" belum dibuat (jalankan SQL-nya).'
-    : /row-level security|unauthorized|403/i.test(m) ? ' — akun ini belum diizinkan (pastikan role admin, lalu logout & login ulang).'
+    : /row-level security|unauthorized|403/i.test(m) ? ' — akun ini belum diizinkan (PDF panduan khusus Editor; logout & login ulang bila perlu).'
     : /exceeded|too large|413|payload/i.test(m) ? ' — ukuran file melebihi batas Supabase (maks. 50 MB di paket gratis).'
     : '';
 }
@@ -968,6 +970,7 @@ async function uploadGuideFiles(id, input) {
 }
 
 async function deleteGuideFile(id, key) {
+  if (!isEditor()) return;
   const f = (guideFiles?.get(id) || []).find(x => x.key === key);
   if (!f || !supabase || !confirm(`Hapus "${f.title}" dari Panduan Partner?\n\nFile akan hilang untuk semua partner.`)) return;
   try {
@@ -982,6 +985,139 @@ async function deleteGuideFile(id, key) {
     const m = String(e.message || e);
     showToast('Gagal menghapus: ' + m + guideErrorHint(m), 12000);
   }
+}
+
+/* ── Jadwal tayang Panduan Partner (4 Nov 2026, permintaan pemilik — khusus Editor, seperti Concerto Way & Academy) ──
+   PDF terjadwal diunggah ke folder tunggu guides/pending/<folder>/ (policy Storage: hanya Editor yang bisa membaca) + baris
+   tabel guide_schedule; Edge Function cway-push (pg_cron tiap menit) memindahkannya ke <folder>/ pada jam tayang lalu
+   mengirim notifikasi "📘 Panduan Partner baru tersedia" (tanpa judul). "Tayang sekarang" = langsung ke folder + notifikasi.
+   SQL: supabase/cway-push.sql (CWAY_PUSH_SQL di js/push.js). */
+let guideSched = null, guideSchedMissing = false, guideSchedT = null, gdForm = null;
+async function loadGuideSchedule() {
+  if (!supabase || !isEditor()) { guideSched = []; return; }
+  const { data, error } = await supabase.from('guide_schedule').select('id, folder, src, dest, title, publish_at, error').is('done_at', null).order('publish_at');
+  guideSchedMissing = !!error && /does not exist|schema cache|42P01|PGRST205/i.test(error.message + ' ' + (error.code || ''));
+  guideSched = error ? [] : (data || []);
+  clearTimeout(guideSchedT);
+  const next = guideSched.map(r => Date.parse(r.publish_at)).filter(t => t > Date.now()).sort((a, b) => a - b)[0];
+  if (next) guideSchedT = setTimeout(() => { if (document.getElementById('view-guides')?.classList.contains('active')) loadGuideFiles(); }, Math.min(next - Date.now() + 75000, 2 ** 31 - 1));
+}
+function guideTopHtml() {
+  let h = typeof pnHtml === 'function' ? pnHtml('guides') : '';
+  if (!isEditor()) return h;
+  if (guideSchedMissing) h += `<div class="stock-empty">Jadwal tayang Panduan butuh SQL sekali. <button class="gt-btn ghost" onclick="pushCopySql()">📋 Salin SQL Notifikasi & Jadwal</button></div>`;
+  const q = guideSched || [];
+  if (q.length) h += `<div class="cw-queue"><div class="cw-queue-h">⏰ Antrian tayang <span>${q.length} PDF · otomatis tampil untuk partner pada jamnya</span></div>
+    ${q.map(r => `<button class="cw-queue-r" onclick="openGuideReader('${escHtml(r.src)}')"><span class="cw-queue-t">${escHtml(cwWhen(r.publish_at))}</span>
+      <span class="cw-queue-d">PDF</span><b>${escHtml(r.title || guideTitleFromName(r.dest.split('/').pop()))}${r.error ? ' <em class="gd-err">⚠ ' + escHtml(r.error) + '</em>' : ''}</b>
+      <span class="cw-queue-e" onclick="event.stopPropagation();guideReschedule('${r.id}')">✏️ Ubah jadwal</span></button>`).join('')}</div>`;
+  return h;
+}
+function guideSchedCard(r) {
+  const t = r.title || guideTitleFromName(r.dest.split('/').pop());
+  return `<div class="gf-card sched">
+    <button class="gf-cover" onclick="openGuideReader('${escHtml(r.src)}')" title="Buka ${escHtml(t)}"><span class="gf-ph"><b>📄</b>PDF</span><span class="gf-sched">⏰ TERJADWAL</span></button>
+    <div class="gf-body">
+      <div><div class="gf-title">${escHtml(t)}</div><div class="gf-sub">Tayang ${escHtml(cwWhen(r.publish_at))}</div></div>
+      <div class="gf-actions">
+        <button class="res-btn res-btn-view" onclick="openGuideReader('${escHtml(r.src)}')">Buka</button>
+        <button class="res-btn" onclick="guideReschedule('${r.id}')">✏️ Jadwal</button>
+        <button class="res-btn gf-del" title="Hapus PDF terjadwal ini" onclick="guideSchedDelete('${r.id}')">🗑</button>
+      </div></div></div>`;
+}
+function openGuideUpload(id, input) {
+  const files = [...(input.files || [])]; input.value = '';
+  const g = DEALER_GUIDES.find(x => x.id === id);
+  if (!files.length || !g?.folder || !isEditor()) return;
+  const bad = files.filter(f => !/\.pdf$/i.test(f.name) && f.type !== 'application/pdf');
+  if (bad.length) return showToast('Hanya file PDF yang bisa diunggah: ' + bad.map(f => f.name).join(', '), 8000);
+  const tm = new Date(Date.now() + 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+  gdForm = { id, folder: g.folder, card: g.title, items: files.map(f => ({ file: f, title: guideTitleFromName(f.name) })), mode: 'now', sd: tm, st: '08:00', stag: false, per: 1, busy: false };
+  let ov = document.getElementById('gd-form');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'gd-form'; ov.className = 'rk-pick gl-ov';
+    ov.innerHTML = '<div class="rk-pick-box gl-fbox" role="dialog" aria-modal="true"></div>';
+    document.body.appendChild(ov);
+  }
+  renderGuideUpload(); ov.classList.add('open');
+}
+function closeGuideUpload() { gdForm = null; document.getElementById('gd-form')?.classList.remove('open'); }
+const gdSchedAt = (f, i) => new Date(Date.parse(`${f.sd}T${f.st || '08:00'}:00+07:00`) + (f.stag ? Math.floor(i / Math.max(1, +f.per || 1)) : 0) * 864e5).toISOString();
+function gdSchedSet(k, v) { if (!gdForm) return; gdForm[k] = k === 'stag' ? !!v : k === 'per' ? Math.max(1, Math.min(50, parseInt(v) || 1)) : v; renderGuideUpload(); }
+function renderGuideUpload() {
+  const f = gdForm, box = document.querySelector('#gd-form .rk-pick-box'); if (!f || !box) return;
+  const n = f.items.length, past = f.mode === 'sched' && !(Date.parse(gdSchedAt(f, 0)) > Date.now());
+  const note = f.mode !== 'sched' ? 'PDF langsung tampil untuk partner, dan partner yang mengaktifkan notifikasi Panduan diberi tahu.'
+    : past ? '⚠ Jam tayang sudah lewat — pilih waktu yang akan datang, atau Tayang sekarang.'
+    : `⏰ ${n > 1 && f.stag ? `Mulai ${cwWhen(gdSchedAt(f, 0))} sampai ${cwWhen(gdSchedAt(f, n - 1))}` : `Tayang ${cwWhen(gdSchedAt(f, 0))}`}. Sampai jamnya PDF terkunci — hanya Editor yang bisa membuka.`;
+  box.innerHTML = `<div class="rk-pick-hd"><div class="rk-pick-t">＋ Tambah PDF · ${escHtml(f.card)}</div><button class="rk-pick-x" onclick="closeGuideUpload()" aria-label="Tutup">✕</button></div>
+    <div class="acf">
+      <div class="acf-l">Tayang</div>
+      <div class="cwf-seg"><button type="button" class="${f.mode === 'now' ? 'on' : ''}" onclick="gdSchedSet('mode','now')">Tayang sekarang</button><button type="button" class="${f.mode === 'sched' ? 'on' : ''}" onclick="gdSchedSet('mode','sched')">⏰ Jadwalkan</button></div>
+      ${f.mode === 'sched' ? `<div class="cwf-sched"><input type="date" value="${f.sd}" onchange="gdSchedSet('sd',this.value)"><input type="time" value="${f.st}" onchange="gdSchedSet('st',this.value)"><span>WIB</span></div>
+      ${n > 1 ? `<label class="acf-stag"><input type="checkbox" ${f.stag ? 'checked' : ''} onchange="gdSchedSet('stag',this.checked)"> Rilis bertahap: <input type="number" min="1" max="50" value="${f.per}" onchange="gdSchedSet('per',this.value)"> PDF per hari, mulai tanggal ini</label>` : ''}` : ''}
+      <div class="cwf-snote">${note}</div>
+      <div class="acf-l">PDF (${n} file) — judul = nama file di portal</div>
+      <div class="acf-list">${f.items.map((x, i) => `<div class="acf-it gd-it"><div class="gd-ic">📄</div><div><span>${escHtml(x.file.name)} · ${fmtGuideSize(x.file.size)}${f.mode === 'sched' ? ` · <em class="acf-when">⏰ ${escHtml(cwWhen(gdSchedAt(f, i)))}</em>` : ''}</span><input value="${escHtml(x.title)}" placeholder="Judul panduan" oninput="gdForm.items[${i}].title=this.value"></div><button title="Hapus" onclick="gdForm.items.splice(${i},1);gdForm.items.length?renderGuideUpload():closeGuideUpload()">🗑</button></div>`).join('')}</div>
+    </div>
+    <div class="acf-foot"><button class="gt-btn ghost" onclick="closeGuideUpload()">Batal</button><button class="gt-btn" onclick="saveGuideUpload()"${f.busy || past ? ' disabled' : ''}>${f.busy ? '⏳ Mengunggah…' : f.mode === 'sched' ? '⏰ Simpan Jadwal' : '💾 Unggah & Tayangkan'}</button></div>`;
+}
+async function saveGuideUpload() {
+  const f = gdForm; if (!f || f.busy || !isEditor() || !supabase) return;
+  if (f.items.some(x => !x.title.trim())) return showToast('⚠ Isi judul untuk setiap PDF.', 4000);
+  const sched = f.mode === 'sched';
+  if (sched && !(Date.parse(gdSchedAt(f, 0)) > Date.now())) return showToast('⚠ Jam tayang sudah lewat — ubah tanggal/jam.', 5000);
+  f.busy = true; renderGuideUpload();
+  const store = supabase.storage.from(GUIDES_BUCKET), live = [], failed = [];
+  let ok = 0;
+  for (const [i, x] of f.items.entries()) {
+    const name = guideSafeName(x.title.trim()), dest = `${f.folder}/${name}`, path = sched ? `pending/${dest}` : dest;
+    showToast(`Mengunggah ${f.items.length > 1 ? `(${i + 1}/${f.items.length}) ` : ''}${x.title} (${fmtGuideSize(x.file.size)})… jangan tutup halaman ini.`, 600000);
+    try {
+      const { error } = await store.upload(path, x.file, { upsert: true, contentType: 'application/pdf', cacheControl: '60' });
+      if (error) throw error;
+      if (sched) {
+        await supabase.from('guide_schedule').delete().eq('src', path).is('done_at', null);   // jadwal lama untuk file yang sama diganti
+        const { error: e2 } = await supabase.from('guide_schedule').insert({ folder: f.folder, src: path, dest, title: x.title.trim(), publish_at: gdSchedAt(f, i) });
+        if (e2) { store.remove([path]); throw e2; }
+      } else { guideThumbs.delete(dest); live.push(dest); }
+      ok++;
+    } catch (e) {
+      const m = String(e.message || e);
+      if (/guide_schedule|does not exist|schema cache|42P01/i.test(m)) { guideSchedMissing = true; pushCopySql(); }
+      failed.push(x.title + ': ' + m + guideErrorHint(m));
+    }
+  }
+  if (live.length && typeof pushNotify === 'function') pushNotify('guide', live);   // notifikasi partner "Panduan Partner baru"
+  closeGuideUpload();
+  await loadGuideFiles();
+  if (failed.length) showToast(`${ok ? `✓ ${ok} PDF tersimpan. ` : ''}Gagal: ${failed.join(' | ')}`, 12000);
+  else showToast(sched ? `⏰ ${ok} PDF dijadwalkan — mulai ${cwWhen(gdSchedAt(f, 0))}` : `✓ ${ok} PDF tayang di "${f.card}".`, 6000);
+}
+async function guideReschedule(id) {
+  const r = (guideSched || []).find(x => x.id === id); if (!r || !isEditor()) return;
+  const cur = new Date(r.publish_at).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16);
+  const v = prompt('Jadwal tayang PDF ini (WIB), format YYYY-MM-DD HH:MM.\nKetik "sekarang" untuk langsung tayang (± 1 menit).', cur); if (v == null) return;
+  let at;
+  if (/^\s*sekarang\s*$/i.test(v)) at = new Date().toISOString();
+  else {
+    const m = v.trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})$/);
+    if (!m) return showToast('⚠ Format salah. Contoh: 2026-11-10 08:00', 5000);
+    at = new Date(Date.parse(`${m[1]}T${m[2].padStart(2, '0')}:${m[3]}:00+07:00`)).toISOString();
+    if (!(Date.parse(at) > Date.now())) return showToast('⚠ Waktu sudah lewat — pilih waktu yang akan datang, atau ketik "sekarang".', 5000);
+  }
+  const { error } = await supabase.from('guide_schedule').update({ publish_at: at, error: null }).eq('id', id);
+  if (error) return showToast('⚠ Gagal menyimpan jadwal: ' + error.message, 7000);
+  showToast(Date.parse(at) <= Date.now() + 5000 ? '✓ PDF akan tayang dalam ± 1 menit' : `⏰ Dijadwalkan ${cwWhen(at)}`, 4000);
+  await loadGuideFiles();
+}
+async function guideSchedDelete(id) {
+  const r = (guideSched || []).find(x => x.id === id); if (!r || !isEditor()) return;
+  if (!confirm(`Hapus PDF terjadwal "${r.title || r.dest}"?\n\nPDF batal tayang dan dihapus.`)) return;
+  await supabase.storage.from(GUIDES_BUCKET).remove([r.src]);
+  const { error } = await supabase.from('guide_schedule').delete().eq('id', id);
+  if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
+  showToast('PDF terjadwal dihapus.'); await loadGuideFiles();
 }
 
 function openDspSoftware() {
@@ -2647,7 +2783,8 @@ let gdrTok = 0, gdrDoc = null, gdrIO = null;
 async function openGuideReader(key) {
   if (!key || !supabase) return;
   let f = null; guideFiles?.forEach(list => { f = f || list.find(x => x.key === key); });
-  const title = f?.title || guideTitleFromName(key.split('/').pop());
+  const pend = /^pending\//.test(key), sr = pend && (guideSched || []).find(r => r.src === key);   // PDF terjadwal (khusus Editor)
+  const title = f?.title || sr?.title || guideTitleFromName(key.split('/').pop());
   let ov = document.getElementById('gdr');
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'gdr'; ov.className = 'gdr-ov';
@@ -2663,6 +2800,7 @@ async function openGuideReader(key) {
   ov.querySelector('.gdr-t').textContent = title;
   ov.querySelector('#gdr-dl').onclick = () => openGuideFile(key, true);
   ov.querySelector('#gdr-share').onclick = () => guideShare(key);
+  ov.querySelector('#gdr-share').hidden = pend;   // belum tayang → belum bisa dibagikan
   const pages = ov.querySelector('.gdr-pages');
   pages.innerHTML = '<div class="gdr-msg">⏳ Memuat panduan…</div>';
   ov.classList.add('open'); document.body.style.overflow = 'hidden';

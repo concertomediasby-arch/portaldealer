@@ -3989,6 +3989,13 @@ body.logged-in .guest-only { display: none !important; }
 .pn-x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--fg-2, #9aa0ad); font-size: 15px; cursor: pointer; padding: 4px 6px; }
 .cw-push-h small { font: 500 11px var(--f-body); color: var(--fg-2, #9aa0ad); }
 @media (max-width: 720px) { .pn-chk { flex: 1 1 100%; } }
+/* Jadwal tayang Panduan Partner (4 Nov 2026) */
+.gf-card.sched { outline: 1.5px dashed #2aa6bd; outline-offset: -1.5px; }
+.gf-sched { position: absolute; top: 8px; left: 8px; z-index: 2; font: 800 10px var(--f-display); letter-spacing: .12em; padding: 4px 9px; border-radius: 999px; background: #0b1219; color: #6fd3e6; border: 1px solid #6fd3e6; }
+#guides-list > .cw-queue, #guides-list > [data-pn], #guides-list > .stock-empty { margin-bottom: 16px; }
+.gd-it { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.gd-ic { width: 44px; height: 56px; display: grid; place-items: center; font-size: 24px; border-radius: 6px; background: var(--surface2); }
+.gd-err { font-style: normal; color: #e57373; font-size: 11.5px; font-weight: 500; }
 /* Jadwal tayang Academy (4 Nov 2026) */
 .acad-card { position: relative; }
 .acad-card.sched { outline: 1.5px dashed #2aa6bd; outline-offset: -1.5px; }

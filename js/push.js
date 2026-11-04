@@ -4,6 +4,7 @@
 //   cway  = partner: "Concerto Way Day n sudah tayang" saat tayang (tanpa judul) — hanya bisa dipilih yang login
 //   news  = semua pengunjung: News baru diterbitkan
 //   acad  = semua pengunjung: materi Concerto Academy baru tayang (4 Nov 2026)
+//   guide = partner yang login: Panduan Partner baru tayang (tanpa judul di layar kunci)
 // Semua lewat Edge Function supabase/functions/cway-push (aksi key/get/set/test/notify + jadwal pg_cron tiap menit).
 // sw.js menampilkan notifikasi & membuka link-nya. iPhone: hanya bila CAI Hub dipasang di Layar Utama (iOS 16.4+).
 const PUSH_FN = 'cway-push';
@@ -31,6 +32,44 @@ alter table if exists public.cai_news add column if not exists push_at timestamp
 alter table public.cway_push_subs add column if not exists acad boolean default false;   -- notifikasi materi Academy baru
 create table if not exists public.academy_push (no int primary key, sent_at timestamptz default now());   -- materi Academy yang sudah dikirimi notifikasi
 alter table public.academy_push enable row level security;
+alter table public.cway_push_subs add column if not exists guide boolean default false;   -- notifikasi Panduan Partner baru (khusus partner login)
+
+-- Panduan Partner terjadwal (4 Nov 2026): PDF disimpan dulu di folder tunggu guides/pending/ (hanya Editor yang bisa membaca),
+-- lalu dipindah Edge Function cway-push ke folder kartunya pada jam tayang.
+create table if not exists public.guide_schedule (
+  id uuid primary key default gen_random_uuid(),
+  folder text not null,
+  src text not null,            -- pending/<folder>/<file>.pdf
+  dest text not null,           -- <folder>/<file>.pdf
+  title text,
+  publish_at timestamptz not null,
+  done_at timestamptz,
+  error text,
+  created_at timestamptz default now(),
+  created_by uuid default auth.uid()
+);
+alter table public.guide_schedule enable row level security;
+drop policy if exists "guide schedule editor" on public.guide_schedule;
+create policy "guide schedule editor" on public.guide_schedule for all to authenticated
+  using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+
+-- Storage bucket guides: aturan PEMBATAS (restrictive) — ditambahkan di atas izin yang sudah ada, tidak menggantinya.
+-- 1) Folder tunggu pending/ hanya bisa dibaca Editor.  2) PDF panduan hanya bisa ditulis/dihapus Editor
+--    (folder gathering/ (PKS, flier, lagu) & thumbs/ (sampul) tetap mengikuti izin lama Admin/Editor).
+drop policy if exists "guides pending editor only" on storage.objects;
+create policy "guides pending editor only" on storage.objects as restrictive for select to authenticated
+  using (bucket_id <> 'guides' or name not like 'pending/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+drop policy if exists "guides insert editor only" on storage.objects;
+create policy "guides insert editor only" on storage.objects as restrictive for insert to authenticated
+  with check (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+drop policy if exists "guides update editor only" on storage.objects;
+create policy "guides update editor only" on storage.objects as restrictive for update to authenticated
+  using (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
+  with check (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+drop policy if exists "guides delete editor only" on storage.objects;
+create policy "guides delete editor only" on storage.objects as restrictive for delete to authenticated
+  using (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated
@@ -55,7 +94,7 @@ $$);
 -- Mematikan jadwal: select cron.unschedule('cway-push');`;
 const PN_DISMISS_KEY = 'cai-pn-dismiss';
 let pushSt = '?';          // ? | … | ok | unsupported | denied | nosql | nofn | busy
-let pushFlags = null;      // { staff, cway, news, acad } milik HP ini (null = belum diketahui)
+let pushFlags = null;      // { staff, cway, news, acad, guide } milik HP ini (null = belum diketahui)
 let pushEp = null;         // endpoint langganan HP ini
 let pnSel = null;          // pilihan centang sebelum diaktifkan
 const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -174,18 +213,18 @@ function cwPushHtml() {
 // ── Kotak partner/pengunjung: Concerto Way baru tayang + News (Dashboard = ajakan, menu Concerto Way & News = pengaturan) ──
 function pnHtml(where) {
   const wrap = h => where === 'dash' ? h : `<div data-pn="${where}">${h}</div>`;
-  if (where === 'cway' && (!authUser || isEditor())) return wrap('');   // Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
+  if ((where === 'cway' || where === 'guides') && (!authUser || isEditor())) return wrap('');   // Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
   pushInit();
-  const st = pushSt, f = pushFlags || {}, active = st === 'ok' && (f.cway || f.news || f.acad);
+  const st = pushSt, f = pushFlags || {}, active = st === 'ok' && (f.cway || f.news || f.acad || f.guide);
   const canCw = !!authUser && !isEditor();   // Editor sudah punya Pengingat tayang 5 menit
   if (where === 'dash') {   // ajakan: hanya di CAI Hub yang dibuka dari Layar Utama, belum aktif, belum ditutup
     let dis = false; try { dis = localStorage.getItem(PN_DISMISS_KEY) === '1'; } catch (e) {}
     if (dis || !pushOk() || !pushStandalone() || st !== 'ok' || active || Notification.permission === 'denied') return '';
   }
-  if (!pnSel) pnSel = { cway: true, news: true, acad: true };
-  const sel = active ? { cway: !!f.cway, news: !!f.news, acad: !!f.acad } : pnSel;
+  if (!pnSel) pnSel = { cway: true, news: true, acad: true, guide: true };
+  const sel = active ? { cway: !!f.cway, news: !!f.news, acad: !!f.acad, guide: !!f.guide } : pnSel;
   const chk = (k, ico, lbl, sub) => `<label class="pn-chk"><input type="checkbox" ${sel[k] ? 'checked' : ''} ${st === 'busy' ? 'disabled' : ''} onchange="pnToggle('${k}', this.checked)"><span>${ico} ${lbl}${sub ? ` <small>· ${sub}</small>` : ''}</span></label>`;
-  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru');
+  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') + chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') : '') + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru');
   let title, text = '', btn = '';
   if (st === 'unsupported') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = pushUnsupportedMsg(); }
   else if (st === 'denied') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP, lalu muat ulang.'; }
@@ -199,14 +238,15 @@ function pnHtml(where) {
     <b class="pn-h">${title}</b>${text ? `<p>${text}</p>` : ''}${showOpts ? `<div class="pn-opts">${opts}</div>` : ''}${btn ? `<div class="pn-b">${btn}</div>` : ''}</div>`);
 }
 function pnToggle(k, v) {
-  if (pushSt === 'ok' && (pushFlags?.cway || pushFlags?.news || pushFlags?.acad)) pushSet({ [k]: v });
-  else { pnSel = { ...(pnSel || { cway: true, news: true, acad: true }), [k]: v }; }
+  if (pushSt === 'ok' && (pushFlags?.cway || pushFlags?.news || pushFlags?.acad || pushFlags?.guide)) pushSet({ [k]: v });
+  else { pnSel = { ...(pnSel || { cway: true, news: true, acad: true, guide: true }), [k]: v }; }
 }
 function pnOn() {
-  const s = pnSel || { cway: true, news: true, acad: true };
-  const flags = { cway: !!authUser && s.cway, news: s.news, acad: s.acad };
-  if (!flags.cway && !flags.news && !flags.acad) return showToast('Centang minimal satu jenis notifikasi.');
+  const s = pnSel || { cway: true, news: true, acad: true, guide: true };
+  const part = !!authUser && !isEditor();
+  const flags = { cway: part && s.cway, guide: part && s.guide, news: s.news, acad: s.acad };
+  if (!flags.cway && !flags.news && !flags.acad && !flags.guide) return showToast('Centang minimal satu jenis notifikasi.');
   pushSet(flags, true).then(r => { if (r && !r.deleted) showToast('✅ Notifikasi aktif di HP ini'); });
 }
-function pnOff() { pushSet({ cway: false, news: false, acad: false }).then(r => { if (r) showToast('Notifikasi dimatikan di HP ini'); }); }
+function pnOff() { pushSet({ cway: false, news: false, acad: false, guide: false }).then(r => { if (r) showToast('Notifikasi dimatikan di HP ini'); }); }
 function pnDismiss() { try { localStorage.setItem(PN_DISMISS_KEY, '1'); } catch (e) {} const el = document.getElementById('pn-invite'); if (el) el.innerHTML = ''; }

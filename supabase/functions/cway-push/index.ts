@@ -3,7 +3,8 @@
 //  • Editor        : pengingat 5 menit SEBELUM Concerto Way terjadwal tayang (Day + judul). Khusus Editor (bukan Admin staff).
 //  • Partner       : "Concerto Way Day n sudah tayang" TEPAT saat tayang — tanpa judul/isi (khusus partner, layar kunci).
 //  • Semua (publik): "CAI Hub News" saat berita baru diterbitkan; "Concerto Academy" saat materi baru tayang.
-// Tiap HP memilih sendiri (kolom staff / cway / news / acad di tabel cway_push_subs).
+//  • Partner       : "Panduan Partner baru tersedia" saat PDF panduan tayang — tanpa judul (khusus partner).
+// Tiap HP memilih sendiri (kolom staff / cway / news / acad / guide di tabel cway_push_subs).
 //
 // Deploy: Supabase Dashboard → Edge Functions → cway-push → Code → tempel file ini → Deploy ("Verify JWT" tetap MATI).
 // SQL: supabase/cway-push.sql (tabel + kolom + jadwal tiap menit). Tidak perlu secret: kunci VAPID dibuat otomatis
@@ -17,8 +18,11 @@
 //   { action: 'test', endpoint }                     → notifikasi uji ke HP itu
 //   { action: 'notify', type: 'cway'|'news', id }   → kirim "sudah tayang"/berita baru sekarang (hanya Admin/Editor; sekali per item)
 //   { action: 'notify', type: 'acad', id: [no…] }    → materi Academy baru tayang sekarang (hanya Editor; sekali per nomor, tabel academy_push)
+//   { action: 'notify', type: 'guide', id: [path…] } → PDF Panduan Partner baru tayang sekarang (hanya Editor)
 //   {} (pg_cron tiap menit)                          → pengingat staf 5 menit sebelum tayang + notifikasi partner saat jadwal tiba
 //                                                      + materi Academy terjadwal (field `at` di showcase/academy/items.json) saat tiba
+//                                                      + PDF Panduan terjadwal (tabel guide_schedule): dipindah dari folder tunggu `pending/`
+//                                                        (hanya Editor yang bisa membaca) ke folder kartunya, lalu notifikasi
 // Endpoint langganan = alamat acak dari browser (rahasia HP itu) — dipakai sebagai tanda pemilik untuk get/set/test.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import webpush from 'npm:web-push@3.6.7';
@@ -71,7 +75,7 @@ async function send(sub: Sub, payload: unknown, key: Key) {
   if (res.status === 404 || res.status === 410) await db.from(SUBS).delete().eq('endpoint', sub.endpoint);   // langganan kedaluwarsa / dicabut
   return res.status;
 }
-async function sendAll(col: 'staff' | 'cway' | 'news' | 'acad', payload: unknown, key: Key) {
+async function sendAll(col: 'staff' | 'cway' | 'news' | 'acad' | 'guide', payload: unknown, key: Key) {
   const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').eq(col, true);
   let sent = 0; const list = subs || [];
   for (let i = 0; i < list.length; i += 20) {   // 20 HP sekaligus
@@ -107,6 +111,30 @@ async function acadItems(): Promise<Acad[]> {
   try { const r = await fetch(ACAD_MANIFEST + '?t=' + Date.now()); const j = r.ok ? await r.json() : null; return Array.isArray(j?.items) ? j.items : []; } catch (_) { return []; }
 }
 
+// Panduan Partner: tanpa judul (PDF khusus partner, notifikasi tampil di layar kunci)
+async function guideLive(paths: string[], key: Key) {
+  if (!paths.length) return 0;
+  return sendAll('guide', { title: paths.length > 1 ? `📘 ${paths.length} Panduan Partner baru tersedia` : '📘 Panduan Partner baru tersedia',
+    body: 'Khusus partner CAI. Ketuk untuk membuka.', url: `/?guide=${encodeURIComponent(paths[0])}`, tag: `guide-${paths[0]}` }, key);
+}
+// Pindahkan PDF terjadwal yang jamnya sudah tiba: pending/<folder>/<file> → <folder>/<file> (nama sama = menggantikan file lama)
+async function guidePublishDue() {
+  const { data: due, error } = await db.from('guide_schedule').select('id, src, dest').is('done_at', null).lte('publish_at', new Date().toISOString()).order('publish_at').limit(50);
+  if (error || !due?.length) return [] as string[];
+  const store = db.storage.from('guides'), moved: string[] = [];
+  for (const g of due) {
+    const { data: mark } = await db.from('guide_schedule').update({ done_at: new Date().toISOString() }).eq('id', g.id).is('done_at', null).select('id');
+    if (!mark?.length) continue;   // sudah diproses panggilan lain
+    let { error: e } = await store.move(g.src, g.dest);
+    if (e && /exist|duplicate/i.test(e.message)) { await store.remove([g.dest]); ({ error: e } = await store.move(g.src, g.dest)); }
+    if (e) { await db.from('guide_schedule').update({ done_at: null, error: e.message }).eq('id', g.id); continue; }
+    await store.remove([`thumbs/${g.dest}.jpg`]);   // sampul lama (bila menggantikan file bernama sama) dibuat ulang
+    await db.from('guide_schedule').update({ error: null }).eq('id', g.id);
+    moved.push(g.dest);
+  }
+  return moved;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   let body: Record<string, any> = {};
@@ -117,7 +145,7 @@ Deno.serve(async (req) => {
     if (a === 'key') return json({ key: key.pub });
 
     if (a === 'get') {
-      const { data, error } = await db.from(SUBS).select('staff, cway, news, acad').eq('endpoint', String(body.endpoint || '')).maybeSingle();
+      const { data, error } = await db.from(SUBS).select('staff, cway, news, acad, guide').eq('endpoint', String(body.endpoint || '')).maybeSingle();
       if (error) return json({ error: error.message }, 500);
       return json({ flags: data || null });
     }
@@ -126,14 +154,15 @@ Deno.serve(async (req) => {
       const ep = String(body.endpoint || '');
       if (!/^https:\/\//.test(ep) || ep.length > 1000) return json({ error: 'endpoint tidak valid' }, 400);
       const who = await caller(req);
-      const { data: cur, error: e1 } = await db.from(SUBS).select('endpoint, staff, cway, news, acad').eq('endpoint', ep).maybeSingle();
+      const { data: cur, error: e1 } = await db.from(SUBS).select('endpoint, staff, cway, news, acad, guide').eq('endpoint', ep).maybeSingle();
       if (e1) return json({ error: e1.message }, 500);
-      const f = { staff: !!cur?.staff, cway: !!cur?.cway, news: !!cur?.news, acad: !!cur?.acad };
+      const f = { staff: !!cur?.staff, cway: !!cur?.cway, news: !!cur?.news, acad: !!cur?.acad, guide: !!cur?.guide };
       const want = body.flags || {};
-      for (const k of ['staff', 'cway', 'news', 'acad'] as const) if (k in want) f[k] = !!want[k];
+      for (const k of ['staff', 'cway', 'news', 'acad', 'guide'] as const) if (k in want) f[k] = !!want[k];
       if (want.staff && !who.editor) f.staff = !!cur?.staff;  // pengingat 5 menit hanya untuk Editor
       if (want.cway && !who.auth) f.cway = !!cur?.cway;       // Concerto Way hanya untuk yang login (partner)
-      if (!f.staff && !f.cway && !f.news && !f.acad) {
+      if (want.guide && !who.auth) f.guide = !!cur?.guide;    // Panduan Partner hanya untuk yang login (partner)
+      if (!f.staff && !f.cway && !f.news && !f.acad && !f.guide) {
         if (cur) await db.from(SUBS).delete().eq('endpoint', ep);
         return json({ flags: f, deleted: true });
       }
@@ -176,6 +205,11 @@ Deno.serve(async (req) => {
         const items = (await acadItems()).filter(a => nos.includes(+a.no) && (!a.at || Date.parse(a.at) <= now));
         return json({ sent: await acadLive(items, key) });
       }
+      if (body.type === 'guide') {
+        if (!who.editor) return json({ error: 'khusus Editor' }, 403);
+        const paths = (Array.isArray(body.id) ? body.id : [body.id]).map(String).filter(p => /\.pdf$/i.test(p) && !p.startsWith('pending/'));
+        return json({ sent: await guideLive(paths, key) });
+      }
       return json({ error: 'type tidak dikenal' }, 400);
     }
 
@@ -202,7 +236,9 @@ Deno.serve(async (req) => {
     // 3) Academy terjadwal: jam tayang sudah tiba (≤ 15 menit lalu), sekali per nomor
     const acadDue = (await acadItems()).filter(a => a.at && Date.parse(a.at) <= now && Date.parse(a.at) > now - 15 * 60e3);
     const acadSent = await acadLive(acadDue, key);
-    return json({ staffSent, liveSent, acadSent });
+    // 4) Panduan Partner terjadwal: pindahkan PDF yang jamnya tiba, lalu satu notifikasi
+    const guideSent = await guideLive(await guidePublishDue(), key);
+    return json({ staffSent, liveSent, acadSent, guideSent });
   } catch (e) {
     return json({ error: String((e as Error)?.message || e) }, 500);
   }

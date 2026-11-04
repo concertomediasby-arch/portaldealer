@@ -22,6 +22,44 @@ alter table if exists public.cai_news add column if not exists push_at timestamp
 alter table public.cway_push_subs add column if not exists acad boolean default false;   -- notifikasi materi Academy baru
 create table if not exists public.academy_push (no int primary key, sent_at timestamptz default now());   -- materi Academy yang sudah dikirimi notifikasi
 alter table public.academy_push enable row level security;
+alter table public.cway_push_subs add column if not exists guide boolean default false;   -- notifikasi Panduan Partner baru (khusus partner login)
+
+-- Panduan Partner terjadwal (4 Nov 2026): PDF disimpan dulu di folder tunggu guides/pending/ (hanya Editor yang bisa membaca),
+-- lalu dipindah Edge Function cway-push ke folder kartunya pada jam tayang.
+create table if not exists public.guide_schedule (
+  id uuid primary key default gen_random_uuid(),
+  folder text not null,
+  src text not null,            -- pending/<folder>/<file>.pdf
+  dest text not null,           -- <folder>/<file>.pdf
+  title text,
+  publish_at timestamptz not null,
+  done_at timestamptz,
+  error text,
+  created_at timestamptz default now(),
+  created_by uuid default auth.uid()
+);
+alter table public.guide_schedule enable row level security;
+drop policy if exists "guide schedule editor" on public.guide_schedule;
+create policy "guide schedule editor" on public.guide_schedule for all to authenticated
+  using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+
+-- Storage bucket guides: aturan PEMBATAS (restrictive) — ditambahkan di atas izin yang sudah ada, tidak menggantinya.
+-- 1) Folder tunggu pending/ hanya bisa dibaca Editor.  2) PDF panduan hanya bisa ditulis/dihapus Editor
+--    (folder gathering/ (PKS, flier, lagu) & thumbs/ (sampul) tetap mengikuti izin lama Admin/Editor).
+drop policy if exists "guides pending editor only" on storage.objects;
+create policy "guides pending editor only" on storage.objects as restrictive for select to authenticated
+  using (bucket_id <> 'guides' or name not like 'pending/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+drop policy if exists "guides insert editor only" on storage.objects;
+create policy "guides insert editor only" on storage.objects as restrictive for insert to authenticated
+  with check (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+drop policy if exists "guides update editor only" on storage.objects;
+create policy "guides update editor only" on storage.objects as restrictive for update to authenticated
+  using (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
+  with check (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+drop policy if exists "guides delete editor only" on storage.objects;
+create policy "guides delete editor only" on storage.objects as restrictive for delete to authenticated
+  using (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated
