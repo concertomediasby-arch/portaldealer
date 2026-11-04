@@ -1,6 +1,6 @@
 // Supabase Edge Function: cway-push
 // Notifikasi HP (Web Push, gratis — tanpa WhatsApp/layanan pihak ketiga). 4 Nov 2026, permintaan pemilik:
-//  • Editor/Admin  : pengingat 5 menit SEBELUM Concerto Way terjadwal tayang (Day + judul).
+//  • Editor        : pengingat 5 menit SEBELUM Concerto Way terjadwal tayang (Day + judul). Khusus Editor (bukan Admin staff).
 //  • Partner       : "Concerto Way Day n sudah tayang" TEPAT saat tayang — tanpa judul/isi (khusus partner, layar kunci).
 //  • Semua (publik): "CAI Hub News" saat berita baru diterbitkan.
 // Tiap HP memilih sendiri (kolom staff / cway / news di tabel cway_push_subs).
@@ -12,7 +12,7 @@
 // Aksi (POST JSON; header Authorization = sesi login bila ada):
 //   { action: 'key' }                                → { key } kunci publik VAPID
 //   { action: 'get', endpoint }                      → { flags: {staff, cway, news} | null } pilihan HP ini
-//   { action: 'set', endpoint, keys?, flags }        → simpan pilihan HP ini (staff hanya Admin/Editor, cway hanya yang login;
+//   { action: 'set', endpoint, keys?, flags }        → simpan pilihan HP ini (staff hanya Editor, cway hanya yang login;
 //                                                      semua false = langganan dihapus → { deleted: true })
 //   { action: 'test', endpoint }                     → notifikasi uji ke HP itu
 //   { action: 'notify', type: 'cway'|'news', id }   → kirim "sudah tayang"/berita baru sekarang (hanya Admin/Editor; sekali per item)
@@ -47,13 +47,14 @@ async function vapid(): Promise<Key> {
 // Siapa pemanggil: login? Admin/Editor?
 async function caller(req: Request) {
   const t = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  if (!t) return { auth: false, staff: false };
+  const none = { auth: false, staff: false, editor: false };
+  if (!t) return none;
   try {
     const { data } = await db.auth.getUser(t);
-    const u = data?.user; if (!u) return { auth: false, staff: false };
+    const u = data?.user; if (!u) return none;
     const r = (u.app_metadata as Record<string, string> | undefined)?.role;
-    return { auth: true, staff: r === 'admin' || r === 'editor' };
-  } catch (_) { return { auth: false, staff: false }; }
+    return { auth: true, staff: r === 'admin' || r === 'editor', editor: r === 'editor' };
+  } catch (_) { return none; }
 }
 
 // Kirim lewat fetch (bukan modul https Node) — web-push hanya dipakai untuk enkripsi & tanda tangan VAPID
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
       const f = { staff: !!cur?.staff, cway: !!cur?.cway, news: !!cur?.news };
       const want = body.flags || {};
       for (const k of ['staff', 'cway', 'news'] as const) if (k in want) f[k] = !!want[k];
-      if (want.staff && !who.staff) f.staff = !!cur?.staff;   // pengingat staf hanya untuk Admin/Editor
+      if (want.staff && !who.editor) f.staff = !!cur?.staff;  // pengingat 5 menit hanya untuk Editor
       if (want.cway && !who.auth) f.cway = !!cur?.cway;       // Concerto Way hanya untuk yang login (partner)
       if (!f.staff && !f.cway && !f.news) {
         if (cur) await db.from(SUBS).delete().eq('endpoint', ep);

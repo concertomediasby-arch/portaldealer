@@ -1,6 +1,6 @@
 // ── NOTIFIKASI HP (Web Push, gratis) — 4 Nov 2026, permintaan pemilik ──
 // Satu langganan per HP (tabel cway_push_subs), dengan pilihan:
-//   staff = pengingat Editor/Admin 5 menit SEBELUM Concerto Way terjadwal tayang (kotak "Pengingat tayang", js/cway.js)
+//   staff = pengingat khusus Editor 5 menit SEBELUM Concerto Way terjadwal tayang (kotak "Pengingat tayang", js/cway.js)
 //   cway  = partner: "Concerto Way Day n sudah tayang" saat tayang (tanpa judul) — hanya bisa dipilih yang login
 //   news  = semua pengunjung: News baru diterbitkan
 // Semua lewat Edge Function supabase/functions/cway-push (aksi key/get/set/test/notify + jadwal pg_cron tiap menit).
@@ -150,9 +150,9 @@ const pushUnsupportedMsg = () => pushIos()
   ? 'Di iPhone, notifikasi hanya bisa bila CAI Hub <b>dipasang di Layar Utama</b> (Safari → Bagikan → <i>Tambah ke Layar Utama</i>) lalu dibuka dari ikonnya — iOS 16.4 ke atas.'
   : 'Browser ini belum mendukung notifikasi. Pakai Chrome terbaru, atau pasang CAI Hub di Layar Utama.';
 
-// ── Kotak Editor/Admin: Pengingat tayang (menu Concerto Way) ──
+// ── Kotak Editor: Pengingat tayang (menu Concerto Way) — khusus Editor (4 Nov 2026, permintaan pemilik; Admin staff tidak) ──
 function cwPushHtml() {
-  if (!isAdmin()) return '';
+  if (!isEditor()) return '';
   pushInit();
   const st = pushSt, on = !!pushFlags?.staff && st === 'ok';
   const msg = on ? '<b>✅ Aktif di HP ini.</b> Notifikasi masuk 5 menit sebelum Day terjadwal tayang. Ketuk notifikasinya untuk membuka Day itu & membagikannya.'
@@ -163,14 +163,14 @@ function cwPushHtml() {
       || 'Dapat notifikasi di HP ini <b>5 menit sebelum</b> setiap Day yang dijadwalkan tayang — walau CAI Hub sedang tertutup.');
   const btn = on ? `<button class="gt-btn ghost" onclick="pushTest()">🔔 Kirim tes</button><button class="gt-btn ghost" onclick="pushSet({ staff: false })">Matikan</button>`
     : ['ok', 'nosql', 'nofn'].includes(st) ? `<button class="gt-btn" onclick="pushSet({ staff: true }, true)">Aktifkan di HP ini</button>` : '';
-  return `<div class="cw-push${on ? ' on' : ''}" id="cw-push"><div class="cw-push-tx"><b class="cw-push-h">🔔 Pengingat tayang <small>· Editor/Admin</small></b><span>${msg}</span></div>
+  return `<div class="cw-push${on ? ' on' : ''}" id="cw-push"><div class="cw-push-tx"><b class="cw-push-h">🔔 Pengingat tayang <small>· khusus Editor</small></b><span>${msg}</span></div>
     <div class="cw-push-b">${btn}${st === 'nosql' ? '<button class="gt-btn ghost" onclick="pushCopySql()">📋 Salin SQL Notifikasi</button>' : ''}</div></div>`;
 }
 
 // ── Kotak partner/pengunjung: Concerto Way baru tayang + News (Dashboard = ajakan, menu Concerto Way & News = pengaturan) ──
 function pnHtml(where) {
   const wrap = h => where === 'dash' ? h : `<div data-pn="${where}">${h}</div>`;
-  if (where === 'cway' && (!authUser || isAdmin())) return wrap('');   // Editor/Admin memakai kotak Pengingat tayang
+  if (where === 'cway' && (!authUser || isEditor())) return wrap('');   // Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
   pushInit();
   const st = pushSt, f = pushFlags || {}, active = st === 'ok' && (f.cway || f.news);
   const canCw = !!authUser;

@@ -29,8 +29,8 @@ create policy "cway read" on public.concerto_way for select to authenticated
   using (published or (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));
 drop policy if exists "cway write" on public.concerto_way;
 create policy "cway write" on public.concerto_way for all to authenticated
-  using ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'))
-  with check ((auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));
+  using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
 revoke all on public.concerto_way from anon;
 grant select, insert, update, delete on public.concerto_way to authenticated;`;
 
@@ -205,7 +205,7 @@ function renderCway() {
   const body = document.getElementById('cway-body'), tools = document.getElementById('cway-tools'), hd = document.getElementById('cway-head');
   if (!body) return;
   if (hd) hd.hidden = !!cwCur;
-  if (tools) tools.innerHTML = isAdmin() ? `<button class="gt-btn" onclick="openCwForm()">＋ Tambah Concerto Way</button>${cwMissing ? ' <button class="gt-btn ghost" onclick="cwCopySql()">📋 Salin SQL</button>' : ''}` : '';
+  if (tools) tools.innerHTML = isEditor() ? `<button class="gt-btn" onclick="openCwForm()">＋ Tambah Concerto Way</button>${cwMissing ? ' <button class="gt-btn ghost" onclick="cwCopySql()">📋 Salin SQL</button>' : ''}` : '';
   if (!cwItems) { body.innerHTML = '<div class="stock-empty">Memuat…</div>'; return; }
   if (cwMissing) { body.innerHTML = `<div class="stock-empty">${isAdmin() ? 'Tabel <b>concerto_way</b> belum dibuat. Klik <b>📋 Salin SQL</b>, jalankan sekali di Supabase → SQL Editor → Run, lalu muat ulang halaman.' : 'Concerto Way segera hadir.'}</div>`; return; }
   if (cwErr && !cwItems.length) { body.innerHTML = `<div class="stock-empty">Concerto Way belum bisa dimuat. Coba lagi sebentar.${isAdmin() ? `<br><small>${escHtml(cwErr)}</small>` : ''}</div>`; return; }
@@ -230,7 +230,7 @@ function cwQueueHtml() {
   if (!q.length) return '';
   return `<div class="cw-queue"><div class="cw-queue-h">⏰ Antrian tayang <span>${q.length} postingan · otomatis muncul untuk partner pada jamnya</span></div>
     ${q.map(x => `<button class="cw-queue-r" onclick="openCway('${x.id}')"><span class="cw-queue-t">${escHtml(cwWhen(x.publish_at))}</span>
-      <span class="cw-queue-d">${x.day != null ? 'DAY ' + x.day : '•'}</span><b>${escHtml(x.title)}</b><span class="cw-queue-e" onclick="event.stopPropagation();openCwForm('${x.id}')">✏️ Ubah jadwal</span></button>`).join('')}</div>`;
+      <span class="cw-queue-d">${x.day != null ? 'DAY ' + x.day : '•'}</span><b>${escHtml(x.title)}</b>${isEditor() ? `<span class="cw-queue-e" onclick="event.stopPropagation();openCwForm('${x.id}')">✏️ Ubah jadwal</span>` : ''}</button>`).join('')}</div>`;
 }
 function cwRenderListOnly() {   // pencarian: jangan render ulang kotak input (fokus & kursor tetap)
   const q = cwQ.trim().toLowerCase(), list = cwShown(), groups = [];
@@ -239,7 +239,7 @@ function cwRenderListOnly() {   // pencarian: jangan render ulang kotak input (f
   const el = document.getElementById('cw-list'); if (el) el.innerHTML = cwListHtml(groups, list.length);
 }
 function cwListHtml(groups, total) {
-  if (!total) return `<div class="stock-empty">${isAdmin() ? 'Belum ada postingan. Klik <b>＋ Tambah Concerto Way</b> lalu tempel teks dari grup WA.' : 'Belum ada postingan Concerto Way.'}</div>`;
+  if (!total) return `<div class="stock-empty">${isEditor() ? 'Belum ada postingan. Klik <b>＋ Tambah Concerto Way</b> lalu tempel teks dari grup WA.' : 'Belum ada postingan Concerto Way.'}</div>`;
   if (!groups.length) return '<div class="stock-empty">Tidak ada postingan yang cocok.</div>';
   // Satu grid sejajar, urut terbaru (3 Nov 2026, permintaan pemilik — dulu dikelompokkan per seri sehingga kartu terpencar);
   // nama seri jadi label kecil di kartu, filter seri lewat chip.
@@ -260,7 +260,7 @@ function renderCwPost(body, it) {
   const tot = cwTaskCount(it), done = (cwLS(CWAY_TASK_KEY)[it.id] || []).filter(Boolean).length;
   const others = cwShown().filter(x => x.id !== it.id).slice(0, 8);
   const acts = `<button class="gt-btn ghost" onclick="cwShare('${it.id}')">${SHARE_ICON} Bagikan</button><button class="gt-btn ghost" onclick="cwPngDownload('${it.id}', this)">⬇ Unduh PNG</button>
-        ${isAdmin() ? `<button class="gt-btn ghost" onclick="openCwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteCw('${it.id}')">🗑 Hapus</button>` : ''}`;
+        ${isEditor() ? `<button class="gt-btn ghost" onclick="openCwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteCw('${it.id}')">🗑 Hapus</button>` : ''}`;
   // Laptop >1100px: 2 kolom (3 Nov 2026, permintaan pemilik — ruang kosong kiri/kanan), sama seperti halaman baca News
   body.innerHTML = `<div class="cw-reader cw-wide">
     <button class="cw-back" onclick="cwBack()">← Semua Concerto Way</button>
@@ -296,7 +296,7 @@ function renderCwPost(body, it) {
 
 /* ── Form Editor/Admin: tempel teks WA ── */
 function openCwForm(id) {
-  if (!isAdmin()) return;
+  if (!isEditor()) return;
   if (cwMissing) { cwCopySql(); return; }
   const it = id && cwItems?.find(x => x.id === id);
   cwForm = it ? { id: it.id, body: it.body, day: it.day ?? '', series: it.series || '', title: it.title, subtitle: it.subtitle || '', post_date: it.post_date, published: it.published, touched: {}, busy: false, ...cwSchedInit(it) }
@@ -374,7 +374,7 @@ function cwFormPreview() {
     <div class="cw-body">${cwBodyHtml({ id: 'preview', body: f.body }, false) || '<p class="cw-src">Isi postingan tampil di sini.</p>'}</div>`;
 }
 async function saveCw() {
-  const f = cwForm; if (!f || f.busy || !isAdmin()) return;
+  const f = cwForm; if (!f || f.busy || !isEditor()) return;
   if (!f.body.trim()) return showToast('Tempel teks Concerto Way dulu.');
   if (!f.title.trim()) return showToast('Judul belum terisi.');
   const row = { body: f.body.trim(), day: f.day === '' ? null : parseInt(f.day, 10), series: f.series.trim() || null, title: f.title.trim(), subtitle: f.subtitle.trim() || null,
@@ -399,7 +399,7 @@ async function saveCw() {
   }
 }
 async function deleteCw(id) {
-  const it = cwItems?.find(x => x.id === id); if (!it || !isAdmin()) return;
+  const it = cwItems?.find(x => x.id === id); if (!it || !isEditor()) return;
   if (!confirm(`Hapus Concerto Way ${it.day != null ? 'Day ' + it.day + ' — ' : ''}"${it.title}"?\n\nPostingan hilang dari portal untuk semua partner.`)) return;
   const { error } = await supabase.from(CWAY_TABLE).delete().eq('id', id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
