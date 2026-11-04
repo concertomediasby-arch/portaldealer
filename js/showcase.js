@@ -93,7 +93,7 @@ function openHofDealer(name) {
       <h3 class="gl-dt">${escHtml(d.n)} <span class="ad-badge">✓ Resmi</span></h3>
       <div class="gl-dc">📍 ${escHtml([d.c, d.r].filter(Boolean).join(', '))}</div>
       ${d.a ? `<div class="ad-addr">${escHtml(d.a)}</div>` : ''}
-      <div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat prestasi kompetisi Anda di Hall of Fame CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a></div></div>
+      <div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat prestasi kompetisi Anda di Hall of Fame CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>${pfBtn(d, 'closeHofDealer()')}</div></div>
     <div class="hof-lbl" style="margin-top:18px">${wins.length} prestasi <span class="hof-ms">${[1, 2, 3].map(pl => cnt(pl) ? hofMedal(pl, cnt(pl)) : '').join('')}</span></div>
     ${wins.map(e => `<div class="hof-win${e.products?.length ? ' link' : ''}"${e.products?.length ? hofWinAttr(e) : ''}>${hofMedal(e.place)}<div><b>${escHtml(e.award)}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b>
       <div class="hof-meta">${escHtml([e.event, e.city].filter(Boolean).join(' · '))}</div>
@@ -124,7 +124,7 @@ function openHofWin(id) {
         return `<button class="gl-prod" onclick="closeHofDealer();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}
       ${(e.other || []).map(t => `<div class="gl-prod hof-oth"><span class="hof-ph">🔧</span><span><b>${escHtml(t)}</b><small>Belum ada di katalog</small></span></div>`).join('')}` : ''}
     ${e.dealer ? `<div class="gl-dcard"><div class="hof-lbl">Dipasang oleh</div><b>${escHtml(e.dealer)}${d ? ' <span class="ad-badge">✓ Resmi</span>' : ''}</b>${d ? `<div class="gl-dc">${escHtml([d.c, d.r].join(', '))}</div>
-      <div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat ${e.car || 'mobil'} juara ${e.event} di Hall of Fame CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a></div>` : ''}</div>` : ''}`;
+      <div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat ${e.car || 'mobil'} juara ${e.event} di Hall of Fame CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>${pfBtn(d, 'closeHofDealer()')}</div>` : ''}</div>` : ''}`;
   document.getElementById('hof-dealer').classList.add('open');
   const g = hofGallery(e), ph = g && (g.photos || []).find(p => !glIsVid(p));
   if (ph) sharePrep('h:' + e.id, glUrl(ph.path), 'Hall-of-Fame-CAI');
@@ -406,6 +406,7 @@ function loadGaleri(force) {
       glErr = /relation|does not exist|schema cache|404|PGRST205/i.test(m) ? 'setup' : 'Galeri tidak bisa dimuat: ' + m;
     }
     glLoading = null;
+    if (typeof carsRerender === 'function') carsRerender();   // Cari per Mobil / Profil Partner / kotak Dashboard (js/cars.js)
   })();
   return glLoading;
 }
@@ -568,7 +569,7 @@ function openGlDetail(id, photoIdx = 0) {
         ${(it.products || []).length ? `<div class="hof-lbl">Produk yang dipasang</div>${it.products.map(pid => { const r = glProd(pid); if (!r.product) return ''; const p = r.product;
           return `<button class="gl-prod" onclick="closeGlDetail();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}` : ''}
         ${it.dealer ? `<div class="gl-dcard"><div class="hof-lbl">Dipasang oleh</div><b>${escHtml(it.dealer)}${d ? ' <span class="ad-badge">✓ Resmi</span>' : ''}</b><div class="gl-dc">${escHtml(d ? [d.c, d.r].join(', ') : it.city || '')}</div>
-          ${d ? `<div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat contoh instalasi ${glTitle(it)} di CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a></div>` : ''}</div>` : ''}
+          ${d ? `<div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat contoh instalasi ${glTitle(it)} di CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>${pfBtn(d, 'closeGlDetail()')}</div>` : ''}</div>` : ''}
         ${glCanEdit() ? `<div class="gl-adm"><button class="gt-btn" onclick="closeGlDetail();openGlForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost gt-del" onclick="deleteGlItem('${it.id}')">🗑 Hapus</button></div>` : ''}
       </div>
     </div>`;

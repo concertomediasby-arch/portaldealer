@@ -65,6 +65,8 @@ function openDeepLink() {
   if (q.get('paket')) { enterPortal(); paketOpenLinked(q.get('paket')); return; }   // link Paket Audio
   if (q.get('sorotan')) { enterPortal(); dvOpenLinked(q.get('sorotan')); return; }   // link Sorotan Brand → jendela video brand itu
   if (q.get('hof')) { enterPortal(); hofOpenLinked(q.get('hof')); return; }
+  if (q.has('mobil')) { enterPortal(); carOpenLinked(q.get('mobil')); return; }       // Tahap 7 (js/cars.js)
+  if (q.has('partner')) { enterPortal(); partnerOpenLinked(q.get('partner')); return; }
   if (q.has('minggu')) { enterPortal(); openWeek(); return; }   // notifikasi 🗓 Ringkasan mingguan (js/fav.js)
   if (q.get('cmp')) { enterPortal(); cmpOpenLinked(q.get('cmp')); return; }   // link perbandingan produk (js/fav.js)
   if (q.get('rk')) { enterPortal(); rkOpenLinked(q.get('rk')); return; }   // link rakitan System Simulator

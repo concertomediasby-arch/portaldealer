@@ -2038,6 +2038,7 @@ function renderAuthDealers() {
         ${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
         ${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}
         <a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>
+        ${d.hidden ? '' : pfBtn(d)}
         <button class="ad-btn ad-share" title="Bagikan partner ini ke WhatsApp" aria-label="Bagikan" onclick="adShare(${escHtml(JSON.stringify(d.n))})">${SHARE_ICON}</button>
       </div>
       ${ed ? `<div class="ad-adm"><button class="gt-btn" onclick="openAdForm('${d.id}')">✏️ Edit</button><button class="gt-btn ghost gt-del" onclick="deleteAdDealer('${d.id}')">🗑 Hapus</button></div>` : ''}
@@ -2107,6 +2108,7 @@ function adRerender() {
   if (typeof trustRefresh === 'function') trustRefresh();   // angka & daftar partner di Dashboard / halaman produk (js/dash.js)
   const on = id => document.getElementById(id)?.classList.contains('active');
   if (on('view-authdealer')) renderAuthDealers();
+  if (typeof carsRerender === 'function') carsRerender();   // Cari per Mobil, Profil Partner, kotak Dashboard (js/cars.js)
   if (on('view-halloffame') && typeof renderHallOfFame === 'function') renderHallOfFame();
   if (on('view-galeri') && typeof renderGaleri === 'function') renderGaleri();
   if (document.getElementById('rks')?.classList.contains('open')) rkSendRender();   // jendela Kirim rakitan ke partner
@@ -2287,7 +2289,8 @@ function showView(viewId) {
   if (viewId === 'dashboard') document.getElementById('nav-dashboard')?.classList.add('active');
   if (viewId === 'catalog') document.getElementById('nav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('nav-brandresmi')?.classList.add('active');
-  if (viewId === 'authdealer') document.getElementById('nav-authdealer')?.classList.add('active');
+  if (viewId === 'authdealer' || viewId === 'partner') document.getElementById('nav-authdealer')?.classList.add('active');
+  if (viewId === 'mobil') document.getElementById('nav-mobil')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('nav-updates')?.classList.add('active');
   if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
@@ -2307,7 +2310,8 @@ function showView(viewId) {
   if (viewId === 'dashboard') document.getElementById('mnav-dashboard')?.classList.add('active');
   if (viewId === 'catalog') document.getElementById('mnav-brands')?.classList.add('active');
   if (viewId === 'brands') document.getElementById('mnav-brandresmi')?.classList.add('active');
-  if (viewId === 'authdealer') document.getElementById('mnav-authdealer')?.classList.add('active');
+  if (viewId === 'authdealer' || viewId === 'partner') document.getElementById('mnav-authdealer')?.classList.add('active');
+  if (viewId === 'mobil') document.getElementById('mnav-mobil')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('mnav-updates')?.classList.add('active');
   if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
@@ -2510,7 +2514,7 @@ function renderCatalog() {
 // Kembali dari detail produk ke halaman asal (katalog/brand/stok/…) di posisi scroll yang sama, tanpa merender ulang (30 Okt 2026, permintaan pemilik).
 // Tombol back HP / browser juga kembali ke halaman asal (history.pushState saat detail produk dibuka).
 let productFrom = null;
-const PRODUCT_FROM_LABEL = { week: 'Minggu ini', compare: 'Bandingkan Produk', halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'System Simulator', updates: 'Update Terbaru', dashboard: 'Dashboard' };
+const PRODUCT_FROM_LABEL = { mobil: 'Cari per Mobil', partner: 'Profil Partner', week: 'Minggu ini', compare: 'Bandingkan Produk', halloffame: 'Hall of Fame', galeri: 'Galeri Instalasi', catalog: 'Katalog', stock: 'Stok Produk', rakit: 'System Simulator', updates: 'Update Terbaru', dashboard: 'Dashboard' };
 function showProduct(brandId, productId) {
   const curView = document.querySelector('.view.active');
   if (curView && curView.id !== 'view-product') {
