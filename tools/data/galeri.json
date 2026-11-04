@@ -78,7 +78,7 @@
      "type": "video",
      "area": "Tampak Luar",
      "wa": true,
-     "waT": 1.5,
+     "waT": 7.9,
      "pos": "50 57"
     }
    ]
@@ -336,7 +336,8 @@
     },
     {
      "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598327170-7.jpg",
-     "area": "Amplifier"
+     "area": "Amplifier",
+     "wa": true
     },
     {
      "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598327902-9.jpg",
