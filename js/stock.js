@@ -101,6 +101,7 @@ function initSupabase() {
 
 function onAuthChanged() {
   updateAuthUI();
+  if (typeof settingsAuthChanged === 'function') settingsAuthChanged();
   idleCheck();   // sesi lama yang dipulihkan setelah lewat batas tidak aktif → langsung keluar
   visitLog();
   if (!GT_DEALER_MENU && !isAdmin() && document.getElementById('view-gathering')?.classList.contains('active')) showView('dashboard');

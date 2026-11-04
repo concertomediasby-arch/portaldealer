@@ -221,7 +221,7 @@ function renderCway() {
   body.innerHTML = `<div class="cw-tools"><input type="search" class="cw-search" placeholder="Cari topik, mis. papan nama…" value="${escHtml(cwQ)}" oninput="cwQ=this.value;cwRenderListOnly()">
       <div class="cw-sort" role="group" aria-label="Urutan"><button class="cw-chip${cwSort === 'new' ? ' on' : ''}" onclick="cwSetSort('new')">Terbaru dulu</button><button class="cw-chip${cwSort === 'old' ? ' on' : ''}" onclick="cwSetSort('old')">Day 1 dulu</button></div>
       ${sers.length > 1 ? `<div class="cw-chips"><button class="cw-chip${cwSer ? '' : ' on'}" onclick="cwSer='';renderCway()">Semua</button>${sers.map(s => `<button class="cw-chip${cwSer === s ? ' on' : ''}" onclick="cwSer=${escHtml(JSON.stringify(s))};renderCway()">${escHtml(s)}</button>`).join('')}</div>` : ''}</div>
-    ${cwQueueHtml()}${cwPushHtml()}${pnHtml('cway')}<div id="cw-list">${cwListHtml(groups, list.length)}</div>`;
+    ${cwQueueHtml()}${pnHtml('cway')}<div id="cw-list">${cwListHtml(groups, list.length)}</div>`;
 }
 // Antrian tayang (Admin/Editor): postingan terjadwal, urut waktu tayang terdekat
 function cwQueueHtml() {

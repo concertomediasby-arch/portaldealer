@@ -283,6 +283,7 @@ function cwPushHtml() {
 // ── Kotak partner/pengunjung: Concerto Way baru tayang + News (Dashboard = ajakan, menu Concerto Way & News = pengaturan) ──
 function pnHtml(where) {
   const wrap = h => where === 'dash' ? h : `<div data-pn="${where}">${h}</div>`;
+  if (where !== 'dash' && where !== 'settings') return wrap(pnLinkHtml(where));   // menu lain: tautan kecil ke menu Setting (4 Nov 2026)
   if ((where === 'cway' && (!authUser || isEditor())) || ((where === 'guides' || where === 'stock') && !authUser)) return wrap('');   // Concerto Way: Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
   pushInit();
   const st = pushSt, f = pushFlags || {}, active = pnActive(f);
@@ -307,7 +308,14 @@ function pnHtml(where) {
     btn = `<button class="gt-btn" onclick="pnOn()" ${st === 'busy' ? 'disabled' : ''}>${st === 'busy' ? 'Mengaktifkan…' : 'Aktifkan notifikasi'}</button>`; }
   const showOpts = !['unsupported', 'denied', 'nofn', 'nosql'].includes(st);
   return wrap(`<div class="pn-box${active ? ' on' : ''}${where === 'dash' ? ' invite' : ''}">${where === 'dash' ? '<button class="pn-x" onclick="pnDismiss()" aria-label="Tutup">✕</button>' : ''}
-    <b class="pn-h">${title}</b>${text ? `<p>${text}</p>` : ''}${showOpts ? `<div class="pn-opts">${opts}</div>` : ''}${btn ? `<div class="pn-b">${btn}</div>` : ''}</div>${where === 'stock' ? swListHtml() : ''}`);
+    <b class="pn-h">${title}</b>${text ? `<p>${text}</p>` : ''}${showOpts ? `<div class="pn-opts">${opts}</div>` : ''}${btn ? `<div class="pn-b">${btn}</div>` : ''}</div>${where === 'settings' ? swListHtml() : ''}`);
+}
+// Tautan kecil di News / Academy / Concerto Way / Panduan / Stok → menu Setting (semua pengaturan notifikasi di satu tempat)
+function pnLinkHtml(where) {
+  pushInit();
+  const on = pushSt === 'ok' && (pnActive(pushFlags) || (isEditor() && !!pushFlags?.staff));
+  const h = `<button class="pn-link${on ? ' on' : ''}" onclick="openSettings()"><span>🔔</span><b>${on ? 'Notifikasi aktif di HP ini' : 'Mau dikabari saat ada yang baru?'}</b><em>${on ? 'Atur' : 'Aktifkan'} di Setting ›</em></button>`;
+  return h + (where === 'stock' ? swListHtml() : '');
 }
 function pnToggle(k, v) {
   if (pnActive(pushFlags)) pushSet({ [k]: v });
@@ -375,7 +383,7 @@ function swListHtml() {
 function swPaint() {
   if (typeof currentProductId !== 'undefined' && currentProductId && document.getElementById('panel-stock-badge')) renderProductStockBadge(currentProductId);
   if (document.getElementById('view-stock')?.classList.contains('active')) renderStockView();
-  document.querySelectorAll('[data-pn="stock"]').forEach(el => { el.outerHTML = pnHtml('stock'); });
+  document.querySelectorAll('[data-pn="stock"], [data-pn="settings"]').forEach(el => { el.outerHTML = pnHtml(el.dataset.pn); });
 }
 
 // ── 🆕 Umumkan produk (4 Nov 2026, permintaan pemilik — khusus Editor) ──

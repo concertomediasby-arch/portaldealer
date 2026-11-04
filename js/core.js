@@ -2152,6 +2152,7 @@ function showView(viewId) {
   if (viewId === 'updates') document.getElementById('nav-updates')?.classList.add('active');
   if (viewId === 'guides') document.getElementById('nav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('nav-dsp')?.classList.add('active');
+  if (viewId === 'settings') document.getElementById('nav-settings')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('nav-paket')?.classList.add('active');
   if (viewId === 'rakit') document.getElementById('nav-rakit')?.classList.add('active');
   if (viewId === 'halloffame') document.getElementById('nav-halloffame')?.classList.add('active');
@@ -2171,6 +2172,7 @@ function showView(viewId) {
   if (viewId === 'updates') document.getElementById('mnav-updates')?.classList.add('active');
   if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
+  if (viewId === 'settings') document.getElementById('mnav-settings')?.classList.add('active');
   if (viewId === 'paket') document.getElementById('mnav-paket')?.classList.add('active');
   if (viewId === 'rakit') document.getElementById('mnav-rakit')?.classList.add('active');
   if (viewId === 'halloffame') document.getElementById('mnav-halloffame')?.classList.add('active');
