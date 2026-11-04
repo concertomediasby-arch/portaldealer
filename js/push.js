@@ -286,10 +286,55 @@ function cwPushHtml() {
       nosql: 'Tabel/kolom notifikasi belum lengkap. Klik <b>📋 Salin SQL Notifikasi</b>, jalankan sekali di Supabase → SQL Editor → Run, lalu coba lagi.',
       nofn: 'Edge Function <b>cway-push</b> belum di-deploy / belum versi terbaru di Supabase (lihat <code>supabase/functions/cway-push</code>; Verify JWT dimatikan), lalu coba lagi.' }[st]
       || 'Dapat notifikasi di HP ini sebelum setiap konten terjadwal tayang (Concerto Way, Galeri, pengumuman produk, Academy, Panduan) — waktunya bisa Anda pilih (1 hari sampai 5 menit sebelumnya), walau CAI Hub sedang tertutup.');
-  const btn = on ? `<button class="gt-btn ghost" onclick="pushTest()">🔔 Kirim tes</button><button class="gt-btn ghost" onclick="pushSet({ staff: false })">Matikan</button>`
+  const btn = on ? `<button class="gt-btn ghost" onclick="pushTestAll()">🔔 Kirim tes ke semua perangkat Editor${pdList?.length > 1 ? ` (${pdList.length})` : ''}</button><button class="gt-btn ghost" onclick="pushSet({ staff: false })">Matikan di perangkat ini</button>`
     : ['ok', 'nosql', 'nofn'].includes(st) ? `<button class="gt-btn" onclick="pushSet({ staff: true }, true)">Aktifkan di HP ini</button>` : '';
   return `<div class="cw-push${on ? ' on' : ''}" id="cw-push"><div class="cw-push-tx"><b class="cw-push-h">🔔 Pengingat tayang <small>· khusus Editor</small></b><span>${msg}</span></div>
-    <div class="cw-push-b">${btn}${st === 'nosql' ? '<button class="gt-btn ghost" onclick="pushCopySql()">📋 Salin SQL Notifikasi</button>' : ''}</div>${on ? rmHtml() : ''}</div>`;
+    <div class="cw-push-b">${btn}${st === 'nosql' ? '<button class="gt-btn ghost" onclick="pushCopySql()">📋 Salin SQL Notifikasi</button>' : ''}</div>${on ? rmHtml() + pdHtml() : ''}</div>`;
+}
+
+/* 📱 Perangkat Editor (4 Nov 2026, permintaan pemilik): daftar semua perangkat yang pengingat tayangnya aktif (ikut akun),
+   🔔 Kirim tes ke semua (status per perangkat), 🗑 Hapus perangkat lain yang tidak dipakai lagi. Aksi Edge Function devices / test_all / forget. */
+let pdList = null, pdLoading = false, pdTested = false;
+function pdLabel(ua) {
+  ua = ua || '';
+  let m = ua.match(/iPhone OS (\d+)[_.](\d+)/); if (m) return `iPhone · iOS ${m[1]}.${m[2]}`;
+  m = ua.match(/iPad.*OS (\d+)[_.](\d+)/); if (m) return `iPad · iPadOS ${m[1]}.${m[2]}`;
+  m = ua.match(/Android (\d+)/); if (m) return `HP Android · Android ${m[1]}`;
+  if (/Windows/.test(ua)) return 'Komputer · Windows';
+  if (/Macintosh/.test(ua)) return 'Komputer · Mac';
+  if (/CrOS/.test(ua)) return 'Chromebook';
+  if (/Linux/.test(ua)) return 'Komputer · Linux';
+  return 'Perangkat lain';
+}
+async function pdLoad(force) {
+  if (pdLoading || (pdList && !force) || !pushEp) return;
+  pdLoading = true;
+  try { const r = await pushFn({ action: 'devices', endpoint: pushEp }); pdList = r?.devices || []; } catch (e) { pdList = pdList || []; }
+  pdLoading = false; pushPaint();
+}
+function pdHtml() {
+  if (!pdList) { pdLoad(); return '<div class="rm-box pd-box"><div class="rm-lbl">Perangkat Editor</div><div class="rm-note">Memuat…</div></div>'; }
+  if (!pdList.length) return '';
+  const st = d => d.status == null ? '' : d.status > 0 && d.status < 300 ? '<em class="pd-ok">✅ tes terkirim</em>' : `<em class="pd-bad">⚠ gagal${d.status === 404 || d.status === 410 ? ' — langganan kedaluwarsa, sudah dihapus' : ''}</em>`;
+  return `<div class="rm-box pd-box"><div class="rm-lbl">Perangkat Editor · ${pdList.length}</div>
+    ${pdList.map(d => `<div class="pd-row"><span class="pd-ic">${/iPhone|Android|iPad/.test(pdLabel(d.ua)) ? '📱' : '💻'}</span>
+      <div><b>${escHtml(pdLabel(d.ua))}${d.me ? ' <small>· perangkat ini</small>' : ''}</b><small>aktif sejak ${d.since ? new Date(d.since).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</small>${st(d)}</div>
+      ${d.me ? '' : `<button type="button" class="pd-del" onclick="pdForget('${d.id}')" title="Hapus perangkat ini dari daftar">🗑</button>`}</div>`).join('')}
+    <div class="rm-note">Semua perangkat di atas memakai waktu pengingat yang sama (ikut akun). Hapus perangkat yang sudah tidak dipakai — perangkat itu berhenti menerima semua notifikasi CAI Hub sampai diaktifkan lagi dari menu Setting di perangkat itu.</div></div>`;
+}
+async function pushTestAll() {
+  showToast('🔔 Mengirim tes ke semua perangkat Editor…', 3000);
+  try { const r = await pushFn({ action: 'test_all', endpoint: pushEp }); pdList = r?.devices || []; pdTested = true; pushPaint();
+    const ok = pdList.filter(d => d.status > 0 && d.status < 300).length;
+    showToast(`🔔 Tes terkirim ke ${ok} dari ${pdList.length} perangkat — notifikasi muncul dalam beberapa detik`, 6000);
+    if (ok < pdList.length) setTimeout(() => pdLoad(true), 1500);
+  } catch (e) { if (/tidak dikenal|404/.test(e.message || '') || e.nofn) pushTest(); else showToast('⚠ Tes gagal: ' + (e.message || e), 7000); }
+}
+async function pdForget(id) {
+  const d = (pdList || []).find(x => x.id === id); if (!d) return;
+  if (!confirm(`Hapus ${pdLabel(d.ua)} dari daftar perangkat Editor?\n\nPerangkat itu berhenti menerima semua notifikasi CAI Hub sampai diaktifkan lagi dari menu Setting di perangkat itu.`)) return;
+  try { await pushFn({ action: 'forget', endpoint: pushEp, id }); pdList = pdList.filter(x => x.id !== id); pushPaint(); showToast('🗑 Perangkat dihapus dari daftar', 4000); }
+  catch (e) { showToast('⚠ Gagal menghapus: ' + (e.message || e), 6000); }
 }
 
 /* ⏰ Waktu pengingat tayang Editor (4 Nov 2026, permintaan pemilik — pratinjau .mockup/remind/, cara 1): dipilih per HP, boleh lebih dari satu,

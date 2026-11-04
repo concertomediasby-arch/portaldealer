@@ -35,6 +35,9 @@
 //   { action: 'watch', endpoint, product_id, name, on } → pantau / batal pantau stok produk di HP ini (hanya yang login; maks. 30)
 //   { action: 'watches', endpoint }                  → { items: [{product_id, name}] } produk yang dipantau HP ini
 //   { action: 'remind', endpoint, remind }           → simpan pilihan waktu pengingat Editor untuk semua HP Editor (ikut akun; hanya Editor)
+//   { action: 'devices', endpoint }                  → daftar perangkat Editor yang pengingatnya aktif (hanya Editor)
+//   { action: 'test_all', endpoint }                 → notifikasi uji ke SEMUA perangkat Editor → status per perangkat (hanya Editor)
+//   { action: 'forget', endpoint, id }               → hapus langganan perangkat Editor lain dari daftar (hanya Editor)
 //   {} (pg_cron tiap menit)                          → pengingat Editor sesuai pilihan waktunya + notifikasi partner saat jadwal tiba
 //                                                      + materi Academy terjadwal (field `at` di showcase/academy/items.json) saat tiba
 //                                                      + PDF Panduan terjadwal (tabel guide_schedule): dipindah dari folder tunggu `pending/`
@@ -385,6 +388,33 @@ Deno.serve(async (req) => {
       if (e0) return json({ error: e0.message, nosql: /remind/.test(e0.message) }, 500);
       const { data } = await db.from(SUBS).update({ remind: out }).eq('staff', true).select('endpoint');
       return json({ remind: out, devices: Math.max(1, data?.length || 0) });
+    }
+
+    // ── Perangkat Editor (ikut akun): daftar · tes ke semua · hapus ──
+    if (a === 'devices' || a === 'test_all' || a === 'forget') {
+      const who = await caller(req);
+      if (!who.editor) return json({ error: 'khusus Editor' }, 403);
+      const ep = String(body.endpoint || '');
+      const devId = async (e: string) => { const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(e));
+        return [...new Uint8Array(h)].slice(0, 6).map(b => b.toString(16).padStart(2, '0')).join(''); };
+      const { data: rows, error } = await db.from(SUBS).select('endpoint, p256dh, auth, ua, created_at').eq('staff', true).order('created_at');
+      if (error) return json({ error: error.message }, 500);
+      const list = await Promise.all((rows || []).map(async r => ({ r, id: await devId(r.endpoint) })));
+      if (a === 'forget') {
+        const t = list.find(x => x.id === String(body.id || ''));
+        if (!t) return json({ error: 'perangkat tidak ditemukan' }, 404);
+        if (t.r.endpoint === ep) return json({ error: 'perangkat ini dimatikan lewat tombol Matikan' }, 400);
+        await db.from(SUBS).delete().eq('endpoint', t.r.endpoint);
+        await db.from('stock_watch').delete().eq('endpoint', t.r.endpoint);
+        return json({ ok: true });
+      }
+      const status: Record<string, number> = {};
+      if (a === 'test_all') {
+        const st = await Promise.all(list.map(x => send(x.r, { title: '🔔 Tes pengingat CAI Hub', body: 'Perangkat Editor ini menerima notifikasi pengingat tayang.', url: '/', tag: 'cai-test-all' }, key).catch(() => 0)));
+        list.forEach((x, i) => { status[x.id] = st[i]; });
+      }
+      return json({ devices: list.map(x => ({ id: x.id, ua: x.r.ua || '', since: x.r.created_at, me: x.r.endpoint === ep,
+        ...(a === 'test_all' ? { status: status[x.id] } : {}) })) });
     }
 
     if (a === 'test') {
