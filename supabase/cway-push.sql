@@ -60,6 +60,70 @@ create policy "guides update editor only" on storage.objects as restrictive for 
 drop policy if exists "guides delete editor only" on storage.objects;
 create policy "guides delete editor only" on storage.objects as restrictive for delete to authenticated
   using (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+
+-- ── 4 Nov 2026 (permintaan pemilik): 📦 Stok pantauan (partner) · 🚗 Galeri Instalasi baru · 🆕 Produk baru (publik)
+--    + pengingat Editor 5 menit sebelum SEMUA konten terjadwal (Galeri, pengumuman produk, Academy, Panduan) ──
+alter table public.cway_push_subs add column if not exists stock boolean default false;     -- 📦 produk pantauan HP ini sudah Ready
+alter table public.cway_push_subs add column if not exists gallery boolean default false;   -- 🚗 Galeri Instalasi baru
+alter table public.cway_push_subs add column if not exists product boolean default false;   -- 🆕 Produk baru (pengumuman Editor)
+
+-- 📦 Daftar produk yang dipantau per HP (akun partner bersama → disimpan per HP, bukan per akun). Hanya lewat Edge Function.
+create table if not exists public.stock_watch (
+  endpoint text not null references public.cway_push_subs(endpoint) on delete cascade,
+  product_id text not null,
+  name text,
+  created_at timestamptz default now(),
+  primary key (endpoint, product_id)
+);
+alter table public.stock_watch enable row level security;
+-- Antrian "baru Ready": diisi trigger tabel stok (sinkron Google Sheet, import, panel admin), dikirim jadwal cway-push tiap menit
+create table if not exists public.stock_ready_q (product_id text primary key, at timestamptz default now());
+alter table public.stock_ready_q enable row level security;
+create or replace function public.stock_ready_mark() returns trigger language plpgsql security definer set search_path = public as $f$
+begin
+  if new.product_id not like 'v:%' and new.status = 'ready' and coalesce(new.qty, 1) > 0
+     and (tg_op = 'INSERT' or old.status is distinct from 'ready' or coalesce(old.qty, 1) <= 0) then
+    insert into public.stock_ready_q (product_id) values (new.product_id) on conflict (product_id) do update set at = now();
+  end if;
+  return new;
+end $f$;
+drop trigger if exists stock_ready_mark on public.stock;
+create trigger stock_ready_mark after insert or update on public.stock for each row execute function public.stock_ready_mark();
+
+-- 🚗 Galeri Instalasi: jadwal tayang + notifikasi. Sebelum publish_at, mobil dikunci (hanya Admin/Editor yang bisa membaca).
+alter table public.showcase_installs add column if not exists publish_at timestamptz;
+alter table public.showcase_installs add column if not exists notify boolean not null default true;
+alter table public.showcase_installs add column if not exists push_at timestamptz;     -- notifikasi publik terkirim
+alter table public.showcase_installs add column if not exists remind_at timestamptz;   -- pengingat Editor terkirim
+drop policy if exists "showcase read" on public.showcase_installs;
+create policy "showcase read" on public.showcase_installs for select
+  using ((published and (publish_at is null or publish_at <= now())) or (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));
+
+-- 🆕 Pengumuman produk (Editor): kirim sekarang / terjadwal
+create table if not exists public.product_push (
+  id uuid primary key default gen_random_uuid(),
+  product_id text not null,
+  kind text,                    -- new | soon | avail
+  title text not null,
+  body text,
+  image text,
+  publish_at timestamptz not null default now(),
+  sent_at timestamptz,
+  remind_at timestamptz,
+  created_at timestamptz default now(),
+  created_by uuid default auth.uid()
+);
+alter table public.product_push enable row level security;
+drop policy if exists "product push editor" on public.product_push;
+create policy "product push editor" on public.product_push for all to authenticated
+  using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+
+-- ⏰ Pengingat Editor 5 menit sebelum tayang: Panduan & Academy
+alter table public.guide_schedule add column if not exists remind_at timestamptz;
+create table if not exists public.academy_remind (no int primary key, sent_at timestamptz default now());
+alter table public.academy_remind enable row level security;
+
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated

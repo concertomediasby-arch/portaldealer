@@ -5,6 +5,9 @@
 //   news  = semua pengunjung: News baru diterbitkan
 //   acad  = semua pengunjung: materi Concerto Academy baru tayang (4 Nov 2026)
 //   guide = partner yang login: Panduan Partner baru tayang (tanpa judul di layar kunci)
+//   stock = partner yang login: produk yang DIPANTAU HP ini sudah Ready lagi (tombol 🔔 di halaman produk / menu Stok; tabel stock_watch)
+//   gallery = semua pengunjung: instalasi baru di Galeri tayang · product = semua: pengumuman produk baru dari Editor
+//   (staff juga dipakai untuk pengingat Editor 5 menit sebelum Galeri / pengumuman produk / Academy / Panduan terjadwal — 4 Nov 2026)
 // Semua lewat Edge Function supabase/functions/cway-push (aksi key/get/set/test/notify + jadwal pg_cron tiap menit).
 // sw.js menampilkan notifikasi & membuka link-nya. iPhone: hanya bila CAI Hub dipasang di Layar Utama (iOS 16.4+).
 const PUSH_FN = 'cway-push';
@@ -70,6 +73,70 @@ create policy "guides update editor only" on storage.objects as restrictive for 
 drop policy if exists "guides delete editor only" on storage.objects;
 create policy "guides delete editor only" on storage.objects as restrictive for delete to authenticated
   using (bucket_id <> 'guides' or name like 'gathering/%' or name like 'thumbs/%' or (auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+
+-- ── 4 Nov 2026 (permintaan pemilik): 📦 Stok pantauan (partner) · 🚗 Galeri Instalasi baru · 🆕 Produk baru (publik)
+--    + pengingat Editor 5 menit sebelum SEMUA konten terjadwal (Galeri, pengumuman produk, Academy, Panduan) ──
+alter table public.cway_push_subs add column if not exists stock boolean default false;     -- 📦 produk pantauan HP ini sudah Ready
+alter table public.cway_push_subs add column if not exists gallery boolean default false;   -- 🚗 Galeri Instalasi baru
+alter table public.cway_push_subs add column if not exists product boolean default false;   -- 🆕 Produk baru (pengumuman Editor)
+
+-- 📦 Daftar produk yang dipantau per HP (akun partner bersama → disimpan per HP, bukan per akun). Hanya lewat Edge Function.
+create table if not exists public.stock_watch (
+  endpoint text not null references public.cway_push_subs(endpoint) on delete cascade,
+  product_id text not null,
+  name text,
+  created_at timestamptz default now(),
+  primary key (endpoint, product_id)
+);
+alter table public.stock_watch enable row level security;
+-- Antrian "baru Ready": diisi trigger tabel stok (sinkron Google Sheet, import, panel admin), dikirim jadwal cway-push tiap menit
+create table if not exists public.stock_ready_q (product_id text primary key, at timestamptz default now());
+alter table public.stock_ready_q enable row level security;
+create or replace function public.stock_ready_mark() returns trigger language plpgsql security definer set search_path = public as $f$
+begin
+  if new.product_id not like 'v:%' and new.status = 'ready' and coalesce(new.qty, 1) > 0
+     and (tg_op = 'INSERT' or old.status is distinct from 'ready' or coalesce(old.qty, 1) <= 0) then
+    insert into public.stock_ready_q (product_id) values (new.product_id) on conflict (product_id) do update set at = now();
+  end if;
+  return new;
+end $f$;
+drop trigger if exists stock_ready_mark on public.stock;
+create trigger stock_ready_mark after insert or update on public.stock for each row execute function public.stock_ready_mark();
+
+-- 🚗 Galeri Instalasi: jadwal tayang + notifikasi. Sebelum publish_at, mobil dikunci (hanya Admin/Editor yang bisa membaca).
+alter table public.showcase_installs add column if not exists publish_at timestamptz;
+alter table public.showcase_installs add column if not exists notify boolean not null default true;
+alter table public.showcase_installs add column if not exists push_at timestamptz;     -- notifikasi publik terkirim
+alter table public.showcase_installs add column if not exists remind_at timestamptz;   -- pengingat Editor terkirim
+drop policy if exists "showcase read" on public.showcase_installs;
+create policy "showcase read" on public.showcase_installs for select
+  using ((published and (publish_at is null or publish_at <= now())) or (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));
+
+-- 🆕 Pengumuman produk (Editor): kirim sekarang / terjadwal
+create table if not exists public.product_push (
+  id uuid primary key default gen_random_uuid(),
+  product_id text not null,
+  kind text,                    -- new | soon | avail
+  title text not null,
+  body text,
+  image text,
+  publish_at timestamptz not null default now(),
+  sent_at timestamptz,
+  remind_at timestamptz,
+  created_at timestamptz default now(),
+  created_by uuid default auth.uid()
+);
+alter table public.product_push enable row level security;
+drop policy if exists "product push editor" on public.product_push;
+create policy "product push editor" on public.product_push for all to authenticated
+  using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+
+-- ⏰ Pengingat Editor 5 menit sebelum tayang: Panduan & Academy
+alter table public.guide_schedule add column if not exists remind_at timestamptz;
+create table if not exists public.academy_remind (no int primary key, sent_at timestamptz default now());
+alter table public.academy_remind enable row level security;
+
 alter table public.cway_push_subs enable row level security;
 drop policy if exists "cway push own" on public.cway_push_subs;
 create policy "cway push own" on public.cway_push_subs for all to authenticated
@@ -97,6 +164,9 @@ let pushSt = '?';          // ? | … | ok | unsupported | denied | nosql | nofn
 let pushFlags = null;      // { staff, cway, news, acad, guide } milik HP ini (null = belum diketahui)
 let pushEp = null;         // endpoint langganan HP ini
 let pnSel = null;          // pilihan centang sebelum diaktifkan
+const PN_KEYS = ['cway', 'guide', 'stock', 'news', 'acad', 'product', 'gallery'];   // pilihan kotak 🔔 Notifikasi (selain staff)
+const PN_DEF = () => Object.fromEntries(PN_KEYS.map(k => [k, true]));
+const pnActive = f => pushSt === 'ok' && PN_KEYS.some(k => f?.[k]);
 const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 const pushIos = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const pushStandalone = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } };
@@ -133,7 +203,7 @@ async function pushRefresh() {
   pushEp = sub?.endpoint || null;
   if (!sub || Notification.permission !== 'granted') { pushSt = 'ok'; pushFlags = {}; return pushPaint(); }
   if (typeof supabase === 'undefined' || !supabase) { setTimeout(pushRefresh, 1500); return; }   // tunggu koneksi Supabase siap
-  try { const r = await pushFn({ action: 'get', endpoint: sub.endpoint }); pushFlags = r?.flags || {}; pushSt = 'ok'; }
+  try { const r = await pushFn({ action: 'get', endpoint: sub.endpoint }); pushFlags = r?.flags || {}; pushSt = 'ok'; if (authUser) swLoad(true); }
   catch (e) { if (!pushErrState(e)) pushSt = 'ok'; pushFlags = pushFlags || {}; }
   pushPaint();
 }
@@ -198,12 +268,12 @@ function cwPushHtml() {
   if (!isEditor()) return '';
   pushInit();
   const st = pushSt, on = !!pushFlags?.staff && st === 'ok';
-  const msg = on ? '<b>✅ Aktif di HP ini.</b> Notifikasi masuk 5 menit sebelum Day terjadwal tayang. Ketuk notifikasinya untuk membuka Day itu & membagikannya.'
+  const msg = on ? '<b>✅ Aktif di HP ini.</b> Notifikasi masuk 5 menit sebelum konten terjadwal tayang — Concerto Way, Galeri, pengumuman produk, Academy & Panduan Partner. Ketuk notifikasinya untuk membuka & mengecek.'
     : ({ '?': 'Memeriksa…', '…': 'Memeriksa…', busy: 'Menyimpan…', unsupported: pushUnsupportedMsg(),
       denied: 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP (Notifikasi → CAI Hub), lalu muat ulang.',
       nosql: 'Tabel/kolom notifikasi belum lengkap. Klik <b>📋 Salin SQL Notifikasi</b>, jalankan sekali di Supabase → SQL Editor → Run, lalu coba lagi.',
       nofn: 'Edge Function <b>cway-push</b> belum di-deploy / belum versi terbaru di Supabase (lihat <code>supabase/functions/cway-push</code>; Verify JWT dimatikan), lalu coba lagi.' }[st]
-      || 'Dapat notifikasi di HP ini <b>5 menit sebelum</b> setiap Day yang dijadwalkan tayang — walau CAI Hub sedang tertutup.');
+      || 'Dapat notifikasi di HP ini <b>5 menit sebelum</b> setiap konten terjadwal tayang (Concerto Way, Galeri, pengumuman produk, Academy, Panduan) — walau CAI Hub sedang tertutup.');
   const btn = on ? `<button class="gt-btn ghost" onclick="pushTest()">🔔 Kirim tes</button><button class="gt-btn ghost" onclick="pushSet({ staff: false })">Matikan</button>`
     : ['ok', 'nosql', 'nofn'].includes(st) ? `<button class="gt-btn" onclick="pushSet({ staff: true }, true)">Aktifkan di HP ini</button>` : '';
   return `<div class="cw-push${on ? ' on' : ''}" id="cw-push"><div class="cw-push-tx"><b class="cw-push-h">🔔 Pengingat tayang <small>· khusus Editor</small></b><span>${msg}</span></div>
@@ -213,19 +283,20 @@ function cwPushHtml() {
 // ── Kotak partner/pengunjung: Concerto Way baru tayang + News (Dashboard = ajakan, menu Concerto Way & News = pengaturan) ──
 function pnHtml(where) {
   const wrap = h => where === 'dash' ? h : `<div data-pn="${where}">${h}</div>`;
-  if ((where === 'cway' && (!authUser || isEditor())) || (where === 'guides' && !authUser)) return wrap('');   // Concerto Way: Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
+  if ((where === 'cway' && (!authUser || isEditor())) || ((where === 'guides' || where === 'stock') && !authUser)) return wrap('');   // Concerto Way: Editor memakai kotak Pengingat tayang (Admin staff = seperti partner)
   pushInit();
-  const st = pushSt, f = pushFlags || {}, active = st === 'ok' && (f.cway || f.news || f.acad || f.guide);
+  const st = pushSt, f = pushFlags || {}, active = pnActive(f);
   const canCw = !!authUser && !isEditor();   // Editor sudah punya Pengingat tayang 5 menit
   const canGd = !!authUser;                   // 📘 Panduan: partner yang login + Editor (permintaan pemilik 4 Nov 2026)
   if (where === 'dash') {   // ajakan: hanya di CAI Hub yang dibuka dari Layar Utama, belum aktif, belum ditutup
     let dis = false; try { dis = localStorage.getItem(PN_DISMISS_KEY) === '1'; } catch (e) {}
     if (dis || !pushOk() || !pushStandalone() || st !== 'ok' || active || Notification.permission === 'denied') return '';
   }
-  if (!pnSel) pnSel = { cway: true, news: true, acad: true, guide: true };
-  const sel = active ? { cway: !!f.cway, news: !!f.news, acad: !!f.acad, guide: !!f.guide } : pnSel;
+  if (!pnSel) pnSel = PN_DEF();
+  const sel = active ? Object.fromEntries(PN_KEYS.map(k => [k, !!f[k]])) : pnSel;
   const chk = (k, ico, lbl, sub) => `<label class="pn-chk"><input type="checkbox" ${sel[k] ? 'checked' : ''} ${st === 'busy' ? 'disabled' : ''} onchange="pnToggle('${k}', this.checked)"><span>${ico} ${lbl}${sub ? ` <small>· ${sub}</small>` : ''}</span></label>`;
-  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + (canGd ? chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') : '') + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru');
+  const opts = (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + (canGd ? chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') + chk('stock', '📦', 'Stok produk pantauan', 'khusus partner') : '')
+    + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru') + chk('product', '🆕', 'Produk baru') + chk('gallery', '🚗', 'Galeri Instalasi baru');
   let title, text = '', btn = '';
   if (st === 'unsupported') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = pushUnsupportedMsg(); }
   else if (st === 'denied') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP, lalu muat ulang.'; }
@@ -236,18 +307,166 @@ function pnHtml(where) {
     btn = `<button class="gt-btn" onclick="pnOn()" ${st === 'busy' ? 'disabled' : ''}>${st === 'busy' ? 'Mengaktifkan…' : 'Aktifkan notifikasi'}</button>`; }
   const showOpts = !['unsupported', 'denied', 'nofn', 'nosql'].includes(st);
   return wrap(`<div class="pn-box${active ? ' on' : ''}${where === 'dash' ? ' invite' : ''}">${where === 'dash' ? '<button class="pn-x" onclick="pnDismiss()" aria-label="Tutup">✕</button>' : ''}
-    <b class="pn-h">${title}</b>${text ? `<p>${text}</p>` : ''}${showOpts ? `<div class="pn-opts">${opts}</div>` : ''}${btn ? `<div class="pn-b">${btn}</div>` : ''}</div>`);
+    <b class="pn-h">${title}</b>${text ? `<p>${text}</p>` : ''}${showOpts ? `<div class="pn-opts">${opts}</div>` : ''}${btn ? `<div class="pn-b">${btn}</div>` : ''}</div>${where === 'stock' ? swListHtml() : ''}`);
 }
 function pnToggle(k, v) {
-  if (pushSt === 'ok' && (pushFlags?.cway || pushFlags?.news || pushFlags?.acad || pushFlags?.guide)) pushSet({ [k]: v });
-  else { pnSel = { ...(pnSel || { cway: true, news: true, acad: true, guide: true }), [k]: v }; }
+  if (pnActive(pushFlags)) pushSet({ [k]: v });
+  else { pnSel = { ...(pnSel || PN_DEF()), [k]: v }; }
 }
 function pnOn() {
-  const s = pnSel || { cway: true, news: true, acad: true, guide: true };
+  const s = pnSel || PN_DEF();
   const part = !!authUser && !isEditor();
-  const flags = { cway: part && s.cway, guide: !!authUser && s.guide, news: s.news, acad: s.acad };
-  if (!flags.cway && !flags.news && !flags.acad && !flags.guide) return showToast('Centang minimal satu jenis notifikasi.');
+  const flags = { ...Object.fromEntries(PN_KEYS.map(k => [k, !!s[k]])), cway: part && s.cway, guide: !!authUser && s.guide, stock: !!authUser && s.stock };
+  if (!PN_KEYS.some(k => flags[k])) return showToast('Centang minimal satu jenis notifikasi.');
   pushSet(flags, true).then(r => { if (r && !r.deleted) showToast('✅ Notifikasi aktif di HP ini'); });
 }
-function pnOff() { pushSet({ cway: false, news: false, acad: false, guide: false }).then(r => { if (r) showToast('Notifikasi dimatikan di HP ini'); }); }
+function pnOff() { pushSet(Object.fromEntries(PN_KEYS.map(k => [k, false]))).then(r => { if (r) showToast('Notifikasi dimatikan di HP ini'); }); }
 function pnDismiss() { try { localStorage.setItem(PN_DISMISS_KEY, '1'); } catch (e) {} const el = document.getElementById('pn-invite'); if (el) el.innerHTML = ''; }
+
+
+// ── 📦 Kabari saya bila stok ready (4 Nov 2026, permintaan pemilik — khusus partner yang login) ──
+// Daftar pantauan disimpan per HP di tabel stock_watch lewat Edge Function (aksi watch / watches). Trigger tabel stok mengisi
+// antrian stock_ready_q saat produk berubah menjadi Ready; jadwal cway-push tiap menit mengirim notifikasi lalu menghapus pantauannya.
+let swList = null, swLoading = null;
+const swHas = pid => !!swList?.some(x => x.product_id === pid);
+const swEligible = s => !!s && (s.status === 'habis' || s.status === 'indent');
+function swLoad(force) {
+  if (!authUser || !pushEp || typeof supabase === 'undefined' || !supabase) { if (!pushEp) swList = []; return Promise.resolve(); }
+  if (swLoading && !force) return swLoading;
+  swLoading = pushFn({ action: 'watches', endpoint: pushEp }).then(r => { swList = r?.items || []; }, () => { swList = swList || []; })
+    .finally(() => { swLoading = null; swPaint(); });
+  return swLoading;
+}
+function swName(pid) { const r = findProductAny(pid); return r.product ? `${r.brand.name} ${r.product.name}` : pid; }
+async function swToggle(pid) {
+  if (!authUser) { requireLogin(() => swToggle(pid)); return; }
+  const on = !swHas(pid);
+  if (on && !(pushSt === 'ok' && pushEp && pushFlags?.stock)) {
+    if (!pushOk()) { showToast(pushIos() ? 'Di iPhone, pasang CAI Hub di Layar Utama lalu buka dari ikonnya untuk memakai notifikasi.' : 'Browser ini belum mendukung notifikasi.', 7000); return; }
+    const r = await pushSet({ stock: true }, true);   // minta izin & berlangganan (langsung dari klik)
+    if (!r || !pushFlags?.stock) { if (pushSt === 'denied') showToast('Izin notifikasi ditolak — izinkan lewat pengaturan HP, lalu coba lagi.', 7000); return; }
+  }
+  try {
+    const r = await pushFn({ action: 'watch', endpoint: pushEp, product_id: pid, name: swName(pid), on });
+    swList = r?.items || [];
+    showToast(on ? `🔔 Anda akan dikabari begitu ${swName(pid)} Ready` : `Pantauan ${swName(pid)} dibatalkan`, 5000);
+  } catch (e) { if (!pushErrState(e)) showToast('⚠ ' + (e.message || e), 7000); else if (isAdmin()) pushCopySql(); }
+  swPaint();
+}
+function swBtnHtml(pid) {
+  if (!authUser || pid.startsWith(EXTRA_PREFIX)) return '';
+  const on = swHas(pid);
+  if (!on && !swEligible(stockShown(pid))) return '';
+  return `<button class="sw-btn${on ? ' on' : ''}" onclick="event.stopPropagation(); swToggle('${pid}')">${on ? '✓ Dipantau — dikabari bila Ready <small>· batal</small>' : '🔔 Kabari saya bila ready'}</button>
+    <div class="sw-hint">${on ? 'Lihat semua pantauan di menu Stok Produk → 🔔 Dipantau.' : 'Notifikasi dikirim ke HP ini begitu stok tersedia.'}</div>`;
+}
+function swBellHtml(pid) {
+  if (!authUser || pid.startsWith(EXTRA_PREFIX)) return '';
+  const on = swHas(pid);
+  if (!on && !swEligible(stockShown(pid))) return '';
+  return `<button class="sw-bell${on ? ' on' : ''}" title="${on ? 'Dipantau — ketuk untuk batal' : 'Kabari saya bila ready'}" onclick="event.stopPropagation(); swToggle('${pid}')">🔔</button>`;
+}
+function swListHtml() {
+  if (!authUser || !swList?.length) return '';
+  return `<div class="sw-list"><b>🔔 Produk dipantau <small>· ${swList.length}</small></b>${swList.map(x => { const r = findProductAny(x.product_id), s = stockShown(x.product_id);
+    return `<div class="sw-it">${r.product?.photo ? `<img src="${r.product.photo}" alt="">` : `<span class="sw-em">${r.product?.emoji || '📦'}</span>`}<div>${escHtml(r.product?.name || x.name || x.product_id)}<small>${escHtml([r.brand?.name, s ? (STOCK_LABEL[s.status] || s.status) : ''].filter(Boolean).join(' · '))}</small></div><button onclick="swToggle('${x.product_id}')" aria-label="Hapus">✕</button></div>`; }).join('')}
+    <div class="sw-note">Pantauan selesai otomatis setelah Anda dikabari.</div></div>`;
+}
+function swPaint() {
+  if (typeof currentProductId !== 'undefined' && currentProductId && document.getElementById('panel-stock-badge')) renderProductStockBadge(currentProductId);
+  if (document.getElementById('view-stock')?.classList.contains('active')) renderStockView();
+  document.querySelectorAll('[data-pn="stock"]').forEach(el => { el.outerHTML = pnHtml('stock'); });
+}
+
+// ── 🆕 Umumkan produk (4 Nov 2026, permintaan pemilik — khusus Editor) ──
+// Data katalog ada di repo, jadi produk tidak dijadwalkan dari portal; yang dijadwalkan adalah PENGUMUMANNYA (tabel product_push).
+// Kirim sekarang = Edge Function langsung mengirim; ⏰ Jadwalkan = jadwal cway-push tiap menit (Editor dapat pengingat 5 menit sebelumnya).
+// Isi hanya nama, brand, kategori, status & SRP — tidak pernah harga dealer.
+let paForm = null;
+const paWhen = iso => new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':') + ' WIB';
+function paText(kind, r) {
+  const p = r.product, b = r.brand;
+  const title = kind === 'avail' ? `✅ Kini tersedia: ${b.name} ${p.name}` : `🆕 Produk baru ${b.name}: ${p.name}`;
+  const body = [p.category, r.line, p.soon && kind !== 'avail' ? 'Coming Soon' : '', hasPrice(p) ? 'SRP ' + srpText(p) : ''].filter(Boolean).join(' · ') + '. Ketuk untuk melihat.';
+  return { title, body };
+}
+async function openProdAnn() {
+  if (!isEditor() || !currentProductId) return;
+  const r = findProductAny(currentProductId); if (!r.product) return;
+  const kind = 'new', t = paText(kind, r), tom = new Date(Date.parse(todayWIB() + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
+  paForm = { pid: r.product.id, r, kind, ...t, mode: 'now', sd: tom, st: '10:00', list: null, busy: false };
+  let ov = document.getElementById('pa-form');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'pa-form'; ov.className = 'rk-pick gl-ov';
+    ov.onclick = e => { if (e.target === ov) closeProdAnn(); };
+    ov.innerHTML = '<div class="rk-pick-box pa-box" role="dialog" aria-modal="true"></div>';
+    document.body.appendChild(ov);
+  }
+  renderProdAnn(); ov.classList.add('open');
+  try { const { data, error } = await supabase.from('product_push').select('id, kind, title, publish_at, sent_at').eq('product_id', paForm.pid).order('publish_at', { ascending: false });
+    if (paForm) { paForm.list = error ? [] : data || []; paForm.missing = !!error; renderProdAnn(); } } catch (e) {}
+}
+function closeProdAnn() { paForm = null; document.getElementById('pa-form')?.classList.remove('open'); }
+const paIso = f => f.mode === 'sched' && f.sd && f.st ? new Date(`${f.sd}T${f.st}:00+07:00`).toISOString() : null;
+function paSet(k, v) {
+  const f = paForm; if (!f) return; f[k] = v;
+  if (k === 'kind') Object.assign(f, paText(v, f.r));
+  if (k === 'kind' || k === 'mode') renderProdAnn(); else paPrev();
+}
+function paPrev() {
+  const f = paForm; if (!f) return;
+  const pv = document.getElementById('pa-prev'); if (pv) pv.innerHTML = `<img src="assets/icons/icon-192.png" alt=""><div><b>${escHtml(f.title)}</b>${escHtml(f.body)}</div>`;
+  const iso = paIso(f), past = iso && Date.parse(iso) <= Date.now(), n = document.getElementById('pa-note'), btn = document.getElementById('pa-save');
+  if (n) n.innerHTML = f.mode === 'now' || past ? `${past ? '⚠ Waktu ini sudah lewat — ' : ''}Dikirim ke semua HP yang mencentang <b>🆕 Produk baru</b> begitu Anda menekan Kirim.`
+    : `Dikirim otomatis <b>${escHtml(paWhen(iso))}</b>. Editor mendapat pengingat 5 menit sebelumnya.`;
+  if (btn && !f.busy) btn.textContent = f.mode === 'sched' && !past ? '⏰ Jadwalkan' : '📣 Kirim sekarang';
+}
+function renderProdAnn() {
+  const f = paForm, box = document.querySelector('#pa-form .rk-pick-box'); if (!f || !box) return;
+  const p = f.r.product, seg = (k, v, t) => `<button type="button" class="${f[k] === v ? 'on' : ''}" onclick="paSet('${k}','${v}')">${t}</button>`;
+  const sent = (f.list || []).filter(x => x.sent_at), wait = (f.list || []).filter(x => !x.sent_at);
+  box.innerHTML = `<div class="rk-pick-hd"><div class="rk-pick-t">📣 Umumkan produk</div><button class="rk-pick-x" onclick="closeProdAnn()" aria-label="Tutup">✕</button></div>
+    <div class="pa">
+      <div class="pa-sub">${escHtml(p.name)} · ${escHtml(f.r.brand.name)}${p.soon ? ' · <span class="eol-tag soon-tag">COMING SOON</span>' : ''}</div>
+      ${f.missing ? `<div class="vs-warn">Tabel pengumuman produk belum ada. <button class="gt-btn ghost" onclick="pushCopySql()">📋 Salin SQL Notifikasi</button> — jalankan sekali di Supabase → SQL Editor.</div>` : ''}
+      ${sent.length ? `<div class="pa-warn">⚠ Produk ini sudah pernah diumumkan: ${sent.map(x => `<b>${escHtml(x.title)}</b> (${escHtml(paWhen(x.sent_at))})`).join(', ')}.</div>` : ''}
+      ${wait.length ? `<div class="pa-queue"><b>⏰ Terjadwal</b>${wait.map(x => `<div class="pa-qi"><span>${escHtml(paWhen(x.publish_at))}</span><span>${escHtml(x.title)}</span><button class="gt-btn ghost gt-del" onclick="paDelete('${x.id}')">🗑</button></div>`).join('')}</div>` : ''}
+      <div class="cwf-h">Jenis</div><div class="cwf-seg">${seg('kind', 'new', '🆕 Produk baru')}${seg('kind', 'avail', '✅ Kini tersedia')}</div>
+      <label class="cwf-l">Judul notifikasi<input value="${escHtml(f.title)}" maxlength="80" oninput="paSet('title',this.value)"></label>
+      <label class="cwf-l">Isi<textarea rows="2" maxlength="160" oninput="paSet('body',this.value)">${escHtml(f.body)}</textarea></label>
+      <div class="cwf-h">Kirim</div><div class="cwf-seg">${seg('mode', 'now', 'Sekarang')}${seg('mode', 'sched', '⏰ Jadwalkan')}</div>
+      ${f.mode === 'sched' ? `<div class="cwf-row"><label>Tanggal<input type="date" value="${escHtml(f.sd)}" min="${todayWIB()}" oninput="paSet('sd',this.value)"></label><label>Jam (WIB)<input type="time" value="${escHtml(f.st)}" step="300" oninput="paSet('st',this.value)"></label></div>` : ''}
+      <div class="cwf-snote" id="pa-note"></div>
+      <div class="cwf-h">Pratinjau</div><div class="pa-prev" id="pa-prev"></div>
+      <div class="gl-hint">Hanya SRP & status — jangan menulis harga dealer / diskon. Android ikut menampilkan foto produk.</div>
+    </div>
+    <div class="acf-foot"><button class="gt-btn ghost" onclick="closeProdAnn()">Batal</button><button class="gt-btn" id="pa-save" onclick="saveProdAnn()"${f.busy ? ' disabled' : ''}>📣 Kirim sekarang</button></div>`;
+  paPrev();
+}
+async function saveProdAnn() {
+  const f = paForm; if (!f || f.busy || !isEditor()) return;
+  if (!f.title.trim()) { showToast('Isi judul notifikasi dulu.'); return; }
+  const iso = paIso(f), later = iso && Date.parse(iso) > Date.now() + 30e3;
+  if (f.list?.some(x => x.sent_at) && !confirm('Produk ini sudah pernah diumumkan. Kirim pengumuman lagi?')) return;
+  const p = f.r.product, ph = p.photo || p.photos?.[0];
+  const row = { product_id: f.pid, kind: f.kind, title: f.title.trim(), body: f.body.trim(), image: ph ? new URL(ph, 'https://hub.concerto.id/').href : null,
+    publish_at: later ? iso : new Date().toISOString(), remind_at: later ? null : new Date().toISOString() };
+  f.busy = true; const btn = document.getElementById('pa-save'); if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan…'; }
+  try {
+    const { data, error } = await supabase.from('product_push').insert(row).select('id').single();
+    if (error) throw error;
+    if (later) { showToast(`⏰ Pengumuman dijadwalkan ${paWhen(iso)}`, 6000); closeProdAnn(); return; }
+    const r = await pushFn({ action: 'notify', type: 'product', id: data.id });
+    showToast(`📣 Pengumuman terkirim ke ${r?.sent ?? 0} HP`, 6000); closeProdAnn();
+  } catch (e) {
+    f.busy = false; if (btn) btn.disabled = false; paPrev();
+    if (/relation|does not exist|schema cache|42P01/i.test(e.message || '')) { pushCopySql(); showToast('⚠ Tabel pengumuman produk belum ada — SQL notifikasi disalin, jalankan di Supabase → SQL Editor.', 9000); }
+    else showToast('⚠ Gagal: ' + (e.message || e), 7000);
+  }
+}
+async function paDelete(id) {
+  if (!paForm || !confirm('Batalkan pengumuman terjadwal ini?')) return;
+  const { error } = await supabase.from('product_push').delete().eq('id', id).is('sent_at', null);
+  if (error) { showToast('⚠ ' + error.message, 6000); return; }
+  paForm.list = paForm.list.filter(x => x.id !== id); renderProdAnn(); showToast('Pengumuman terjadwal dibatalkan');
+}

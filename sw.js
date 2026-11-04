@@ -27,7 +27,7 @@ self.addEventListener('push', e => {
   try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data && e.data.text() }; }
   e.waitUntil(self.registration.showNotification(d.title || 'CAI Hub', {
     body: d.body || '', icon: '/assets/icons/icon-192.png', badge: '/assets/icons/badge-96.png',   // badge = ikon kecil status bar Android (wajib putih transparan)
-   
+    ...(d.image ? { image: d.image } : {}),   // foto besar (Android) — Galeri & Produk baru
     tag: d.tag || 'cai', renotify: true, data: { url: d.url || '/' } }));
 });
 self.addEventListener('notificationclick', e => {

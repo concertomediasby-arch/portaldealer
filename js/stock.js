@@ -404,7 +404,8 @@ function renderProductStockBadge(pid) {
   const el = document.getElementById('panel-stock-badge');
   if (!el) return;
   const s = stockShown(pid);
-  if (!s) { el.innerHTML = ''; document.querySelectorAll('#panel-price .pp-stk').forEach(x => { x.textContent = ''; x.className = 'pp-stk'; }); return; }
+  const sw = typeof swBtnHtml === 'function' ? swBtnHtml(pid) : '';   // 📦 Kabari saya bila ready (partner login, produk Habis/Indent)
+  if (!s) { el.innerHTML = sw; document.querySelectorAll('#panel-price .pp-stk').forEach(x => { x.textContent = ''; x.className = 'pp-stk'; }); return; }
   const base = STOCK_LABEL[s.status] || s.status;
   const label = s.status === 'ready' && s.qty != null ? `${base} — Sisa ${s.qty} unit` : base;
   const otw = s.incoming ? `<div class="stock-badge-note">🚚 Dalam perjalanan: ${escHtml(s.incoming)}</div>` : '';
@@ -418,7 +419,7 @@ function renderProductStockBadge(pid) {
     x.textContent = !st ? '' : st.inf ? 'Stok ∞' : st.qty != null ? (st.qty ? `Sisa ${st.qty}` : 'Habis') : (STOCK_LABEL[st.status] || st.status);
   });
   const lbl = vs.length && s.qty != null ? label.replace('Sisa', 'Total sisa') : label;
-  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${lbl}</span></div>${otw}${note}`;
+  el.innerHTML = `<div class="stock-badge-wrap"><span class="stock-badge ${s.status}">${lbl}</span></div>${otw}${note}${sw}`;
 }
 
 /* ── Stok Produk view (publik, tanpa login) ── */
@@ -436,6 +437,8 @@ function openStockView() {
       `<button class="filter-chip${b.id==='all'?' active':''}" data-brand="${b.id}" onclick="setStockBrand('${b.id}')">${b.name}</button>`
     ).join('');
   renderStockView();
+  const pn = document.getElementById('stock-pn'); if (pn && typeof pnHtml === 'function') pn.innerHTML = pnHtml('stock');
+  if (typeof swLoad === 'function') swLoad();
   showView('stock');
   document.querySelector('.main')?.scrollTo(0, 0);
   loadStock();
@@ -461,6 +464,7 @@ function renderStockView() {
   all.forEach(x => { if (counts[x.s.status] !== undefined) counts[x.s.status]++; if (x.s.incoming) counts.otw++; });
   document.getElementById('stock-summary').innerHTML =
     [['all','Total', all.length], ['ready','Ready', counts.ready], ['indent','Indent', counts.indent], ['habis','Habis', counts.habis], ['otw','OTW', counts.otw]]
+      .concat(swList?.length ? [['watch', '🔔 Dipantau', swList.length]] : [])
       .map(([k, label, n]) => `<button class="stock-sum ${k}${stockStatus===k?' active':''}" onclick="setStockStatus('${k}')"><b>${n}</b><span>${label}</span></button>`).join('');
 
   const latest = all.map(x => x.s.updated_at).filter(Boolean).sort().pop();
@@ -472,7 +476,7 @@ function renderStockView() {
 
   const rows = all.filter(({ b, p, s }) =>
     (stockBrand === 'all' || b.id === stockBrand) &&
-    (stockStatus === 'all' || (stockStatus === 'otw' ? !!s.incoming : s.status === stockStatus)) &&
+    (stockStatus === 'all' || (stockStatus === 'otw' ? !!s.incoming : stockStatus === 'watch' ? swHas(p.id) : s.status === stockStatus)) &&
     (!q || p.name.toLowerCase().includes(q) || p.model.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)));
 
   const el = document.getElementById('stock-results');
@@ -489,7 +493,7 @@ function renderStockView() {
       const open = b === EXTRA_GROUP ? 'style="cursor:default"' : `onclick="showProduct('${b.id}','${p.id}')"`;
       return `<div class="stock-row" ${open}>
         <div style="min-width:0"><div class="sr-name">${escHtml(p.name)}${eolTag(p)}</div><div class="sr-model">${escHtml(p.model)}${hasPrice(p) ? ` · <span class="sr-price">SRP ${srpText(p)}</span>` : ''}</div></div>
-        <div><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}${mq}</span></div>
+        <div><span class="stock-badge ${s.status}">${STOCK_LABEL[s.status] || s.status}${mq}</span>${typeof swBellHtml === 'function' ? swBellHtml(p.id) : ''}</div>
         <div class="sr-qty">${s.qty ?? ''}</div>
         <div class="sr-note">${b !== EXTRA_GROUP && variantLine(p) ? `<div class="sr-var">📏 ${escHtml(variantLine(p))}</div>` : ''}${s.incoming ? `<div class="sr-otw">🚚 OTW ${escHtml(s.incoming)}</div>` : escHtml(dealerNote(s.note))}</div>
         <div class="sr-time">${fmtStockTime(s.updated_at)}<button class="sr-wa wa-only" title="Tanya / order via WhatsApp" onclick="event.stopPropagation(); contactProduct('${b.id}','${p.id}','order')"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3z"/></svg>Tanya</button></div>

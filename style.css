@@ -4024,3 +4024,46 @@ body.logged-in .guest-only { display: none !important; }
 .cw-queue-r b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cw-queue-e { font-size: 12px; color: var(--fg-2, #9aa0ad); white-space: nowrap; }
 @media (max-width: 720px) { .cw-queue-r { grid-template-columns: auto 1fr; } .cw-queue-r b { grid-column: 1 / -1; white-space: normal; } .cw-queue-e { display: none; } }
+/* 📦 Kabari saya bila stok ready (4 Nov 2026, js/push.js) */
+.sw-btn { display: block; width: calc(100% - 40px); margin: 10px 20px 0; padding: 11px; border-radius: var(--r-sm); border: 1px solid var(--accent); background: var(--accent); color: #15100a; font: 700 13px var(--f-body); cursor: pointer; }
+.sw-btn.on { background: var(--accent-lo); color: var(--accent); }
+.sw-btn small { font-weight: 500; color: var(--fg-muted); }
+.sw-hint { margin: 6px 20px 0; font-size: 11.5px; color: var(--fg-muted); text-align: center; }
+.sw-bell { margin-left: 6px; width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); background: transparent; font-size: 13px; cursor: pointer; filter: grayscale(1); opacity: .6; vertical-align: middle; }
+.sw-bell:hover { opacity: 1; }
+.sw-bell.on { filter: none; opacity: 1; border-color: var(--accent); background: var(--accent-lo); }
+.stock-sum.watch { border-color: rgba(216,178,106,.5); }
+#stock-pn { padding: 0 28px; }
+@media (max-width: 720px) { #stock-pn { padding: 0 16px; } }
+.sw-list { margin: -8px 0 18px; border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; background: var(--surface); }
+.sw-list > b { display: block; font: 700 13px var(--f-display); margin-bottom: 4px; }
+.sw-list > b small { font: 500 11.5px var(--f-body); color: var(--fg-muted); }
+.sw-it { display: grid; grid-template-columns: 36px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.sw-it:first-of-type { border-top: 0; }
+.sw-it img, .sw-em { width: 36px; height: 36px; border-radius: 8px; background: #fff; object-fit: contain; display: grid; place-items: center; }
+.sw-it small { display: block; font-size: 11px; color: var(--fg-muted); }
+.sw-it button { border: 1px solid var(--border); background: transparent; color: var(--fg-muted); border-radius: 8px; padding: 4px 9px; cursor: pointer; }
+.sw-note { font-size: 11.5px; color: var(--fg-muted); margin-top: 6px; }
+/* 🚗 Galeri: jadwal tayang (4 Nov 2026) */
+.gl-draft.sched { background: #0b1219; color: #6fd3e6; border: 1px solid #6fd3e6; }
+.gl-tag.sc { color: #6fd3e6; border-color: #2aa6bd; }
+.gl-queue .gl-grid { margin-top: 8px; }
+.gl-queue .cw-queue-h span { font: 500 12px var(--f-body); color: var(--fg-muted); margin-left: 6px; }
+.gl-sched { margin-top: 2px; }
+/* 🆕 Umumkan produk (Editor) */
+.dl-btn.pa-btn { margin-top: 8px; background: transparent; border-style: dashed; }
+.pa-box { max-width: 520px; }
+.pa { display: grid; gap: 8px; padding: 4px 2px 6px; }
+.pa-sub { font-size: 13px; color: var(--fg-muted); }
+.pa-warn { font-size: 12.5px; color: #f0b04a; background: rgba(240,176,74,.08); border: 1px solid rgba(240,176,74,.35); border-radius: 10px; padding: 8px 10px; line-height: 1.45; }
+.pa-queue { border: 1px solid rgba(111,211,230,.35); background: rgba(111,211,230,.06); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; }
+.pa-qi { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; margin-top: 6px; }
+.pa-qi span:first-child { font: 700 11px var(--f-mono); color: #6fd3e6; }
+.pa .cwf-seg { justify-self: start; margin: 0; }
+.pa .cwf-l input, .pa .cwf-l textarea, .pa .cwf-row input { background: var(--surface); border: 1px solid var(--border); color: var(--fg); border-radius: 9px; padding: 8px 10px; font: 13px var(--f-body); }
+.pa-prev { display: grid; grid-template-columns: 34px 1fr; gap: 10px; background: rgba(127,127,127,.14); border-radius: 14px; padding: 10px 12px; font-size: 12.5px; }
+.pa-prev img { width: 34px; height: 34px; border-radius: 8px; }
+.pa-prev b { display: block; font-size: 13px; }
+.gl-sched .cwf-chk { flex-direction: row; text-transform: none; letter-spacing: 0; font: 500 13px var(--f-body); color: var(--fg); margin-top: 8px; }
+.gl-sched .cwf-chk input { width: auto; }
+.pa { padding: 4px 18px 8px; }

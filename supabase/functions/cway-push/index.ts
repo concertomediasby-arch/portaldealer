@@ -4,7 +4,10 @@
 //  • Partner       : "Concerto Way Day n sudah tayang" TEPAT saat tayang — tanpa judul/isi (khusus partner, layar kunci).
 //  • Semua (publik): "CAI Hub News" saat berita baru diterbitkan; "Concerto Academy" saat materi baru tayang.
 //  • Partner       : "Panduan Partner baru tersedia" saat PDF panduan tayang — tanpa judul (khusus partner).
-// Tiap HP memilih sendiri (kolom staff / cway / news / acad / guide di tabel cway_push_subs).
+//  • Partner       : "Stok tersedia lagi" untuk produk yang dipantau HP itu (tabel stock_watch; antrian stock_ready_q dari trigger stok).
+//  • Semua (publik): "Instalasi baru di Galeri" (jadwal tayang showcase_installs) & "Produk baru" (pengumuman Editor, tabel product_push).
+//  • Editor        : pengingat 5 menit sebelum SEMUA konten terjadwal (Concerto Way, Galeri, pengumuman produk, Academy, Panduan).
+// Tiap HP memilih sendiri (kolom staff / cway / news / acad / guide / stock / gallery / product di tabel cway_push_subs).
 //
 // Deploy: Supabase Dashboard → Edge Functions → cway-push → Code → tempel file ini → Deploy ("Verify JWT" tetap MATI).
 // SQL: supabase/cway-push.sql (tabel + kolom + jadwal tiap menit). Tidak perlu secret: kunci VAPID dibuat otomatis
@@ -19,6 +22,10 @@
 //   { action: 'notify', type: 'cway'|'news', id }   → kirim "sudah tayang"/berita baru sekarang (hanya Admin/Editor; sekali per item)
 //   { action: 'notify', type: 'acad', id: [no…] }    → materi Academy baru tayang sekarang (hanya Editor; sekali per nomor, tabel academy_push)
 //   { action: 'notify', type: 'guide', id: [path…] } → PDF Panduan Partner baru tayang sekarang (hanya Editor)
+//   { action: 'notify', type: 'gallery', id }        → instalasi Galeri baru tayang sekarang (hanya Editor; sekali per mobil, kolom push_at)
+//   { action: 'notify', type: 'product', id }        → kirim pengumuman produk (baris product_push) sekarang (hanya Editor)
+//   { action: 'watch', endpoint, product_id, name, on } → pantau / batal pantau stok produk di HP ini (hanya yang login; maks. 30)
+//   { action: 'watches', endpoint }                  → { items: [{product_id, name}] } produk yang dipantau HP ini
 //   {} (pg_cron tiap menit)                          → pengingat staf 5 menit sebelum tayang + notifikasi partner saat jadwal tiba
 //                                                      + materi Academy terjadwal (field `at` di showcase/academy/items.json) saat tiba
 //                                                      + PDF Panduan terjadwal (tabel guide_schedule): dipindah dari folder tunggu `pending/`
@@ -36,10 +43,14 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const LEAD_MIN = 5;                       // menit sebelum tayang (pengingat staf)
 const SUBJECT = 'https://hub.concerto.id/';
 const SUBS = 'cway_push_subs';
+const PUB_STORAGE = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/`;
+const WATCH_MAX = 30;
 const ACAD_MANIFEST = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/showcase/academy/items.json`;
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
 type Sub = { endpoint: string; p256dh: string; auth: string };
+type Col = 'staff' | 'cway' | 'news' | 'acad' | 'guide' | 'stock' | 'gallery' | 'product';
+const FLAGS: Col[] = ['staff', 'cway', 'news', 'acad', 'guide', 'stock', 'gallery', 'product'];
 type Key = { pub: string; priv: string };
 
 async function vapid(): Promise<Key> {
@@ -75,7 +86,7 @@ async function send(sub: Sub, payload: unknown, key: Key) {
   if (res.status === 404 || res.status === 410) await db.from(SUBS).delete().eq('endpoint', sub.endpoint);   // langganan kedaluwarsa / dicabut
   return res.status;
 }
-async function sendAll(col: 'staff' | 'cway' | 'news' | 'acad' | 'guide', payload: unknown, key: Key) {
+async function sendAll(col: Col, payload: unknown, key: Key) {
   const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').eq(col, true);
   let sent = 0; const list = subs || [];
   for (let i = 0; i < list.length; i += 20) {   // 20 HP sekaligus
@@ -135,6 +146,94 @@ async function guidePublishDue() {
   return moved;
 }
 
+// Menit tersisa sebelum tayang (pengingat Editor)
+const minsTo = (iso: string) => Math.max(0, Math.round((Date.parse(iso) - Date.now()) / 60e3));
+const remindTitle = (what: string, iso: string) => `⏰ ${what} tayang ${minsTo(iso) ? minsTo(iso) + ' menit lagi' : 'sekarang'}`;
+
+// 🚗 Galeri Instalasi: satu notifikasi per mobil (kolom push_at)
+type Gl = { id: string; car_make?: string; car_model?: string; car_year?: number; dealer?: string; city?: string; photos?: { path?: string; type?: string }[] };
+const glName = (g: Gl) => [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ');
+const glImg = (g: Gl) => { const f = (g.photos || []).find(p => p?.path && p.type !== 'video' && !/\.(mp4|m4v|mov|webm)$/i.test(p.path)); return f ? PUB_STORAGE + 'showcase/' + f.path : undefined; };
+async function galleryLive(id: string, key: Key) {
+  const now = new Date().toISOString();
+  const { data: mark } = await db.from('showcase_installs').update({ push_at: now }).eq('id', id).eq('published', true).eq('notify', true).is('push_at', null)
+    .or(`publish_at.is.null,publish_at.lte."${now}"`).select('id, car_make, car_model, car_year, dealer, city, photos');
+  const g = mark?.[0] as Gl | undefined; if (!g) return 0;
+  return sendAll('gallery', { title: '🚗 Instalasi baru di Galeri CAI Hub', body: `${glName(g)}${g.dealer ? ' · ' + g.dealer : ''}. Ketuk untuk melihat.`,
+    url: `/?gl=${encodeURIComponent(g.id)}`, tag: `gl-${g.id}`, image: glImg(g) }, key);
+}
+// 🆕 Pengumuman produk: satu kali per baris product_push (kolom sent_at)
+async function productLive(id: string, key: Key) {
+  const now = new Date().toISOString();
+  const { data: mark } = await db.from('product_push').update({ sent_at: now, remind_at: now }).eq('id', id).is('sent_at', null).lte('publish_at', now)
+    .select('id, product_id, title, body, image');
+  const r = mark?.[0]; if (!r) return 0;
+  return sendAll('product', { title: r.title, body: r.body || 'Ketuk untuk melihat.', url: `/?p=${encodeURIComponent(r.product_id)}`, tag: `prod-${r.id}`, image: r.image || undefined }, key);
+}
+// 📦 Stok tersedia lagi: antrian dari trigger stok → HP yang memantau produk itu (pantauan selesai setelah dikabari)
+async function stockLive(key: Key) {
+  const { data: q } = await db.from('stock_ready_q').select('product_id').limit(300);
+  if (!q?.length) return 0;
+  const ids = q.map(x => x.product_id);
+  await db.from('stock_ready_q').delete().in('product_id', ids);
+  const { data: w } = await db.from('stock_watch').select('endpoint, product_id, name').in('product_id', ids);
+  if (!w?.length) return 0;
+  const byEp = new Map<string, { product_id: string; name: string }[]>();
+  for (const x of w) { const a = byEp.get(x.endpoint) || []; a.push({ product_id: x.product_id, name: x.name || x.product_id }); byEp.set(x.endpoint, a); }
+  const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').eq('stock', true).in('endpoint', [...byEp.keys()]);
+  let sent = 0;
+  for (const s of subs || []) {
+    const items = byEp.get(s.endpoint)!;
+    const one = items.length === 1;
+    const payload = one
+      ? { title: `📦 Stok tersedia lagi: ${items[0].name}`, body: 'Produk pantauan Anda sudah Ready. Ketuk untuk melihat.', url: `/?p=${encodeURIComponent(items[0].product_id)}`, tag: `stk-${items[0].product_id}` }
+      : { title: `📦 ${items.length} produk pantauan Anda sudah Ready`, body: `${items.slice(0, 4).map(i => i.name).join(', ')}${items.length > 4 ? ', …' : ''}. Ketuk untuk melihat.`, url: `/?p=${encodeURIComponent(items[0].product_id)}`, tag: 'stk-multi' };
+    const st = await send(s, payload, key).catch(() => 0);
+    if (st > 0 && st < 300) sent++;
+  }
+  await db.from('stock_watch').delete().in('product_id', ids);   // pantauan selesai otomatis setelah produk Ready
+  return sent;
+}
+// ⏰ Pengingat Editor 5 menit sebelum konten terjadwal tayang (selain Concerto Way)
+async function staffReminders(key: Key, acad: Acad[]) {
+  const now = Date.now(), lo = new Date(now).toISOString(), hi = new Date(now + LEAD_MIN * 60e3 + 30e3).toISOString();
+  const send1 = (payload: unknown) => sendAll('staff', payload, key);
+  let n = 0;
+  // Galeri
+  const { data: gl } = await db.from('showcase_installs').select('id, car_make, car_model, car_year, dealer, publish_at').eq('published', true).is('remind_at', null).is('push_at', null)
+    .gt('publish_at', lo).lte('publish_at', hi);
+  for (const g of gl || []) {
+    const { data: m } = await db.from('showcase_installs').update({ remind_at: new Date().toISOString() }).eq('id', g.id).is('remind_at', null).select('id');
+    if (!m?.length) continue;
+    n += await send1({ title: remindTitle('Galeri', g.publish_at), body: `${glName(g)}${g.dealer ? ' · ' + g.dealer : ''} · ${wib(g.publish_at)} WIB. Ketuk untuk mengecek.`, url: `/?gl=${encodeURIComponent(g.id)}`, tag: `rgl-${g.id}` });
+  }
+  // Pengumuman produk
+  const { data: pp } = await db.from('product_push').select('id, product_id, title, publish_at').is('sent_at', null).is('remind_at', null).gt('publish_at', lo).lte('publish_at', hi);
+  for (const r of pp || []) {
+    const { data: m } = await db.from('product_push').update({ remind_at: new Date().toISOString() }).eq('id', r.id).is('remind_at', null).select('id');
+    if (!m?.length) continue;
+    n += await send1({ title: remindTitle('Pengumuman produk', r.publish_at), body: `"${r.title}" · ${wib(r.publish_at)} WIB. Ketuk untuk mengecek.`, url: `/?p=${encodeURIComponent(r.product_id)}`, tag: `rpp-${r.id}` });
+  }
+  // Panduan Partner
+  const { data: gs } = await db.from('guide_schedule').select('id, title, dest, publish_at').is('done_at', null).is('remind_at', null).gt('publish_at', lo).lte('publish_at', hi);
+  if (gs?.length) {
+    const ids: string[] = [];
+    for (const g of gs) { const { data: m } = await db.from('guide_schedule').update({ remind_at: new Date().toISOString() }).eq('id', g.id).is('remind_at', null).select('id'); if (m?.length) ids.push(g.id); }
+    const list = gs.filter(g => ids.includes(g.id));
+    if (list.length) n += await send1({ title: remindTitle(list.length > 1 ? `${list.length} Panduan Partner` : 'Panduan Partner', list[0].publish_at),
+      body: `${list.map(g => g.title || g.dest.split('/').pop()).slice(0, 3).join(', ')} · ${wib(list[0].publish_at)} WIB.`, url: '/', tag: `rgd-${list[0].id}` });
+  }
+  // Academy
+  const soon = acad.filter(a => a.at && Date.parse(a.at) > now && Date.parse(a.at) <= now + LEAD_MIN * 60e3 + 30e3);
+  if (soon.length) {
+    const { data: m } = await db.from('academy_remind').upsert(soon.map(a => ({ no: a.no })), { onConflict: 'no', ignoreDuplicates: true }).select('no');
+    const fresh = soon.filter(a => (m || []).some((x: { no: number }) => x.no === a.no)).sort((x, y) => x.no - y.no);
+    if (fresh.length) n += await send1({ title: remindTitle(fresh.length > 1 ? `${fresh.length} materi Academy` : 'Materi Academy', fresh[0].at!),
+      body: `${fresh.slice(0, 3).map(a => '#' + a.no + ' ' + (a.title || '')).join(', ')} · ${wib(fresh[0].at!)} WIB.`, url: `/?acad=${fresh[0].no}`, tag: `rac-${fresh[0].no}` });
+  }
+  return n;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   let body: Record<string, any> = {};
@@ -145,7 +244,7 @@ Deno.serve(async (req) => {
     if (a === 'key') return json({ key: key.pub });
 
     if (a === 'get') {
-      const { data, error } = await db.from(SUBS).select('staff, cway, news, acad, guide').eq('endpoint', String(body.endpoint || '')).maybeSingle();
+      const { data, error } = await db.from(SUBS).select(FLAGS.join(', ')).eq('endpoint', String(body.endpoint || '')).maybeSingle();
       if (error) return json({ error: error.message }, 500);
       return json({ flags: data || null });
     }
@@ -154,15 +253,17 @@ Deno.serve(async (req) => {
       const ep = String(body.endpoint || '');
       if (!/^https:\/\//.test(ep) || ep.length > 1000) return json({ error: 'endpoint tidak valid' }, 400);
       const who = await caller(req);
-      const { data: cur, error: e1 } = await db.from(SUBS).select('endpoint, staff, cway, news, acad, guide').eq('endpoint', ep).maybeSingle();
+      const { data: cur, error: e1 } = await db.from(SUBS).select('endpoint, ' + FLAGS.join(', ')).eq('endpoint', ep).maybeSingle();
       if (e1) return json({ error: e1.message }, 500);
-      const f = { staff: !!cur?.staff, cway: !!cur?.cway, news: !!cur?.news, acad: !!cur?.acad, guide: !!cur?.guide };
+      const c = (cur || {}) as Record<string, unknown>;
+      const f = Object.fromEntries(FLAGS.map(k => [k, !!c[k]])) as Record<Col, boolean>;
       const want = body.flags || {};
-      for (const k of ['staff', 'cway', 'news', 'acad', 'guide'] as const) if (k in want) f[k] = !!want[k];
+      for (const k of FLAGS) if (k in want) f[k] = !!want[k];
       if (want.staff && !who.editor) f.staff = !!cur?.staff;  // pengingat 5 menit hanya untuk Editor
       if (want.cway && !who.auth) f.cway = !!cur?.cway;       // Concerto Way hanya untuk yang login (partner)
       if (want.guide && !who.auth) f.guide = !!cur?.guide;    // Panduan Partner hanya untuk yang login (partner)
-      if (!f.staff && !f.cway && !f.news && !f.acad && !f.guide) {
+      if (want.stock && !who.auth) f.stock = !!cur?.stock;    // Stok pantauan hanya untuk yang login (partner)
+      if (!FLAGS.some(k => f[k])) {
         if (cur) await db.from(SUBS).delete().eq('endpoint', ep);
         return json({ flags: f, deleted: true });
       }
@@ -181,6 +282,30 @@ Deno.serve(async (req) => {
       if (!sub) return json({ error: 'HP ini belum terdaftar' }, 404);
       const st = await send(sub, { title: '🔔 Tes notifikasi CAI Hub', body: 'Notifikasi aktif di HP ini.', url: '/', tag: 'cai-test' }, key);
       return json({ ok: st < 300, status: st });
+    }
+
+    if (a === 'watches') {
+      const { data, error } = await db.from('stock_watch').select('product_id, name').eq('endpoint', String(body.endpoint || '')).order('created_at');
+      if (error) return json({ error: error.message }, 500);
+      return json({ items: data || [] });
+    }
+
+    if (a === 'watch') {
+      const who = await caller(req);
+      if (!who.auth) return json({ error: 'khusus partner yang login' }, 403);
+      const ep = String(body.endpoint || ''), pid = String(body.product_id || '').slice(0, 120);
+      if (!pid || pid.startsWith('v:')) return json({ error: 'produk tidak valid' }, 400);
+      const { data: sub } = await db.from(SUBS).select('endpoint').eq('endpoint', ep).maybeSingle();
+      if (!sub) return json({ error: 'HP ini belum terdaftar' }, 404);
+      if (body.on === false) { await db.from('stock_watch').delete().eq('endpoint', ep).eq('product_id', pid); }
+      else {
+        const { count } = await db.from('stock_watch').select('product_id', { count: 'exact', head: true }).eq('endpoint', ep);
+        if ((count || 0) >= WATCH_MAX) return json({ error: `maksimal ${WATCH_MAX} produk dipantau per HP` }, 400);
+        const { error } = await db.from('stock_watch').upsert({ endpoint: ep, product_id: pid, name: String(body.name || '').slice(0, 120) || null }, { onConflict: 'endpoint,product_id' });
+        if (error) return json({ error: error.message }, 500);
+      }
+      const { data } = await db.from('stock_watch').select('product_id, name').eq('endpoint', ep).order('created_at');
+      return json({ items: data || [] });
     }
 
     if (a === 'notify') {
@@ -210,6 +335,14 @@ Deno.serve(async (req) => {
         const paths = (Array.isArray(body.id) ? body.id : [body.id]).map(String).filter(p => /\.pdf$/i.test(p) && !p.startsWith('pending/'));
         return json({ sent: await guideLive(paths, key) });
       }
+      if (body.type === 'gallery') {
+        if (!who.editor) return json({ error: 'khusus Editor' }, 403);
+        return json({ sent: await galleryLive(id, key) });
+      }
+      if (body.type === 'product') {
+        if (!who.editor) return json({ error: 'khusus Editor' }, 403);
+        return json({ sent: await productLive(id, key) });
+      }
       return json({ error: 'type tidak dikenal' }, 400);
     }
 
@@ -234,11 +367,23 @@ Deno.serve(async (req) => {
       .lte('publish_at', new Date(now).toISOString()).gt('publish_at', new Date(now - 15 * 60e3).toISOString());
     for (const p of live || []) liveSent += await cwayLive(p, key);
     // 3) Academy terjadwal: jam tayang sudah tiba (≤ 15 menit lalu), sekali per nomor
-    const acadDue = (await acadItems()).filter(a => a.at && Date.parse(a.at) <= now && Date.parse(a.at) > now - 15 * 60e3);
+    const acadAll = await acadItems();
+    const acadDue = acadAll.filter(a => a.at && Date.parse(a.at) <= now && Date.parse(a.at) > now - 15 * 60e3);
     const acadSent = await acadLive(acadDue, key);
     // 4) Panduan Partner terjadwal: pindahkan PDF yang jamnya tiba, lalu satu notifikasi
     const guideSent = await guideLive(await guidePublishDue(), key);
-    return json({ staffSent, liveSent, acadSent, guideSent });
+    // 5) Galeri terjadwal: jam tayang tiba (≤ 15 menit lalu), sekali per mobil
+    let gallerySent = 0, productSent = 0;
+    const { data: gl } = await db.from('showcase_installs').select('id').eq('published', true).eq('notify', true).is('push_at', null)
+      .lte('publish_at', new Date(now).toISOString()).gt('publish_at', new Date(now - 15 * 60e3).toISOString());
+    for (const g of gl || []) gallerySent += await galleryLive(g.id, key);
+    // 6) Pengumuman produk terjadwal
+    const { data: pp } = await db.from('product_push').select('id').is('sent_at', null).lte('publish_at', new Date(now).toISOString()).gt('publish_at', new Date(now - 15 * 60e3).toISOString());
+    for (const r of pp || []) productSent += await productLive(r.id, key);
+    // 7) Stok pantauan yang baru Ready  8) Pengingat Editor untuk konten terjadwal lain
+    const stockSent = await stockLive(key);
+    staffSent += await staffReminders(key, acadAll);
+    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent });
   } catch (e) {
     return json({ error: String((e as Error)?.message || e) }, 500);
   }

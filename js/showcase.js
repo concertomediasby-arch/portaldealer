@@ -345,6 +345,13 @@ create policy "showcase delete" on storage.objects for delete to authenticated
 create policy "showcase staff read" on storage.objects for select to authenticated
   using (bucket_id = 'showcase' and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));`;
 let glItems = null, glErr = '', glLoading = null, glMake = 'all', glBody = 'all', glHofOnly = false, glQ = '';
+let glLoadedAt = 0, glSchedT = null;
+// Muat ulang Galeri tepat saat mobil terjadwal tayang (Editor melihat kartunya pindah dari antrian ke daftar)
+function glSchedTimer() {
+  clearTimeout(glSchedT);
+  const next = (glItems || []).filter(glSched).map(it => Date.parse(it.publish_at)).sort((a, b) => a - b)[0];
+  if (next) glSchedT = setTimeout(() => { if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri(); glSchedTimer(); }, Math.min(next - Date.now() + 1500, 2 ** 31 - 1));
+}
 let glEdit = null;   // { id?, …field, photos:[{path?, area, blob?, url}], removed:[path] }
 
 // Video instalasi (31 Okt 2026, permintaan pemilik): disimpan di array photos yang sama dengan type:'video'.
@@ -355,7 +362,11 @@ const GL_VIDEO_MAX_MB = 50;
 const GL_SUB_MAX_PHOTOS = 10, GL_SUB_MAX_VIDEOS = 2;   // 31 Okt 2026, permintaan pemilik (sempat 20 foto + 3 video)
 // Menunggu persetujuan Editor: kiriman dealer & simpanan akun Admin staff (31 Okt 2026, permintaan pemilik)
 const glPending = it => (it?.source === 'dealer' || it?.source === 'admin') && !it.published;
-const glLive = () => (glItems || []).filter(it => !glPending(it));
+// Jadwal tayang Galeri (4 Nov 2026, permintaan pemilik): published + publish_at di masa depan = terjadwal. Sebelum jamnya
+// RLS hanya mengizinkan Admin/Editor membaca baris itu; notifikasi 🚗 dikirim jadwal cway-push tepat pada jamnya.
+const glSched = it => !!(it?.published && it.publish_at && Date.parse(it.publish_at) > Date.now());
+const glWhen = iso => new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':') + ' WIB';
+const glLive = () => (glItems || []).filter(it => !glPending(it) && !glSched(it));
 const GL_SUBMIT_SQL = `-- Kiriman foto/video dari dealer (menunggu persetujuan Editor) — jalankan sekali di Supabase → SQL Editor → Run
 alter table public.showcase_installs add column if not exists source text not null default 'editor';
 alter table public.showcase_installs add column if not exists submitter text;
@@ -388,7 +399,7 @@ function loadGaleri(force) {
     try {
       const { data, error } = await supabase.from(GL_TABLE).select('*').order('sort', { ascending: true }).order('created_at', { ascending: false });
       if (error) throw error;
-      glItems = data || []; glErr = '';
+      glItems = data || []; glErr = ''; glLoadedAt = Date.now(); glSchedTimer();
     } catch (e) {
       const m = String(e.message || e);
       glItems = [];
@@ -404,6 +415,7 @@ async function openGaleri() {
   document.querySelector('.main')?.scrollTo(0, 0);
   adEnsure();
   if (!glItems) { renderGaleri(); await loadGaleri(); }
+  else if (Date.now() - glLoadedAt > 120e3) loadGaleri(true).then(() => { if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri(); });
   renderGaleri();
 }
 function setGlFilter(kind, v) {
@@ -420,7 +432,7 @@ function glCard(it) {
     <span class="gl-ph">${ph ? (cov ? `<video class="gl-cover" src="${glUrl(cov.path)}"${glCovPoster(it)} muted loop autoplay playsinline webkit-playsinline preload="auto"${glFrAttr(cov)}></video>` : glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? '<span class="gl-tro">🏆 Juara</span>' : ''}
-      ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : ''}</span>
+      ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : glSched(it) ? `<span class="gl-draft sched">⏰ ${escHtml(glWhen(it.publish_at))}</span>` : ''}</span>
     <span class="gl-bd"><span class="gl-mk">${escHtml(it.car_make || '')}</span>
       <b>${escHtml(it.car_model || '')}${it.car_year ? ` <small>${it.car_year}</small>` : ''}</b>
       ${it.dealer || it.city ? `<span class="gl-dl">🛠 ${escHtml([it.dealer, it.city].filter(Boolean).join(' · '))}</span>` : ''}
@@ -488,6 +500,7 @@ function renderGaleri() {
       <div class="hof-sub">Belum terlihat oleh pengunjung. Periksa foto (plat nomor harus diburamkan), lalu setujui atau tolak.</div>
       <div class="gl-grid">${pend.map(it => `<div class="gl-pitem">${glCard(it)}<div class="gl-pby">Dikirim oleh <b>${escHtml(it.submitter || it.dealer || '—')}</b>${it.submitted_at ? ' · ' + escHtml(new Date(it.submitted_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) : ''}</div>
         ${isEditor() ? `<div class="gl-pact"><button class="gt-btn confirm" onclick="approveGlItem('${it.id}')">✓ Setujui</button><button class="gt-btn" onclick="openGlForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost gt-del" onclick="deleteGlItem('${it.id}', true)">✕ Tolak</button></div>` : '<div class="gl-hint">Menunggu persetujuan Editor.</div>'}</div>`).join('')}</div></div>` : ''}
+    ${glQueueHtml()}
     ${glChampBanner()}
     <div class="gl-search"><span>🔎</span><input type="search" placeholder="Cari mobil Anda — mis. Fortuner, HR-V, Pajero…" value="${escHtml(glQ)}" oninput="glQ=this.value;clearTimeout(window.glQt);window.glQt=setTimeout(()=>{renderGaleri();const i=document.querySelector('.gl-search input');i?.focus();i?.setSelectionRange(i.value.length,i.value.length)},250)"></div>
     ${live.length ? `<div class="gl-makes">${['all', ...makes].map(m => `<button class="gl-make${glMake === m ? ' on' : ''}" onclick="setGlFilter('make','${escHtml(m)}')">${m === 'all' ? 'SEMUA' : escHtml(m.toUpperCase())}<small>${cnt(m)} mobil</small></button>`).join('')}</div>
@@ -500,6 +513,14 @@ function renderGaleri() {
   glCoverObs();
 }
 
+// ⏰ Antrian tayang Galeri (Admin/Editor): mobil terjadwal, urut jam tayang
+function glQueueHtml() {
+  if (!isAdmin()) return '';
+  const q = (glItems || []).filter(glSched).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at));
+  if (!q.length) return '';
+  return `<div class="cw-queue gl-queue"><div class="cw-queue-h">⏰ Antrian tayang <span>${q.length} mobil · tampil otomatis untuk pengunjung pada jamnya${q.some(it => it.notify !== false) ? ' + notifikasi 🚗' : ''}</span></div>
+    <div class="gl-grid">${q.map(glCard).join('')}</div></div>`;
+}
 // Banner ke Hall of Fame: jumlah mobil juara (peserta + mobil + dealer berbeda) di data Hall of Fame
 function glChampBanner() {
   if (hofIsDemo()) return '';
@@ -538,9 +559,9 @@ function openGlDetail(id, photoIdx = 0) {
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
         <h3 class="gl-dt">${escHtml(it.car_model || '')}${it.car_year ? ' ' + it.car_year : ''}</h3>
-        <div class="gl-tags">${hof ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofGroupKey(hof)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${glPending(it) ? `<span class="gl-tag dr">Kiriman ${escHtml(it.submitter || 'dealer')} — menunggu persetujuan</span>` : !it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : ''}</div>
+        <div class="gl-tags">${hof ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofGroupKey(hof)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${glPending(it) ? `<span class="gl-tag dr">Kiriman ${escHtml(it.submitter || 'dealer')} — menunggu persetujuan</span>` : !it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : glSched(it) ? `<span class="gl-tag sc">⏰ Tayang ${escHtml(glWhen(it.publish_at))}</span>` : ''}</div>
         ${it.note ? `<p class="gl-note">${escHtml(it.note)}</p>` : ''}
-        ${it.published && !glPending(it) ? `<div class="gl-share"><button class="gt-btn ghost" onclick="glShare('${it.id}')">${SHARE_ICON} Bagikan</button></div>` : ''}
+        ${it.published && !glPending(it) && !glSched(it) ? `<div class="gl-share"><button class="gt-btn ghost" onclick="glShare('${it.id}')">${SHARE_ICON} Bagikan</button></div>` : ''}
         ${(it.products || []).length ? `<div class="hof-lbl">Produk yang dipasang</div>${it.products.map(pid => { const r = glProd(pid); if (!r.product) return ''; const p = r.product;
           return `<button class="gl-prod" onclick="closeGlDetail();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}` : ''}
         ${it.dealer ? `<div class="gl-dcard"><div class="hof-lbl">Dipasang oleh</div><b>${escHtml(it.dealer)}${d ? ' <span class="ad-badge">✓ Resmi</span>' : ''}</b><div class="gl-dc">${escHtml(d ? [d.c, d.r].join(', ') : it.city || '')}</div>
@@ -549,7 +570,7 @@ function openGlDetail(id, photoIdx = 0) {
       </div>
     </div>`;
   ov.classList.add('open');
-  if (it.published) glPrepShare(it);
+  if (it.published && !glSched(it)) glPrepShare(it);
 }
 function closeGlDetail() { glAdj = false; glAdjCtx = null; document.querySelectorAll('#gl-detail video').forEach(v => v.pause()); document.getElementById('gl-detail')?.classList.remove('open'); }
 // Atur posisi / putar foto langsung dari jendela detail (Editor, 2 Nov 2026 — permintaan pemilik): disimpan langsung ke tabel.
@@ -658,6 +679,7 @@ function openGlForm(id) {
   const it = id ? glItems?.find(x => x.id === id) : null;
   glEdit = it ? { ...it, products: [...(it.products || [])], photos: (it.photos || []).map(p => ({ ...p, url: glUrl(p.path) })), removed: [] }
     : { car_make: '', car_model: '', car_year: '', body: '', dealer: '', city: '', note: '', products: [], photos: [], hof_id: '', published: false, sort: 0, removed: [] };
+  glSchedInit(glEdit, it);
   renderGlForm();
   document.getElementById('gl-form').classList.add('open');
 }
@@ -676,6 +698,7 @@ function glFromHof(hofId) {
 function openGlForHof(hofId) {
   if (!glCanEdit()) return;
   glEdit = { ...glFromHof(hofId), published: isEditor() };
+  glSchedInit(glEdit, null);
   closeHofDealer();
   renderGlForm();
   document.getElementById('gl-form').classList.add('open');
@@ -1002,6 +1025,35 @@ function renderGlGuide() {
   const el = document.getElementById('gl-guide-box'); if (!el) return;
   el.innerHTML = glGuideFor() ? glGuideHtml() : '';
 }
+// Tayang: draf / sekarang / ⏰ jadwal (tanggal + jam WIB, bawaan besok 19.00) + kirim notifikasi 🚗 (4 Nov 2026, permintaan pemilik)
+function glSchedInit(e, it) {
+  e.wasLive = !!(it && it.published && !glPending(it) && !glSched(it));
+  e.notify = it ? it.notify !== false : true;
+  if (it && glSched(it)) { const w = new Date(Date.parse(it.publish_at) + 7 * 3600e3).toISOString(); Object.assign(e, { mode: 'sched', sd: w.slice(0, 10), st: w.slice(11, 16) }); return; }
+  Object.assign(e, { mode: e.published ? 'now' : 'draft', sd: new Date(Date.parse(todayWIB() + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10), st: '19:00' });
+}
+const glSchedIso = e => e.mode === 'sched' && e.sd && e.st ? new Date(`${e.sd}T${e.st}:00+07:00`).toISOString() : null;
+function glSchedSet(k, v) {
+  if (!glEdit) return; glEdit[k] = v;
+  if (k === 'mode') { glEdit.published = v !== 'draft'; document.getElementById('glf-sched').outerHTML = glSchedHtml(); }
+  glSchedNote();
+}
+function glSchedHtml() {
+  const e = glEdit, seg = (m, t) => `<button type="button" class="${e.mode === m ? 'on' : ''}" onclick="glSchedSet('mode','${m}')">${t}</button>`;
+  return `<div class="w4 cwf-sched gl-sched" id="glf-sched"><div class="cwf-h">Tayang</div>
+    <div class="cwf-seg">${seg('draft', glPending(e) ? 'Belum disetujui' : 'Draf')}${seg('now', glPending(e) ? 'Setujui &amp; tampilkan' : 'Tayang sekarang')}${seg('sched', '⏰ Jadwalkan')}</div>
+    ${e.mode === 'sched' ? `<div class="cwf-row"><label>Tanggal<input type="date" value="${escHtml(e.sd)}" min="${todayWIB()}" oninput="glSchedSet('sd',this.value)"></label><label>Jam (WIB)<input type="time" value="${escHtml(e.st)}" step="300" oninput="glSchedSet('st',this.value)"></label></div>` : ''}
+    ${e.mode !== 'draft' && !e.wasLive && !e.push_at ? `<label class="cwf-chk"><input type="checkbox"${e.notify ? ' checked' : ''} onchange="glEdit.notify=this.checked;glSchedNote()"> 🔔 Kirim notifikasi “Instalasi baru” ke HP pengunjung saat tayang</label>` : ''}
+    <div class="cwf-snote" id="glf-snote"></div></div>`;
+}
+function glSchedNote() {
+  const e = glEdit, el = document.getElementById('glf-snote'), btn = document.getElementById('glf-save'); if (!e) return;
+  const iso = glSchedIso(e), past = iso && Date.parse(iso) <= Date.now(), ntf = e.notify && !e.wasLive && !e.push_at;
+  if (el) el.innerHTML = e.mode === 'draft' ? 'Belum terlihat oleh pengunjung — hanya Admin/Editor.'
+    : e.mode === 'now' || past ? `${past ? '⚠ Waktu ini sudah lewat — ' : ''}Tampil untuk pengunjung begitu disimpan${ntf ? ' + notifikasi 🚗 terkirim' : ''}.`
+    : `Otomatis tampil <b>${escHtml(glWhen(iso))}</b>${ntf ? ' + notifikasi 🚗 ke HP pengunjung' : ''}. Sebelum itu hanya Admin/Editor yang bisa melihatnya; Editor mendapat pengingat 5 menit sebelumnya.`;
+  if (btn && !btn.disabled) btn.textContent = e.mode === 'sched' && !past ? '⏰ Simpan Jadwal' : '💾 Simpan';
+}
 function renderGlForm() {
   const e = glEdit, box = document.querySelector('#gl-form .gl-fbox');
   const opt = (arr, v) => arr.map(a => `<option${a === v ? ' selected' : ''}>${escHtml(a)}</option>`).join('');
@@ -1023,7 +1075,7 @@ function renderGlForm() {
         <input list="glf-plist" placeholder="Ketik nama produk lalu pilih…" onchange="glAddProduct(this)"><datalist id="glf-plist">${glProdOptions()}</datalist>
         <div class="gl-pchips" id="glf-prods"></div></div>
       <label class="w2">Prestasi (Hall of Fame)<select onchange="glField('hof_id',this.value)"><option value="">— tidak ada —</option>${hofs.map(h => `<option value="${escHtml(h.id)}"${h.id === e.hof_id ? ' selected' : ''}>${escHtml([`${h.award} · ${h.cls || ''}`, h.name, h.car, `${h.event} ${h.year || ''}`].filter(Boolean).join(' · '))}</option>`).join('')}</select></label>
-      ${e.submit ? '' : !isEditor() ? '<div class="w2 gl-hint">⏳ Setelah disimpan, foto/video menunggu persetujuan Editor sebelum tampil.</div>' : `<label class="w2 gl-pub"><input type="checkbox"${e.published ? ' checked' : ''} onchange="glField('published',this.checked)"> ${glPending(e) ? 'Setujui &amp; tampilkan' : 'Tampilkan (bukan draf)'}</label>`}
+      ${e.submit ? '' : !isEditor() ? '<div class="w2 gl-hint">⏳ Setelah disimpan, foto/video menunggu persetujuan Editor sebelum tampil.</div>' : glSchedHtml()}
       <div class="w4"><div class="gl-flbl">Foto & Video <small>(foto otomatis diperkecil; video diunggah apa adanya)</small></div>
         <div class="gl-upr"><label class="gt-btn gl-up">📷 Tambah Foto<input type="file" accept="image/*" multiple hidden onchange="glAddPhotos(this)"></label><label class="gt-btn gl-up">🎬 Tambah Video<input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple hidden onchange="glAddVideos(this)"></label></div>
         <div class="gl-hint gl-vhint">Video: MP4 (H.264), maksimal ${GL_VIDEO_MAX_MB} MB per file — disarankan ≤ 30 MB agar cepat diputar di HP. Video tidak dikompres ulang di sini.</div>
@@ -1031,7 +1083,7 @@ function renderGlForm() {
       ${e.submit ? `<label class="w4 gl-pub gl-agree"><input type="checkbox"${e.agree ? ' checked' : ''} onchange="glField('agree',this.checked)"> Foto/video ini milik partner kami, <b>plat nomor sudah diburamkan</b>, dan pemilik mobil tidak keberatan ditampilkan.</label>` : ''}
     </div>
     <div class="gl-factions"><button class="gt-btn ghost" onclick="closeGlForm()">Batal</button>${e.submit ? '<button class="gt-btn confirm" id="glf-save" onclick="submitGlItem()">📤 Kirim untuk Ditinjau</button>' : '<button class="gt-btn confirm" id="glf-save" onclick="saveGlItem()">💾 Simpan</button>'}</div>`;
-  renderGlProducts(); renderGlPhotos();
+  renderGlProducts(); renderGlPhotos(); if (!e.submit && isEditor()) glSchedNote();
 }
 async function saveGlItem() {
   const e = glEdit; if (!e || !supabase) return;
@@ -1041,6 +1093,12 @@ async function saveGlItem() {
     const row = { car_make: e.car_make, car_model: String(e.car_model).trim(), car_year: e.car_year ? +e.car_year : null, body: e.body || null,
       dealer: (e.dealer || '').trim() || null, city: (e.city || '').trim() || null, note: (e.note || '').trim() || null, products: e.products,
       hof_id: e.hof_id || null, published: !!e.published, sort: +e.sort || 0, updated_at: new Date().toISOString() };
+    if (isEditor() && e.mode) {   // jadwal tayang + notifikasi
+      const iso = glSchedIso(e);
+      row.publish_at = e.mode === 'sched' ? iso : e.mode === 'now' && e.publish_at && Date.parse(e.publish_at) <= Date.now() ? e.publish_at : null;
+      row.notify = !!e.notify;
+      if (iso && iso !== e.publish_at) row.remind_at = null;   // jadwal berubah → pengingat Editor dikirim lagi
+    }
     if (!isEditor()) Object.assign(row, { published: false, source: 'admin', submitter: 'Admin staff', submitted_at: new Date().toISOString() });
     let id = e.id;
     if (!id) {
@@ -1063,12 +1121,16 @@ async function saveGlItem() {
     const { error } = await supabase.from(GL_TABLE).update({ ...row, photos }).eq('id', id);
     if (error) throw error;
     if (e.removed.length) await supabase.storage.from(GL_BUCKET).remove(e.removed);
+    const goLive = isEditor() && e.mode === 'now' && !e.wasLive, sched = isEditor() && e.mode === 'sched' && Date.parse(row.publish_at || 0) > Date.now();
+    if (goLive && row.notify && typeof pushNotify === 'function') pushNotify('gallery', id);   // sekali per mobil (dicek server)
     closeGlForm();
-    showToast(isEditor() ? '✓ Instalasi disimpan' : '✓ Disimpan — tampil setelah disetujui Editor', 5000);
+    showToast(!isEditor() ? '✓ Disimpan — tampil setelah disetujui Editor' : sched ? `⏰ Dijadwalkan tayang ${glWhen(row.publish_at)}` : goLive && row.notify ? '✓ Instalasi tayang — notifikasi 🚗 dikirim' : '✓ Instalasi disimpan', 5000);
     await loadGaleri(true); renderGaleri(); refreshProductShowcase();
     if (document.getElementById('view-halloffame')?.classList.contains('active')) renderHallOfFame();
   } catch (err) {
-    showToast('⚠ Gagal menyimpan: ' + (err.message || err), 6000);
+    const m = String(err.message || err);
+    if (/publish_at|remind_at|notify|schema cache/i.test(m) && typeof pushCopySql === 'function') { pushCopySql(); showToast('⚠ Jadwal tayang Galeri butuh SQL sekali — SQL notifikasi disalin, jalankan di Supabase → SQL Editor.', 9000); }
+    else showToast('⚠ Gagal menyimpan: ' + m, 6000);
     btn.disabled = false; btn.textContent = '💾 Simpan';
   }
 }
@@ -1077,6 +1139,7 @@ async function approveGlItem(id) {
   const { error } = await supabase.from(GL_TABLE).update({ published: true, updated_at: new Date().toISOString() }).eq('id', id);
   if (error) { showToast('⚠ Gagal menyetujui: ' + error.message, 6000); return; }
   showToast(`✓ ${glTitle(it)} disetujui — kini tampil di Galeri${it.hof_id ? ' & Hall of Fame' : ''}`);
+  if (typeof pushNotify === 'function') pushNotify('gallery', id);
   await loadGaleri(true); renderGaleri(); refreshProductShowcase();
 }
 async function deleteGlItem(id, reject) {
@@ -1150,6 +1213,6 @@ async function glShare(id) {
 }
 async function glOpenLinked(id) {
   await openGaleri();
-  const it = glItems?.find(x => x.id === id && x.published && !glPending(x));
+  const it = glItems?.find(x => x.id === id && x.published && !glPending(x) && (!glSched(x) || isAdmin()));
   if (it) openGlDetail(id); else showToast('Instalasi ini tidak ditemukan atau belum ditampilkan.');
 }
