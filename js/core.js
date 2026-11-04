@@ -1275,6 +1275,8 @@ function renderRakitSide() {
       ${a.notes.length ? `<div class="rk-notes">${a.notes.map(n => `<div class="rk-note ${n.t}"><i>${ic[n.t]}</i><span>${n.m}</span></div>`).join('')}</div>` : '<div class="rk-note info"><i>ℹ</i><span>Mulai dengan menambahkan speaker, subwoofer, amplifier, atau DSP.</span></div>'}
       <div class="rk-fine">Cek channel = perkiraan sederhana: 2 channel per set speaker/midrange/tweeter, 1 channel per subwoofer pasif. Konsultasikan konfigurasi final (crossover, bridge, impedansi) dengan installer / CAI.</div>
     </div>
+    <div class="rk-card rk-send-card"><div class="rk-send"><b>📍 Kirim rakitan ke partner resmi</b><small>Pilih partner resmi CAI di kota Anda — daftar barang &amp; total SRP langsung terkirim lewat WhatsApp untuk ditanyakan biaya pasang &amp; ketersediaan.</small>
+      <button onclick="rkSendOpen()" ${rk.items.length ? '' : 'disabled'}>💬 Kirim ke partner resmi</button></div></div>
     <div class="rk-card">
       <b class="rk-ct">Data penawaran (opsional)</b>
       ${f('cust', 'Nama customer', 'mis. Bapak Andi')}${f('car', 'Mobil', 'mis. Toyota Fortuner 2024')}${f('by', 'Disiapkan oleh', 'nama toko / partner')}
@@ -1308,6 +1310,42 @@ function rkShare() {
   const lines = rk.items.map(it => { const { brand, product: p } = findProductAny(it.pid); return `• ${brand.name} ${p.name}${it.v ? ' ' + it.v : ''}${it.qty > 1 ? ' ×' + it.qty : ''}`; });
   shareWa(`🔊 Rakitan audio dari CAI Hub (${rk.items.length} produk):\n${lines.join('\n')}\nTotal SRP ${fmtRp(a.total)} — ${RK_EXCL}\n\nLihat & ubah rakitannya di CAI Hub:\n${rkLink()}`);
 }
+/* Kirim rakitan ke partner resmi (Tahap 5, 4 Nov 2026, permintaan pemilik — pratinjau .mockup/tahap5/): jendela #rks — ringkasan rakitan +
+   Total SRP → pilih provinsi (sama dengan pilihan di halaman produk, localStorage cai-prov) → partner resmi provinsi itu (urutan acak,
+   4 pertama + Lihat semua) → WhatsApp partner berisi daftar barang, Total SRP, RK_EXCL & link rakitan. Hanya SRP. Klik tercatat di Laporan
+   Minat Pengunjung (sumber "simulator", lewat listener klik di js/interest.js). Partner yang login tidak melihat kotaknya (CSS). */
+let rksOrder = null, rksAll = false;
+function rkSendMsg(d) {
+  const a = rkAnalyze();
+  const lines = rk.items.map((it, i) => { const { brand, product: p } = findProductAny(it.pid); return `${i + 1}. ${brand.name} ${p.name}${it.v ? ' ' + it.v : ''} (${it.qty}×)`; });
+  return `Halo ${d.n}, saya merakit sistem audio di CAI Hub dan ingin menanyakan ketersediaan & biaya pemasangannya:\n\n${lines.join('\n')}\n\nTotal SRP: ${fmtRp(a.total)}\n${RK_EXCL}\n\nRakitan lengkap: ${rkLink()}`;
+}
+function rkSendOpen() {
+  if (!rk.items.length) return showToast('Tambahkan produk dulu.');
+  rksOrder = pdShuffle(adPublic().map(d => d.n)); rksAll = false;
+  let ov = document.getElementById('rks');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'rks'; ov.className = 'rks-ov'; ov.onclick = e => { if (e.target === ov) rkSendClose(); }; document.body.appendChild(ov); }
+  ov.classList.add('open'); document.body.style.overflow = 'hidden';
+  rkSendRender(); adEnsure();
+}
+function rkSendClose() { document.getElementById('rks')?.classList.remove('open'); document.body.style.overflow = ''; }
+function rkSendProv(v) { try { localStorage.setItem(PD_PROV_KEY, v); } catch (e) {} rksAll = false; rkSendRender(); if (typeof intCity === 'function') intCity(v); }
+function rkSendRender() {
+  const ov = document.getElementById('rks'); if (!ov || !ov.classList.contains('open')) return;
+  const a = rkAnalyze(), parts = adPublic(), provs = [...new Set(parts.map(d => d.r))], prov = provs.includes(pdProv()) ? pdProv() : '';
+  const rank = n => { const i = (rksOrder || []).indexOf(n); return i < 0 ? 1e9 : i; };
+  const list = prov ? parts.filter(d => d.r === prov).sort((x, y) => rank(x.n) - rank(y.n)) : [], show = rksAll ? list : list.slice(0, 4);
+  const items = rk.items.map(it => { const { brand, product: p } = findProductAny(it.pid); return `<div>${it.qty}× ${escHtml(brand.name + ' ' + p.name)}${it.v ? ' ' + escHtml(it.v) : ''}</div>`; }).join('');
+  ov.innerHTML = `<div class="rks" role="dialog" aria-label="Kirim rakitan ke partner"><div class="rks-h"><b>Kirim rakitan ke partner<small>Partner menerima daftar barang &amp; total SRP lewat WhatsApp</small></b><button class="rks-x" onclick="rkSendClose()" aria-label="Tutup">✕</button></div>
+    <div class="rks-sum">${items}<div class="t"><span>Total SRP</span><span>${fmtRp(a.total)}</span></div></div>
+    <select onchange="rkSendProv(this.value)" aria-label="Pilih provinsi"><option value="">Pilih provinsi Anda…</option>${provs.map(r => `<option ${r === prov ? 'selected' : ''}>${escHtml(r)}</option>`).join('')}</select>
+    ${prov ? `<div class="rks-l">${show.map(d => `<div class="rks-it"><div><b>${escHtml(d.n)}</b><small>📍 ${escHtml(d.c || d.r)}</small></div>${d.wa
+      ? `<a href="https://wa.me/${d.wa}?text=${waText(rkSendMsg(d))}" target="_blank" rel="noopener">💬 Kirim</a>` : `<a class="mp" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>`}</div>`).join('')}</div>
+      ${list.length > show.length ? `<button class="rks-more" onclick="rksAll=true;rkSendRender()">Lihat semua ${list.length} partner di ${escHtml(prov)} ›</button>` : ''}`
+    : '<div class="rks-f">Pilih provinsi untuk melihat partner resmi CAI terdekat.</div>'}
+    <div class="rks-f">Urutan partner diacak. Pesan berisi daftar barang, total SRP, keterangan “${RK_EXCL}” dan link rakitan. Hanya harga SRP.</div></div>`;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('rks')?.classList.contains('open')) rkSendClose(); });
 function rkOpenLinked(str) {
   const items = String(str || '').split('~').map(x => x.split('*')).map(([pid, q, v]) => ({ pid, qty: Math.max(1, Math.min(99, +q || 1)), ...(v ? { v } : {}) }))
     .filter(it => { const p = findProductAny(it.pid).product; return p && (!it.v || p.priceList?.[it.v] !== undefined); });
@@ -1993,6 +2031,7 @@ function adRerender() {
   if (on('view-authdealer')) renderAuthDealers();
   if (on('view-halloffame') && typeof renderHallOfFame === 'function') renderHallOfFame();
   if (on('view-galeri') && typeof renderGaleri === 'function') renderGaleri();
+  if (document.getElementById('rks')?.classList.contains('open')) rkSendRender();   // jendela Kirim rakitan ke partner
 }
 function adEnsure() { if (adTried || adLoading) return; loadAuthDealers().then(adRerender); }
 // Dipanggil scAuthChanged() tiap status login berubah — Editor juga melihat dealer yang disembunyikan
