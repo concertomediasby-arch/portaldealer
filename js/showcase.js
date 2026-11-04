@@ -552,7 +552,9 @@ function openGlDetail(id, photoIdx = 0) {
       <div>
         <div class="gl-big">${cur ? glBigMedia(it, cur, photoIdx) : glCarSvg}${cur?.area ? `<span class="gl-area">${escHtml(cur.area)}</span>` : ''}</div>
         ${photos.length > 1 ? `<div class="gl-th">${photos.map((p, i) => `<button class="${i === photoIdx ? 'on' : ''}" onclick="openGlDetail('${it.id}',${i})">${glIsVid(p) ? glVidTag(glUrl(p.path), '', p) + '<i class="gl-play">▶</i>' : `<img src="${glUrl(p.path)}" alt="" loading="lazy"${glFrAttr(p)}>`}${p.area ? `<span>${escHtml(p.area)}</span>` : ''}</button>`).join('')}</div>` : ''}
-      ${cur && isEditor() ? (() => { const vid = glIsVid(cur), what = vid ? 'video' : 'foto', rot = vid ? `<button class="${cur.cover ? 'on' : ''}" onclick="glAdjCover('${it.id}',${photoIdx})" title="Video ini diputar berulang (tanpa suara) sebagai sampul kartu Galeri">${cur.cover ? '🎞 Sampul loop · lepas' : '🎞 Jadikan sampul loop'}</button>`+`<button class="${cur.mute ? 'on' : ''}" onclick="glAdjMute('${it.id}',${photoIdx})" title="Atur suara video untuk semua yang menonton">${cur.mute ? '🔇 Tayang tanpa suara · ubah' : '🔊 Tayang dengan suara · ubah'}</button>` : `<button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`;
+      ${cur && isEditor() ? (() => { let vid = glIsVid(cur), what = vid ? 'video' : 'foto', rot = vid ? `<button class="${cur.cover ? 'on' : ''}" onclick="glAdjCover('${it.id}',${photoIdx})" title="Video ini diputar berulang (tanpa suara) sebagai sampul kartu Galeri">${cur.cover ? '🎞 Sampul loop · lepas' : '🎞 Jadikan sampul loop'}</button>`+`<button class="${cur.mute ? 'on' : ''}" onclick="glAdjMute('${it.id}',${photoIdx})" title="Atur suara video untuk semua yang menonton">${cur.mute ? '🔇 Tayang tanpa suara · ubah' : '🔊 Tayang dengan suara · ubah'}</button>` : `<button onclick="glAdjRotate('${it.id}',${photoIdx})">⟳ Putar 90°</button>`;
+        // Sampul kartu WA (Tahap 5 C, 4 Nov 2026 — opsi 1 pemilik): Editor memilih foto / adegan video yang aman (tanpa plat nomor)
+        rot += `<button class="gl-wa${cur.wa ? ' on' : ''}" onclick="glAdjWa('${it.id}',${photoIdx})" title="${vid ? 'Putar lalu jeda video di adegan yang aman (tanpa plat nomor), lalu tekan — adegan itu jadi gambar kartu WhatsApp mobil ini' : 'Foto ini jadi gambar kartu WhatsApp saat mobil ini dibagikan'}">${cur.wa ? `📲 Sampul kartu WA${vid && cur.waT != null ? ' (detik ' + cur.waT + ')' : ''} · lepas` : '📲 Jadikan sampul kartu WA'}</button>`;
         return `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
         ? `<span>✥ Geser ${what} di atas & atur zoom — bingkai itu sama dengan sampul kartu Galeri.</span><label class="gl-zm">🔍 Zoom <input type="range" min="1" max="3" step="0.05" value="${glFr(cur).z}" oninput="glZoomLive(this.value)" onchange="glZoomCommit()"><b id="gl-zmv">${glFr(cur).z.toFixed(1)}×</b></label><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Reset</button>${rot}<button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
         : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi & zoom ${what} ini</button>${rot}`}</div>`; })() : ''}
@@ -650,6 +652,20 @@ async function glAdjCover(id, idx) {
   const on = !it.photos?.[idx]?.cover;
   const photos = (it.photos || []).map((p, i) => { const q = { ...p }; delete q.cover; if (i === idx && on) q.cover = true; return q; });
   if (await glSavePhotos(id, photos, on ? '🎞 Video ini kini jadi sampul loop di Galeri' : 'Sampul kembali ke foto pertama')) openGlDetail(id, idx);
+}
+async function glAdjWa(id, idx) {
+  if (!isEditor()) return;
+  const it = glItems.find(x => x.id === id); if (!it) return;
+  const cur = it.photos?.[idx]; if (!cur) return;
+  let t = null;
+  if (glIsVid(cur)) {
+    const v = document.querySelector('#gl-detail .gl-big video');
+    t = v && v.currentTime > 0.2 ? Math.round(v.currentTime * 10) / 10 : 1.5;   // belum diputar → detik 1,5 (hindari layar hitam di awal)
+    if (cur.wa && cur.waT === t) { if (!confirm('Lepas sampul kartu WA dari video ini?')) return; }
+  }
+  const unset = cur.wa && (!glIsVid(cur) || cur.waT === t);
+  const photos = (it.photos || []).map((p, i) => { const q = { ...p }; delete q.wa; delete q.waT; if (i === idx && !unset) { q.wa = true; if (t != null) q.waT = t; } return q; });
+  if (await glSavePhotos(id, photos, unset ? 'Sampul kartu WA dilepas — kembali otomatis' : `📲 ${glIsVid(cur) ? 'Adegan detik ' + t : 'Foto ini'} jadi sampul kartu WA — kartu diperbarui otomatis ±15–25 menit`)) openGlDetail(id, idx);
 }
 async function glAdjMute(id, idx) {
   if (!isEditor()) return;
@@ -828,7 +844,7 @@ function glSetFr(q, f) {
   return q;
 }
 function glPosAttr(p) { return glFrAttr(p); }
-function glPhotoRow(path, p, vid) { const r = { path, area: p.area || '' }; if (vid) r.type = 'video'; if (glPosXY(p)) r.pos = p.pos; if (+p.zoom > 1) r.zoom = +p.zoom; if (vid && p.mute) r.mute = true; if (vid && p.cover) r.cover = true; return r; }
+function glPhotoRow(path, p, vid) { const r = { path, area: p.area || '' }; if (vid) r.type = 'video'; if (glPosXY(p)) r.pos = p.pos; if (+p.zoom > 1) r.zoom = +p.zoom; if (vid && p.mute) r.mute = true; if (vid && p.cover) r.cover = true; if (p.wa) { r.wa = true; if (vid && p.waT != null) r.waT = +p.waT; } return r; }
 function glSetPos(i) { const p = glEdit.photos[i]; if (!p) return; delete p.pos; delete p.zoom; renderGlPhotos(); }
 function glFormFr(i, f) { const p = glEdit.photos[i]; if (!p) return; glSetFr(p, f); renderGlPhotos(); }
 function glFormZoom(i, inp) {

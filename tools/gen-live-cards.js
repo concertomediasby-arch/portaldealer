@@ -117,8 +117,8 @@ function pageHtml({ dir, id, title, desc, img, target }) {
 `;
 }
 // Cuplikan video (Galeri tanpa foto) → JPEG lokal; ffmpeg membaca langsung dari URL publik (detik ke-1,5 bila ada)
-function videoFrame(url, out) {
-  for (const ss of ['1.5', '0']) {
+function videoFrame(url, out, at) {
+  for (const ss of [...(at != null ? [String(at)] : []), '1.5', '0']) {
     try { execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', ss, '-i', url, '-frames:v', '1', '-vf', 'scale=1280:-2', '-q:v', '3', out], { timeout: 90000 }); if (fs.existsSync(out) && fs.statSync(out).size > 2000) return true; }
     catch (e) { /* coba lagi dari awal */ }
   }
@@ -136,14 +136,17 @@ function videoFrame(url, out) {
   }
   for (const g of data.gallery || []) {
     const ph = (Array.isArray(g.photos) ? g.photos : []).filter(p => p?.path && !String(p.path).startsWith('pending/'));
-    // Gambar kartu: foto "Tampak Luar" → cuplikan video sampul (cover) → foto pertama → cuplikan video pertama
+    // Gambar kartu: pilihan Editor "📲 Sampul kartu WA" (wa, video + detik waT) → foto "Tampak Luar" → cuplikan video sampul (cover)
+    // → foto pertama → cuplikan video pertama
+    const pick = ph.find(p => p.wa);
     const outside = ph.find(p => !isVid(p) && /tampak luar/i.test(p.area || '')), cover = ph.find(p => isVid(p) && p.cover);
-    const photo = outside || (!cover ? ph.find(p => !isVid(p)) : null), video = photo ? null : (cover || ph.find(isVid));
+    const photo = pick ? (isVid(pick) ? null : pick) : outside || (!cover ? ph.find(p => !isVid(p)) : null);
+    const video = photo ? null : (pick || cover || ph.find(isVid));
     const name = carName(g) || 'Instalasi audio mobil';
     items.push({ dir: 'g', id: g.id, target: `/?gl=${encodeURIComponent(g.id)}`,
       title: `${name}${g.dealer ? ' · Instalasi ' + g.dealer : ''}`,
       desc: clip(`Galeri Instalasi partner resmi Concerto Audio Indonesia${g.city ? ' — ' + g.city : ''}. Foto & video pemasangan di CAI Hub.`, 200),
-      sig: [name, g.dealer, g.city, g.hof_id, photo?.path, photo?.pos, video?.path], g, photo, video });
+      sig: [name, g.dealer, g.city, g.hof_id, photo?.path, photo?.pos, video?.path, video?.waT], g, photo, video });
   }
   const livePath = path.join(ROOT, 'share/live.json');
   const old = fs.existsSync(livePath) ? JSON.parse(fs.readFileSync(livePath, 'utf8')) : { n: {}, g: {} };
@@ -172,7 +175,7 @@ function videoFrame(url, out) {
           let src = it.photo ? pub(it.photo.path) : '';
           if (it.photo?.pos) it.g._pos = String(it.photo.pos).split(' ').map(v => /%$/.test(v) ? v : v + '%').join(' ');
           if (!src && it.video && TEST_IMG) src = TEST_IMG;
-          if (!src && it.video) { const f = path.join(tmp, it.id + '.jpg'); if (videoFrame(pub(it.video.path), f)) src = 'data:image/jpeg;base64,' + fs.readFileSync(f).toString('base64'); }
+          if (!src && it.video) { const f = path.join(tmp, it.id + '.jpg'); if (videoFrame(pub(it.video.path), f, it.video.waT)) src = 'data:image/jpeg;base64,' + fs.readFileSync(f).toString('base64'); }
           html = galleryCard(it.g, src, !!it.video);
         }
         await pg.setContent(`<!doctype html><html><head><link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>${CSS}</style></head><body>${html}</body></html>`, { waitUntil: 'networkidle', timeout: 60000 });
