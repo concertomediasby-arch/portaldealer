@@ -19,6 +19,78 @@ const sharePage = (kind, id) => `${PORTAL_URL}/${kind}/${encodeURIComponent(id)}
 /* Kartu WA per berita & per mobil Galeri (Tahap 5 C, 4 Nov 2026): share/live.json dibuat jadwal GitHub (tools/gen-live-cards.js)
    = { n: {id: hash}, g: {id: hash} }. Bila kartu item itu sudah ada → link /n/<id>/?v=<hash> · /g/<id>/?v=<hash>; belum → null
    (pemanggil memakai link lama = kartu umum). ?build= agar tidak disimpan service worker. */
+/* ── PENCARIAN LEBIH PINTAR (Tahap 6 B, 4 Nov 2026, permintaan pemilik — pratinjau .mockup/tahap6/) ──
+   Dipakai Katalog (renderCatalog), pencarian Dashboard (dashSearch), menu Stok & jendela pilih System Simulator.
+   (1) huruf besar, spasi, tanda hubung & titik tidak berpengaruh ("sqw8" = SQW-8, "dsp12" = SS-DSP12);
+   (2) kata sehari-hari → kategori / kata kunci lewat SR_SYN (tambah sinonim baru di sini — bahan: laporan Minat Pengunjung
+       "Dicari tapi tidak ketemu"); (3) salah ketik 1 huruf pada nama/model (≥ 4 huruf) bila tidak ada hasil persis;
+   (4) tetap tidak ada → saran (srHintHtml), kata untuk barang yang tidak dijual CAI (SR_NONE) dijelaskan. */
+const SR_N = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '');
+const SR_SYN = [
+  { k: ['speaker pintu', 'speaker depan', 'speaker belakang', 'speaker mobil', 'speaker komponen', 'komponen', 'component', '2 way', '3 way', 'split', 'splitter', 'midbass', 'mid bass', 'woofer pintu'], cat: 'Speaker', note: 'speaker komponen & midbass untuk pintu depan / belakang' },
+  { k: ['coaxial', 'coax', 'koaksial', 'speaker coaxial'], cat: 'Speaker', note: 'speaker (termasuk coaxial)' },
+  { k: ['twitter', 'twiter', 'tweter', 'tweeter mobil'], cat: 'Tweeter', note: 'tweeter' },
+  { k: ['mid', 'mid range', 'midrange mobil', 'squawker'], cat: 'Midrange', note: 'midrange' },
+  { k: ['subwoofer kolong', 'sub kolong', 'woofer kolong', 'kolong', 'under seat', 'subwoofer aktif', 'active subwoofer', 'sub aktif', 'subwoofer slim'], cat: 'Subwoofer', line: /active|aktif/i, note: 'subwoofer aktif (tipis, bisa di kolong jok / ban serep)' },
+  { k: ['sub', 'bass', 'basstube', 'bass tube', 'woofer', 'subwofer', 'subwoffer'], cat: 'Subwoofer', note: 'subwoofer' },
+  { k: ['power', 'ampli', 'amp', 'amplifier mobil', 'penguat', 'monoblok', 'mono block', 'monoblock', 'power amplifier', 'power mobil'], cat: 'Amplifier', note: 'power amplifier' },
+  { k: ['processor', 'prosesor', 'procesor', 'dsp mobil', 'equalizer', 'eq', 'crossover aktif'], cat: 'DSP', note: 'DSP (digital sound processor)' },
+  { k: ['kabel', 'cable', 'rca', 'kabel rca', 'kabel power', 'kabel speaker', 'kabel audio'], cat: 'Cable', note: 'kabel audio' },
+  { k: ['peredam', 'redam', 'damping', 'dumping', 'damper', 'sound deadening', 'deadening', 'peredam suara', 'peredam pintu'], terms: ['deadening'], note: 'peredam (sound deadening)' },
+  { k: ['sekring', 'fuse', 'fuse anl', 'distribution', 'distribution block'], terms: ['fuse', 'distribution'], note: 'fuse & distribusi daya' },
+  { k: ['remote', 'controller', 'kontrol', 'remote dsp'], terms: ['drc'], note: 'remote / controller DSP' },
+];
+const SR_NONE = ['head unit', 'headunit', 'android', 'tape', 'radio', 'double din', 'layar', 'monitor', 'kamera', 'camera', 'lampu', 'alarm', 'velg', 'ban'];
+function srLev(a, b) {
+  if (Math.abs(a.length - b.length) > 1) return 9;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) { const cur = [i]; for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+  return prev[b.length];
+}
+const srHay = (b, l, p) => [p.name, p.model, p.category, b.name, l?.name || '', p.desc || ''].join(' ');
+// Cocok persis (tanpa sinonim & salah ketik): teks utuh, versi tanpa spasi/tanda baca, atau semua kata ada
+function srText(q, b, l, p) {
+  const ql = String(q || '').toLowerCase().trim(); if (!ql) return true;
+  const hay = srHay(b, l, p).toLowerCase(), hc = SR_N(hay), qc = SR_N(ql);
+  return hay.includes(ql) || (qc.length >= 2 && hc.includes(qc)) || ql.split(/\s+/).every(w => hc.includes(SR_N(w)));
+}
+function srFuzzy(q, p) {
+  const qc = SR_N(q); if (qc.length < 4) return false;
+  const cs = [SR_N(p.name), SR_N(p.model), ...String(p.name + ' ' + p.model).split(/\s+/).map(SR_N)].filter(Boolean);
+  return cs.some(c => srLev(qc, c) <= 1 || (c.length > qc.length && srLev(qc, c.slice(0, qc.length)) <= 1));
+}
+const srSyn = q => { const ql = String(q || '').toLowerCase().trim().replace(/\s+/g, ' '); return SR_SYN.find(s => s.k.includes(ql)) || null; };
+function srSynHit(s, b, l, p) {
+  if (s.terms) return s.terms.some(t => srHay(b, l, p).toLowerCase().includes(t));
+  return p.category === s.cat && (!s.line || s.line.test(l?.name || '') || s.line.test(p.name));
+}
+// rows = [{ b | brand, l, p }] → { list, syn, fuzzy, none }
+function searchProducts(rows, q) {
+  const ql = String(q || '').trim(); if (!ql) return { list: rows };
+  const B = r => r.b || r.brand, s = srSyn(ql);
+  if (s) { const list = rows.filter(r => srSynHit(s, B(r), r.l, r.p)); if (list.length) return { list, syn: s }; }
+  let list = rows.filter(r => srText(ql, B(r), r.l, r.p));
+  if (list.length) return { list };
+  list = rows.filter(r => srFuzzy(ql, r.p));
+  if (list.length) return { list, fuzzy: true };
+  return { list, none: SR_NONE.some(w => (' ' + ql.toLowerCase() + ' ').includes(' ' + w + ' ')) };
+}
+// Filter satu baris (menu Stok, jendela pilih Simulator): teks persis atau sinonim
+function srMatch(q, b, l, p) { const s = srSyn(q); return (s && srSynHit(s, b, l, p)) || srText(q, b, l, p); }
+function srHintHtml(q, r) {
+  if (!String(q || '').trim()) return '';
+  const e = escHtml(String(q).trim());
+  if (r.syn) return `<div class="sr-hint ok">🔎 Menampilkan <b>${escHtml(r.syn.note)}</b> <span>— “${e}” dikenali otomatis</span></div>`;
+  if (r.fuzzy) return `<div class="sr-hint ok">🔎 Tidak ada yang persis “${e}” — mungkin maksud Anda: <b>${r.list.slice(0, 4).map(x => escHtml(x.p.name)).join(', ')}</b></div>`;
+  if (r.list.length) return '';
+  const all = BRANDS.flatMap(b => b.lines.flatMap(l => l.products));
+  const n = c => all.filter(p => p.category === c).length;
+  const chip = (t, js) => `<button onclick="${js}">${t}</button>`;
+  return `<div class="sr-hint"><b>${r.none ? `“${e}” belum ada di katalog CAI Hub.` : `Tidak ada produk untuk “${e}”.`}</b>
+    ${r.none ? 'Sistem audio CAI bisa dipasang dengan perangkat bawaan mobil Anda — coba mulai dari:' : 'Coba kata lain, atau mulai dari:'}
+    <div class="chips">${chip(`DSP (${n('DSP')})`, "srGo('DSP')")}${chip(`Speaker (${n('Speaker')})`, "srGo('Speaker')")}${chip(`Subwoofer (${n('Subwoofer')})`, "srGo('Subwoofer')")}${chip('Paket Audio', 'openPaketAudio()')}${chip('System Simulator', 'openRakit()')}${chip('Tanya partner resmi', 'openAuthDealers()')}</div></div>`;
+}
+function srGo(cat) { openCatalog(); const s = document.getElementById('catalog-search'); if (s) { s.value = cat; renderCatalog(); } }
 let liveCards = null;
 function liveLoad() { fetch('/share/live.json?build=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j) liveCards = j; }, () => {}); }
 const liveLink = (kind, id) => { const h = liveCards?.[kind]?.[id]; return h ? `${sharePage(kind, id)}?v=${h}` : null; };
@@ -1380,7 +1452,7 @@ function renderRkPick() {
   const brands = [...new Set(all.map(r => r.b))];
   ov.querySelector('.rk-pick-brands').innerHTML = [`<button class="filter-chip${rkPickBrand ? '' : ' active'}" onclick="rkPickBrand='';renderRkPick()">Semua</button>`]
     .concat(brands.map(b => `<button class="filter-chip${rkPickBrand === b.id ? ' active' : ''}" onclick="rkPickBrand='${b.id}';renderRkPick()">${escHtml(b.name)}</button>`)).join('');
-  const list = all.filter(r => (!rkPickBrand || r.b.id === rkPickBrand) && (!q || normKey(`${r.b.name} ${r.l.name} ${r.p.name} ${r.p.model} ${r.p.category}`).includes(q)));
+  const list = all.filter(r => (!rkPickBrand || r.b.id === rkPickBrand) && (!q || srMatch(rkPickQ, r.b, r.l, r.p)));
   ov.querySelector('.rk-pick-list').innerHTML = list.map(({ b, l, p }) => {
     const n = rk.items.filter(it => it.pid === p.id).reduce((s, it) => s + it.qty, 0), sb = stockBadgeSmall(p.id);
     return `<div class="rk-opt">
@@ -2381,13 +2453,11 @@ function renderCatalog() {
 
   // Flatten semua produk dengan info brand-nya
   const allPairs = [];
-  brands.forEach(brand => brand.lines.forEach(l => l.products.forEach(p => allPairs.push({ brand, p }))));
+  brands.forEach(brand => brand.lines.forEach(l => l.products.forEach(p => allPairs.push({ brand, l, p }))));
 
-  // Filter pencarian
-  const filtered = allPairs.filter(({ brand, p }) => {
-    if (!q) return true;
-    return (p.name + ' ' + p.model + ' ' + p.category + ' ' + brand.name + ' ' + (p.desc||'')).toLowerCase().includes(q);
-  });
+  // Filter pencarian — pencarian pintar (searchProducts: tanpa tanda hubung/spasi, sinonim, salah ketik, saran)
+  const sr = searchProducts(allPairs, q), filtered = sr.list;
+  const hintEl = document.getElementById('catalog-hint'); if (hintEl) hintEl.innerHTML = q ? srHintHtml(q, sr) : '';
   if (q && typeof intSearch === 'function') intSearch(q, filtered.length > 0);   // Laporan Minat Pengunjung
 
   // Urutkan: ikuti UPDATE_LOG (terbaru dulu), sisanya di belakang

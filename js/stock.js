@@ -478,7 +478,7 @@ function renderStockView() {
   const rows = all.filter(({ b, p, s }) =>
     (stockBrand === 'all' || b.id === stockBrand) &&
     (stockStatus === 'all' || (stockStatus === 'otw' ? !!s.incoming : stockStatus === 'watch' ? swHas(p.id) : s.status === stockStatus)) &&
-    (!q || p.name.toLowerCase().includes(q) || p.model.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)));
+    (!q || srMatch(q, b, null, p)));
 
   const el = document.getElementById('stock-results');
   if (!rows.length) {

@@ -22,8 +22,7 @@ function dashSearch(q) {
   q = String(q || '').trim();
   if (!q) { openCatalog(); return; }
   const k = q.toLowerCase();
-  const prodHit = BRANDS.some(b => b.lines.some(l => l.products.some(p =>
-    (p.name + ' ' + p.model + ' ' + p.category + ' ' + b.name + ' ' + (p.desc || '')).toLowerCase().includes(k))));
+  const prodHit = searchProducts(BRANDS.flatMap(b => b.lines.flatMap(l => l.products.map(p => ({ b, l, p })))), q).list.length > 0;   // pencarian pintar (js/core.js)
   const dlHit = adPublic().some(d => [d.n, d.c, d.r, d.a].join(' ').toLowerCase().includes(k));
   if (!prodHit && dlHit) {
     if (typeof intCity === 'function') intCity(q);

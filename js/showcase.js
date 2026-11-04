@@ -1176,8 +1176,48 @@ async function deleteGlItem(id, reject) {
    HALAMAN PRODUK — Achievement + Contoh pemasangan (dipanggil showProduct di core.js)
 ══════════════════════════════════════════ */
 let scProduct = null;
+/* ── 🔧 Sering dipasang bersama + ⇄ Produk serupa (Tahap 6 A, 4 Nov 2026, permintaan pemilik — pratinjau .mockup/tahap6/) ──
+   Data instalasi asli: perangkat (products) mobil Galeri yang tayang (glLive) + entri Hall of Fame ber-products; mobil yang sama
+   di keduanya (daftar perangkat identik) dihitung sekali. Tampil bila produk ini ada di ≥ CO_MIN instalasi; produk lain dihitung
+   "di n dari m mobil" (≥ 2). Produk serupa = kategori sama, seri lain, SRP ±50% (tanpa SRP: kategori sama, seri lain). */
+const CO_MIN = 2, CO_MAX = 6, SIM_MAX = 4;
+function coInstalls() {
+  const sets = new Map();
+  const add = arr => { const a = [...new Set((arr || []).filter(Boolean))]; if (a.length > 1) sets.set(a.slice().sort().join('|'), a); };
+  (typeof glLive === 'function' ? glLive() : []).forEach(it => add(it.products));
+  (typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME : []).forEach(e => add(e.products));
+  return [...sets.values()];
+}
+function coHtml(product, brand, lineName) {
+  const ins = coInstalls().filter(a => a.includes(product.id)), m = ins.length;
+  const cnt = new Map(); ins.forEach(a => a.forEach(id => { if (id !== product.id) cnt.set(id, (cnt.get(id) || 0) + 1); }));
+  const top = [...cnt].filter(([id, n]) => n >= 2 && findProductAny(id)?.product).sort((a, b) => b[1] - a[1]).slice(0, CO_MAX);
+  const card = (id, n) => { const { brand: b, product: p } = findProductAny(id);
+    return `<div class="co-w">${productCard(b, p)}${n ? `<div class="co-n">🔧 di ${n} dari ${m} mobil</div>` : ''}</div>`; };
+  let out = '';
+  if (m >= CO_MIN && top.length) out += `<div class="co-sec"><div class="co-h"><b>🔧 Sering dipasang bersama ${escHtml(product.name)}</b><small>dari ${m} instalasi partner resmi di Galeri &amp; Hall of Fame</small></div>
+    <div class="line-grid co-grid">${top.map(([id, n]) => card(id, n)).join('')}</div>
+    <div class="co-bar"><button onclick="coRakit(${escHtml(JSON.stringify([product.id, ...top.slice(0, 3).map(x => x[0])]))})">＋ Rakit sistem dengan ${escHtml(product.name)} + ${Math.min(3, top.length)} teratas</button><span>membuka System Simulator berisi produk-produk ini</span></div></div>`;
+  const all = BRANDS.flatMap(b => b.lines.flatMap(l => l.products.map(p => ({ b, l, p }))));
+  const sim = all.filter(x => x.p.category === product.category && x.p.id !== product.id && x.l.name !== lineName && !cnt.has(x.p.id)
+      && (!product.price || (x.p.price && Math.abs(x.p.price - product.price) / product.price <= .5)))
+    .sort((a, b) => product.price ? Math.abs(a.p.price - product.price) - Math.abs(b.p.price - product.price) : 0).slice(0, SIM_MAX);
+  if (sim.length) out += `<div class="co-sec"><div class="co-h"><b>⇄ Produk serupa</b><small>${escHtml(product.category)}${product.price ? ' · kisaran SRP mirip' : ''} · seri / brand lain</small></div>
+    <div class="line-grid co-grid">${sim.map(x => card(x.p.id, 0)).join('')}</div></div>`;
+  return out;
+}
+function coRakit(ids) {
+  rkLoad();
+  let n = 0;
+  ids.forEach(pid => { const { product: p } = findProductAny(pid); if (!p || rk.items.some(it => it.pid === pid)) return;
+    const v = p.priceList ? Object.keys(p.priceList)[0] : undefined; rk.items.push({ pid, qty: 1, ...(v ? { v } : {}) }); n++;
+    if (typeof intLog === 'function') intLog('rk', pid); });
+  rkSave(); openRakit();
+  showToast(n ? `✓ ${n} produk ditambahkan ke System Simulator` : 'Produk-produk ini sudah ada di System Simulator');
+}
 function renderProductShowcase(product, lineName, brand) {
   scProduct = { product, lineName, brand };
+  const coEl = document.getElementById('pd-co'); if (coEl) coEl.innerHTML = coHtml(product, brand, lineName);
   const el = document.getElementById('product-showcase'); if (!el) return;
   if (!scOn()) { el.innerHTML = ''; return; }
   const hof = hofForProduct(brand.id, lineName, product.id).sort(hofSort);
