@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tutorial — Aktifkan Notifikasi CAI Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Video tutorial vertikal 1080×1920 "Aktifkan Notifikasi CAI Hub" (4 Nov 2026, permintaan pemilik — storyboard .mockup/tut-notif/).
+     Dirender per frame lewat seek(t) (tools/tutorial-capture.js tutorial-notifikasi.html). Tampilan HP digambar sederhana (bukan salinan persis UI asli).
+     Kode Akses tidak pernah ditampilkan (titik-titik). */
+  :root { --gold:#e9c46a; --gold-hi:#f6dfa0; --acc:#d8b26a; --f-d:'Sora','Inter',system-ui,sans-serif; --f-b:'Inter',system-ui,sans-serif; --f-m:'JetBrains Mono',ui-monospace,monospace; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:#000; overflow:hidden; color:#fff; font-family:var(--f-b); }
+  #stage { position:absolute; left:0; top:0; width:1080px; height:1920px; transform-origin:0 0; overflow:hidden;
+    background:radial-gradient(ellipse 90% 60% at 50% 58%, #15233f 0%, #0a1226 50%, #04060c 100%); }
+  .abs { position:absolute; }
+  .scene { position:absolute; inset:0; opacity:0; }
+  .gold { background:linear-gradient(100deg,#b98a3c,var(--gold-hi) 30%,#fff6dc 45%,var(--gold) 60%,#b98a3c); background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .mono { font-family:var(--f-m); letter-spacing:.4em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  #glow { inset:0; background:radial-gradient(ellipse 50% 35% at 50% 62%, rgba(233,196,106,.14), transparent 70%); }
+  .spark { position:absolute; border-radius:50%; background:radial-gradient(circle,#fff3d6,#e9c46a 55%,transparent 70%); opacity:0; }
+  #vig { inset:0; background:radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,.5) 100%); pointer-events:none; z-index:50; }
+
+  /* pembuka */
+  #ic1 { left:50%; top:420px; width:260px; height:260px; margin-left:-130px; border-radius:60px; opacity:0; box-shadow:0 30px 70px rgba(0,0,0,.6), 0 0 90px rgba(233,196,106,.35); }
+  .ring { left:50%; top:550px; width:300px; height:300px; margin:-150px 0 0 -150px; border-radius:50%; border:2px solid rgba(233,196,106,.6); opacity:0; }
+  #bell { left:0; right:0; top:740px; text-align:center; font-size:170px; opacity:0; transform-origin:50% 10%; }
+  #t1 { left:60px; right:60px; top:990px; text-align:center; font:800 110px/1.05 var(--f-d); letter-spacing:-.02em; }
+  #t1 span { display:inline-block; opacity:0; }
+  #s1 { left:110px; right:110px; top:1290px; text-align:center; font:500 42px/1.4 var(--f-b); color:#c3cbdc; opacity:0; }
+
+  /* keterangan */
+  .cap { left:60px; right:60px; top:130px; height:420px; display:flex; flex-direction:column; align-items:center; text-align:center; opacity:0; }
+  .cap .st { font:700 28px var(--f-m); letter-spacing:.3em; color:var(--gold); text-transform:uppercase; }
+  .cap h2 { font:800 72px/1.1 var(--f-d); letter-spacing:-.015em; margin-top:20px; }
+  .cap h2 b { color:var(--gold-hi); }
+  .cap p { font:500 34px/1.4 var(--f-b); color:#c3cbdc; margin-top:20px; }
+  .cap.ok h2 { color:#86efac; }
+
+  /* ponsel */
+  .phone { left:50%; top:570px; width:613px; height:1294px; margin-left:-306px; opacity:0; }
+  .phone.sm { width:440px; height:919px; top:660px; }
+  .pb { position:absolute; inset:0; background:#0b0d14; border-radius:78px; box-shadow:0 0 0 3px #2c3244, 0 50px 110px rgba(0,0,0,.7), 0 0 120px rgba(233,196,106,.16); }
+  .scr { position:absolute; left:14px; top:14px; width:390px; height:844px; transform:scale(1.5); transform-origin:0 0; overflow:hidden; border-radius:44px; background:#0b0c10; }
+  .phone.sm .scr { transform:scale(1.0564); }
+  .phone.sm .pb { border-radius:58px; }
+  .scr > *, .scr .p { position:absolute; }
+  .island { left:50%; top:11px; width:120px; height:34px; margin-left:-60px; background:#000; border-radius:20px; z-index:40; }
+  .sb { left:0; right:0; top:0; height:47px; z-index:35; display:flex; justify-content:space-between; align-items:center; padding:6px 30px 0 34px; font:600 16px var(--f-b); }
+
+  /* portal (digambar sederhana, tema gelap) */
+  .app { inset:0; background:#0b0c10; padding:58px 18px 18px; }
+  .app > * { position:relative; }
+  .atop { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+  .atop img { width:24px; height:24px; border-radius:6px; }
+  .atop b { font:800 13px var(--f-d); letter-spacing:.22em; color:var(--acc); }
+  .atop span { margin-left:auto; font:600 12px var(--f-b); color:#9aa0ad; }
+  .hello { font:800 22px var(--f-d); }
+  .mut { color:#9aa0ad; font-size:13px; }
+  .box { border:1.5px solid rgba(216,178,106,.55); background:rgba(216,178,106,.1); border-radius:16px; padding:14px; margin-top:16px; }
+  .box.on { border-color:rgba(31,157,85,.7); background:rgba(31,157,85,.12); }
+  .box > b { display:block; font:700 16px var(--f-d); margin-bottom:6px; }
+  .chk { display:flex; gap:10px; align-items:center; background:rgba(255,255,255,.06); border-radius:9px; padding:9px 10px; margin-top:7px; font:500 14.5px var(--f-b); }
+  .chk small { color:#9aa0ad; font-size:11.5px; }
+  .cb { width:18px; height:18px; border-radius:5px; background:#d8b26a; color:#111; font:800 12px var(--f-b); display:grid; place-items:center; flex:none; }
+  .cb.off { background:transparent; border:1.5px solid #666; color:transparent; }
+  .btn { margin-top:12px; background:#fff; color:#111; border-radius:11px; padding:12px; text-align:center; font:700 15px var(--f-b); }
+  .btn.gold { background:var(--acc); color:#15100a; }
+  .btn.ghost { background:transparent; color:#ddd; border:1.5px solid #555; }
+
+  /* layar utama */
+  .home { inset:0; background:linear-gradient(160deg,#1f3a68 0%,#3b2a6b 45%,#7a3b6b 100%); }
+  .grid { left:22px; right:22px; top:72px; display:grid; grid-template-columns:repeat(4,1fr); row-gap:22px; }
+  .grid > div { height:86px; display:flex; flex-direction:column; align-items:center; gap:6px; font:500 11.5px var(--f-b); color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+  .grid i { display:block; width:62px; height:62px; border-radius:15px; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+  .grid img { width:62px; height:62px; border-radius:15px; box-shadow:0 4px 14px rgba(0,0,0,.45); }
+  .dock { left:14px; right:14px; bottom:14px; height:92px; border-radius:30px; background:rgba(255,255,255,.18); display:flex; justify-content:space-around; align-items:center; }
+  .dock i { display:block; width:62px; height:62px; border-radius:15px; }
+  .splash { inset:0; z-index:34; background:#070809; opacity:0; display:flex; align-items:center; justify-content:center; }
+  .splash img { width:150px; }
+
+  /* login */
+  .lgn { left:22px; right:22px; top:220px; background:#15161b; border:1.5px solid rgba(216,178,106,.45); border-radius:18px; padding:20px; }
+  .lgn > b { display:block; font:800 20px var(--f-d); }
+  .fld { margin:14px 0 4px; background:#0b0c10; border:1.5px solid rgba(255,255,255,.18); border-radius:10px; height:48px; display:flex; align-items:center; padding:0 14px; font:700 22px var(--f-b); letter-spacing:.35em; }
+  .fld i { display:inline-block; width:12px; height:12px; border-radius:50%; background:#fff; margin-right:9px; opacity:0; }
+
+  /* dialog izin */
+  .dim { inset:0; background:rgba(0,0,0,.55); z-index:28; opacity:0; }
+  .idlg { left:46px; right:46px; top:330px; z-index:30; background:rgba(242,242,247,.97); color:#111; border-radius:16px; text-align:center; opacity:0; transform:scale(.85); }
+  .idlg b { display:block; font:600 17px/1.3 var(--f-b); padding:20px 16px 6px; }
+  .idlg p { font:400 13px/1.35 var(--f-b); padding:0 16px 16px; color:#333; }
+  .idlg .row { display:flex; border-top:1px solid #c9c9ce; }
+  .idlg .row span { flex:1; padding:13px; color:#0a7aff; font:400 17px var(--f-b); }
+  .idlg .row span + span { border-left:1px solid #c9c9ce; font-weight:600; }
+  .adlg { left:26px; right:26px; top:310px; z-index:30; background:#2d2e31; color:#e8eaed; border-radius:26px; padding:24px; opacity:0; transform:scale(.85); }
+  .adlg b { display:block; font:500 19px/1.35 var(--f-b); }
+  .adlg .row { display:flex; justify-content:flex-end; gap:30px; margin-top:26px; font:600 16px var(--f-b); color:#8ab4f8; }
+  .plbl { left:0; right:0; text-align:center; font:700 26px var(--f-m); letter-spacing:.3em; color:var(--gold); opacity:0; }
+
+  /* layar kunci */
+  .lock { inset:0; background:linear-gradient(160deg,#2b3550,#0e1220 60%,#1d1426); text-align:center; padding:66px 12px 12px; }
+  .lock > * { position:relative; }
+  .lock .d { font:500 17px var(--f-b); opacity:.85; }
+  .lock .t { font:600 84px/1 var(--f-b); letter-spacing:-3px; margin:4px 0 26px; }
+  .nt { background:rgba(255,255,255,.2); backdrop-filter:blur(8px); border-radius:20px; padding:12px; display:flex; gap:10px; text-align:left; margin-bottom:10px; opacity:0; }
+  .nt img { width:38px; height:38px; border-radius:9px; flex:none; }
+  .nt .h { font:500 11px var(--f-b); opacity:.75; text-transform:uppercase; letter-spacing:.04em; }
+  .nt b { display:block; font:600 14.5px/1.3 var(--f-b); margin:2px 0; }
+  .nt span { font:400 13px/1.35 var(--f-b); opacity:.9; }
+
+  /* produk */
+  .ph-img { background:#fff; border-radius:16px; height:250px; display:grid; place-items:center; }
+  .ph-img img { height:230px; }
+  .brand { font:700 11px var(--f-d); letter-spacing:.18em; color:var(--acc); margin-top:14px; }
+  .pname { font:800 30px var(--f-d); }
+  .srp { display:flex; justify-content:space-between; align-items:center; background:#15161b; border:1px solid rgba(255,255,255,.08); border-radius:11px; padding:11px 13px; margin-top:8px; font-size:13px; color:#9aa0ad; }
+  .srp b { color:#fff; font:700 17px var(--f-d); }
+  .stk { display:flex; align-items:center; gap:10px; margin-top:12px; font-size:13px; color:#9aa0ad; }
+  .pill { font:700 12px var(--f-b); padding:5px 11px; border-radius:999px; color:#ff8a80; border:1px solid rgba(214,69,65,.5); background:rgba(214,69,65,.16); }
+  .wbtn { margin-top:14px; border-radius:12px; padding:14px; text-align:center; font:700 15px var(--f-b); background:var(--acc); color:#15100a; }
+  .wbtn.on { position:absolute; left:0; right:0; top:0; margin:0; background:rgba(216,178,106,.14); color:#e7c98a; border:1.5px solid rgba(216,178,106,.6); opacity:0; }
+  .toast { left:30px; right:30px; bottom:40px; z-index:45; background:#1d1f25; border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:13px 14px; font:600 13.5px var(--f-b); text-align:center; opacity:0; }
+
+  /* jari */
+  .fg { width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; background:rgba(255,255,255,.38); border:2.5px solid rgba(255,255,255,.95); box-shadow:0 0 0 6px rgba(233,196,106,.35), 0 6px 18px rgba(0,0,0,.45); z-index:60; opacity:0; }
+  .rp { width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; border:3px solid var(--gold-hi); z-index:59; opacity:0; }
+  .hlring { border-radius:16px; border:3px solid var(--gold); box-shadow:0 0 18px rgba(233,196,106,.8); z-index:58; opacity:0; }
+
+  /* penutup */
+  #ic9 { left:50%; top:330px; width:220px; height:220px; margin-left:-110px; border-radius:52px; opacity:0; box-shadow:0 0 80px rgba(233,196,106,.35); }
+  #t9 { left:60px; right:60px; top:600px; text-align:center; font:800 92px/1.08 var(--f-d); letter-spacing:-.02em; opacity:0; }
+  #q9 { left:50%; top:960px; width:440px; height:440px; margin-left:-220px; background:#fff; border-radius:30px; padding:26px; opacity:0; box-shadow:0 0 90px rgba(233,196,106,.35); }
+  #q9 img { width:100%; height:100%; }
+  #u9 { left:0; right:0; top:1450px; text-align:center; font:700 60px var(--f-d); color:var(--gold-hi); opacity:0; }
+  #s9 { left:0; right:0; top:1550px; text-align:center; font:500 34px var(--f-b); color:#c3cbdc; opacity:0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="abs" id="glow"></div>
+  <div class="abs" id="sparks" style="inset:0"></div>
+
+  <!-- S1 pembuka -->
+  <div class="scene" id="S1">
+    <div class="abs ring"></div><div class="abs ring"></div>
+    <img class="abs" id="ic1" src="assets/icons/icon-512.png" alt="">
+    <div class="abs" id="bell">🔔</div>
+    <div class="abs" id="t1"><span>Jangan</span> <span>lewatkan</span><br><span class="gold">kabar baru</span></div>
+    <div class="abs" id="s1">Aktifkan notifikasi CAI Hub di HP Anda — gratis, cukup sekali.</div>
+  </div>
+
+  <!-- S2 syarat: Layar Utama -->
+  <div class="scene" id="S2">
+    <div class="abs cap" id="c2"><div class="st">Langkah 1</div><h2>Pasang CAI Hub di <b>Layar Utama</b> dulu</h2><p>iPhone wajib (iOS 16.4 ke atas). Android disarankan.<br>Belum? Tonton video “Pasang di Layar Utama”.</p></div>
+    <div class="abs phone" id="ph2"><div class="pb"></div><div class="scr">
+      <div class="home">
+        <div class="grid p">
+          <div><i style="background:linear-gradient(#ff6b6b,#e03131)"></i>Kalender</div><div><i style="background:linear-gradient(#ffd43b,#fab005)"></i>Foto</div><div><i style="background:linear-gradient(#69db7c,#2f9e44)"></i>Pesan</div><div><i style="background:linear-gradient(#74c0fc,#1c7ed6)"></i>Cuaca</div>
+          <div><i style="background:linear-gradient(#adb5bd,#495057)"></i>Kamera</div><div><i style="background:linear-gradient(#91a7ff,#4263eb)"></i>Peta</div><div><i style="background:linear-gradient(#ffa8a8,#f03e3e)"></i>Musik</div><div id="ni2"><img src="assets/icons/apple-touch-icon.png" alt="">CAI Hub</div>
+        </div>
+        <div class="dock p"><i style="background:linear-gradient(#69db7c,#2f9e44)"></i><i style="background:linear-gradient(#74c0fc,#1c7ed6)"></i><i style="background:linear-gradient(#ffd43b,#fab005)"></i><i style="background:linear-gradient(#ffa8a8,#f03e3e)"></i></div>
+      </div>
+      <div class="island"></div>
+    </div></div>
+  </div>
+
+  <!-- S3 buka dari ikon -->
+  <div class="scene" id="S3">
+    <div class="abs cap" id="c3"><div class="st">Langkah 2</div><h2>Buka CAI Hub dari <b>ikonnya</b></h2><p>iPhone: wajib dari ikon Layar Utama, bukan dari Safari.<br>Android: boleh juga dari Chrome.</p></div>
+    <div class="abs phone" id="ph3"><div class="pb"></div><div class="scr">
+      <div class="home">
+        <div class="grid p">
+          <div><i style="background:linear-gradient(#ff6b6b,#e03131)"></i>Kalender</div><div><i style="background:linear-gradient(#ffd43b,#fab005)"></i>Foto</div><div><i style="background:linear-gradient(#69db7c,#2f9e44)"></i>Pesan</div><div><i style="background:linear-gradient(#74c0fc,#1c7ed6)"></i>Cuaca</div>
+          <div><i style="background:linear-gradient(#adb5bd,#495057)"></i>Kamera</div><div><i style="background:linear-gradient(#91a7ff,#4263eb)"></i>Peta</div><div><i style="background:linear-gradient(#ffa8a8,#f03e3e)"></i>Musik</div><div id="ni3"><img src="assets/icons/apple-touch-icon.png" alt="">CAI Hub</div>
+        </div>
+        <div class="dock p"><i style="background:linear-gradient(#69db7c,#2f9e44)"></i><i style="background:linear-gradient(#74c0fc,#1c7ed6)"></i><i style="background:linear-gradient(#ffd43b,#fab005)"></i><i style="background:linear-gradient(#ffa8a8,#f03e3e)"></i></div>
+      </div>
+      <div class="splash" id="sp3"><img src="assets/intro/logo-white.png" alt=""></div>
+      <img class="p" id="ap3" src="assets/intro/tut-dash.webp" alt="" style="left:0;top:47px;width:390px;opacity:0;z-index:36">
+      <div class="island" style="z-index:46"></div>
+      <div class="rp" id="rp3"></div><div class="fg" id="fg3"></div>
+    </div></div>
+  </div>
+
+  <!-- S4 login partner -->
+  <div class="scene" id="S4">
+    <div class="abs cap" id="c4"><div class="st">Langkah 3 · khusus partner</div><h2>Masuk dengan <b>Kode Akses</b></h2><p>Untuk notifikasi Concerto Way, Panduan Partner &amp; Stok pantauan. News, Academy, Produk baru &amp; Galeri bisa tanpa login.</p></div>
+    <div class="abs phone" id="ph4"><div class="pb"></div><div class="scr">
+      <div class="app">
+        <div class="atop"><img src="assets/icons/icon-192.png" alt=""><b>CAI HUB</b></div>
+      </div>
+      <div class="dim" style="opacity:1;z-index:5"></div>
+      <div class="lgn" style="z-index:6"><b>🔑 Login Partner</b><div class="mut" style="margin-top:4px">Masukkan Kode Akses partner CAI</div>
+        <div class="fld"><i></i><i></i><i></i></div><div class="btn gold" id="lg4">Masuk</div></div>
+      <div class="island"></div>
+      <div class="rp" id="rp4"></div><div class="fg" id="fg4"></div>
+    </div></div>
+  </div>
+
+  <!-- S5 pilih & aktifkan -->
+  <div class="scene" id="S5">
+    <div class="abs cap" id="c5"><div class="st">Langkah 4</div><h2>Ketuk <b>Aktifkan notifikasi</b></h2><p>Di Dashboard atau kotak 🔔 Notifikasi di menu mana pun. Pilih yang ingin diterima.</p></div>
+    <div class="abs phone" id="ph5"><div class="pb"></div><div class="scr">
+      <div class="app">
+        <div class="atop"><img src="assets/icons/icon-192.png" alt=""><b>CAI HUB</b><span>🔓 Partner</span></div>
+        <div class="hello">Selamat pagi, Partner 👋</div>
+        <div class="box"><b>🔔 Jangan lewatkan kabar baru</b>
+          <div class="chk"><span class="cb">✓</span>☕ Concerto Way baru tayang</div>
+          <div class="chk"><span class="cb">✓</span>📘 Panduan Partner baru</div>
+          <div class="chk"><span class="cb">✓</span>📦 Stok produk pantauan</div>
+          <div class="chk"><span class="cb">✓</span>📰 News CAI terbaru</div>
+          <div class="chk"><span class="cb">✓</span>🎓 Materi Academy baru</div>
+          <div class="chk"><span class="cb">✓</span>🆕 Produk baru</div>
+          <div class="chk"><span class="cb">✓</span>🚗 Galeri Instalasi baru</div>
+          <div class="btn" id="on5">Aktifkan notifikasi</div></div>
+      </div>
+      <div class="island"></div>
+      <div class="rp" id="rp5"></div><div class="fg" id="fg5"></div>
+    </div></div>
+  </div>
+
+  <!-- S6 izinkan -->
+  <div class="scene" id="S6">
+    <div class="abs cap" id="c6"><div class="st">Langkah 5</div><h2>Pilih <b>Izinkan</b></h2><p>HP menanyakan izin notifikasi — pilih Izinkan / Allow.</p></div>
+    <div class="abs phone sm" id="ph6a" style="margin-left:-470px"><div class="pb"></div><div class="scr">
+      <div class="app"><div class="atop"><img src="assets/icons/icon-192.png" alt=""><b>CAI HUB</b></div><div class="hello">Dashboard</div></div>
+      <div class="dim" id="dm6a"></div>
+      <div class="idlg" id="dl6a"><b>“CAI Hub” Ingin Mengirimi Anda Pemberitahuan</b><p>Pemberitahuan dapat berupa peringatan, suara, dan badge ikon.</p><div class="row"><span>Jangan Izinkan</span><span>Izinkan</span></div></div>
+      <div class="island"></div>
+      <div class="rp" id="rp6"></div><div class="fg" id="fg6"></div>
+    </div></div>
+    <div class="abs phone sm" id="ph6b" style="margin-left:30px"><div class="pb"></div><div class="scr">
+      <div class="app"><div class="atop"><img src="assets/icons/icon-192.png" alt=""><b>CAI HUB</b></div><div class="hello">Dashboard</div></div>
+      <div class="dim" id="dm6b"></div>
+      <div class="adlg" id="dl6b"><b>Izinkan hub.concerto.id mengirim notifikasi?</b><div class="row"><span>Blokir</span><span>Izinkan</span></div></div>
+      <div class="rp" id="rp7"></div><div class="fg" id="fg7"></div>
+    </div></div>
+    <div class="abs plbl" id="pl6a" style="top:1600px;left:100px;right:auto;width:440px">iPhone</div>
+    <div class="abs plbl" id="pl6b" style="top:1600px;left:570px;right:auto;width:440px">Android</div>
+  </div>
+
+  <!-- S7 aktif -->
+  <div class="scene" id="S7">
+    <div class="abs cap ok" id="c7"><div class="st">Selesai</div><h2>✅ Notifikasi aktif</h2><p>Tidak perlu apa-apa lagi — kabar berikutnya masuk otomatis ke HP ini.</p></div>
+    <div class="abs phone" id="ph7"><div class="pb"></div><div class="scr">
+      <div class="app">
+        <div class="atop"><img src="assets/icons/icon-192.png" alt=""><b>CAI HUB</b><span>🔓 Partner</span></div>
+        <div class="box on" id="bx7"><b>🔔 Notifikasi · ✅ aktif di HP ini</b>
+          <div class="chk"><span class="cb">✓</span>☕ Concerto Way <small>· khusus partner</small></div>
+          <div class="chk"><span class="cb">✓</span>📘 Panduan Partner <small>· khusus partner</small></div>
+          <div class="chk"><span class="cb">✓</span>📦 Stok pantauan <small>· khusus partner</small></div>
+          <div class="chk"><span class="cb">✓</span>📰 News</div>
+          <div class="chk"><span class="cb">✓</span>🎓 Academy</div>
+          <div class="chk"><span class="cb">✓</span>🆕 Produk baru</div>
+          <div class="chk"><span class="cb">✓</span>🚗 Galeri Instalasi</div>
+          <div class="btn ghost">Matikan di HP ini</div></div>
+      </div>
+      <div class="island"></div>
+    </div></div>
+  </div>
+
+  <!-- S8 notifikasi masuk -->
+  <div class="scene" id="S8">
+    <div class="abs cap" id="c8"><div class="st">Hasilnya</div><h2>Kabar baru langsung <b>di HP</b></h2><p>Walau CAI Hub tertutup &amp; HP terkunci. Ketuk notifikasi → langsung terbuka.</p></div>
+    <div class="abs phone" id="ph8"><div class="pb"></div><div class="scr">
+      <div class="lock">
+        <div class="d">Kamis, 6 November</div><div class="t">09.00</div>
+        <div class="nt" id="n81"><img src="assets/icons/icon-192.png" alt=""><div><div class="h">CAI Hub · sekarang</div><b>☕ Concerto Way Day 4 sudah tayang</b><span>Materi harian baru untuk partner CAI.</span></div></div>
+        <div class="nt" id="n82"><img src="assets/icons/icon-192.png" alt=""><div><div class="h">CAI Hub · 5 menit lalu</div><b>📦 Stok tersedia lagi: STEG SQW-8</b><span>Produk pantauan Anda sudah Ready.</span></div></div>
+        <div class="nt" id="n83"><img src="assets/icons/icon-192.png" alt=""><div><div class="h">CAI Hub · 08.30</div><b>🆕 Produk baru STEG: SSDSP10/Unico</b><span>DSP · Coming Soon. Ketuk untuk melihat.</span></div></div>
+        <div class="nt" id="n84"><img src="assets/icons/icon-192.png" alt=""><div><div class="h">CAI Hub · 08.00</div><b>🚗 Instalasi baru di Galeri CAI Hub</b><span>Toyota Fortuner · Concerto Surabaya</span></div></div>
+        <div class="nt" id="n85"><img src="assets/icons/icon-192.png" alt=""><div><div class="h">CAI Hub · kemarin</div><b>🎓 Concerto Academy: materi baru</b><span>Ketuk untuk membaca.</span></div></div>
+      </div>
+      <div class="island"></div>
+    </div></div>
+  </div>
+
+  <!-- S9 pantau stok -->
+  <div class="scene" id="S9">
+    <div class="abs cap" id="c9"><div class="st">Bonus · khusus partner</div><h2>Stok habis? <b>Pantau</b> saja</h2><p>Ketuk 🔔 Kabari saya bila ready — notifikasi masuk begitu stok tersedia.</p></div>
+    <div class="abs phone" id="ph9"><div class="pb"></div><div class="scr">
+      <div class="app">
+        <div class="atop"><img src="assets/icons/icon-192.png" alt=""><b>CAI HUB</b><span>🔓 Partner</span></div>
+        <div class="ph-img"><img src="assets/st-sqw8-1.webp" alt=""></div>
+        <div class="brand">STEG · SUBWOOFER</div><div class="pname">SQW-8</div>
+        <div class="srp"><span>SRP</span><b>Rp 9.000.000</b></div>
+        <div class="stk"><span class="pill">Habis</span>🚚 OTW 20 pcs</div>
+        <div style="position:relative"><div class="wbtn" id="w9">🔔 Kabari saya bila ready</div><div class="wbtn on" id="w9on">✓ Dipantau — dikabari bila Ready</div></div>
+        <div class="mut" style="text-align:center;margin-top:8px">Notifikasi dikirim ke HP ini begitu stok tersedia.</div>
+      </div>
+      <div class="toast" id="ts9">🔔 Anda akan dikabari begitu STEG SQW-8 Ready</div>
+      <div class="island"></div>
+      <div class="rp" id="rp9"></div><div class="fg" id="fg9"></div>
+    </div></div>
+  </div>
+
+  <!-- S10 atur / matikan -->
+  <div class="scene" id="S10">
+    <div class="abs cap" id="c10"><div class="st">Tips</div><h2>Atur atau matikan <b>kapan saja</b></h2><p>Kotak 🔔 Notifikasi di menu News, Academy, Stok Produk, dll. → ubah centang atau “Matikan di HP ini”.</p></div>
+    <div class="abs phone" id="ph10"><div class="pb"></div><div class="scr">
+      <div class="app">
+        <div class="atop"><img src="assets/icons/icon-192.png" alt=""><b>CAI HUB</b><span>News</span></div>
+        <div class="hello">News</div><div class="mut">Kabar terbaru Concerto Audio Indonesia</div>
+        <div class="box on"><b>🔔 Notifikasi · ✅ aktif di HP ini</b>
+          <div class="chk"><span class="cb">✓</span>📰 News CAI terbaru</div>
+          <div class="chk" id="ac10"><span class="cb" id="cb10">✓</span>🎓 Materi Academy baru</div>
+          <div class="chk"><span class="cb">✓</span>🆕 Produk baru</div>
+          <div class="chk"><span class="cb">✓</span>🚗 Galeri Instalasi baru</div>
+          <div class="btn ghost">Matikan di HP ini</div></div>
+      </div>
+      <div class="island"></div>
+      <div class="rp" id="rp10"></div><div class="fg" id="fg10"></div>
+    </div></div>
+  </div>
+
+  <!-- S11 penutup -->
+  <div class="scene" id="S11">
+    <img class="abs" id="ic9" src="assets/icons/icon-512.png" alt="">
+    <div class="abs" id="t9">CAI <span class="gold">Hub</span></div>
+    <div class="abs" id="q9"><img src="assets/qr-portal.svg" alt=""></div>
+    <div class="abs" id="u9">hub.concerto.id</div>
+    <div class="abs" id="s9">Pindai untuk membuka CAI Hub</div>
+  </div>
+
+  <div class="abs" id="vig"></div>
+</div>
+<script>
+const W = 1080, H = 1920, DUR = 60;
+const st = document.getElementById('stage');
+function fit() { const s = Math.min(innerWidth / W, innerHeight / H); st.style.transform = `translate(${(innerWidth - W * s) / 2}px, ${(innerHeight - H * s) / 2}px) scale(${s})`; }
+fit(); addEventListener('resize', fit);
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const ms = s => s * 1000;
+const EO = 'cubic-bezier(.16,1,.3,1)', EB = 'cubic-bezier(.34,1.56,.64,1)', EI = 'cubic-bezier(.7,0,.84,0)', EIO = 'cubic-bezier(.65,0,.35,1)';
+function A(el, kf, t0, d, easing = EO, fill = 'both') { return (typeof el === 'string' ? $(el) : el).animate(kf, { delay: ms(t0), duration: ms(d), easing, fill }); }
+const OUT = (el, kf, t0, d) => A(el, kf, t0, d, 'linear', 'forwards');
+function scene(id, a, b, fin = .4, fout = .5) { const d = b - a; return A(id, [{ opacity: 0, offset: 0 }, { opacity: 1, offset: fin / d }, { opacity: 1, offset: 1 - fout / d }, { opacity: 0, offset: 1 }], a, d, 'linear'); }
+function cap(id, a, b) { const d = b - a; A(id, [{ opacity: 0, transform: 'translateY(40px)', offset: 0 }, { opacity: 1, transform: 'none', offset: .45 / d }, { opacity: 1, transform: 'none', offset: 1 - .35 / d }, { opacity: 0, transform: 'translateY(-30px)', offset: 1 }], a, d, 'linear'); }
+const TAPS = [], POPS = [], SWISH = [], TINGS = [];
+function tap(n, fx, fy, x, y, t) {
+  TAPS.push(t);
+  const fg = '#fg' + n, rp = '#rp' + n;
+  $(fg).animate([
+    { opacity: 0, left: fx + 'px', top: fy + 'px', transform: 'scale(1)', offset: 0 },
+    { opacity: 1, left: fx + 'px', top: fy + 'px', transform: 'scale(1)', offset: .15 },
+    { opacity: 1, left: x + 'px', top: y + 'px', transform: 'scale(1)', offset: .7, easing: 'ease-in' },
+    { opacity: 1, left: x + 'px', top: y + 'px', transform: 'scale(.78)', offset: .8 },
+    { opacity: 1, left: x + 'px', top: y + 'px', transform: 'scale(1)', offset: .9 },
+    { opacity: 0, left: x + 'px', top: y + 'px', transform: 'scale(1)', offset: 1 }
+  ], { delay: ms(t - 1.12), duration: ms(1.6), easing: EIO, fill: 'forwards' });
+  $(rp).animate([{ opacity: 0, left: x + 'px', top: y + 'px', transform: 'scale(.6)' }, { opacity: .95, left: x + 'px', top: y + 'px', transform: 'scale(.8)', offset: .1 }, { opacity: 0, left: x + 'px', top: y + 'px', transform: 'scale(2.6)' }], { delay: ms(t), duration: ms(.7), easing: 'ease-out', fill: 'forwards' });
+}
+function phoneIn(id, t) { A(id, [{ opacity: 0, transform: 'translateY(160px) scale(.9)' }, { opacity: 1, transform: 'none' }], t, 1.0, EO); }
+function pop(el, t) { A(el, [{ opacity: 0, transform: 'scale(.2)' }, { opacity: 1, transform: 'scale(1.18)', offset: .6 }, { opacity: 1, transform: 'scale(1)' }], t, .7, 'ease-out'); }
+function pulse(el, t) { A(el, [{ boxShadow: '0 0 0 0 rgba(233,196,106,.9)' }, { boxShadow: '0 0 0 14px rgba(233,196,106,0)' }], t, 1.2, 'ease-out', 'forwards'); }
+
+// latar
+(function () { let r = 7; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  for (let i = 0; i < 40; i++) { const e = document.createElement('i'); e.className = 'spark'; const sz = 6 + rnd() * 12;
+    e.style.cssText = `left:${rnd() * 1080}px;top:${200 + rnd() * 1700}px;width:${sz}px;height:${sz}px`; $('#sparks').appendChild(e);
+    e.animate([{ opacity: 0, transform: 'translateY(30px) scale(.4)' }, { opacity: .8, offset: .3 }, { opacity: 0, transform: `translateY(${-180 - rnd() * 220}px) scale(1.2)` }], { duration: 5000 + rnd() * 4000, delay: -rnd() * 9000, iterations: Infinity, easing: 'ease-in-out' }); } })();
+$('#glow').animate([{ opacity: .7 }, { opacity: 1 }, { opacity: .7 }], { duration: 4000, iterations: Infinity, easing: 'ease-in-out' });
+
+/* S1 · 0 – 4.6 pembuka */
+scene('#S1', 0, 4.6, .15, .5);
+A('#ic1', [{ opacity: 0, transform: 'scale(.3) rotate(-10deg)', filter: 'blur(12px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], .2, .9, EB);
+$$('#S1 .ring').forEach((r, i) => A(r, [{ opacity: .9, transform: 'scale(.4)' }, { opacity: 0, transform: 'scale(5)' }], .3 + i * .3, 1.8, 'ease-out'));
+A('#bell', [{ opacity: 0, transform: 'translateY(40px) scale(.6)' }, { opacity: 1, transform: 'none' }], .9, .6, EB);
+A('#bell', [{ transform: 'rotate(0)' }, { transform: 'rotate(16deg)' }, { transform: 'rotate(-14deg)' }, { transform: 'rotate(10deg)' }, { transform: 'rotate(-6deg)' }, { transform: 'rotate(0)' }], 1.5, 1.1, 'ease-out', 'none');
+POPS.push(1.5);
+$$('#t1 span').forEach((s, i) => A(s, [{ opacity: 0, transform: 'translateY(80px) scale(1.3)', filter: 'blur(10px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], 1.6 + i * .14, .6, EB));
+$('#t1 .gold').animate([{ backgroundPosition: '0% 0' }, { backgroundPosition: '-220% 0' }], { duration: 4000, iterations: Infinity });
+A('#s1', [{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }], 2.4, .7);
+A('#S1', [{ transform: 'scale(1)', filter: 'blur(0)' }, { transform: 'scale(1.12)', filter: 'blur(12px)' }], 4.1, .5, EI);
+
+/* S2 · 4.4 – 10.2 Layar Utama */
+SWISH.push(4.4);
+scene('#S2', 4.4, 10.2, .3, .5);
+cap('#c2', 4.6, 10.2); phoneIn('#ph2', 4.7);
+pop('#ni2', 6.0); POPS.push(6.0);
+pulse('#ni2 img', 7.0); pulse('#ni2 img', 8.3);
+
+/* S3 · 10.0 – 15.0 buka dari ikon */
+SWISH.push(10.0);
+scene('#S3', 10.0, 15.0, .3, .5);
+cap('#c3', 10.2, 15.0); phoneIn('#ph3', 10.3);
+tap(3, 300, 600, 325, 211, 12.0);
+A('#ni3', [{ transform: 'scale(1)' }, { transform: 'scale(.85)', offset: .4 }, { transform: 'scale(1)' }], 11.95, .35, 'ease-out');
+A('#sp3', [{ opacity: 0, transform: 'scale(.3)', transformOrigin: '325px 211px' }, { opacity: 1, transform: 'none', transformOrigin: '325px 211px' }], 12.25, .5, EO);
+A('#ap3', [{ opacity: 0 }, { opacity: 1 }], 13.2, .5, 'linear');
+
+/* S4 · 14.8 – 20.6 login */
+SWISH.push(14.8);
+scene('#S4', 14.8, 20.6, .3, .5);
+cap('#c4', 15.0, 20.6); phoneIn('#ph4', 15.1);
+$$('#S4 .fld i').forEach((d, i) => { A(d, [{ opacity: 0, transform: 'scale(.2)' }, { opacity: 1, transform: 'none' }], 16.4 + i * .3, .2, 'ease-out'); TAPS.push(16.4 + i * .3); });
+tap(4, 260, 600, 195, 382, 18.4);
+
+/* S5 · 20.4 – 27.6 pilih & aktifkan */
+SWISH.push(20.4);
+scene('#S5', 20.4, 27.6, .3, .5);
+cap('#c5', 20.6, 27.6); phoneIn('#ph5', 20.7);
+$$('#S5 .chk').forEach((c, i) => A(c, [{ opacity: 0, transform: 'translateX(-24px)' }, { opacity: 1, transform: 'none' }], 21.6 + i * .28, .4, EO));
+$$('#S5 .cb').forEach((c, i) => pop(c, 21.75 + i * .28));
+A('#on5', [{ opacity: 0 }, { opacity: 1 }], 23.7, .4);
+tap(5, 300, 760, 195, 512, 25.6);
+A('#on5', [{ background: '#fff' }, { background: '#d8b26a' }], 25.6, .2, 'linear', 'forwards');
+
+/* S6 · 27.4 – 34.4 izinkan */
+SWISH.push(27.4);
+scene('#S6', 27.4, 34.4, .3, .5);
+cap('#c6', 27.6, 34.4);
+phoneIn('#ph6a', 27.7); phoneIn('#ph6b', 27.9);
+A('#pl6a', [{ opacity: 0 }, { opacity: 1 }], 28.6, .4); A('#pl6b', [{ opacity: 0 }, { opacity: 1 }], 28.8, .4);
+A('#dm6a', [{ opacity: 0 }, { opacity: 1 }], 28.6, .3); A('#dl6a', [{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'none' }], 28.65, .35, EO);
+A('#dm6b', [{ opacity: 0 }, { opacity: 1 }], 29.0, .3); A('#dl6b', [{ opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'none' }], 29.05, .35, EO);
+tap(6, 200, 640, 269, 475, 30.6);
+OUT('#dl6a', [{ opacity: 1 }, { opacity: 0 }], 30.9, .25); OUT('#dm6a', [{ opacity: 1 }, { opacity: 0 }], 30.9, .25);
+tap(7, 180, 640, 312, 418, 32.2);
+OUT('#dl6b', [{ opacity: 1 }, { opacity: 0 }], 32.5, .25); OUT('#dm6b', [{ opacity: 1 }, { opacity: 0 }], 32.5, .25);
+
+/* S7 · 34.2 – 39.2 aktif */
+SWISH.push(34.2);
+scene('#S7', 34.2, 39.2, .3, .5);
+cap('#c7', 34.4, 39.2); phoneIn('#ph7', 34.5);
+A('#bx7', [{ transform: 'scale(.92)', borderColor: 'rgba(216,178,106,.55)' }, { transform: 'scale(1.03)', offset: .6 }, { transform: 'none', borderColor: 'rgba(31,157,85,.7)' }], 35.3, .6, 'ease-out');
+POPS.push(35.4);
+
+/* S8 · 39.0 – 46.2 notifikasi masuk */
+SWISH.push(39.0);
+scene('#S8', 39.0, 46.2, .3, .5);
+cap('#c8', 39.2, 46.2); phoneIn('#ph8', 39.3);
+['#n81', '#n82', '#n83', '#n84', '#n85'].forEach((n, i) => { const t = 40.4 + i * 1.0; A(n, [{ opacity: 0, transform: 'translateY(-60px) scale(.9)' }, { opacity: 1, transform: 'none' }], t, .5, EO); TINGS.push(t); });
+
+/* S9 · 46.0 – 52.4 pantau stok */
+SWISH.push(46.0);
+scene('#S9', 46.0, 52.4, .3, .5);
+cap('#c9', 46.2, 52.4); phoneIn('#ph9', 46.3);
+tap(9, 290, 760, 195, 544, 48.6);
+OUT('#w9', [{ opacity: 1 }, { opacity: 0 }], 48.8, .2);
+A('#w9on', [{ opacity: 0, transform: 'scale(.9)' }, { opacity: 1, transform: 'none' }], 48.85, .35, EO);
+A('#ts9', [{ opacity: 0, transform: 'translateY(30px)' }, { opacity: 1, transform: 'none' }], 49.1, .4, EO);
+POPS.push(48.9);
+
+/* S10 · 52.2 – 56.4 atur / matikan */
+SWISH.push(52.2);
+scene('#S10', 52.2, 56.4, .3, .5);
+cap('#c10', 52.4, 56.4); phoneIn('#ph10', 52.5);
+tap(10, 280, 640, 52, 261, 54.4);
+A('#cb10', [{ background: '#d8b26a', color: '#111', borderWidth: '0px' }, { background: 'transparent', color: 'transparent', border: '1.5px solid #666' }], 54.45, .2, 'linear', 'forwards');
+
+/* S11 · 56.2 – 60 penutup */
+SWISH.push(56.2);
+scene('#S11', 56.2, 60.01, .3, .01);
+A('#ic9', [{ opacity: 0, transform: 'translateY(40px) scale(.8)' }, { opacity: 1, transform: 'none' }], 56.4, .8, EB);
+A('#t9', [{ opacity: 0, transform: 'translateY(40px)', filter: 'blur(12px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], 56.7, .8, EO);
+$('#t9 .gold').animate([{ backgroundPosition: '0% 0' }, { backgroundPosition: '-220% 0' }], { duration: 3500, iterations: Infinity });
+A('#q9', [{ opacity: 0, transform: 'scale(.5) rotate(-8deg)' }, { opacity: 1, transform: 'none' }], 57.0, .8, EB);
+A('#u9', [{ opacity: 0, transform: 'translateY(30px)' }, { opacity: 1, transform: 'none' }], 57.5, .7, EO);
+A('#s9', [{ opacity: 0 }, { opacity: 1 }], 57.9, .6);
+OUT('#S11', [{ opacity: 1 }, { opacity: 0 }], 59.4, .6);
+
+/* kendali waktu */
+window.seek = t => { document.getAnimations().forEach(a => { a.pause(); a.currentTime = ms(t); }); };
+window.DUR = DUR; window.TAPS = TAPS; window.POPS = POPS; window.SWISH = SWISH; window.TINGS = TINGS;
+if (!location.search.includes('seek')) {
+  const t0 = performance.now(); (function loop() { const t = (performance.now() - t0) / 1000 % (DUR + 1.5); if (t <= DUR) document.getAnimations().forEach(a => { a.currentTime = ms(t); }); requestAnimationFrame(loop); })();
+}
+</script>
+</body>
+</html>

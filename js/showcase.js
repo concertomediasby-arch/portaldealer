@@ -540,6 +540,7 @@ function glChampHint(champ, q, hay) {
 function glDealer(name) { const n = normKey(name); return n ? adPublic().find(d => normKey(d.n) === n) : null; }
 function openGlDetail(id, photoIdx = 0) {
   const it = glItems?.find(x => x.id === id); if (!it) return;
+  if (!photoIdx && typeof insInterest === 'function') insInterest('gl');
   const ov = document.getElementById('gl-detail');
   const photos = it.photos || [];
   const cur = photos[photoIdx];

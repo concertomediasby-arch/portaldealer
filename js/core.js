@@ -1688,6 +1688,7 @@ function openAcademy(keepScroll) {
 }
 
 function openAcademyItem(no) {
+  if (typeof insInterest === 'function') insInterest('acad');
   const a = acadShown().find(x => x.no === no);
   if (!a) return;
   acadCurrent = no;
@@ -2435,6 +2436,7 @@ function showProduct(brandId, productId) {
 
   // Stock badge in detail panel
   renderProductStockBadge(product.id);
+  if (typeof insInterest === 'function') { insPaint(); insInterest('prod'); }   // ajakan "Pasang CAI Hub" (js/install.js)
   if (typeof renderProductShowcase === 'function') renderProductShowcase(product, line, brand);   // Showcase: Achievement + Contoh pemasangan
 
   hideViews();

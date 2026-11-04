@@ -110,6 +110,7 @@ async function loadVisitStats(quiet) {
     visitStats = null;
     visitErr = /function|does not exist|schema cache|404|relation/i.test(m) ? 'setup' : 'Data pengunjung tidak bisa dimuat: ' + m;
   }
+  if (typeof loadAppStats === 'function') await loadAppStats();
   renderVisitStat();
   if (!quiet || document.getElementById('view-visitors')?.classList.contains('active')) { renderVisitors(); loadAcadViews().then(() => { if (document.getElementById('view-visitors')?.classList.contains('active')) renderVisitors(); }); }
 }
@@ -166,6 +167,7 @@ function renderVisitors() {
     <div class="vs-box"><h3>Rincian harian</h3>
       ${rows ? `<table class="vs-table"><thead><tr><th>Tanggal</th><th>Orang</th><th>Login dealer</th><th>Kunjungan</th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="vs-note">Belum ada kunjungan tercatat di periode ini.</div>'}
     </div>
+    ${typeof appRecapHtml === 'function' ? appRecapHtml() : ''}
     ${acadRecapHtml()}
     <div class="vs-note"><b>Orang</b> = browser/perangkat berbeda (satu orang yang membuka dari HP dan laptop terhitung 2; mode incognito / hapus data browser = orang baru). <b>Kunjungan</b> = berapa kali portal dibuka (sekali per tab). <b>Login dealer</b> = pengunjung yang masuk dengan Kode Akses hari itu. Akun Admin/Editor dan layar videotron tidak dihitung. Hari dihitung dalam WIB.</div>`;
 }
