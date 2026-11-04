@@ -6,7 +6,10 @@
 //  • Partner       : "Panduan Partner baru tersedia" saat PDF panduan tayang — tanpa judul (khusus partner).
 //  • Partner       : "Stok tersedia lagi" untuk produk yang dipantau HP itu (tabel stock_watch; antrian stock_ready_q dari trigger stok).
 //  • Semua (publik): "Instalasi baru di Galeri" (jadwal tayang showcase_installs) & "Produk baru" (pengumuman Editor, tabel product_push).
-//  • Editor        : pengingat 5 menit sebelum SEMUA konten terjadwal (Concerto Way, Galeri, pengumuman produk, Academy, Panduan).
+//  • Editor        : pengingat sebelum SEMUA konten terjadwal (Concerto Way, Galeri, pengumuman produk, Academy, Panduan) — waktunya
+//                    dipilih Editor per HP (4 Nov 2026, kolom remind jsonb: { all: [60, 5], live: true, cway?: [...], gallery?: [...], … };
+//                    pilihan REMIND_LEADS = 1 hari · 3 jam · 1 jam · 30 · 15 · 5 menit; kosong = bawaan 5 menit) + opsional "✅ sudah tayang".
+//                    Sekali per konten per waktu lewat tabel staff_remind_log.
 //  • Semua         : 🗓 Ringkasan mingguan — Senin 08.00 WIB, satu notifikasi: jumlah produk diperbarui, instalasi Galeri, materi Academy,
 //                    berita 7 hari terakhir (+ jumlah Concerto Way & Panduan Partner TANPA judul bagi HP partner). Kolom weekly,
 //                    sekali per minggu lewat tabel weekly_push; minggu tanpa isi = tidak dikirim. Ketuk = /?minggu (halaman "Minggu ini").
@@ -29,7 +32,8 @@
 //   { action: 'notify', type: 'product', id }        → kirim pengumuman produk (baris product_push) sekarang (hanya Editor)
 //   { action: 'watch', endpoint, product_id, name, on } → pantau / batal pantau stok produk di HP ini (hanya yang login; maks. 30)
 //   { action: 'watches', endpoint }                  → { items: [{product_id, name}] } produk yang dipantau HP ini
-//   {} (pg_cron tiap menit)                          → pengingat staf 5 menit sebelum tayang + notifikasi partner saat jadwal tiba
+//   { action: 'remind', endpoint, remind }           → simpan pilihan waktu pengingat Editor di HP ini (hanya Editor)
+//   {} (pg_cron tiap menit)                          → pengingat Editor sesuai pilihan waktunya + notifikasi partner saat jadwal tiba
 //                                                      + materi Academy terjadwal (field `at` di showcase/academy/items.json) saat tiba
 //                                                      + PDF Panduan terjadwal (tabel guide_schedule): dipindah dari folder tunggu `pending/`
 //                                                        (hanya Editor yang bisa membaca) ke folder kartunya, lalu notifikasi
@@ -43,7 +47,9 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
-const LEAD_MIN = 5;                       // menit sebelum tayang (pengingat staf)
+const REMIND_LEADS = [1440, 180, 60, 30, 15, 5];   // menit sebelum tayang yang bisa dipilih Editor (pengingat tayang)
+const REMIND_DEFAULT = [5];                         // HP Editor yang belum memilih = seperti dulu (5 menit)
+const REMIND_KINDS = ['cway', 'gallery', 'acad', 'guide', 'product'] as const;
 const SUBJECT = 'https://hub.concerto.id/';
 const SUBS = 'cway_push_subs';
 const PUB_STORAGE = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/`;
@@ -149,9 +155,6 @@ async function guidePublishDue() {
   return moved;
 }
 
-// Menit tersisa sebelum tayang (pengingat Editor)
-const minsTo = (iso: string) => Math.max(0, Math.round((Date.parse(iso) - Date.now()) / 60e3));
-const remindTitle = (what: string, iso: string) => `⏰ ${what} tayang ${minsTo(iso) ? minsTo(iso) + ' menit lagi' : 'sekarang'}`;
 
 // 🚗 Galeri Instalasi: satu notifikasi per mobil (kolom push_at)
 type Gl = { id: string; car_make?: string; car_model?: string; car_year?: number; dealer?: string; city?: string; photos?: { path?: string; type?: string }[] };
@@ -197,43 +200,69 @@ async function stockLive(key: Key) {
   await db.from('stock_watch').delete().in('product_id', ids);   // pantauan selesai otomatis setelah produk Ready
   return sent;
 }
-// ⏰ Pengingat Editor 5 menit sebelum konten terjadwal tayang (selain Concerto Way)
+// ⏰ Pengingat Editor sebelum konten terjadwal tayang — waktu dipilih per HP (kolom remind), sekali per konten per waktu (staff_remind_log)
+type RKind = typeof REMIND_KINDS[number];
+type RItem = { kind: RKind; ref: string; at: string; title: string; body: string; url: string };
+type RSub = Sub & { remind?: Record<string, unknown> | null };
+const leadsOf = (r: RSub['remind'], k: RKind): number[] => {
+  const pick = (v: unknown) => Array.isArray(v) ? v.map(Number).filter(n => REMIND_LEADS.includes(n)) : null;
+  return pick(r?.[k]) ?? pick(r?.all) ?? REMIND_DEFAULT;
+};
+const leadTxt = (m: number) => m >= 1380 ? `${Math.round(m / 1440)} hari lagi` : m >= 90 ? `${Math.round(m / 60)} jam lagi` : m >= 1 ? `${Math.round(m)} menit lagi` : 'sekarang';
+const whenTxt = (iso: string) => {
+  const d = new Date(iso), same = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+  return (same ? '' : d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'Asia/Jakarta' }) + ' ') + wib(iso) + ' WIB';
+};
+const KIND_LABEL: Record<RKind, string> = { cway: 'Concerto Way', gallery: 'Galeri', acad: 'Academy', guide: 'Panduan Partner', product: 'Pengumuman produk' };
+// Konten terjadwal dalam rentang [from, to] (ISO) dari kelima menu
+async function remindItems(from: string, to: string, acad: Acad[]): Promise<RItem[]> {
+  const out: RItem[] = [];
+  const { data: cw } = await db.from('concerto_way').select('id, day, title, publish_at').eq('published', true).gt('publish_at', from).lte('publish_at', to);
+  for (const p of cw || []) out.push({ kind: 'cway', ref: p.id, at: p.publish_at, title: `Concerto Way ${dayTxt(p.day)}`.trim(), body: `"${p.title}"`, url: `/?cw=${encodeURIComponent(p.id)}` });
+  const { data: gl } = await db.from('showcase_installs').select('id, car_make, car_model, car_year, dealer, publish_at').eq('published', true).gt('publish_at', from).lte('publish_at', to);
+  for (const g of gl || []) out.push({ kind: 'gallery', ref: g.id, at: g.publish_at, title: `Galeri — ${glName(g)}`, body: g.dealer ? `Dipasang oleh ${g.dealer}` : 'Instalasi baru', url: `/?gl=${encodeURIComponent(g.id)}` });
+  const { data: pp } = await db.from('product_push').select('id, product_id, title, publish_at').gt('publish_at', from).lte('publish_at', to);
+  for (const r of pp || []) out.push({ kind: 'product', ref: r.id, at: r.publish_at, title: 'Pengumuman produk', body: `"${r.title}"`, url: `/?p=${encodeURIComponent(r.product_id)}` });
+  const { data: gs } = await db.from('guide_schedule').select('id, title, dest, publish_at').gt('publish_at', from).lte('publish_at', to);
+  for (const g of gs || []) out.push({ kind: 'guide', ref: g.id, at: g.publish_at, title: 'Panduan Partner', body: `"${g.title || String(g.dest).split('/').pop()}"`, url: '/' });
+  for (const a of acad) if (a.at && Date.parse(a.at) > Date.parse(from) && Date.parse(a.at) <= Date.parse(to))
+    out.push({ kind: 'acad', ref: String(a.no), at: a.at, title: `Materi Academy #${a.no}`, body: `"${a.title || 'Materi baru'}"`, url: `/?acad=${a.no}` });
+  return out;
+}
 async function staffReminders(key: Key, acad: Acad[]) {
-  const now = Date.now(), lo = new Date(now).toISOString(), hi = new Date(now + LEAD_MIN * 60e3 + 30e3).toISOString();
-  const send1 = (payload: unknown) => sendAll('staff', payload, key);
+  const now = Date.now();
+  let subs: RSub[] = [];
+  const r1 = await db.from(SUBS).select('endpoint, p256dh, auth, remind').eq('staff', true);
+  if (r1.error) { const r2 = await db.from(SUBS).select('endpoint, p256dh, auth').eq('staff', true); subs = (r2.data || []) as RSub[]; }   // kolom remind belum ada
+  else subs = (r1.data || []) as RSub[];
+  if (!subs.length) return 0;
+  const items = await remindItems(new Date(now - 15 * 60e3).toISOString(), new Date(now + (Math.max(...REMIND_LEADS) + 1) * 60e3).toISOString(), acad);
+  // Kelompokkan konten sejenis yang tayang di menit yang sama (mis. 3 materi Academy sekaligus) → satu notifikasi
+  type Job = { lead: number; items: RItem[] };
+  const jobs = new Map<string, Job>();
+  for (const it of items) {
+    const m = (Date.parse(it.at) - now) / 60e3;
+    let lead = -1;
+    if (m <= 0) lead = 0;   // sudah tayang (≤ 15 menit lalu) → "✅ sudah tayang" bagi yang memilih
+    else for (const L of REMIND_LEADS) if (m <= L + 0.5 && m > Math.max(0, L - 10)) { lead = L; break; }
+    if (lead < 0) continue;
+    const { data: claim, error } = await db.from('staff_remind_log').upsert({ kind: it.kind, ref: it.ref, lead }, { onConflict: 'kind,ref,lead', ignoreDuplicates: true }).select('ref');
+    if (error || !claim?.length) continue;   // sudah dikirim (atau tabel belum ada)
+    const k = `${it.kind}|${lead}|${it.at.slice(0, 16)}`;
+    const j = jobs.get(k) || { lead, items: [] }; j.items.push(it); jobs.set(k, j);
+  }
   let n = 0;
-  // Galeri
-  const { data: gl } = await db.from('showcase_installs').select('id, car_make, car_model, car_year, dealer, publish_at').eq('published', true).is('remind_at', null).is('push_at', null)
-    .gt('publish_at', lo).lte('publish_at', hi);
-  for (const g of gl || []) {
-    const { data: m } = await db.from('showcase_installs').update({ remind_at: new Date().toISOString() }).eq('id', g.id).is('remind_at', null).select('id');
-    if (!m?.length) continue;
-    n += await send1({ title: remindTitle('Galeri', g.publish_at), body: `${glName(g)}${g.dealer ? ' · ' + g.dealer : ''} · ${wib(g.publish_at)} WIB. Ketuk untuk mengecek.`, url: `/?gl=${encodeURIComponent(g.id)}`, tag: `rgl-${g.id}` });
+  for (const j of jobs.values()) {
+    const it = j.items[0], kind = it.kind, many = j.items.length > 1;
+    const what = many ? `${j.items.length} ${KIND_LABEL[kind]}` : it.title;
+    const payload = j.lead === 0
+      ? { title: `✅ Sudah tayang: ${what}`, body: `${many ? j.items.map(x => x.body).slice(0, 3).join(', ') : it.body} · ${wib(it.at)} WIB${kind === 'cway' ? '. Ketuk untuk membuka & bagikan ke grup partner.' : ''}`, url: it.url, tag: `rlive-${kind}-${it.ref}` }
+      : { title: `⏰ ${leadTxt((Date.parse(it.at) - now) / 60e3)}: ${what}`, body: `${many ? j.items.map(x => x.body).slice(0, 3).join(', ') : it.body} · tayang ${whenTxt(it.at)}. Ketuk untuk mengecek.`, url: it.url, tag: `rmd-${kind}-${it.ref}-${j.lead}` };
+    const to = subs.filter(s => j.lead === 0 ? !!s.remind?.live : leadsOf(s.remind, kind).includes(j.lead));
+    const st = await Promise.all(to.map(s => send(s, payload, key).catch(() => 0)));
+    n += st.filter(x => x > 0 && x < 300).length;
   }
-  // Pengumuman produk
-  const { data: pp } = await db.from('product_push').select('id, product_id, title, publish_at').is('sent_at', null).is('remind_at', null).gt('publish_at', lo).lte('publish_at', hi);
-  for (const r of pp || []) {
-    const { data: m } = await db.from('product_push').update({ remind_at: new Date().toISOString() }).eq('id', r.id).is('remind_at', null).select('id');
-    if (!m?.length) continue;
-    n += await send1({ title: remindTitle('Pengumuman produk', r.publish_at), body: `"${r.title}" · ${wib(r.publish_at)} WIB. Ketuk untuk mengecek.`, url: `/?p=${encodeURIComponent(r.product_id)}`, tag: `rpp-${r.id}` });
-  }
-  // Panduan Partner
-  const { data: gs } = await db.from('guide_schedule').select('id, title, dest, publish_at').is('done_at', null).is('remind_at', null).gt('publish_at', lo).lte('publish_at', hi);
-  if (gs?.length) {
-    const ids: string[] = [];
-    for (const g of gs) { const { data: m } = await db.from('guide_schedule').update({ remind_at: new Date().toISOString() }).eq('id', g.id).is('remind_at', null).select('id'); if (m?.length) ids.push(g.id); }
-    const list = gs.filter(g => ids.includes(g.id));
-    if (list.length) n += await send1({ title: remindTitle(list.length > 1 ? `${list.length} Panduan Partner` : 'Panduan Partner', list[0].publish_at),
-      body: `${list.map(g => g.title || g.dest.split('/').pop()).slice(0, 3).join(', ')} · ${wib(list[0].publish_at)} WIB.`, url: '/', tag: `rgd-${list[0].id}` });
-  }
-  // Academy
-  const soon = acad.filter(a => a.at && Date.parse(a.at) > now && Date.parse(a.at) <= now + LEAD_MIN * 60e3 + 30e3);
-  if (soon.length) {
-    const { data: m } = await db.from('academy_remind').upsert(soon.map(a => ({ no: a.no })), { onConflict: 'no', ignoreDuplicates: true }).select('no');
-    const fresh = soon.filter(a => (m || []).some((x: { no: number }) => x.no === a.no)).sort((x, y) => x.no - y.no);
-    if (fresh.length) n += await send1({ title: remindTitle(fresh.length > 1 ? `${fresh.length} materi Academy` : 'Materi Academy', fresh[0].at!),
-      body: `${fresh.slice(0, 3).map(a => '#' + a.no + ' ' + (a.title || '')).join(', ')} · ${wib(fresh[0].at!)} WIB.`, url: `/?acad=${fresh[0].no}`, tag: `rac-${fresh[0].no}` });
-  }
+  if (Math.random() < 0.02) await db.from('staff_remind_log').delete().lt('at', new Date(now - 3 * 86400e3).toISOString());
   return n;
 }
 
@@ -297,9 +326,12 @@ Deno.serve(async (req) => {
     if (a === 'key') return json({ key: key.pub });
 
     if (a === 'get') {
-      const { data, error } = await db.from(SUBS).select(FLAGS.join(', ')).eq('endpoint', String(body.endpoint || '')).maybeSingle();
+      const ep = String(body.endpoint || '');
+      let { data, error } = await db.from(SUBS).select(FLAGS.join(', ') + ', remind').eq('endpoint', ep).maybeSingle();
+      if (error && /remind/.test(error.message)) ({ data, error } = await db.from(SUBS).select(FLAGS.join(', ')).eq('endpoint', ep).maybeSingle());   // kolom remind belum ada
       if (error) return json({ error: error.message }, 500);
-      return json({ flags: data || null });
+      const d = data as Record<string, unknown> | null;
+      return json({ flags: d ? Object.fromEntries(FLAGS.map(k => [k, d[k]])) : null, remind: d?.remind ?? null, remindCol: !!d && 'remind' in d });
     }
 
     if (a === 'set') {
@@ -328,6 +360,19 @@ Deno.serve(async (req) => {
       const { error: e2 } = cur ? await db.from(SUBS).update(row).eq('endpoint', ep) : await db.from(SUBS).insert(row);
       if (e2) return json({ error: e2.message }, 500);
       return json({ flags: f });
+    }
+
+    if (a === 'remind') {
+      const who = await caller(req);
+      if (!who.editor) return json({ error: 'khusus Editor' }, 403);
+      const ep = String(body.endpoint || ''), r = body.remind || {};
+      const clean = (v: unknown) => Array.isArray(v) ? [...new Set(v.map(Number).filter(n => REMIND_LEADS.includes(n)))].sort((x, y) => y - x) : undefined;
+      const out: Record<string, unknown> = { all: clean(r.all) ?? REMIND_DEFAULT, live: !!r.live };
+      for (const k of REMIND_KINDS) { const v = clean(r[k]); if (v) out[k] = v; }
+      const { data, error } = await db.from(SUBS).update({ remind: out }).eq('endpoint', ep).select('endpoint');
+      if (error) return json({ error: error.message, nosql: /remind/.test(error.message) }, 500);
+      if (!data?.length) return json({ error: 'HP ini belum terdaftar' }, 404);
+      return json({ remind: out });
     }
 
     if (a === 'test') {
@@ -402,19 +447,7 @@ Deno.serve(async (req) => {
     // ── Jadwal tiap menit ──
     const now = Date.now();
     let staffSent = 0, liveSent = 0;
-    // 1) Pengingat staf: tayang ≤ 5 menit lagi (atau baru lewat ≤ 10 menit), sekali per postingan (push_notified_at)
-    const { data: due, error } = await db.from('concerto_way').select('id, day, title, publish_at').eq('published', true).is('push_notified_at', null)
-      .gt('publish_at', new Date(now - 10 * 60e3).toISOString()).lte('publish_at', new Date(now + LEAD_MIN * 60e3 + 30e3).toISOString());
-    if (error) return json({ error: error.message }, 500);
-    for (const p of due || []) {
-      const { data: mark } = await db.from('concerto_way').update({ push_notified_at: new Date().toISOString() }).eq('id', p.id).is('push_notified_at', null).select('id');
-      if (!mark?.length) continue;
-      const mins = Math.max(0, Math.round((Date.parse(p.publish_at) - Date.now()) / 60e3));
-      staffSent += await sendAll('staff', {
-        title: `⏰ Concerto Way ${dayTxt(p.day)}tayang ${mins ? mins + ' menit lagi' : 'sekarang'}`,
-        body: `"${p.title}" · ${wib(p.publish_at)} WIB. Ketuk untuk membuka & bagikan ke grup partner.`,
-        url: `/?cw=${encodeURIComponent(p.id)}`, tag: `cway-${p.id}` }, key);
-    }
+    // 1) Pengingat Editor: lihat staffReminders() di langkah 8 (semua menu, waktu sesuai pilihan tiap HP)
     // 2) Partner: jadwal sudah tiba (≤ 15 menit lalu), sekali per postingan (push_live_at)
     const { data: live } = await db.from('concerto_way').select('id, day').eq('published', true).is('push_live_at', null)
       .lte('publish_at', new Date(now).toISOString()).gt('publish_at', new Date(now - 15 * 60e3).toISOString());

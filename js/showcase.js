@@ -1072,7 +1072,7 @@ function glSchedNote() {
   const iso = glSchedIso(e), past = iso && Date.parse(iso) <= Date.now(), ntf = e.notify && !e.wasLive && !e.push_at;
   if (el) el.innerHTML = e.mode === 'draft' ? 'Belum terlihat oleh pengunjung — hanya Admin/Editor.'
     : e.mode === 'now' || past ? `${past ? '⚠ Waktu ini sudah lewat — ' : ''}Tampil untuk pengunjung begitu disimpan${ntf ? ' + notifikasi 🚗 terkirim' : ''}.`
-    : `Otomatis tampil <b>${escHtml(glWhen(iso))}</b>${ntf ? ' + notifikasi 🚗 ke HP pengunjung' : ''}. Sebelum itu hanya Admin/Editor yang bisa melihatnya; Editor mendapat pengingat 5 menit sebelumnya.`;
+    : `Otomatis tampil <b>${escHtml(glWhen(iso))}</b>${ntf ? ' + notifikasi 🚗 ke HP pengunjung' : ''}. Sebelum itu hanya Admin/Editor yang bisa melihatnya; Editor mendapat pengingat sesuai pilihan di Setting.`;
   if (btn && !btn.disabled) btn.textContent = e.mode === 'sched' && !past ? '⏰ Simpan Jadwal' : '💾 Simpan';
 }
 function renderGlForm() {

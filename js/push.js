@@ -140,6 +140,11 @@ alter table public.academy_remind enable row level security;
 -- 🗓 Ringkasan mingguan (Tahap 6 C, 4 Nov 2026): Senin 08.00 WIB, satu notifikasi berisi semua yang baru 7 hari terakhir.
 -- Bawaan aktif — termasuk HP yang sudah berlangganan (pilihan pemilik "a"); bisa dimatikan di menu Setting.
 alter table public.cway_push_subs add column if not exists weekly boolean not null default true;
+-- ⏰ Pengingat Editor: waktu dipilih per HP (4 Nov 2026) — { all: [60, 5], live: true, cway?: [...], gallery?: [...], acad?, guide?, product? }
+alter table public.cway_push_subs add column if not exists remind jsonb;
+create table if not exists public.staff_remind_log (kind text not null, ref text not null, lead int not null, at timestamptz not null default now(), primary key (kind, ref, lead));
+alter table public.staff_remind_log enable row level security;   -- tanpa policy: hanya Edge Function
+
 create table if not exists public.weekly_push (week date primary key, sent_at timestamptz default now(), counts jsonb);
 alter table public.weekly_push enable row level security;
 
@@ -169,6 +174,7 @@ const PN_DISMISS_KEY = 'cai-pn-dismiss';
 let pushSt = '?';          // ? | … | ok | unsupported | denied | nosql | nofn | busy
 let pushFlags = null;      // { staff, cway, news, acad, guide } milik HP ini (null = belum diketahui)
 let pushEp = null;         // endpoint langganan HP ini
+let pushRemind = null, pushRemindCol = true;   // ⏰ pilihan waktu pengingat Editor di HP ini (kolom remind) · false = SQL belum dijalankan
 let pnSel = null;          // pilihan centang sebelum diaktifkan
 const PN_KEYS = ['weekly', 'cway', 'guide', 'stock', 'news', 'acad', 'product', 'gallery'];   // weekly = 🗓 Ringkasan mingguan (Tahap 6 C)   // pilihan kotak 🔔 Notifikasi (selain staff)
 const PN_DEF = () => Object.fromEntries(PN_KEYS.map(k => [k, true]));
@@ -209,7 +215,7 @@ async function pushRefresh() {
   pushEp = sub?.endpoint || null;
   if (!sub || Notification.permission !== 'granted') { pushSt = 'ok'; pushFlags = {}; return pushPaint(); }
   if (typeof supabase === 'undefined' || !supabase) { setTimeout(pushRefresh, 1500); return; }   // tunggu koneksi Supabase siap
-  try { const r = await pushFn({ action: 'get', endpoint: sub.endpoint }); pushFlags = r?.flags || {}; pushSt = 'ok'; if (authUser) swLoad(true); }
+  try { const r = await pushFn({ action: 'get', endpoint: sub.endpoint }); pushFlags = r?.flags || {}; pushRemind = r?.remind || null; pushRemindCol = r?.remindCol !== false; pushSt = 'ok'; if (authUser) swLoad(true); }
   catch (e) { if (!pushErrState(e)) pushSt = 'ok'; pushFlags = pushFlags || {}; }
   pushPaint();
 }
@@ -274,17 +280,57 @@ function cwPushHtml() {
   if (!isEditor()) return '';
   pushInit();
   const st = pushSt, on = !!pushFlags?.staff && st === 'ok';
-  const msg = on ? '<b>✅ Aktif di HP ini.</b> Notifikasi masuk 5 menit sebelum konten terjadwal tayang — Concerto Way, Galeri, pengumuman produk, Academy & Panduan Partner. Ketuk notifikasinya untuk membuka & mengecek.'
+  const msg = on ? `<b>✅ Aktif di HP ini</b> — diingatkan ${rmSummary()} sebelum konten terjadwal tayang (Concerto Way, Galeri, pengumuman produk, Academy & Panduan Partner). Ketuk notifikasinya untuk membuka & mengecek.`
     : ({ '?': 'Memeriksa…', '…': 'Memeriksa…', busy: 'Menyimpan…', unsupported: pushUnsupportedMsg(),
       denied: 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP (Notifikasi → CAI Hub), lalu muat ulang.',
       nosql: 'Tabel/kolom notifikasi belum lengkap. Klik <b>📋 Salin SQL Notifikasi</b>, jalankan sekali di Supabase → SQL Editor → Run, lalu coba lagi.',
       nofn: 'Edge Function <b>cway-push</b> belum di-deploy / belum versi terbaru di Supabase (lihat <code>supabase/functions/cway-push</code>; Verify JWT dimatikan), lalu coba lagi.' }[st]
-      || 'Dapat notifikasi di HP ini <b>5 menit sebelum</b> setiap konten terjadwal tayang (Concerto Way, Galeri, pengumuman produk, Academy, Panduan) — walau CAI Hub sedang tertutup.');
+      || 'Dapat notifikasi di HP ini sebelum setiap konten terjadwal tayang (Concerto Way, Galeri, pengumuman produk, Academy, Panduan) — waktunya bisa Anda pilih (1 hari sampai 5 menit sebelumnya), walau CAI Hub sedang tertutup.');
   const btn = on ? `<button class="gt-btn ghost" onclick="pushTest()">🔔 Kirim tes</button><button class="gt-btn ghost" onclick="pushSet({ staff: false })">Matikan</button>`
     : ['ok', 'nosql', 'nofn'].includes(st) ? `<button class="gt-btn" onclick="pushSet({ staff: true }, true)">Aktifkan di HP ini</button>` : '';
   return `<div class="cw-push${on ? ' on' : ''}" id="cw-push"><div class="cw-push-tx"><b class="cw-push-h">🔔 Pengingat tayang <small>· khusus Editor</small></b><span>${msg}</span></div>
-    <div class="cw-push-b">${btn}${st === 'nosql' ? '<button class="gt-btn ghost" onclick="pushCopySql()">📋 Salin SQL Notifikasi</button>' : ''}</div></div>`;
+    <div class="cw-push-b">${btn}${st === 'nosql' ? '<button class="gt-btn ghost" onclick="pushCopySql()">📋 Salin SQL Notifikasi</button>' : ''}</div>${on ? rmHtml() : ''}</div>`;
 }
+
+/* ⏰ Waktu pengingat tayang Editor (4 Nov 2026, permintaan pemilik — pratinjau .mockup/remind/, cara 1): dipilih per HP, boleh lebih dari satu,
+   + "✅ sudah tayang", + opsional berbeda per menu. Disimpan lewat aksi Edge Function `remind` (kolom cway_push_subs.remind). */
+const RM_LEADS = [[1440, '1 hari', '1 hari'], [180, '3 jam', '3 jam'], [60, '1 jam', '1 jam'], [30, '30 menit', '30 mnt'], [15, '15 menit', '15 mnt'], [5, '5 menit', '5 mnt']];
+const RM_KINDS = [['cway', '☕ Concerto Way'], ['gallery', '🚗 Galeri'], ['acad', '🎓 Academy'], ['guide', '📘 Panduan'], ['product', '🆕 Produk']];
+let rmOpen = false;
+const rmCur = () => ({ all: [5], live: false, ...(pushRemind || {}) });
+const rmLeads = (r, k) => Array.isArray(r[k]) ? r[k] : r.all;
+function rmSummary() {
+  const r = rmCur(), t = r.all.length ? RM_LEADS.filter(x => r.all.includes(x[0])).map(x => `<b>${x[1]}</b>`).join(' &amp; ') : '<b>tidak</b>';
+  return t + (RM_KINDS.some(([k]) => Array.isArray(r[k])) ? ' (beberapa menu diatur berbeda)' : '');
+}
+function rmHtml() {
+  if (!pushRemindCol) return `<div class="rm-box"><div class="rm-note">Untuk memilih waktu pengingat (1 hari · 3 jam · 1 jam · 30 · 15 · 5 menit), jalankan dulu SQL notifikasi terbaru sekali di Supabase → SQL Editor → Run, lalu deploy ulang Edge Function <b>cway-push</b>. Sampai itu, pengingat tetap 5 menit sebelum tayang.<br><button class="gt-btn ghost" onclick="pushCopySql()">📋 Salin SQL Notifikasi</button></div></div>`;
+  const r = rmCur();
+  const chip = (k, L, label) => { const on = rmLeads(r, k).includes(L);
+    return `<button type="button" class="rm-chip${on ? ' sel' : ''}" onclick="rmToggle('${k}', ${L})" aria-pressed="${on}"><i>${on ? '✓' : ''}</i>${label}</button>`; };
+  const per = RM_KINDS.map(([k, n]) => `<div class="rm-row"><span>${n}${Array.isArray(r[k]) ? '' : ' <small>ikut umum</small>'}</span><div>${RM_LEADS.map(([L, , s]) => chip(k, L, s)).join('')}
+      ${Array.isArray(r[k]) ? `<button type="button" class="rm-reset" onclick="rmReset('${k}')" title="Kembali ikut pilihan umum">↺</button>` : ''}</div></div>`).join('');
+  return `<div class="rm-box">
+    <div class="rm-lbl">Ingatkan saya</div>
+    <div class="rm-chips">${RM_LEADS.map(([L, t]) => chip('all', L, t + (L === 1440 ? ' sebelum' : ''))).join('')}</div>
+    <label class="rm-live"><input type="checkbox" ${r.live ? 'checked' : ''} onchange="rmLive(this.checked)"> Juga kabari saya <b>saat sudah tayang</b> ✅</label>
+    <details class="rm-per" ${rmOpen ? 'open' : ''} ontoggle="rmOpen = this.open"><summary>Atur berbeda per menu <small>(opsional)</small></summary>${per}</details>
+    <div class="rm-note">Tersimpan langsung saat diklik. Konten yang dijadwalkan lebih dekat dari waktu pengingat (mis. tayang 20 menit lagi, pengingat 1 jam) → pengingat itu dilewati; yang lebih dekat tetap dikirim.</div></div>`;
+}
+let rmBusy = null;
+async function rmSave(next) {
+  const prev = pushRemind; pushRemind = next; pushPaint();
+  const my = rmBusy = {};
+  try { const r = await pushFn({ action: 'remind', endpoint: pushEp, remind: next }); if (rmBusy === my && r?.remind) { pushRemind = r.remind; pushPaint(); } }
+  catch (e) { pushRemind = prev; if (/remind|column/i.test(e.message || '')) pushRemindCol = false; else showToast('⚠ Gagal menyimpan pengingat: ' + (e.message || e), 6000); pushPaint(); }
+}
+function rmToggle(k, L) {
+  const r = rmCur(), cur = [...rmLeads(r, k)], i = cur.indexOf(L);
+  if (i >= 0) cur.splice(i, 1); else cur.push(L);
+  rmSave({ ...r, [k]: cur.sort((a, b) => b - a) });
+}
+function rmReset(k) { const r = { ...rmCur() }; delete r[k]; rmSave(r); }
+function rmLive(on) { rmSave({ ...rmCur(), live: !!on }); }
 
 // ── Kotak partner/pengunjung: Concerto Way baru tayang + News (Dashboard = ajakan, menu Concerto Way & News = pengaturan) ──
 function pnHtml(where) {
@@ -433,7 +479,7 @@ function paPrev() {
   const pv = document.getElementById('pa-prev'); if (pv) pv.innerHTML = `<img src="assets/icons/icon-192.png" alt=""><div><b>${escHtml(f.title)}</b>${escHtml(f.body)}</div>`;
   const iso = paIso(f), past = iso && Date.parse(iso) <= Date.now(), n = document.getElementById('pa-note'), btn = document.getElementById('pa-save');
   if (n) n.innerHTML = f.mode === 'now' || past ? `${past ? '⚠ Waktu ini sudah lewat — ' : ''}Dikirim ke semua HP yang mencentang <b>🆕 Produk baru</b> begitu Anda menekan Kirim.`
-    : `Dikirim otomatis <b>${escHtml(paWhen(iso))}</b>. Editor mendapat pengingat 5 menit sebelumnya.`;
+    : `Dikirim otomatis <b>${escHtml(paWhen(iso))}</b>. Editor mendapat pengingat sesuai pilihan di Setting.`;
   if (btn && !f.busy) btn.textContent = f.mode === 'sched' && !past ? '⏰ Jadwalkan' : '📣 Kirim sekarang';
 }
 function renderProdAnn() {

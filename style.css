@@ -4554,3 +4554,20 @@ body.logged-in:not(.is-staff) .rk-send-card { display: none; }   /* partner yang
 .gs-empty div { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .gs-empty button { background: rgba(216,178,106,.14); color: #f0d39a; border: 1px solid rgba(216,178,106,.35); border-radius: 10px; padding: 8px 12px; font: 600 12.5px var(--f-body); cursor: pointer; }
 @media (max-width: 720px) { .gs-go { display: none; } .gs-res { max-height: none; } .dash-hello .gs-res { position: static; } }
+
+/* ⏰ Waktu pengingat tayang Editor (js/push.js rmHtml) */
+.rm-box { flex: 1 1 100%; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 2px; font-size: 13px; }
+.rm-lbl { font: 700 10.5px var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 8px; }
+.rm-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.rm-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: none; color: var(--fg); border-radius: 10px; padding: 7px 11px; font: 600 12.5px var(--f-body); cursor: pointer; }
+.rm-chip i { font-style: normal; width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--fg-muted); display: grid; place-items: center; font-size: 10px; line-height: 1; }
+.rm-chip.sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
+.rm-chip.sel i { background: var(--accent); border-color: var(--accent); color: #111; }
+.rm-live { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; cursor: pointer; } .rm-live input { width: 16px; height: 16px; accent-color: #1f9d55; }
+.rm-per { margin-top: 8px; } .rm-per summary { cursor: pointer; font-weight: 600; padding: 6px 0; } .rm-per summary small { color: var(--fg-muted); font-weight: 400; }
+.rm-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--border); }
+.rm-row > span { font-weight: 600; } .rm-row > span small { display: block; color: var(--fg-muted); font-weight: 400; font-size: 11px; }
+.rm-row > div { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; } .rm-row .rm-chip { padding: 4px 8px; font-size: 11.5px; } .rm-row .rm-chip i { display: none; }
+.rm-reset { border: 0; background: none; color: var(--fg-muted); cursor: pointer; font-size: 15px; padding: 2px 6px; }
+.rm-note { color: var(--fg-muted); font-size: 12px; line-height: 1.5; margin-top: 8px; } .rm-note .gt-btn { margin-top: 8px; }
+@media (max-width: 560px) { .rm-row { grid-template-columns: 1fr; gap: 5px; } }
