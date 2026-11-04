@@ -194,10 +194,11 @@ function fdLoadRk(confirmReplace) {
   if (fd.carName) rk.car = fd.carName;
   rkSave(); return true;
 }
-function fdToRakit() { if (fdLoadRk(true)) { openRakit(); showToast('✓ Rekomendasi dimuat — bisa Anda ubah'); } }
-function fdToPartner() { if (fdLoadRk(true)) { openRakit(); setTimeout(() => rkSendOpen(), 120); } }
+const fdGo = k => { if (typeof intLog === 'function') intLog('fdgo', k, '', true); };   // Laporan Minat: hasil Temukan Sistem dipakai
+function fdToRakit() { if (fdLoadRk(true)) { fdGo('rakit'); openRakit(); showToast('✓ Rekomendasi dimuat — bisa Anda ubah'); } }
+function fdToPartner() { if (fdLoadRk(true)) { fdGo('partner'); openRakit(); setTimeout(() => rkSendOpen(), 120); } }
 function fdShare() {
-  if (!fdSel) return;
+  if (!fdSel) return; fdGo('share');
   const ids = fdIds(), enc = ids.map(id => id + '*1').join('~'), link = `${location.origin}/rakitan/?rk=${encodeURIComponent(enc)}`;
   const t = `🎯 Rekomendasi sistem audio dari CAI Hub${fd.carName ? ' untuk ' + fd.carName : ''}: ${fdSel.t}\n\n` +
     ids.map((id, i) => { const { brand: b, product: p } = findProductAny(id); return `${i + 1}. ${b.name} ${p.name}`; }).join('\n') +

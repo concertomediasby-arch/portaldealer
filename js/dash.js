@@ -36,16 +36,18 @@ function dashSearch(q) {
   if (s) { s.value = q; renderCatalog(); }
 }
 function dashSearchKey(e, el) { if (e.key === 'Enter') { e.preventDefault(); dashSearch(el.value); } }
-const dashSearchBox = (id, ph) => `<form class="dash-search" onsubmit="event.preventDefault(); dashSearch(this.q.value)">
-  ${DASH_SEARCH_ICON}<input name="q" id="${id}" type="search" enterkeyhint="search" placeholder="${ph}" autocomplete="off">
-  <button type="submit" aria-label="Cari">Cari</button></form>`;
+// Hasil langsung saat mengetik (produk · mobil · partner · Academy · News) — js/gsearch.js (Tahap 9 C)
+const dashSearchBox = (id, ph) => `<div class="gs-wrap"><form class="dash-search" onsubmit="event.preventDefault(); gsSubmit(this)">
+  ${DASH_SEARCH_ICON}<input name="q" id="${id}" type="search" enterkeyhint="search" placeholder="${ph}" autocomplete="off"
+    oninput="gsInput(this)" onkeydown="gsKey(event, this)" onfocus="if (this.value.trim().length > 1) gsInput(this)" role="combobox" aria-controls="${id}-res">
+  <button type="submit" aria-label="Cari">Cari</button></form><div class="gs-res" id="${id}-res" role="listbox"></div></div>`;
 
 /* ── Pengunjung umum ── */
 function dashHeroHtml() {
   return `<div class="dash-hero-k">CAI HUB · OFFICIAL BRAND HUB</div>
     <h1 class="dash-hero-h">Temukan sistem audio mobil <br>yang <em>tepat untuk Anda.</em></h1>
     <p class="dash-hero-p">${BRANDS.length} brand resmi Concerto Audio Indonesia — spesifikasi lengkap, harga SRP, dan partner resmi terdekat.</p>
-    ${dashSearchBox('dash-q', 'Cari produk, model, atau kota partner…')}
+    ${dashSearchBox('dash-q', 'Cari produk, mobil, partner, materi…')}
     <div class="dash-chips">${DASH_CATS.map(([t, c]) => `<button onclick="dashSearch('${c}')">${t}</button>`).join('')}</div>`;
 }
 function dashCtaHtml() {
@@ -83,7 +85,7 @@ function dashPaketHtml() {
 function dashHelloHtml() {
   return `<div class="dash-hello-t"><h1>Selamat ${dashGreet()}, Partner 👋</h1><p>Ringkasan hari ini untuk partner resmi CAI.</p></div>
     <span class="dash-badge">🔓 MASUK · KODE AKSES</span>
-    ${dashSearchBox('dash-q2', 'Cari produk / cek stok…')}`;
+    ${dashSearchBox('dash-q2', 'Cari produk, mobil, partner…')}`;
 }
 const dashDays = d => (Date.now() - new Date(d)) / 864e5;
 function dashNewHtml() {

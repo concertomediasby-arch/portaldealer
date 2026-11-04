@@ -1,9 +1,10 @@
 -- Laporan Minat Pengunjung (Tahap 4, 4 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run (aman dijalankan ulang)
+-- Tahap 9 (4 Nov 2026): + car (halaman mobil dibuka) · carq (kotak Cari per Mobil, hit/miss) · finder (jawaban Temukan Sistem) · fdgo (hasil Temukan Sistem dibuka di Simulator / dikirim ke partner / dibagikan).
 -- Tanpa data pribadi: vid = ID acak per browser (sama dengan Pengunjung Portal). Akun Admin/Editor tidak mencatat.
 create table if not exists public.site_interest (
   day date not null,
   vid text not null,
-  kind text not null,   -- view (produk dibuka) | wa | maps | ig (klik partner) | city (kota/provinsi dicari) | search | fav | cmp | rk | share
+  kind text not null,   -- view (produk dibuka) | wa | maps | ig (klik partner) | city (kota/provinsi dicari) | search | fav | cmp | rk | share | car | carq | finder | fdgo
   ref text not null,    -- id produk / nama partner / kota / kata dicari / pasangan id dibandingkan / cmp|rk (share)
   src text not null default '',   -- sumber klik partner (produk, partner, cek, hof, galeri, google, lain) · hit|miss (search)
   n int not null default 1,
@@ -17,11 +18,11 @@ returns void language plpgsql security definer set search_path = public as $$
 declare r text := left(btrim(coalesce(p_ref, '')), 120); s text := left(coalesce(p_src, ''), 20);
 begin
   if p_vid is null or length(p_vid) < 8 or length(p_vid) > 64 or r = '' then return; end if;
-  if p_kind not in ('view', 'wa', 'maps', 'ig', 'city', 'search', 'fav', 'cmp', 'rk', 'share') then return; end if;
-  if p_kind = 'search' then r := lower(r); end if;
+  if p_kind not in ('view', 'wa', 'maps', 'ig', 'city', 'search', 'fav', 'cmp', 'rk', 'share', 'car', 'carq', 'finder', 'fdgo') then return; end if;
+  if p_kind in ('search', 'carq') then r := lower(r); end if;
   insert into site_interest (day, vid, kind, ref, src) values ((now() at time zone 'Asia/Jakarta')::date, p_vid, p_kind, r, s)
   on conflict (day, vid, kind, ref, src) do update set n = least(site_interest.n + 1, 50)
-    where site_interest.kind <> 'view';   -- lihat produk: 1× per orang per hari
+    where site_interest.kind not in ('view', 'car', 'finder');   -- lihat produk: 1× per orang per hari
 end $$;
 grant execute on function public.log_interest(text, text, text, text) to anon, authenticated;
 
@@ -65,6 +66,14 @@ begin
     'rk', (select coalesce(json_agg(t), '[]') from (
         select ref, count(distinct vid) n from site_interest where kind = 'rk' and day > a group by ref order by 2 desc, 1 limit 8) t),
     'share', (select coalesce(json_object_agg(ref, n), '{}') from (
-        select ref, sum(n) n from site_interest where kind = 'share' and day > a group by ref) t));
+        select ref, sum(n) n from site_interest where kind = 'share' and day > a group by ref) t),
+    'cars', (select coalesce(json_agg(t), '[]') from (
+        select ref, count(distinct vid) n from site_interest where kind = 'car' and day > a group by ref order by 2 desc, 1 limit 10) t),
+    'car_miss', (select coalesce(json_agg(t), '[]') from (
+        select ref, count(distinct vid) n from site_interest where kind = 'carq' and src = 'miss' and day > a and length(ref) >= 3 group by ref order by 2 desc, 1 limit 12) t),
+    'finder', (select coalesce(json_agg(t), '[]') from (
+        select ref, count(distinct vid) n from site_interest where kind = 'finder' and day > a group by ref order by 2 desc, 1 limit 60) t),
+    'fdgo', (select coalesce(json_object_agg(ref, n), '{}') from (
+        select ref, sum(n) n from site_interest where kind = 'fdgo' and day > a group by ref) t));
 end $$;
 grant execute on function public.interest_stats(int) to authenticated;

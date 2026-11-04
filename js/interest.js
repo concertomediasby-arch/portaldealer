@@ -4,11 +4,12 @@
    RPC log_interest → tabel site_interest; angka lewat interest_stats (KHUSUS EDITOR — permintaan pemilik 4 Nov 2026) → tab "📈 Minat Pengunjung" di menu Pengunjung Portal.
    Akun Admin/Editor & layar videotron tidak mencatat. SQL sekali jalan: supabase/interest.sql = INT_SQL. */
 const INT_SQL = `-- Laporan Minat Pengunjung (Tahap 4, 4 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run (aman dijalankan ulang)
+-- Tahap 9 (4 Nov 2026): + car (halaman mobil dibuka) · carq (kotak Cari per Mobil, hit/miss) · finder (jawaban Temukan Sistem) · fdgo (hasil Temukan Sistem dibuka di Simulator / dikirim ke partner / dibagikan).
 -- Tanpa data pribadi: vid = ID acak per browser (sama dengan Pengunjung Portal). Akun Admin/Editor tidak mencatat.
 create table if not exists public.site_interest (
   day date not null,
   vid text not null,
-  kind text not null,   -- view (produk dibuka) | wa | maps | ig (klik partner) | city (kota/provinsi dicari) | search | fav | cmp | rk | share
+  kind text not null,   -- view (produk dibuka) | wa | maps | ig (klik partner) | city (kota/provinsi dicari) | search | fav | cmp | rk | share | car | carq | finder | fdgo
   ref text not null,    -- id produk / nama partner / kota / kata dicari / pasangan id dibandingkan / cmp|rk (share)
   src text not null default '',   -- sumber klik partner (produk, partner, cek, hof, galeri, google, lain) · hit|miss (search)
   n int not null default 1,
@@ -22,11 +23,11 @@ returns void language plpgsql security definer set search_path = public as $$
 declare r text := left(btrim(coalesce(p_ref, '')), 120); s text := left(coalesce(p_src, ''), 20);
 begin
   if p_vid is null or length(p_vid) < 8 or length(p_vid) > 64 or r = '' then return; end if;
-  if p_kind not in ('view', 'wa', 'maps', 'ig', 'city', 'search', 'fav', 'cmp', 'rk', 'share') then return; end if;
-  if p_kind = 'search' then r := lower(r); end if;
+  if p_kind not in ('view', 'wa', 'maps', 'ig', 'city', 'search', 'fav', 'cmp', 'rk', 'share', 'car', 'carq', 'finder', 'fdgo') then return; end if;
+  if p_kind in ('search', 'carq') then r := lower(r); end if;
   insert into site_interest (day, vid, kind, ref, src) values ((now() at time zone 'Asia/Jakarta')::date, p_vid, p_kind, r, s)
   on conflict (day, vid, kind, ref, src) do update set n = least(site_interest.n + 1, 50)
-    where site_interest.kind <> 'view';   -- lihat produk: 1× per orang per hari
+    where site_interest.kind not in ('view', 'car', 'finder');   -- lihat produk: 1× per orang per hari
 end $$;
 grant execute on function public.log_interest(text, text, text, text) to anon, authenticated;
 
@@ -70,7 +71,15 @@ begin
     'rk', (select coalesce(json_agg(t), '[]') from (
         select ref, count(distinct vid) n from site_interest where kind = 'rk' and day > a group by ref order by 2 desc, 1 limit 8) t),
     'share', (select coalesce(json_object_agg(ref, n), '{}') from (
-        select ref, sum(n) n from site_interest where kind = 'share' and day > a group by ref) t));
+        select ref, sum(n) n from site_interest where kind = 'share' and day > a group by ref) t),
+    'cars', (select coalesce(json_agg(t), '[]') from (
+        select ref, count(distinct vid) n from site_interest where kind = 'car' and day > a group by ref order by 2 desc, 1 limit 10) t),
+    'car_miss', (select coalesce(json_agg(t), '[]') from (
+        select ref, count(distinct vid) n from site_interest where kind = 'carq' and src = 'miss' and day > a and length(ref) >= 3 group by ref order by 2 desc, 1 limit 12) t),
+    'finder', (select coalesce(json_agg(t), '[]') from (
+        select ref, count(distinct vid) n from site_interest where kind = 'finder' and day > a group by ref order by 2 desc, 1 limit 60) t),
+    'fdgo', (select coalesce(json_object_agg(ref, n), '{}') from (
+        select ref, sum(n) n from site_interest where kind = 'fdgo' and day > a group by ref) t));
 end $$;
 grant execute on function public.interest_stats(int) to authenticated;`;
 
@@ -126,6 +135,7 @@ function intSrcOf(el) {
   if (el.closest('#view-partner')) return 'profil';
   if (el.closest('#view-mobil')) return 'mobil';
   if (el.closest('#view-finder')) return 'finder';
+  if (el.closest('.gs-res')) return 'cari';
   if (el.closest('#view-authdealer')) return 'partner';
   if (el.closest('#hof-dealer, #view-halloffame, #hof-win')) return 'hof';
   if (el.closest('#gl-detail, #view-galeri')) return 'galeri';
@@ -154,7 +164,7 @@ async function loadIntStats() {
   if (vsTab === 'int') renderVisitors();
 }
 function intCopySql() { (navigator.clipboard?.writeText(INT_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => prompt('Salin SQL ini:', INT_SQL)); }
-const INT_SRC = { produk: ['Halaman produk “Tanya”', 'var(--accent)'], simulator: ['System Simulator “Kirim rakitan”', '#f0c75e'], partner: ['Authorized Partner', '#6fd3e6'], cek: ['Cek Partner Resmi', '#52c38a'], profil: ['Profil Partner', '#e8c14a'], mobil: ['Cari per Mobil', '#7aa7ff'], finder: ['Temukan Sistem', '#ff9bd2'],
+const INT_SRC = { produk: ['Halaman produk “Tanya”', 'var(--accent)'], simulator: ['System Simulator “Kirim rakitan”', '#f0c75e'], partner: ['Authorized Partner', '#6fd3e6'], cek: ['Cek Partner Resmi', '#52c38a'], profil: ['Profil Partner', '#e8c14a'], mobil: ['Cari per Mobil', '#7aa7ff'], finder: ['Temukan Sistem', '#ff9bd2'], cari: ['Pencarian Dashboard', '#a3e07a'],
   google: ['Halaman Google /partner/', '#b48cf2'], hof: ['Hall of Fame', '#f0a35e'], galeri: ['Galeri Instalasi', '#e2685f'], lain: ['Lainnya', '#8b92a1'] };
 function intTrend(n, n0) {
   if (!n0) return n ? '<small class="int-up">baru</small>' : '';
@@ -209,5 +219,37 @@ function intHtml() {
       <div class="vs-box"><h3>⇄ Paling sering dibandingkan</h3>${list(S.cmp, cmpName)}</div>
       <div class="vs-box"><h3>🔧 Paling sering masuk rakitan</h3>${list(S.rk, pname)}</div>
     </div>
+    ${intCarHtml(S)}
     <div class="vs-note">Dicatat per browser tanpa data pribadi${S.first_day ? ' sejak ' + new Date(S.first_day + 'T00:00:00Z').toLocaleDateString('id-ID', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' }) : ''}; akun Admin/Editor tidak dihitung. Satu orang di HP + laptop = 2. Angka “disimpan / dibandingkan / rakitan” = jumlah orang.</div>`;
+}
+
+/* Tahap 9 (4 Nov 2026, permintaan pemilik — pratinjau .mockup/tahap9/): 🚗 Mobil paling dicari + 🎯 Jawaban Temukan Sistem.
+   Butuh interest_stats versi baru (kunci cars/car_miss/finder/fdgo) — SQL lama → kotak ajakan salin SQL. */
+function intCarHtml(S) {
+  if (!('cars' in S)) return `<div class="vs-warn">🚗 Mobil paling dicari &amp; 🎯 Jawaban Temukan Sistem butuh pembaruan SQL laporan. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (aman dijalankan ulang), lalu ↻ Muat ulang.<br><br><button class="gt-btn" onclick="intCopySql()">📋 Salin SQL Minat Pengunjung</button></div>`;
+  const empty = t => `<div class="vs-note">${t}</div>`;
+  const cars = S.cars || [], cmax = Math.max(1, ...cars.map(x => +x.n));
+  const carRow = (x, i) => { const c = typeof carBySlug === 'function' ? carBySlug(x.ref) : null;
+    const sub = c ? [c.wins ? `🏆 ${c.wins} prestasi` : '', c.gl.length ? `📷 ${c.gl.length} Galeri` : '', c.partners.length ? `${c.partners.length} partner` : ''].filter(Boolean).join(' · ') : '';
+    return `<button class="int-pr int-car" ${c ? `onclick="openCar('${c.slug}')"` : 'disabled'}><span class="rk${i < 3 ? ' g' : ''}">${i + 1}</span>
+      <span class="nm"><b>${escHtml(c ? c.name : x.ref)}</b><small>${escHtml(sub)}</small></span><span class="int-bar"><i style="width:${x.n / cmax * 100}%"></i></span><span class="v">${fmtNum(x.n)}</span></button>`; };
+  const miss = S.car_miss || [];
+  // Temukan Sistem: ref = anggaran|selera|tahap (1 orang per kombinasi per hari)
+  const F = (S.finder || []).map(x => { const [b, t, st] = String(x.ref).split('|'); return { b, t, st, n: +x.n }; });
+  const tot = F.reduce((a, x) => a + x.n, 0);
+  const agg = (key, opts) => opts.map(o => ({ o, n: F.filter(x => x[key] === o.id).reduce((a, x) => a + x.n, 0) }));
+  const bars = (title, rows) => { const mx = Math.max(1, ...rows.map(r => r.n)), top = Math.max(...rows.map(r => r.n));
+    return `<div class="int-q"><h4>${title}</h4>${rows.map(r => `<div class="int-opt${r.n && r.n === top ? ' top' : ''}"><span>${r.o.e || ''} ${escHtml(r.o.t)}</span><span class="int-bar"><i style="width:${r.n / mx * 100}%"></i></span><b>${fmtNum(r.n)}</b></div>`).join('')}</div>`; };
+  const lab = (arr, id) => (arr.find(o => o.id === id) || {}).t || id;
+  const best = [...F].sort((a, b) => b.n - a.n)[0];
+  const go = S.fdgo || {};
+  const fd = typeof FD_BUDGETS !== 'undefined' && tot ? `${bars('Anggaran', agg('b', FD_BUDGETS))}${bars('Selera suara', agg('t', FD_TASTES))}${bars('Cara pasang', agg('st', FD_STAGES))}
+    ${best ? `<div class="int-combo">🔥 <b>Kombinasi terbanyak:</b> ${escHtml(lab(FD_BUDGETS, best.b))} · ${escHtml(lab(FD_TASTES, best.t))} · ${escHtml(lab(FD_STAGES, best.st))} — <b>${fmtNum(best.n)} orang</b><br><span>→ bahan susunan rakitan &amp; Paket Audio berikutnya.</span></div>` : ''}
+    <div class="int-combo">🔧 Hasil dipakai: <b>${fmtNum(go.rakit || 0)}</b> dibuka di Simulator · <b>${fmtNum(go.partner || 0)}</b> dikirim ke partner · <b>${fmtNum(go.share || 0)}</b> dibagikan.</div>` : empty('Belum ada yang menyelesaikan Temukan Sistem.');
+  return `<div class="int-g2">
+      <div class="vs-box"><h3>🚗 Mobil paling dicari</h3><div class="vs-note" style="margin:2px 0 8px">Halaman mobil yang dibuka (Cari per Mobil, pencarian Dashboard, link Google/WA). Jumlah orang. Klik = buka halaman mobil.</div>
+        ${cars.length ? cars.map(carRow).join('') : empty('Belum ada data.')}
+        ${miss.length ? `<div class="int-combo">💡 <b>Dicari tapi belum ada datanya:</b> ${miss.map(x => `${escHtml(x.ref)} (${fmtNum(x.n)})`).join(' · ')}<br><span>→ calon konten Galeri Instalasi berikutnya.</span></div>` : ''}</div>
+      <div class="vs-box"><h3>🎯 Jawaban Temukan Sistem</h3><div class="vs-note" style="margin:2px 0 8px">${tot ? `${fmtNum(tot)} kali diselesaikan (1× per orang per hari).` : 'Pemandu 4 pertanyaan di menu Temukan Sistem.'}</div>${fd}</div>
+    </div>`;
 }

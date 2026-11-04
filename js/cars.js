@@ -88,7 +88,13 @@ function carsRerender() {
   if (v === 'partner' && pfSel) renderPartner();
 }
 function setCarMake(m) { carMake = m; renderCars(); }
-function carSearch(v) { carQ = v; renderCars(true); }
+function carSearch(v) { carQ = v; renderCars(true); carSearchLog(v); }
+// Laporan Minat: kata di kotak Cari per Mobil (1,5 dtk setelah berhenti mengetik) — hit = ada mobilnya, miss = belum ada (calon konten Galeri)
+let carSearchT = null;
+function carSearchLog(v) {
+  clearTimeout(carSearchT); const q = String(v || '').trim(); if (q.length < 3 || typeof intLog !== 'function') return;
+  carSearchT = setTimeout(() => { const k = normKey(q); intLog('carq', q, carList().some(c => normKey(c.name).includes(k)) ? 'hit' : 'miss', true); }, 1500);
+}
 function renderCars(keepFocus) {
   const el = document.getElementById('mobil-body'); if (!el) return;
   if (carSel) return renderCar();
@@ -110,6 +116,15 @@ function renderCars(keepFocus) {
   if (keepFocus) { const i = document.getElementById('car-q'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }
 }
 
+// Perangkat per mobil: { sets: Map daftar perangkat unik, prods: id produk urut paling sering } — dipakai halaman mobil & pencarian Dashboard
+function carProds(c) {
+  const sets = new Map();
+  for (const g of c.gl) if ((g.products || []).length) sets.set([...g.products].sort().join(','), g.products);
+  for (const e of c.hof) if ((e.products || []).length) sets.set([...e.products].sort().join(','), e.products);
+  const cnt = new Map(); for (const ps of sets.values()) for (const id of new Set(ps)) if (findProductAny(id).product) cnt.set(id, (cnt.get(id) || 0) + 1);
+  return { sets, prods: [...cnt.entries()].sort((a, b) => b[1] - a[1]).map(x => x[0]) };
+}
+
 // ── Halaman satu mobil ──
 function openCar(slug) {
   carSel = slug; showView('mobil'); document.querySelector('.main')?.scrollTo(0, 0);
@@ -124,11 +139,7 @@ function renderCar() {
   const g0 = [...c.gl].sort((a, b) => (b.photos || []).length - (a.photos || []).length)[0];
   const hof = [...c.hof].sort((a, b) => (a.place || 9) - (b.place || 9) || (b.year || 0) - (a.year || 0));
   // Perangkat: dihitung per mobil (Galeri + prestasi yang punya daftar perangkat; daftar identik dihitung sekali)
-  const sets = new Map();
-  for (const g of c.gl) if ((g.products || []).length) sets.set([...g.products].sort().join(','), g.products);
-  for (const e of c.hof) if ((e.products || []).length) sets.set([...e.products].sort().join(','), e.products);
-  const cnt = new Map(); for (const ps of sets.values()) for (const id of new Set(ps)) if (findProductAny(id).product) cnt.set(id, (cnt.get(id) || 0) + 1);
-  const prods = [...cnt.entries()].sort((a, b) => b[1] - a[1]).map(x => x[0]);
+  const { sets, prods } = carProds(c);
   const rich = [...sets.values()].sort((a, b) => b.length - a.length)[0] || [];
   const medal = e => hofMedal(e.place);
   const partners = c.partners.map(n => adPublic().find(d => d.n === n) || null);
