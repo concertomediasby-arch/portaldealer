@@ -3943,3 +3943,7 @@ body.logged-in .guest-only { display: none !important; }
 
 /* Dashboard tanpa Hall of Fame (4 Nov 2026): kartu Academy satu-satunya → selebar baris */
 .dash-pair.one { grid-template-columns: minmax(0, 1fr); }
+
+/* Tombol Bagikan di jendela video Sorotan Brand (4 Nov 2026) */
+.dv-btn.dv-share { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.dv-btn.dv-share .ico-share { width: 15px; height: 15px; }

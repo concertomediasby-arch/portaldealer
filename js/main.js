@@ -63,6 +63,7 @@ function openDeepLink() {
   if (q.get('acad')) { enterPortal(); acadPending = +q.get('acad'); return; }   // link materi Academy → setelah loadAcadExtra()
   if (q.get('dealer')) { enterPortal(); adOpenLinked(q.get('dealer')); return; }   // link Authorized Dealer
   if (q.get('paket')) { enterPortal(); paketOpenLinked(q.get('paket')); return; }   // link Paket Audio
+  if (q.get('sorotan')) { enterPortal(); dvOpenLinked(q.get('sorotan')); return; }   // link Sorotan Brand → jendela video brand itu
   if (q.get('hof')) { enterPortal(); hofOpenLinked(q.get('hof')); return; }   // link prestasi Hall of Fame (data statis di katalog.js)
   if (q.get('guide')) { enterPortal(); guidePending = q.get('guide'); return; }   // link Panduan Dealer → setelah status login diketahui
   const pid = q.get('p');

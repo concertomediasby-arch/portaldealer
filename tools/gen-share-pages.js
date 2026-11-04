@@ -32,6 +32,7 @@ function literal(name) {
   }
 }
 const LOGO_WHITE = core.match(/const LOGO_WHITE = "([^"]+)"/)[1];
+const DASH_TILES = literal('DASH_TILES');
 const ACADEMY = literal('ACADEMY'), PAKET_AUDIO = literal('PAKET_AUDIO'), AUTH_DEALERS = literal('AUTH_DEALERS');
 // Sama dengan shareSlug() di js/core.js
 const shareSlug = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -74,6 +75,15 @@ for (const k of PAKET_AUDIO) items.push({ kind: 'k', id: k.id, target: `/?paket=
 for (const d of AUTH_DEALERS) items.push({ kind: 'd', id: shareSlug(d.n), target: `/?dealer=${encodeURIComponent(d.n)}`,
   title: `${d.n} — Authorized Partner Concerto Audio Indonesia`, desc: clip([[d.c, d.r].filter(Boolean).join(', '), d.a, 'Dealer resmi Audiocircle · STEG · Zelos · Diosdela · OG One Sound · Audio System.'].filter(Boolean).join(' · '), 200),
   card: { t: 'd', name: d.n, city: d.c || '', region: d.r || '', addr: d.a || '', ig: d.ig || '' } });
+
+// Sorotan Brand (4 Nov 2026, permintaan pemilik): /s/<brand>/ → /?sorotan=<brand> (jendela video kotak Dashboard).
+// Label bawaan DASH_TILES dipakai di kartu; bila Editor mengganti label dari portal, kartu tetap memakai label bawaan.
+for (const t of DASH_TILES) {
+  const b = ctx.BRANDS.find(x => x.id === t.id); if (!b) continue;
+  items.push({ kind: 's', id: t.id, target: `/?sorotan=${encodeURIComponent(t.id)}`,
+    title: `Sorotan Brand: ${b.name}${t.label ? ' — ' + t.label : ''}`, desc: clip(`${b.tagline || b.name}. Tonton videonya di CAI Hub — Concerto Audio Indonesia.`, 200),
+    card: { t: 's', img: (t.poster || (t.photos || [])[0] || '').split('?')[0], logo: b.logo || '', brand: b.name, label: t.label || '', tag: t.tag || '', tagline: b.tagline || '', color: b.color || '#d8b26a' } });
+}
 
 // Kartu per JENIS (3 Nov 2026, permintaan pemilik — pilihan 1): isi Panduan Dealer / Concerto Way / News / Galeri ada di
 // database (Panduan & Concerto Way khusus partner), jadi satu kartu per jenis. Halaman di /<id>/ meneruskan query apa adanya
@@ -143,6 +153,16 @@ const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
 .ty h1{font:800 56px/1.08 Sora;margin:0 0 16px;color:#fff;max-width:820px}.ty .sub{font-size:22px;line-height:1.45;color:#b9bec9;max-width:820px}
 .ty .lock{display:inline-flex;align-items:center;gap:10px;font:700 18px Sora;border-radius:999px;padding:9px 18px;margin-top:22px}
 .ty .ft{margin-top:0}
+.so{background:#07080a}.so>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.so .sh{position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,8,10,.95) 0%,rgba(7,8,10,.82) 42%,rgba(7,8,10,.15) 75%,transparent)}
+.so .in{position:absolute;inset:0;padding:52px 64px 44px;display:flex;flex-direction:column;max-width:720px}
+.so .bl{height:54px;object-fit:contain;object-position:left;max-width:280px;align-self:flex-start}.so .bn{font:800 38px Sora}
+.so .kk{margin-top:auto;font:700 16px Sora;letter-spacing:.26em;color:#d8b26a}.so .tg{display:inline-block;margin-left:10px;font:800 14px Sora;letter-spacing:.12em;border-radius:6px;padding:4px 10px;background:#d8b26a;color:#111;vertical-align:2px}
+.so .tg.new{background:#e5484d;color:#fff}.so .tg.soon{background:#2f6bff;color:#fff}
+.so h1{font:800 64px/1.05 Sora;margin:12px 0 10px;color:#fff}.so .sub{font-size:21px;color:#c9cdd5;margin-bottom:26px}
+.so .play{position:absolute;right:70px;top:50%;margin-top:-56px;width:112px;height:112px;border-radius:50%;background:rgba(0,0,0,.45);border:3px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center}
+.so .play::after{content:'';border-left:34px solid #fff;border-top:21px solid transparent;border-bottom:21px solid transparent;margin-left:8px}
+.so .bar{position:absolute;left:0;right:0;top:0;height:8px}
 .ty.nw{background:radial-gradient(70% 90% at 90% 0%,rgba(111,211,230,.28),transparent 60%),linear-gradient(150deg,#0c1520,#07080a 62%)}.ty.nw .k,.ty.nw .u{color:#6fd3e6}
 .ty.nw .ic{background:rgba(111,211,230,.1);border:2px solid rgba(111,211,230,.5)}
 .ty .ic{background:rgba(216,178,106,.1);border:2px solid rgba(216,178,106,.55)}.ty .k{color:#d8b26a}
@@ -162,6 +182,11 @@ function cardHtml(c) {
         ${c.lock ? '<div class="lock">🔒 Khusus partner CAI · buka dengan Kode Akses</div>' : ''}</div></div>
       <div class="ft"><span style="font-size:18px;color:#9aa0ad">CAI Hub · Concerto Audio Indonesia</span><span class="u">hub.concerto.id</span></div></div>`;
   }
+  if (c.t === 's') return `<div class="c so" id="c">${c.img ? `<img class="bg" src="/${esc(c.img)}">` : ''}<div class="sh"></div><div class="bar" style="background:${esc(c.color)}"></div><span class="play"></span>
+    <div class="in">${c.logo ? `<img class="bl" src="/${esc(c.logo)}">` : `<div class="bn">${esc(c.brand)}</div>`}
+      <div class="kk">SOROTAN BRAND${c.tag ? `<span class="tg${/new|baru/i.test(c.tag) ? ' new' : /soon/i.test(c.tag) ? ' soon' : ''}">${esc(c.tag.toUpperCase())}</span>` : ''}</div>
+      <h1>${esc(c.label || c.brand)}</h1><div class="sub">${esc(c.tagline)}</div>
+      <div class="ft">${LOGO}<span class="u">hub.concerto.id</span></div></div></div>`;
   if (c.t === 'p') return `<div class="c pr" id="c"><div class="ph">${c.photo ? `<img src="/${esc(c.photo)}">` : `<span class="emo">${c.emoji}</span>`}<div class="bar" style="background:${esc(c.color)}"></div></div>
     <div class="in" style="background:radial-gradient(80% 70% at 100% 0%,${esc(c.color)}55,transparent 60%),linear-gradient(160deg,#101216,#08090b)">
       ${c.logo ? `<img class="bl" src="/${esc(c.logo)}">` : `<div class="bn">${esc(c.brand)}</div>`}
@@ -263,7 +288,7 @@ function pageHtml(it, imgUrl) {
   }
   // Hapus halaman & gambar item yang sudah tidak ada
   const keep = new Set(items.map(it => `${it.kind}/${it.id}`));
-  for (const k of ['p', 'h', 'a', 'k', 'd']) {
+  for (const k of ['p', 'h', 'a', 'k', 'd', 's']) {
     const d = path.join(ROOT, k); if (!fs.existsSync(d)) continue;
     for (const id of fs.readdirSync(d)) if (!keep.has(`${k}/${id}`)) { fs.rmSync(path.join(d, id), { recursive: true }); fs.rmSync(path.join(ROOT, `share/img/${k}-${id}.jpg`), { force: true }); }
   }

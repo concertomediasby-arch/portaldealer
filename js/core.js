@@ -178,7 +178,7 @@ const DASH_TILES = [
 // Pilihan tag pojok kiri atas (2 Nov 2026, permintaan pemilik); teks bebas juga boleh lewat ✏️
 const DASH_TAGS = ['Featured', 'New Arrival', 'Coming Soon', 'Best Seller', 'Juara EMMA'];
 const DASH_DIR = 'dashboard', DASH_MANIFEST = 'dashboard/tiles.json', DASH_VIDEO_MAX_MB = 50;
-let dashOverrides = {}, dashSlideTimer = null, dashIO = null;
+let dashOverrides = {}, dashSlideTimer = null, dashIO = null, dashOvP = null;
 // 2 Nov 2026: Storage `showcase` belum punya policy SELECT → menimpa tiles.json (upsert) & menghapus file ditolak RLS
 // ("new row violates row-level security policy"). SQL ini dijalankan sekali oleh Editor (aman diulang).
 const DASH_SQL = `-- Kotak video Dashboard: izin Admin/Editor membaca & menimpa file di folder showcase
@@ -284,7 +284,7 @@ function openDashVideo(id) {
     <div class="dv-body">
       <div class="dv-info">${d.b.logo ? `<img class="dv-logo" src="${d.b.logo}" alt="${escHtml(d.b.name)}">` : ''}
         <div class="dv-tt"><b>${escHtml(d.label || d.b.name)}</b><span>${escHtml(dvSub(d, tg))}</span></div>
-        <div class="dv-btns">${tg ? `<button class="dv-btn pri" onclick="dvGo('target')">${escHtml(tg.text)}</button>` : ''}<button class="dv-btn" onclick="dvGo('brand')">Halaman ${escHtml(d.b.name)}</button></div></div>
+        <div class="dv-btns">${tg ? `<button class="dv-btn pri" onclick="dvGo('target')">${escHtml(tg.text)}</button>` : ''}<button class="dv-btn" onclick="dvGo('brand')">Halaman ${escHtml(d.b.name)}</button><button class="dv-btn dv-share" onclick="dvShare()" aria-label="Bagikan">${SHARE_ICON}Bagikan</button></div></div>
       <div class="dv-nav"><button class="dv-nb" onclick="dvStep(-1)" aria-label="Brand sebelumnya">‹</button><div class="dv-chips">${chips}</div><button class="dv-nb" onclick="dvStep(1)" aria-label="Brand berikutnya">›</button></div>
     </div></div>`;
   ov.classList.add('open'); document.body.classList.add('dv-lock');
@@ -316,6 +316,20 @@ function closeDashVideo(after) {
   if (history.state?.dv) { dvAfter = after || null; history.back(); return; }   // popstate → dvClose()
   dvClose(); after?.();
 }
+// Bagikan Sorotan Brand (4 Nov 2026, permintaan pemilik): teks + link /s/<brand>/ (kartu pratinjau WA dari tools/gen-share-pages.js)
+// → /?sorotan=<brand> membuka Dashboard lalu jendela video brand itu (openDeepLink → dvOpenLinked).
+const dvLink = id => `${PORTAL_URL}/s/${encodeURIComponent(id)}/`;
+function dvShare() {
+  const d = dvTile(dvCur); if (!d) return;
+  const tg = dvTarget(d);
+  const text = `🎬 *Sorotan Brand: ${d.b.name}${d.label ? ' — ' + d.label : ''}*\n${dvSub(d, tg)}${d.tag ? ' · ' + d.tag : ''}\nLihat videonya di CAI Hub:\n${dvLink(d.b.id)}`;
+  window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
+}
+function dvOpenLinked(id) {
+  if (!DASH_TILES.some(t => t.id === id)) return;
+  showView('dashboard');
+  Promise.resolve(dashOvP).catch(() => {}).then(() => openDashVideo(id));
+}
 function dvGo(what) {
   const d = dvTile(dvCur); if (!d) return;
   const tg = dvTarget(d);
@@ -337,7 +351,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { e.preventDefault(); closeDashVideo(); }
   else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !/INPUT|TEXTAREA|SELECT/.test(e.target?.tagName || '') && e.target?.tagName !== 'VIDEO') dvStep(e.key === 'ArrowRight' ? 1 : -1);
 });
-async function initDashTiles() { renderDashTiles(); await loadDashOverrides(); if (Object.keys(dashOverrides).length) renderDashTiles(); }
+async function initDashTiles() { renderDashTiles(); dashOvP = loadDashOverrides(); await dashOvP; if (Object.keys(dashOverrides).length) renderDashTiles(); }
 async function saveDashManifest(data = dashOverrides) {
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
   const { error } = await supabase.storage.from('showcase').upload(DASH_MANIFEST, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
