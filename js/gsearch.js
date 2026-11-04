@@ -37,7 +37,9 @@ function gsCompute(q) {
   // Academy & News (yang sudah tayang)
   R.acad = (typeof acadReleased === 'function' ? acadReleased() : []).filter(a => gsHit([a.title, a.series].join(' '), q));
   R.news = (typeof nwLive === 'function' && nwItems ? nwLive() : []).filter(n => gsHit([n.title, n.summary, n.category].join(' '), q));
-  R.any = !!(R.cars.length || R.partners.length || R.prods.length || R.acad.length || R.news.length);
+  // 📅 Kalender Acara (js/events.js): acara mendatang dulu, lalu arsip
+  R.events = typeof evUpcoming === 'function' && evItems ? [...evUpcoming(), ...evArchive()].filter(e => e.published && gsHit([e.title, e.city, e.venue, (e.partners || []).join(' '), evKind_(e)[1]].join(' '), q)) : [];
+  R.any = !!(R.cars.length || R.partners.length || R.prods.length || R.acad.length || R.news.length || R.events.length);
   return R;
 }
 
@@ -94,6 +96,11 @@ function gsRender(el) {
       return it(act(() => showProduct(b.id, p.id)), ph ? `<img src="${escHtml(ph)}" alt="" loading="lazy">` : `<i>${p.emoji || '🔊'}</i>`,
         escHtml(`${b.name} ${p.name}`), escHtml([p.category, l?.name, typeof hasPrice === 'function' && hasPrice(p) ? srpText(p) : ''].filter(Boolean).join(' · ')));
     }).join('');
+  }
+  if (R.events.length) {
+    h += head('📅 Acara', R.events.length > GS_MAX ? moreBtn(`Lihat semua ${R.events.length}`, () => { evQ = q; openEvents(); }) : '');
+    h += R.events.slice(0, GS_MAX).map(e => it(act(() => { openEvents(); openEvDetail(e.id); }), `<i>${evKind_(e)[0]}</i>`, escHtml(e.title),
+      escHtml([evWib(e.start_at, { day: 'numeric', month: 'short', year: 'numeric' }), evPlace(e), evPast(e) ? 'arsip' : ''].filter(Boolean).join(' · ')))).join('');
   }
   if (R.acad.length) {
     h += head('🎓 Concerto Academy', R.acad.length > GS_MAX ? moreBtn(`Lihat semua ${R.acad.length}`, () => openAcademy()) : '');

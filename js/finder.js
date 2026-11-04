@@ -203,5 +203,5 @@ function fdShare() {
   const t = `🎯 Rekomendasi sistem audio dari CAI Hub${fd.carName ? ' untuk ' + fd.carName : ''}: ${fdSel.t}\n\n` +
     ids.map((id, i) => { const { brand: b, product: p } = findProductAny(id); return `${i + 1}. ${b.name} ${p.name}`; }).join('\n') +
     `\n\nTotal SRP ${fmtRp(fdPrice(ids))} (${RK_EXCL.replace(/\.$/, '')})\n${link}`;
-  window.open('https://wa.me/?text=' + encodeURIComponent(waText(t)), '_blank', 'noopener');
+  window.open('https://wa.me/?text=' + waText(t), '_blank', 'noopener');
 }

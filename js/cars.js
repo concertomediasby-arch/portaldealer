@@ -177,12 +177,12 @@ function pfShare(slug) {
   const t = `🏪 ${d.n} — Partner Resmi Concerto Audio Indonesia\n📍 ${[d.c, d.r].filter(Boolean).join(', ')}` +
     (x.hof.length ? `\n🏆 ${x.hof.length} prestasi kompetisi${j1 ? ` (${j1} Juara 1)` : ''}` : '') + (x.gl.length ? `\n📷 ${x.gl.length} instalasi di Galeri CAI Hub` : '') +
     `\n\nLihat profil, hasil pemasangan & kontaknya:\n${pfLink(slug)}`;
-  window.open('https://wa.me/?text=' + encodeURIComponent(waText(t)), '_blank', 'noopener');
+  window.open('https://wa.me/?text=' + waText(t), '_blank', 'noopener');
 }
 function carShare(slug) {
   const c = carBySlug(slug); if (!c) return;
   const t = `🚗 ${c.name} — contoh pemasangan audio di CAI Hub\n${c.cars} mobil dikerjakan partner resmi Concerto Audio Indonesia${c.wins ? ` · 🏆 ${c.wins} prestasi kompetisi` : ''}\n\nLihat foto, perangkat & partnernya:\n${carLink(slug)}`;
-  window.open('https://wa.me/?text=' + encodeURIComponent(waText(t)), '_blank', 'noopener');
+  window.open('https://wa.me/?text=' + waText(t), '_blank', 'noopener');
 }
 // Link /?mobil=… · /?partner=…: buka langsung; Supabase siap beberapa saat setelah halaman dimuat → coba muat Galeri sampai bisa
 // (setelah Galeri / daftar partner termuat, carsRerender() menggambar ulang halaman yang sedang terbuka)

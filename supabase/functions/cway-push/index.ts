@@ -15,7 +15,9 @@
 //  • Semua         : 🗓 Ringkasan mingguan — Senin 08.00 WIB, satu notifikasi: jumlah produk diperbarui, instalasi Galeri, materi Academy,
 //                    berita 7 hari terakhir (+ jumlah Concerto Way & Panduan Partner TANPA judul bagi HP partner). Kolom weekly,
 //                    sekali per minggu lewat tabel weekly_push; minggu tanpa isi = tidak dikirim. Ketuk = /?minggu (halaman "Minggu ini").
-// Tiap HP memilih sendiri (kolom staff / cway / news / acad / guide / stock / gallery / product di tabel cway_push_subs).
+//  • Semua         : 📅 Kalender Acara (4 Nov 2026) — "Acara baru" saat acara pertama tayang (kolom event; acara 🔒 khusus partner
+//                    TANPA judul & hanya ke HP partner) + pengingat H-1 untuk HP yang menekan "Ingatkan saya" (tabel event_watch).
+// Tiap HP memilih sendiri (kolom staff / cway / news / acad / guide / stock / gallery / product / weekly / event di tabel cway_push_subs).
 //
 // Deploy: Supabase Dashboard → Edge Functions → cway-push → Code → tempel file ini → Deploy ("Verify JWT" tetap MATI).
 // SQL: supabase/cway-push.sql (tabel + kolom + jadwal tiap menit). Tidak perlu secret: kunci VAPID dibuat otomatis
@@ -35,6 +37,9 @@
 //   { action: 'watch', endpoint, product_id, name, on } → pantau / batal pantau stok produk di HP ini (hanya yang login; maks. 30)
 //   { action: 'watches', endpoint }                  → { items: [{product_id, name}] } produk yang dipantau HP ini
 //   { action: 'remind', endpoint, remind }           → simpan pilihan waktu pengingat Editor untuk semua HP Editor (ikut akun; hanya Editor)
+//   { action: 'ev_watch', endpoint, event_id, on }   → 📅 ingatkan / batal ingatkan acara di HP ini (maks. 50)
+//   { action: 'ev_watches', endpoint }               → { items: [event_id…] } acara yang diingatkan di HP ini
+//   { action: 'notify', type: 'event', id }          → "Acara baru" sekarang (hanya Editor; sekali per acara, kolom push_at)
 //   { action: 'devices', endpoint }                  → daftar perangkat Editor yang pengingatnya aktif (hanya Editor)
 //   { action: 'test_all', endpoint }                 → notifikasi uji ke SEMUA perangkat Editor → status per perangkat (hanya Editor)
 //   { action: 'forget', endpoint, id }               → hapus langganan perangkat Editor lain dari daftar (hanya Editor)
@@ -68,8 +73,8 @@ const ACAD_MANIFEST = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
 type Sub = { endpoint: string; p256dh: string; auth: string };
-type Col = 'staff' | 'cway' | 'news' | 'acad' | 'guide' | 'stock' | 'gallery' | 'product' | 'weekly';
-const FLAGS: Col[] = ['staff', 'cway', 'news', 'acad', 'guide', 'stock', 'gallery', 'product', 'weekly'];
+type Col = 'staff' | 'cway' | 'news' | 'acad' | 'guide' | 'stock' | 'gallery' | 'product' | 'weekly' | 'event';
+const FLAGS: Col[] = ['staff', 'cway', 'news', 'acad', 'guide', 'stock', 'gallery', 'product', 'weekly', 'event'];
 type Key = { pub: string; priv: string };
 
 async function vapid(): Promise<Key> {
@@ -276,6 +281,53 @@ async function staffReminders(key: Key, acad: Acad[]) {
   return n;
 }
 
+// 📅 Kalender Acara
+type Ev = { id: string; title: string; kind?: string; start_at: string; end_at?: string | null; city?: string | null; venue?: string | null; online?: boolean; public?: boolean; poster?: string | null };
+const EV_WATCH_MAX = 50;
+const evDay = (iso: string) => new Date(iso).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' });
+const evPlace = (e: Ev) => e.online ? 'Online' : (e.city || e.venue || '');
+const evImg = (e: Ev) => e.poster ? (/^https?:/i.test(e.poster) ? e.poster : PUB_STORAGE + 'showcase/' + String(e.poster).split('#')[0]) : undefined;
+// "Acara baru": publik = judul + tanggal + kota ke semua HP pemilih 📅; 🔒 khusus partner = tanpa judul, hanya HP partner (pilihan ☕/📘/📦 hanya bisa dinyalakan yang login)
+async function eventLive(id: string, key: Key) {
+  const { data: mark } = await db.from('cai_events').update({ push_at: new Date().toISOString() }).eq('id', id).eq('published', true).eq('notify', true).is('push_at', null)
+    .select('id, title, kind, start_at, end_at, city, venue, online, public, poster');
+  const e = mark?.[0] as Ev | undefined; if (!e) return 0;
+  const url = `/?acara=${encodeURIComponent(e.id)}`;
+  if (e.public) return sendAll('event', { title: '📅 Acara baru di CAI Hub', body: `${e.title} · ${evDay(e.start_at)}${evPlace(e) ? ' · ' + evPlace(e) : ''}. Ketuk untuk detail.`, url, tag: `ev-${e.id}`, image: evImg(e) }, key);
+  const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').eq('event', true).or('cway.eq.true,guide.eq.true,stock.eq.true');
+  const st = await Promise.all((subs || []).map(s => send(s, { title: '📅 Acara baru khusus partner CAI', body: `${evDay(e.start_at)}. Ketuk untuk detail (masuk dengan Kode Akses).`, url, tag: `ev-${e.id}` }, key).catch(() => 0)));
+  return st.filter(x => x > 0 && x < 300).length;
+}
+// Pengingat H-1: tiap HP yang menekan "Ingatkan saya", sekali per acara (event_watch.sent_at); yang menekan < 24 jam sebelum acara langsung dikabari
+async function eventReminders(key: Key) {
+  const now = Date.now();
+  const { data: w } = await db.from('event_watch').select('endpoint, event_id').is('sent_at', null).limit(500);
+  if (!w?.length) return 0;
+  const ids = [...new Set(w.map(x => x.event_id))];
+  const { data: evs } = await db.from('cai_events').select('id, title, start_at, city, venue, online, public, poster, published').in('id', ids)
+    .gt('start_at', new Date(now).toISOString()).lte('start_at', new Date(now + 24 * 3600e3 + 60e3).toISOString());
+  const due = new Map<string, Ev>((evs || []).filter(e => e.published).map(e => [e.id, e as Ev] as [string, Ev]));
+  if (!due.size) return 0;
+  const todo = w.filter(x => due.has(x.event_id));
+  const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').in('endpoint', [...new Set(todo.map(x => x.endpoint))]);
+  const subOf = new Map<string, Sub>((subs || []).map(s => [s.endpoint, s as Sub] as [string, Sub]));
+  const today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);
+  let sent = 0;
+  for (const x of todo) {
+    const { data: m } = await db.from('event_watch').update({ sent_at: new Date().toISOString() }).eq('endpoint', x.endpoint).eq('event_id', x.event_id).is('sent_at', null).select('event_id');
+    const s = subOf.get(x.endpoint), e = due.get(x.event_id)!;
+    if (!m?.length || !s) continue;
+    const day = new Date(Date.parse(e.start_at) + 7 * 3600e3).toISOString().slice(0, 10);
+    const when = day === today ? 'Hari ini' : 'Besok';
+    const payload = e.public
+      ? { title: `📅 ${when}: ${e.title}`, body: `${evDay(e.start_at)} · ${wib(e.start_at)} WIB${evPlace(e) ? ' · ' + evPlace(e) : ''}. Ketuk untuk detail.`, url: `/?acara=${encodeURIComponent(e.id)}`, tag: `evr-${e.id}`, image: evImg(e) }
+      : { title: `📅 ${when}: acara khusus partner CAI`, body: `${evDay(e.start_at)} · ${wib(e.start_at)} WIB. Ketuk untuk detail.`, url: `/?acara=${encodeURIComponent(e.id)}`, tag: `evr-${e.id}` };
+    const st = await send(s, payload, key).catch(() => 0);
+    if (st > 0 && st < 300) sent++;
+  }
+  return sent;
+}
+
 // 🗓 Ringkasan mingguan — Senin 08.00–11.59 WIB (dicoba tiap menit sampai terkirim), sekali per minggu (weekly_push)
 const CATALOG_JS = Deno.env.get('CATALOG_URL') || 'https://hub.concerto.id/katalog.js';
 const GUIDE_SKIP = new Set(['gathering', 'thumbs', 'pending']);
@@ -390,6 +442,28 @@ Deno.serve(async (req) => {
       return json({ remind: out, devices: Math.max(1, data?.length || 0) });
     }
 
+    // ── 📅 Ingatkan saya (Kalender Acara) ──
+    if (a === 'ev_watches') {
+      const { data, error } = await db.from('event_watch').select('event_id').eq('endpoint', String(body.endpoint || ''));
+      if (error) return json({ error: error.message }, 500);
+      return json({ items: (data || []).map(x => x.event_id) });
+    }
+    if (a === 'ev_watch') {
+      const ep = String(body.endpoint || ''), id = String(body.event_id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'acara tidak valid' }, 400);
+      const { data: sub } = await db.from(SUBS).select('endpoint').eq('endpoint', ep).maybeSingle();
+      if (!sub) return json({ error: 'HP ini belum terdaftar' }, 404);
+      if (body.on === false) await db.from('event_watch').delete().eq('endpoint', ep).eq('event_id', id);
+      else {
+        const { count } = await db.from('event_watch').select('event_id', { count: 'exact', head: true }).eq('endpoint', ep);
+        if ((count || 0) >= EV_WATCH_MAX) return json({ error: `maksimal ${EV_WATCH_MAX} acara diingatkan per HP` }, 400);
+        const { error } = await db.from('event_watch').upsert({ endpoint: ep, event_id: id }, { onConflict: 'endpoint,event_id', ignoreDuplicates: true });
+        if (error) return json({ error: error.message }, 500);
+      }
+      const { data } = await db.from('event_watch').select('event_id').eq('endpoint', ep);
+      return json({ items: (data || []).map(x => x.event_id) });
+    }
+
     // ── Perangkat Editor (ikut akun): daftar · tes ke semua · hapus ──
     if (a === 'devices' || a === 'test_all' || a === 'forget') {
       const who = await caller(req);
@@ -479,6 +553,10 @@ Deno.serve(async (req) => {
         if (!who.editor) return json({ error: 'khusus Editor' }, 403);
         return json({ sent: await galleryLive(id, key) });
       }
+      if (body.type === 'event') {
+        if (!who.editor) return json({ error: 'khusus Editor' }, 403);
+        return json({ sent: await eventLive(id, key) });
+      }
       if (body.type === 'product') {
         if (!who.editor) return json({ error: 'khusus Editor' }, 403);
         return json({ sent: await productLive(id, key) });
@@ -511,9 +589,10 @@ Deno.serve(async (req) => {
     // 7) Stok pantauan yang baru Ready  8) Pengingat Editor untuk konten terjadwal lain
     const stockSent = await stockLive(key);
     staffSent += await staffReminders(key, acadAll);
-    // 9) Ringkasan mingguan (Senin pagi)
+    // 9) Ringkasan mingguan (Senin pagi)  10) 📅 Pengingat acara H-1
     const weeklySent = await weeklyDigest(key, acadAll);
-    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent });
+    let eventSent = 0; try { eventSent = await eventReminders(key); } catch (_) { /* tabel acara belum dibuat */ }
+    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent, eventSent });
   } catch (e) {
     return json({ error: String((e as Error)?.message || e) }, 500);
   }

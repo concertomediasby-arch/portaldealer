@@ -68,6 +68,7 @@ function openDeepLink() {
   if (q.has('temukan')) { enterPortal(); openFinder(q.get('temukan') || ''); return; }   // Tahap 8 A (js/finder.js)
   if (q.has('mobil')) { enterPortal(); carOpenLinked(q.get('mobil')); return; }       // Tahap 7 (js/cars.js)
   if (q.has('partner')) { enterPortal(); partnerOpenLinked(q.get('partner')); return; }
+  if (q.has('acara')) { enterPortal(); evOpenLinked(q.get('acara')); return; }   // 📅 Kalender Acara (js/events.js)
   if (q.has('minggu')) { enterPortal(); openWeek(); return; }   // notifikasi 🗓 Ringkasan mingguan (js/fav.js)
   if (q.get('cmp')) { enterPortal(); cmpOpenLinked(q.get('cmp')); return; }   // link perbandingan produk (js/fav.js)
   if (q.get('rk')) { enterPortal(); rkOpenLinked(q.get('rk')); return; }   // link rakitan System Simulator
@@ -94,7 +95,7 @@ initQaScreen();
 if (!QA_SCREEN_MODE) openDeepLink();
 updateAcademyStar();
 initSupabase();
-if (!QA_SCREEN_MODE) { loadNews(); liveLoad(); document.addEventListener('visibilitychange', () => { if (!document.hidden) liveLoad(); }); }   // News publik (headline Dashboard)
+if (!QA_SCREEN_MODE) { loadNews(); loadEvents(); liveLoad(); document.addEventListener('visibilitychange', () => { if (!document.hidden) liveLoad(); }); }   // News publik (headline Dashboard)
 if (glLinkPending) { const id = glLinkPending; glLinkPending = null; glOpenLinked(id); }
 if (!QA_SCREEN_MODE) loadAcadExtra().then(() => { if (typeof dashRender === 'function') dashRender(); if (acadPending) { const n = acadPending; acadPending = null; acadOpenLinked(n); } });
 setTimeout(visitLog, 2500);   // catat kunjungan setelah status login diketahui

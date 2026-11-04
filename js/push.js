@@ -176,7 +176,7 @@ let pushFlags = null;      // { staff, cway, news, acad, guide } milik HP ini (n
 let pushEp = null;         // endpoint langganan HP ini
 let pushRemind = null, pushRemindCol = true;   // ⏰ pilihan waktu pengingat Editor di HP ini (kolom remind) · false = SQL belum dijalankan
 let pnSel = null;          // pilihan centang sebelum diaktifkan
-const PN_KEYS = ['weekly', 'cway', 'guide', 'stock', 'news', 'acad', 'product', 'gallery'];   // weekly = 🗓 Ringkasan mingguan (Tahap 6 C)   // pilihan kotak 🔔 Notifikasi (selain staff)
+const PN_KEYS = ['weekly', 'cway', 'guide', 'stock', 'news', 'event', 'acad', 'product', 'gallery'];   // weekly = 🗓 Ringkasan mingguan (Tahap 6 C)   // pilihan kotak 🔔 Notifikasi (selain staff)
 const PN_DEF = () => Object.fromEntries(PN_KEYS.map(k => [k, true]));
 const pnActive = f => pushSt === 'ok' && PN_KEYS.some(k => f?.[k]);
 const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -394,7 +394,7 @@ function pnHtml(where) {
   const sel = active ? Object.fromEntries(PN_KEYS.map(k => [k, !!f[k]])) : pnSel;
   const chk = (k, ico, lbl, sub) => `<label class="pn-chk"><input type="checkbox" ${sel[k] ? 'checked' : ''} ${st === 'busy' ? 'disabled' : ''} onchange="pnToggle('${k}', this.checked)"><span>${ico} ${lbl}${sub ? ` <small>· ${sub}</small>` : ''}</span></label>`;
   const opts = chk('weekly', '🗓', 'Ringkasan mingguan', 'Senin 08.00 · semua yang baru dalam satu notifikasi') + (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + (canGd ? chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') + chk('stock', '📦', 'Stok produk pantauan', 'khusus partner') : '')
-    + chk('news', '📰', 'News CAI terbaru') + chk('acad', '🎓', 'Materi Academy baru') + chk('product', '🆕', 'Produk baru') + chk('gallery', '🚗', 'Galeri Instalasi baru');
+    + chk('news', '📰', 'News CAI terbaru') + chk('event', '📅', 'Acara & kompetisi baru') + chk('acad', '🎓', 'Materi Academy baru') + chk('product', '🆕', 'Produk baru') + chk('gallery', '🚗', 'Galeri Instalasi baru');
   let title, text = '', btn = '';
   if (st === 'unsupported') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = pushUnsupportedMsg(); }
   else if (st === 'denied') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP, lalu muat ulang.'; }

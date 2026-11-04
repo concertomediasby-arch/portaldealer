@@ -47,7 +47,9 @@ async function loadData() {
   const gallery = await rest('showcase_installs?select=id,car_make,car_model,car_year,body,dealer,city,products,photos,hof_id,created_at&published=eq.true&order=created_at.desc');
   const partners = (await rest('auth_dealers?select=region,name,city,address,wa,ig,map,sort&order=region,sort,name'))
     .map(r => Object.fromEntries(Object.entries({ r: r.region, n: r.name, c: r.city, a: r.address, wa: r.wa, ig: r.ig, map: r.map }).filter(([, v]) => v)));
-  return { news, gallery, partners };
+  // 📅 Kalender Acara: hanya acara publik yang tayang (RLS anon); tabel belum dibuat → dilewati
+  let events = []; try { events = await rest('cai_events?select=id,title,kind,start_at,end_at,online,city,venue,poster,body&order=start_at'); } catch (e) { console.warn('acara dilewati:', e.message); }
+  return { news, gallery, partners, events };
 }
 
 const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
@@ -84,7 +86,16 @@ const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
 .m p,.pp p{margin:0;font:600 24px Inter;color:#c9ced6}
 .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.chips span{font:700 20px Inter;border-radius:30px;padding:8px 16px;background:rgba(216,178,106,.16);color:#f0cf8a}
 .chips span.ok{background:rgba(62,207,142,.16);color:#5fe0a6}
-.m .foot,.pp .foot{left:52%}.m .u,.pp .u{color:#d8b26a}`;
+.m .foot,.pp .foot{left:52%}.m .u,.pp .u{color:#d8b26a}
+.e .img{position:absolute;top:0;bottom:0;right:0;width:46%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#3a2c10,#0b0c0f 75%);display:flex;align-items:center;justify-content:center}
+.e .img img{width:100%;height:100%;object-fit:cover}.e .img .ic{font-size:200px}
+.e .img::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#07080a 0%,rgba(7,8,10,.5) 22%,transparent 50%)}
+.e .l{position:absolute;left:64px;top:56px;width:690px}
+.e .pill{background:rgba(216,178,106,.16);color:#e9c98a;border:2px solid rgba(216,178,106,.55);font-size:17px}
+.e .dt{display:flex;align-items:center;gap:20px;margin-top:30px}.e .dt .b{width:118px;text-align:center;border:2px solid rgba(216,178,106,.5);border-radius:20px;padding:10px 0}
+.e .dt small{display:block;font:700 18px Inter;letter-spacing:.14em;color:#d8b26a}.e .dt b{display:block;font:800 58px/1 Sora}.e .dt i{font-style:normal;font:600 18px Inter;color:#aab0bc}
+.e h1{font:800 50px/1.1 Sora;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.e h1.sm{font-size:40px}
+.e p{margin:22px 0 0;font:600 25px Inter;color:#e3e6eb}.e .u{color:#d8b26a}`;
 const LOGO = `<img src="${LOGO_WHITE}">`;
 function newsCard(n) {
   const yt = !n.image && ytId(n.link_url), img = n.image ? pub(n.image) : yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : '';
@@ -93,6 +104,24 @@ function newsCard(n) {
   return `<div class="c n" id="c"><div class="img">${img ? `<img src="${esc(img)}" style="${pos}">` : '<span class="ph">📰</span>'}${yt ? '<span class="play"></span>' : ''}</div>
     <div class="l"><span class="pill">CAI HUB NEWS</span><span class="meta">${esc([n.category, tgl(n.post_date)].filter(Boolean).join(' · '))}</span>
       <h1${n.title.length > 70 ? ' class="sm"' : ''}>${esc(n.title)}</h1></div>
+    <div class="foot">${LOGO}<b>CAI Hub</b> · Concerto Audio Indonesia<span class="u">hub.concerto.id</span></div></div>`;
+}
+const EV_IC = { kompetisi: ['🏆', 'KOMPETISI'], gathering: ['🤝', 'GATHERING'], workshop: ['🎓', 'WORKSHOP'], launching: ['🚀', 'LAUNCHING'], partner: ['🏪', 'ACARA PARTNER'] };
+const evW = (iso, o) => new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', ...o });
+const evYmd = iso => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+function evRange(e) {
+  const hm = iso => evW(iso, { hour: '2-digit', minute: '2-digit', hour12: false }).replace(':', '.');
+  const s = e.start_at, en = e.end_at, same = !en || evYmd(s) === evYmd(en);
+  return same ? `${evW(s, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${hm(s)} WIB`
+    : `${evW(s, { day: 'numeric', month: 'short' })} – ${evW(en, { day: 'numeric', month: 'short', year: 'numeric' })} · ${hm(s)} WIB`;
+}
+function eventCard(e) {
+  const k = EV_IC[e.kind] || EV_IC.kompetisi, place = e.online ? 'Online' : [e.venue, e.city].filter(Boolean).join(' · ');
+  return `<div class="c e" id="c"><div class="img">${e.poster ? `<img src="${esc(pub(e.poster))}">` : `<span class="ic">${k[0]}</span>`}</div>
+    <div class="l"><span class="pill">📅 KALENDER ACARA · ${k[1]}</span>
+      <div class="dt"><div class="b"><small>${esc(evW(e.start_at, { weekday: 'short' }).toUpperCase())}</small><b>${evW(e.start_at, { day: 'numeric' })}</b><i>${esc(evW(e.start_at, { month: 'short', year: 'numeric' }))}</i></div>
+        <h1${e.title.length > 48 ? ' class="sm"' : ''}>${esc(e.title)}</h1></div>
+      <p>${esc(evRange(e))}${place ? '<br>📍 ' + esc(place) : ''}</p></div>
     <div class="foot">${LOGO}<b>CAI Hub</b> · Concerto Audio Indonesia<span class="u">hub.concerto.id</span></div></div>`;
 }
 const carName = g => [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ');
@@ -167,6 +196,12 @@ function videoFrame(url, out, at) {
       desc: clip(n.summary || 'Berita terbaru Concerto Audio Indonesia di CAI Hub.', 200),
       sig: [n.title, n.category, n.post_date, n.image, n.link_url], html: () => newsCard(n) });
   }
+  for (const e of data.events || []) {
+    if (!e.id || !e.title || !e.start_at) continue;
+    items.push({ dir: 'e', id: e.id, target: `/?acara=${encodeURIComponent(e.id)}`, title: `${e.title} — Kalender Acara CAI`,
+      desc: clip(`${evRange(e)}${e.online ? ' · Online' : e.city ? ' · ' + e.city : ''}. ${e.body || 'Detail & pengingat di CAI Hub.'}`, 200),
+      sig: ['e', e.title, e.kind, e.start_at, e.end_at, e.online, e.city, e.venue, e.poster], html: () => eventCard(e) });
+  }
   for (const g of data.gallery || []) {
     const ph = (Array.isArray(g.photos) ? g.photos : []).filter(p => p?.path && !String(p.path).startsWith('pending/'));
     // Gambar kartu: pilihan Editor "📲 Sampul kartu WA" (wa, video + detik waT) → foto "Tampak Luar" → cuplikan video sampul (cover)
@@ -211,7 +246,7 @@ function videoFrame(url, out, at) {
   const dataChanged = dataFiles.filter(([f, obj, key]) => { try { return JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'))[key]) !== JSON.stringify(obj[key]); } catch (e) { return true; } });
   const livePath = path.join(ROOT, 'share/live.json');
   const old = fs.existsSync(livePath) ? JSON.parse(fs.readFileSync(livePath, 'utf8')) : {};
-  const DIRS = ['n', 'g', 'm', 'pp'], next = Object.fromEntries(DIRS.map(d => [d, {}]));
+  const DIRS = ['n', 'g', 'm', 'pp', 'e'], next = Object.fromEntries(DIRS.map(d => [d, {}]));
   // --check (dipakai GitHub Actions): hanya cek apakah ada kartu baru/berubah/terhapus — tanpa browser, supaya jadwal tetap ringan
   const ids = new Set(items.map(it => it.dir + '/' + it.id));
   const changed = items.some(it => old[it.dir]?.[it.id] !== hash(it.sig) || !fs.existsSync(path.join(ROOT, `share/img/${it.dir}-${it.id}.jpg`)))
@@ -232,7 +267,7 @@ function videoFrame(url, out, at) {
     try {
       if (old[it.dir]?.[it.id] !== h || !fs.existsSync(img)) {
         let html;
-        if (it.dir === 'n') html = it.html();
+        if (it.dir === 'n' || it.dir === 'e') html = it.html();
         else if (it.dir === 'pp') html = partnerCard(it.d, it.x);
         else {
           let src = it.photo ? pub(it.photo.path) : '';
@@ -259,5 +294,5 @@ function videoFrame(url, out, at) {
   const sorted = o => Object.fromEntries(Object.keys(o).sort().map(k => [k, o[k]]));
   fs.writeFileSync(livePath, JSON.stringify(Object.fromEntries(DIRS.map(d => [d, sorted(next[d])]))) + '\n');
   await browser.close(); fs.rmSync(tmp, { recursive: true, force: true });
-  console.log(`News ${Object.keys(next.n).length} · Galeri ${Object.keys(next.g).length} · Mobil ${Object.keys(next.m).length} · Partner ${Object.keys(next.pp).length} · ${drawn} kartu digambar · ${failed} gagal${dataChanged.length ? ' · data: ' + dataChanged.map(x => x[0]).join(', ') : ''}`);
+  console.log(`News ${Object.keys(next.n).length} · Galeri ${Object.keys(next.g).length} · Mobil ${Object.keys(next.m).length} · Partner ${Object.keys(next.pp).length} · Acara ${Object.keys(next.e).length} · ${drawn} kartu digambar · ${failed} gagal${dataChanged.length ? ' · data: ' + dataChanged.map(x => x[0]).join(', ') : ''}`);
 })().catch(e => { console.error(e); process.exit(1); });

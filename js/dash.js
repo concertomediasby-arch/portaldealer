@@ -122,6 +122,7 @@ function dashRender() {
   dashSet('dash-hello', dashHelloHtml());
   if (typeof pnHtml === 'function') dashSet('pn-invite', pnHtml('dash'));   // ajakan notifikasi HP (js/push.js)
   dashSet('dashboard-brands', dashBrandsHtml());
+  if (typeof evDashRender === 'function') evDashRender();   // 📅 Acara terdekat (js/events.js)
   dashNewRender();
   if (typeof favRenderDash === 'function') favRenderDash();   // Terakhir dilihat · Favorit · Baru minggu ini (js/fav.js)
   ['dash-q', 'dash-q2'].forEach((id, i) => { const el = document.getElementById(id); if (el && keepQ[i]) el.value = keepQ[i]; });
