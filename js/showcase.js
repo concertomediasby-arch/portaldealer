@@ -661,7 +661,10 @@ async function glAdjWa(id, idx) {
   let t = null;
   if (glIsVid(cur)) {
     const v = document.querySelector('#gl-detail .gl-big video');
-    t = v && v.currentTime > 0.2 ? Math.round(v.currentTime * 10) / 10 : 1.5;   // belum diputar → detik 1,5 (hindari layar hitam di awal)
+    // Wajib diputar lalu dijeda dulu (4 Nov 2026): detik bawaan 1,5 = adegan pembuka yang sering memperlihatkan plat nomor
+    if (cur.wa) t = cur.waT ?? null;
+    if (v && v.currentTime > 0.2) t = Math.round(v.currentTime * 10) / 10;
+    else if (!cur.wa) { showToast('▶ Putar video ini, lalu JEDA di adegan yang aman (tanpa plat nomor) — baru tekan 📲 Jadikan sampul kartu WA.', 6000); return; }
     if (cur.wa && cur.waT === t) { if (!confirm('Lepas sampul kartu WA dari video ini?')) return; }
   }
   const unset = cur.wa && (!glIsVid(cur) || cur.waT === t);
