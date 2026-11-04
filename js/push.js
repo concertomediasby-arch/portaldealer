@@ -314,7 +314,8 @@ function pnHtml(where) {
 function pnLinkHtml(where) {
   pushInit();
   const on = pushSt === 'ok' && (pnActive(pushFlags) || (isEditor() && !!pushFlags?.staff));
-  const h = `<button class="pn-link${on ? ' on' : ''}" onclick="openSettings()"><span>🔔</span><b>${on ? 'Notifikasi aktif di HP ini' : 'Mau dikabari saat ada yang baru?'}</b><em>${on ? 'Atur' : 'Aktifkan'} di Setting ›</em></button>`;
+  // Sudah aktif → tautan disembunyikan (atur lewat menu Setting); belum aktif → ajakan kecil (4 Nov 2026, permintaan pemilik)
+  const h = on || ['?', '…'].includes(pushSt) ? '' : `<button class="pn-link" onclick="openSettings()"><span>🔔</span><b>Mau dikabari saat ada yang baru?</b><em>Aktifkan di Setting ›</em></button>`;
   return h + (where === 'stock' ? swListHtml() : '');
 }
 function pnToggle(k, v) {
