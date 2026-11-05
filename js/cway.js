@@ -74,10 +74,10 @@ function cwSchedTimer() {   // postingan terjadwal muncul tepat waktu: cek tiap 
     if (document.hidden) return; n++;
     const due = (cwItems || []).filter(x => x.published && cwDue(x)).map(x => x.id);
     if (due.some(id => !wasDue.has(id))) { wasDue = new Set(due); cwRefresh(); }
-    if (!isAdmin() && n % 10 === 0) loadCway(true);
+    if (!isEditor() && n % 10 === 0) loadCway(true);
   }, 30000);
 }
-const cwShown = () => isAdmin() ? cwSorted() : cwLive();
+const cwShown = () => isEditor() ? cwSorted() : cwLive();
 const cwDaysAgo = d => Math.round((Date.parse(todayWIB() + 'T00:00:00Z') - Date.parse(String(d) + 'T00:00:00Z')) / 864e5);
 const cwIsNew = it => it?.published && cwDue(it) && cwDaysAgo(it.post_date) < CWAY_NEW_DAYS && !cwLS(CWAY_SEEN_KEY)[it.id];
 
@@ -143,7 +143,7 @@ async function loadCway(force) {
     try {
       const { data, error } = await supabase.from(CWAY_TABLE).select('*');
       if (error) throw error;
-      cwItems = data || []; cwMissing = false; cwErr = '';
+      cwItems = (data || []).filter(x => isEditor() || (x.published && cwDue(x))); cwMissing = false; cwErr = '';   // draf & terjadwal khusus Editor (5 Nov 2026)
     } catch (e) {
       const m = e?.message || String(e);
       cwMissing = /does not exist|schema cache|42P01|PGRST205/i.test(m + ' ' + (e?.code || ''));
@@ -225,7 +225,7 @@ function renderCway() {
 }
 // Antrian tayang (Admin/Editor): postingan terjadwal, urut waktu tayang terdekat
 function cwQueueHtml() {
-  if (!isAdmin()) return '';
+  if (!isEditor()) return '';
   const q = (cwItems || []).filter(cwSched).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at));
   if (!q.length) return '';
   return `<div class="cw-queue"><div class="cw-queue-h">⏰ Antrian tayang <span>${q.length} postingan · otomatis muncul untuk partner pada jamnya</span></div>

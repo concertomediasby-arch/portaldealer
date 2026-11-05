@@ -148,7 +148,7 @@ function hofOpenLinked(id) {
 }
 // Kiriman yang belum disetujui untuk mobil ini (hanya terlihat oleh Admin/Editor — RLS)
 function hofPendingFor(e) {
-  if (!isAdmin() || !glItems) return [];
+  if (!isEditor() || !glItems) return [];
   const k = hofCarKey(e);
   return glItems.filter(it => glPending(it) && it.hof_id && (() => { const h = hofData().find(x => x.id === it.hof_id); return h && hofCarKey(h) === k; })());
 }
@@ -402,7 +402,7 @@ function loadGaleri(force) {
     try {
       const { data, error } = await supabase.from(GL_TABLE).select('*').order('sort', { ascending: true }).order('created_at', { ascending: false });
       if (error) throw error;
-      glItems = data || []; glErr = ''; glLoadedAt = Date.now(); glSchedTimer();
+      glItems = (data || []).filter(it => isEditor() || (it.published && !glSched(it))); glErr = '';   // draf, kiriman menunggu & terjadwal khusus Editor (5 Nov 2026) glLoadedAt = Date.now(); glSchedTimer();
     } catch (e) {
       const m = String(e.message || e);
       glItems = [];
@@ -493,7 +493,7 @@ function renderGaleri() {
     return;
   }
   if (glErr) { box.innerHTML = `<div class="vs-warn">${escHtml(isAdmin() ? glErr : 'Galeri belum bisa dimuat. Periksa koneksi internet lalu muat ulang halaman.')}</div>`; return; }
-  const pend = isAdmin() ? glItems.filter(glPending) : [];
+  const pend = isEditor() ? glItems.filter(glPending) : [];
   // Mobil juara (ber-hof_id) ikut tampil di daftar Galeri dengan label juara (5 Nov 2026, permintaan pemilik —
   // dulu 31 Okt 2026 disembunyikan & hanya ada di Hall of Fame); chip "🏆 Mobil juara" menyaring hanya mobil juara
   const live = glLive(), champN = live.filter(it => it.hof_id).length;
@@ -526,7 +526,7 @@ function renderGaleri() {
 
 // ⏰ Antrian tayang Galeri (Admin/Editor): mobil terjadwal, urut jam tayang
 function glQueueHtml() {
-  if (!isAdmin()) return '';
+  if (!isEditor()) return '';
   const q = (glItems || []).filter(glSched).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at));
   if (!q.length) return '';
   return `<div class="cw-queue gl-queue"><div class="cw-queue-h">⏰ Antrian tayang <span>${q.length} mobil · tampil otomatis untuk pengunjung pada jamnya${q.some(it => it.notify !== false) ? ' + notifikasi 🚗' : ''}</span></div>
@@ -1277,6 +1277,6 @@ async function glShare(id) {
 }
 async function glOpenLinked(id) {
   await openGaleri();
-  const it = glItems?.find(x => x.id === id && x.published && !glPending(x) && (!glSched(x) || isAdmin()));
+  const it = glItems?.find(x => x.id === id && x.published && !glPending(x) && (!glSched(x) || isEditor()));
   if (it) openGlDetail(id); else showToast('Instalasi ini tidak ditemukan atau belum ditampilkan.');
 }

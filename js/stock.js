@@ -106,7 +106,7 @@ function onAuthChanged() {
   visitLog();
   if (!GT_DEALER_MENU && !isAdmin() && document.getElementById('view-gathering')?.classList.contains('active')) showView('dashboard');
   if (!isAdmin() && document.getElementById('view-updates')?.classList.contains('active')) showView('dashboard');
-  if (isAdmin()) loadVisitStats(true);
+  if (isEditor()) loadVisitStats(true);
   if (typeof cwayAuthChanged === 'function') cwayAuthChanged();
   if (typeof newsAuthChanged === 'function') newsAuthChanged();
   if (typeof eventsAuthChanged === 'function') eventsAuthChanged();   // 📅 acara 🔒 khusus partner terlihat/tersembunyi
@@ -331,7 +331,7 @@ function updateAuthUI() {
   if (isAdmin()) qsRegisterSW();   // panel Admin/Editor juga bisa dibuka ulang tanpa internet (mode offline videotron)
   updateWaAccess();
   if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
-  if (!isAdmin() && document.getElementById('view-rundown')?.classList.contains('active')) showView('dashboard');
+  if (!isEditor() && (document.getElementById('view-rundown')?.classList.contains('active') || document.getElementById('view-visitors')?.classList.contains('active'))) showView('dashboard');
   qaScreenAuth();
   if (typeof scAuthChanged === 'function') scAuthChanged();
   const btn = document.getElementById('auth-btn');

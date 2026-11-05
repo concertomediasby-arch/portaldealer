@@ -73,7 +73,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-11-05T09:02:59Z">
+<link rel="stylesheet" href="style.css?b=2026-11-05T10:38:29Z">
 <!-- Layar pembuka bermerek (Tahap 3, 4 Nov 2026): hanya saat dibuka dari ikon Layar Utama, sekali per sesi -->
 <script>try{if((matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)&&!sessionStorage.getItem('cai-spl')){document.documentElement.classList.add('spl-on');sessionStorage.setItem('cai-spl','1');}}catch(e){}</script>
 </head>
@@ -252,10 +252,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Setting
       </button>
-      <button class="sidebar-item staff-nav" id="nav-updates" onclick="openUpdates()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Update Terbaru
-      </button>
     </div>
 
     <div class="sidebar-section sidebar-editor staff-sec">
@@ -273,11 +269,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
         Kelola Partner
       </button>
-      <button class="sidebar-item staff-nav" id="nav-rundown" onclick="openRundown()">
+      <button class="sidebar-item editor-only" id="nav-rundown" onclick="openRundown()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
         Run Down Gathering
       </button>
-      <button class="sidebar-item staff-nav" id="nav-visitors" onclick="openVisitors()">
+      <button class="sidebar-item editor-only" id="nav-visitors" onclick="openVisitors()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
         Pengunjung Portal
       </button>
@@ -330,8 +326,8 @@
         <div class="dash-paket" id="dash-paket"></div>
       </div>
 
-      <div class="stats-row vs-row">
-        <div class="stat-card vs-stat" onclick="openVisitors()" title="Pengunjung portal — khusus Admin &amp; Editor">
+      <div class="stats-row vs-row editor-only">
+        <div class="stat-card vs-stat" onclick="openVisitors()" title="Pengunjung portal — khusus Editor">
           <div class="stat-label">Pengunjung Hari Ini</div>
           <div class="stat-value" id="stat-visitors">—</div>
           <div class="vs-sub" id="stat-visitors-sub">khusus Admin &amp; Editor</div>
@@ -860,10 +856,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       <span>Brand</span>
     </button>
-    <button class="mobile-nav-item staff-nav" id="mnav-updates" onclick="openUpdates()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      <span>Update</span>
-    </button>
     <button class="mobile-nav-item login-only" id="mnav-guides" onclick="openGuides()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       <span>Panduan</span><i class="mnav-star" id="mnav-guides-star" title="Ada panduan baru" hidden>★</i>
@@ -880,7 +872,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.2c2.6.3 4.5 2.3 4.5 5.3"/></svg>
       <span>Partner</span>
     </button>
-    <button class="mobile-nav-item staff-nav" id="mnav-rundown" onclick="openRundown()">
+    <button class="mobile-nav-item editor-only" id="mnav-rundown" onclick="openRundown()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
       <span>Run Down</span>
     </button>
@@ -892,7 +884,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
       <span>Sheet</span><i class="mnav-badge" id="mnav-sheet-badge" hidden></i>
     </button>
-    <button class="mobile-nav-item staff-nav" id="mnav-visitors" onclick="openVisitors()">
+    <button class="mobile-nav-item editor-only" id="mnav-visitors" onclick="openVisitors()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
       <span>Pengunjung</span>
     </button>
@@ -1099,29 +1091,29 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/core.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/stock.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/dealers.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/gathering.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/rundown.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/videotron.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/showcase.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/cway.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/news.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/push.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/install.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/settings.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/dash.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/fav.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/cars.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/finder.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/gsearch.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/events.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/interest.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/report.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/preport.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/schedule.js?b=2026-11-05T09:02:59Z"></script>
-<script src="js/main.js?b=2026-11-05T09:02:59Z"></script>
+<script src="katalog.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/core.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/stock.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/dealers.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/gathering.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/rundown.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/videotron.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/showcase.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/cway.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/news.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/push.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/install.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/settings.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/dash.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/fav.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/cars.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/finder.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/gsearch.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/events.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/interest.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/report.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/preport.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/schedule.js?b=2026-11-05T10:38:29Z"></script>
+<script src="js/main.js?b=2026-11-05T10:38:29Z"></script>
 </body>
 </html>

@@ -88,7 +88,7 @@ let visitStats = null, visitErr = '', visitDays = 30, visitAt = null;
 const fmtNum = n => Number(n || 0).toLocaleString('id-ID');
 function openVisitors() {
   if (!requireLogin(() => openVisitors())) return;
-  if (!isAdmin()) { showToast('Menu Pengunjung Portal khusus akun Admin & Editor.'); return; }
+  if (!isEditor()) { showToast('Menu Pengunjung Portal khusus akun Editor.'); return; }
   showView('visitors');
   document.querySelector('.main')?.scrollTo(0, 0);
   renderVisitors();
@@ -176,7 +176,7 @@ function renderVisitors() {
 
 function openRundown(tab) {
   if (!requireLogin(() => openRundown(tab))) return;
-  if (!isAdmin()) { showToast('Menu Gathering 2026 khusus akun Admin & Editor.'); return; }
+  if (!isEditor()) { showToast('Menu Run Down Gathering khusus akun Editor.'); return; }
   showView('rundown');
   document.querySelector('.main')?.scrollTo(0, 0);
   setRdTab(tab === 'qa' ? 'qa' : 'rundown');

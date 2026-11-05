@@ -2199,9 +2199,10 @@ async function deleteAdDealer(id) {
   await loadAuthDealers(true); adRerender();
 }
 
+const UPDATES_ON = false;
 function openUpdates() {
-  // Hanya Admin/Editor (3 Nov 2026, permintaan pemilik)
-  if (!isAdmin()) { showView('dashboard'); return; }
+  // Menu Update Terbaru dihapus dari semua tampilan (5 Nov 2026, permintaan pemilik) — kodenya tetap ada
+  if (!UPDATES_ON || !isAdmin()) { showView('dashboard'); return; }
   showView('updates');
   const el = document.getElementById('updates-list');
   if (el.children.length) return;

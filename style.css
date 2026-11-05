@@ -2786,7 +2786,7 @@ body {
   .stock-sum span { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
   /* Pengunjung Portal (Admin & Editor) */
   .stat-card.vs-stat { display: none; cursor: pointer; }
-  body.is-staff .stat-card.vs-stat { display: block; }
+  body.is-editor .stat-card.vs-stat { display: block; }
   .stat-card.vs-stat:hover { border-color: var(--accent); }
   .vs-sub { font-size: 11.5px; color: var(--fg-muted); margin-top: 4px; }
   .vs-wrap { padding: 8px 28px 48px; }
@@ -3322,7 +3322,7 @@ div.hof-row { cursor: default; }
   .dt-btn { padding: 3px 7px; font-size: 10px; }
 }
 .stats-row.vs-row { display: none; }
-body.is-staff .stats-row.vs-row { display: grid; }
+body.is-editor .stats-row.vs-row { display: grid; }
 
 /* ── Video melayang Dashboard (opsi A, 2 Nov 2026) ── */
 button.dt-go { background: none; border: 0; padding: 4px 2px 4px 8px; cursor: pointer; }
