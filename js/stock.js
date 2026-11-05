@@ -112,7 +112,8 @@ function onAuthChanged() {
   if (typeof eventsAuthChanged === 'function') eventsAuthChanged();   // 📅 acara 🔒 khusus partner terlihat/tersembunyi
   if (typeof dashAuthChanged === 'function') dashAuthChanged();   // Dashboard umum ⇄ partner (js/dash.js)
   if (typeof jdAuthChanged === 'function') jdAuthChanged();   // ⏰ Jadwal Tayang (khusus Editor)
-  if (typeof rpAuthChanged === 'function') rpAuthChanged();   // 📊 Rapor Bulanan (link ?rapor=, khusus Editor)
+  if (typeof rpAuthChanged === 'function') rpAuthChanged();
+  if (typeof prAuthChanged === 'function') prAuthChanged();   // 📨 Laporan Partner (khusus Editor)   // 📊 Rapor Bulanan (link ?rapor=, khusus Editor)
   if (guidePending) { guideFocus = guidePending; guidePending = null; openGuides(); }   // link ?guide= (tanpa sesi → form Kode Akses dulu)   // Concerto Way (js/cway.js): headline Dashboard, link ?cw=
   if (authUser) {
     loadStock();

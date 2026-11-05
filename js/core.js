@@ -2110,6 +2110,7 @@ function adRerender() {
   if (typeof trustRefresh === 'function') trustRefresh();   // angka & daftar partner di Dashboard / halaman produk (js/dash.js)
   const on = id => document.getElementById(id)?.classList.contains('active');
   if (on('view-authdealer')) renderAuthDealers();
+  if (on('view-prapor') && typeof prRender === 'function') prRender();   // Laporan Partner (js/preport.js)
   if (typeof carsRerender === 'function') carsRerender();   // Cari per Mobil, Profil Partner, kotak Dashboard (js/cars.js)
   if (on('view-halloffame') && typeof renderHallOfFame === 'function') renderHallOfFame();
   if (on('view-galeri') && typeof renderGaleri === 'function') renderGaleri();

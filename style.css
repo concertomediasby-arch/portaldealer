@@ -4729,7 +4729,7 @@ textarea.ev-in { resize: vertical; }
 .rp-sheet.png .rp-kpi { grid-template-columns: repeat(5, minmax(0, 1fr)); } .rp-sheet.png .rp-g2 { grid-template-columns: 1.25fr 1fr; } .rp-sheet.png .rp-g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 1100px) { .rp-kpi { grid-template-columns: repeat(3, minmax(0, 1fr)); } .rp-g2, .rp-g3 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 720px) { .rp-wrap { padding: 4px 16px 30px; } .rp-h { font-size: 24px; } .rp-kpi { grid-template-columns: 1fr 1fr; } .rp-kpi .rp-c:last-child { grid-column: 1 / -1; } .rp-cnt { grid-template-columns: 1fr 1fr; } .rp-chart { height: 100px; gap: 2px; } }
-body[data-view="rapor"] .wa-float { display: none !important; }   /* Rapor Bulanan: tombol WA tidak menutupi angka */
+body[data-view="rapor"] .wa-float, body[data-view="prapor"] .wa-float { display: none !important; }   /* Rapor Bulanan: tombol WA tidak menutupi angka */
 
 /* ── ⏰ JADWAL TAYANG (khusus Editor, js/schedule.js) ── */
 .jd-wrap { padding: 18px 28px 40px; max-width: 1240px; }
@@ -4768,3 +4768,51 @@ body[data-view="rapor"] .wa-float { display: none !important; }   /* Rapor Bulan
 @media (max-width: 980px) { .jd-lay { grid-template-columns: minmax(0, 1fr); } .jd-side { order: -1; } }
 @media (max-width: 720px) { .jd-wrap { padding: 14px 16px 30px; } .jd-h { font-size: 23px; } .jd-it { grid-template-columns: 50px 4px minmax(0, 1fr); } .jd-it .acts { grid-column: 3; justify-content: flex-start; } .jd-warn { flex-wrap: wrap; } .jd-warn .gt-btn { margin-left: 0; } }
 body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tayang: tombol WA tidak menutupi kalender */
+
+/* ── 📨 Laporan Partner (khusus Editor; js/preport.js) ── */
+.pr-wrap { padding: 24px 28px 90px; max-width: 1240px; }
+.pr-head h1 { font: 800 26px var(--f-display); margin: 0; }
+.pr-head p { color: var(--fg-muted); font-size: 13.5px; margin: 4px 0 14px; }
+.pr-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.pr-q { flex: 1; min-width: 180px; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; padding: 9px 12px; color: var(--fg); font: 500 14px var(--f-body); }
+.pr-btn { background: var(--accent); color: #111; border: 0; border-radius: 10px; padding: 9px 14px; font: 700 13px var(--f-body); cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-block; }
+.pr-btn.g { background: none; border: 1px solid var(--accent); color: var(--accent); }
+.pr-btn.wa { background: #1f9d55; color: #fff; }
+.pr-btn:disabled { opacity: .45; cursor: default; }
+.pr-note { border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 10px 14px; font-size: 13px; color: var(--fg-muted); margin-bottom: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pr-note.warn { border-color: #e0a84a; color: var(--fg); }
+.pr-sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.pr-sum div { border: 1px solid var(--border); background: var(--surface); border-radius: 13px; padding: 11px 13px; }
+.pr-sum b { display: block; font: 800 22px var(--f-display); color: var(--accent); }
+.pr-sum span { font-size: 12px; color: var(--fg-muted); }
+.pr-tbl { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.pr-tr { display: grid; grid-template-columns: minmax(0, 1.6fr) 90px 130px minmax(0, 1.2fr) 120px 170px; gap: 10px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13.5px; }
+.pr-th { border-top: 0; font: 600 11px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-muted); background: var(--surface); }
+.pr-tr.on { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.pr-n b { display: block; } .pr-n small { color: var(--fg-muted); font-size: 12px; }
+.pr-num { font: 700 15px var(--f-display); } .pr-num em { font: 600 11.5px var(--f-body); font-style: normal; margin-left: 5px; }
+.pr-num em.up { color: #52c38a; } .pr-num em.dn { color: #ef6b6b; }
+.pr-src { color: var(--fg-muted); font-size: 12.5px; }
+.pr-st { font: 600 11.5px var(--f-body); font-style: normal; border-radius: 20px; padding: 3px 9px; background: var(--surface2); color: var(--fg-muted); white-space: nowrap; }
+.pr-st.ok { background: rgba(82,195,138,.14); color: #3fb37a; }
+.pr-acts { display: flex; gap: 6px; justify-content: flex-end; }
+.pr-acts button { background: none; border: 1px solid var(--border); color: var(--fg); border-radius: 8px; padding: 5px 9px; font: 600 12px var(--f-body); cursor: pointer; white-space: nowrap; }
+.pr-acts button.wa { background: #1f9d55; border-color: #1f9d55; color: #fff; }
+.pr-foot { color: var(--fg-muted); font-size: 12.5px; margin-top: 12px; }
+.pr-ov { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.72); display: none; align-items: center; justify-content: center; padding: 16px; }
+.pr-ov.open { display: flex; }
+.pr-box { position: relative; background: #111317; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 16px; width: min(440px, 100%); max-height: calc(100vh - 32px); overflow: auto; color: #eceef2; }
+.pr-box img { width: 100%; border-radius: 10px; display: block; }
+.pr-x { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 16px; cursor: pointer; }
+.pr-msg { margin-top: 12px; background: #0f1a14; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; color: #cfe6d6; white-space: pre-line; }
+.pr-bt { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+@media (max-width: 900px) {
+  .pr-wrap { padding: 18px 16px 100px; }
+  .pr-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pr-th { display: none; }
+  .pr-tr { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .pr-tr > span:nth-child(3), .pr-tr > span:nth-child(4) { grid-column: 1; font-size: 12.5px; color: var(--fg-muted); }
+  .pr-tr > span:nth-child(2) { grid-column: 2; grid-row: 1; text-align: right; }
+  .pr-tr > span:nth-child(5) { grid-column: 2; grid-row: 2; text-align: right; }
+  .pr-acts { grid-column: 1 / -1; justify-content: flex-start; }
+}
