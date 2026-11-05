@@ -97,21 +97,33 @@ const liveLink = (kind, id) => { const h = liveCards?.[kind]?.[id]; return h ? `
 // Teks untuk link wa.me: emoji dibuang — WhatsApp Web/Desktop menampilkan emoji dari link wa.me sebagai "�" (laporan pemilik 3 Nov 2026).
 // Berbagi lewat menu berbagi HP (navigator.share) tetap memakai teks asli lengkap dengan emoji.
 const waText = t => encodeURIComponent(String(t).replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}][\uFE0F\u200D\p{Extended_Pictographic}\p{Emoji_Modifier}]*[ \t]?/gu, ''));
+/* sharePrep: unduh gambar/PDF lebih dulu agar navigator.share tetap di dalam klik (iPhone).
+   5 Nov 2026 (laporan pemilik: tombol Bagikan materi Academy tidak bereaksi di HP): gambar WebP diubah ke JPEG — menu berbagi
+   iPhone/WhatsApp sering menolak WebP; dan bila berbagi file gagal, cadangan wa.me dibuka lewat location.href (window.open
+   sesudah await diblokir browser HP karena sudah di luar klik, jadi dulu tidak terjadi apa-apa). */
 function sharePrep(key, src, name) {
   if (!src || shareFiles[key]?.src === src) return;
   shareFiles[key] = { src, file: null };
-  fetch(src).then(r => r.ok ? r.blob() : null).then(b => {
+  fetch(src).then(r => r.ok ? r.blob() : null).then(async b => {
     if (!b || shareFiles[key]?.src !== src) return;
+    if (/webp/i.test(b.type) && window.createImageBitmap) {
+      try { const bm = await createImageBitmap(b), cv = document.createElement('canvas'); cv.width = bm.width; cv.height = bm.height;
+        const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, cv.width, cv.height); c.drawImage(bm, 0, 0);
+        const j = await new Promise(ok => cv.toBlob(ok, 'image/jpeg', 0.9)); if (j) b = j; } catch (e) {}
+    }
+    if (shareFiles[key]?.src !== src) return;
     const ext = b.type.includes('pdf') ? 'pdf' : b.type.includes('png') ? 'png' : b.type.includes('webp') ? 'webp' : 'jpg';
-    shareFiles[key].file = new File([b], `${name || 'CAI-Hub'}.${ext}`, { type: b.type });
+    shareFiles[key].file = new File([b], `${name || 'CAI-Hub'}.${ext}`, { type: b.type || 'image/jpeg' });
   }).catch(() => {});
 }
 async function shareWa(text, key) {
-  const file = key && shareFiles[key]?.file;
-  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+  const file = key && shareFiles[key]?.file, url = `https://wa.me/?text=${waText(text)}`;
+  let ok = false; try { ok = !!(file && navigator.canShare && navigator.canShare({ files: [file] })); } catch (e) {}
+  if (ok) {
     try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e?.name === 'AbortError') return; }
+    location.href = url; return;   // sudah di luar klik → window.open akan diblokir
   }
-  window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
+  window.open(url, '_blank', 'noopener');   // masih di dalam klik (tanpa await) → tidak diblokir
 }
 
 /* ══════════════════════════════════════════
