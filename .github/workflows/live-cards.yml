@@ -1,7 +1,7 @@
 # Kartu pratinjau WA per berita & per mobil Galeri (Tahap 5 C, 4 Nov 2026) — lihat tools/gen-live-cards.js
 # Tiap ±15 menit: baca berita & mobil Galeri yang sudah tayang (data publik), buat kartu yang baru/berubah, commit ke main.
 # Tahap 8 B: juga kartu per mobil (/m/) & per partner (/pp/), salinan data tools/data/*.json, lalu halaman Google
-# (tools/gen-seo-pages.js: /mobil/, /partner/, /brand/, /kategori/, sitemap.xml).
+# (tools/gen-seo-pages.js: /mobil/, /partner/, /brand/, /kategori/, /produk/, sitemap.xml).
 name: Kartu WA News & Galeri
 on:
   schedule:
@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "CAI Hub Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A n g m pp e share/live.json share/img tools/data mobil partner brand kategori sitemap.xml
+          git add -A n g m pp e share/live.json share/img tools/data mobil partner brand kategori produk sitemap.xml
           if git diff --cached --quiet; then echo "Tidak ada perubahan"; exit 0; fi
           git commit -m "Kartu WA & halaman Google diperbarui otomatis"
           for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep 5; done
