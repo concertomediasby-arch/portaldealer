@@ -52,8 +52,8 @@ grant execute on function public.partner_report(date, date) to authenticated;
 const PR_MIN = '2026-11';
 let prMonth = null, prCache = {}, prBusy = false, prErr = '', prQ = '', prMissing = false;
 const PR_SRC = { produk: 'halaman produk', google: 'Google', mobil: 'Cari per Mobil', simulator: 'System Simulator', partner: 'Authorized Partner', cek: 'Cek Partner Resmi',
-  profil: 'Profil Partner', finder: 'Temukan Sistem', cari: 'pencarian', hof: 'Hall of Fame', galeri: 'Galeri Instalasi', lain: 'lainnya' };
-const PR_COL = { produk: '#d8b26a', google: '#6fd3e6', mobil: '#52c38a', simulator: '#f0c75e', partner: '#7aa7ff', profil: '#e8c14a', cek: '#a3e07a', lain: '#8b92a1' };
+  profil: 'Profil Partner', finder: 'Temukan Sistem', cari: 'pencarian', news: 'berita CAI Hub News', hof: 'Hall of Fame', galeri: 'Galeri Instalasi', lain: 'lainnya' };
+const PR_COL = { produk: '#d8b26a', google: '#6fd3e6', mobil: '#52c38a', simulator: '#f0c75e', partner: '#7aa7ff', profil: '#e8c14a', cek: '#a3e07a', news: '#3fb8cf', lain: '#8b92a1' };
 function prDefault() { const p = rpShift(rpNow(), -1); return p >= PR_MIN ? p : rpNow(); }
 
 function openPartnerReport(m) {

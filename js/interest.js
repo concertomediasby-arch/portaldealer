@@ -129,6 +129,7 @@ function intPartnerOf(href) {
   return null;
 }
 function intSrcOf(el) {
+  if (el.closest('.nw-pj, .nw-pjs')) return 'news';
   if (el.closest('#pd-near')) return 'produk';
   if (el.closest('#rks')) return 'simulator';
   if (el.closest('#dash-check')) return 'cek';
@@ -164,7 +165,7 @@ async function loadIntStats() {
   if (vsTab === 'int') renderVisitors();
 }
 function intCopySql() { (navigator.clipboard?.writeText(INT_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => prompt('Salin SQL ini:', INT_SQL)); }
-const INT_SRC = { produk: ['Halaman produk “Tanya”', 'var(--accent)'], simulator: ['System Simulator “Kirim rakitan”', '#f0c75e'], partner: ['Authorized Partner', '#6fd3e6'], cek: ['Cek Partner Resmi', '#52c38a'], profil: ['Profil Partner', '#e8c14a'], mobil: ['Cari per Mobil', '#7aa7ff'], finder: ['Temukan Sistem', '#ff9bd2'], cari: ['Pencarian Dashboard', '#a3e07a'],
+const INT_SRC = { produk: ['Halaman produk “Tanya”', 'var(--accent)'], simulator: ['System Simulator “Kirim rakitan”', '#f0c75e'], partner: ['Authorized Partner', '#6fd3e6'], cek: ['Cek Partner Resmi', '#52c38a'], profil: ['Profil Partner', '#e8c14a'], mobil: ['Cari per Mobil', '#7aa7ff'], finder: ['Temukan Sistem', '#ff9bd2'], cari: ['Pencarian Dashboard', '#a3e07a'], news: ['Berita News (project)', '#3fb8cf'],
   google: ['Halaman Google /partner/', '#b48cf2'], hof: ['Hall of Fame', '#f0a35e'], galeri: ['Galeri Instalasi', '#e2685f'], lain: ['Lainnya', '#8b92a1'] };
 function intTrend(n, n0) {
   if (!n0) return n ? '<small class="int-up">baru</small>' : '';

@@ -39,7 +39,12 @@ create policy "news write" on public.cai_news for all to authenticated
   using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
   with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
 grant select on public.cai_news to anon;
-grant select, insert, update, delete on public.cai_news to authenticated;`;
+grant select, insert, update, delete on public.cai_news to authenticated;
+-- Project & partner pemasang (5 Nov 2026)
+alter table public.cai_news add column if not exists projects jsonb not null default '[]'::jsonb;`;
+// Project & partner pemasang di berita kontes (5 Nov 2026, permintaan pemilik): kolom jsonb [{car, owner, result, partner, gl}]
+const NEWS_PROJ_SQL = `-- CAI Hub News: project & partner pemasang — jalankan sekali di Supabase → SQL Editor → Run
+alter table public.cai_news add column if not exists projects jsonb not null default '[]'::jsonb;`;
 
 let nwItems = null, nwMissing = false, nwErr = '', nwLoading = null, nwCur = null, nwPending = null, nwForm = null, nwQ = '', nwCat = '';
 const nwImgCache = {};
@@ -66,6 +71,35 @@ function nwYt(u) {
 const nwYtThumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const nwThumb = it => nwImgUrl(it.image) || (nwYt(it.link_url) ? nwYtThumb(nwYt(it.link_url)) : '');
 const nwPlayIc = it => nwYt(it.link_url) ? '<span class="nw-play" aria-label="Video"></span>' : '';
+/* ── 🔧 Project & partner pemasang (berita kontes) ── */
+const nwProj = it => (Array.isArray(it?.projects) ? it.projects : []).filter(p => p && (p.car || p.partner));
+const nwPd = name => { const n = normKey(name || ''); return n ? adPublic().find(d => normKey(d.n) === n) : null; };
+const nwIni = n => String(n || '?').replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+function nwMedal(r) { const m = String(r || '').match(/juara\s*(\d)/i); return m ? ({ 1: ['🥇', ''], 2: ['🥈', ' s'], 3: ['🥉', ' b'] }[m[1]] || ['🏅', '']) : ['🏅', '']; }
+function nwProjStat(it) { const pj = nwProj(it); if (!pj.length) return ''; const n = new Set(pj.map(p => normKey(p.partner || '')).filter(Boolean)).size;
+  return `🏪 ${pj.length} project${n ? ` · ${n} partner resmi CAI` : ''}`; }
+function nwProjHtml(it) {
+  const pj = nwProj(it); if (!pj.length) return '';
+  return `<div class="nw-pj"><div class="nw-pj-h"><b>🔧 Project &amp; partner pemasang</b><span>${escHtml(nwProjStat(it).replace('🏪 ', ''))}</span></div>
+    <div class="nw-pj-g">${pj.map(p => { const d = nwPd(p.partner), md = nwMedal(p.result);
+      const wa = d?.wa ? `https://wa.me/${d.wa}?text=${waText(`Halo ${d.n}, saya lihat project ${p.car || 'mobil'} di berita CAI Hub "${it.title}". Saya ingin bertanya tentang pemasangan audio.`)}` : '';
+      return `<div class="nw-pc">${p.result ? `<span class="nw-res${md[1]}">${md[0]} ${escHtml(p.result)}</span>` : ''}
+        ${p.car ? `<div class="nw-pc-car">${escHtml(p.car)}</div>` : ''}${p.owner ? `<div class="nw-pc-who">Peserta: ${escHtml(p.owner)}</div>` : ''}
+        ${p.partner ? `<div class="nw-pc-pt"><span class="nw-ini">${escHtml(nwIni(d?.n || p.partner))}</span><span class="nw-pc-nm">${escHtml(d?.n || p.partner)}${d?.c ? ` <small>· ${escHtml(d.c)}</small>` : ''}</span>
+          ${d ? `<span class="nw-pc-b">${typeof pfBtn === 'function' ? pfBtn(d) : ''}${wa ? `<a class="ad-btn wa" href="${wa}" target="_blank" rel="noopener">💬 WA</a>` : `<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>`}</span>` : ''}</div>` : ''}
+        ${p.gl ? `<button class="nw-pc-gl" onclick="nwOpenGl('${escHtml(p.gl)}')">📷 Lihat di Galeri ›</button>` : ''}</div>`; }).join('')}</div></div>`;
+}
+function nwProjSide(it) {
+  const pj = nwProj(it); if (!pj.length) return '';
+  const m = new Map(); pj.forEach(p => { if (!p.partner) return; const k = normKey(p.partner); m.set(k, { name: p.partner, n: (m.get(k)?.n || 0) + 1 }); });
+  if (!m.size) return '';
+  return `<div class="nw-sbox nw-pjs"><div class="nw-sh">🏪 Partner di berita ini</div>${[...m.values()].sort((a, b) => b.n - a.n).map(x => { const d = nwPd(x.name);
+    return `<${d ? `button onclick="openPartner('${shareSlug(d.n)}')"` : 'div'} class="nw-pl"><span class="nw-ini">${escHtml(nwIni(d?.n || x.name))}</span><span class="nw-pl-t"><b>${escHtml(d?.n || x.name)}</b>${d ? `<small>${escHtml(d.c || d.r || '')} · Profil ›</small>` : ''}</span><em>${x.n} project</em></${d ? 'button' : 'div'}>`; }).join('')}</div>`;
+}
+async function nwOpenGl(id) {
+  if (typeof loadGaleri === 'function' && !glItems) { try { await loadGaleri(); } catch (e) {} }
+  if (glItems?.some(x => x.id === id)) openGlDetail(id); else showToast('Mobil ini belum tampil di Galeri.');
+}
 function nwYtPlay(el, id) {
   el.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1" title="Video YouTube" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
   el.classList.add('on'); el.onclick = null;
@@ -118,7 +152,7 @@ function nwHlHtml(n) {
     <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async" draggable="false"${nwImgStyle(n.image)}>` : '<span>📰</span>'}${nwPlayIc(n)}</div>
     <div class="nw-main"><div class="nw-top">📰 News${nwIsNew(n) ? ' <span class="nw-new">BARU</span>' : ''}${n.category ? ` <span class="nw-cat">${escHtml(n.category)}</span>` : ''}</div>
       <div class="nw-t">${escHtml(n.title)}</div>${n.summary ? `<div class="nw-s">${escHtml(n.summary)}</div>` : ''}
-      <div class="nw-foot"><span class="nw-date">${escHtml(nwDate(n.post_date))}</span>
+      <div class="nw-foot"><span class="nw-date">${escHtml(nwDate(n.post_date))}${nwProjStat(n) ? ` · <b class="nw-hlpj">${escHtml(nwProjStat(n))}</b>` : ''}</span>
         <span class="nw-btn">Baca selengkapnya ›</span></div></div></div>`;
 }
 /* Carousel: semua slide berjajar di satu "track" (+ salinan slide terakhir di depan & slide pertama di belakang
@@ -305,7 +339,7 @@ function nwListHtml() {
   return `<div class="nw-grid">${list.map(x => { const img = nwThumb(x); return `<button class="nw-card${x.published ? '' : ' draft'}" onclick="openNews('${x.id}')">
     <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '<span>📰</span>'}${nwPlayIc(x)}${nwIsNew(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}</div>
     <div class="nw-cb"><div class="nw-cm">${x.category ? `<span class="nw-cat">${escHtml(x.category)}</span>` : ''}<span>${escHtml(nwDate(x.post_date))}</span></div>
-      <div class="nw-ct">${escHtml(x.title)}</div>${x.summary ? `<div class="nw-cs">${escHtml(x.summary)}</div>` : ''}</div></button>`; }).join('')}</div>`;
+      <div class="nw-ct">${escHtml(x.title)}</div>${x.summary ? `<div class="nw-cs">${escHtml(x.summary)}</div>` : ''}${nwProjStat(x) ? `<div class="nw-cpj">${escHtml(nwProjStat(x))}</div>` : ''}</div></button>`; }).join('')}</div>`;
 }
 function renderNwPost(body, it) {
   if (it.published) if (typeof intLog === 'function') intLog('open', 'news:' + it.id, '', true);   // ⭐ Konten paling dibuka (Rapor Bulanan)
@@ -326,6 +360,7 @@ function renderNwPost(body, it) {
     <h2 class="nw-title">${escHtml(it.title)}</h2>
     ${it.summary ? `<p class="nw-lead">${escHtml(it.summary)}</p>` : ''}
     <div class="cw-body">${paras.map(p => `<p>${p.split('\n').map(cwWa).join('<br>')}</p>`).join('')}</div>
+    ${nwProjHtml(it)}
     ${it.link_url ? `<div class="nw-cta"><button class="gt-btn" onclick="nwOpenLink('${it.id}')">${lbl} ›</button></div>` : ''}
     <div class="cw-foot"><span class="cw-date">CAI Hub · Concerto Audio Indonesia</span>
       <div class="cw-acts">${acts}</div></div>
@@ -337,6 +372,7 @@ function renderNwPost(body, it) {
         ${it.link_url ? `<button class="gt-btn" onclick="nwOpenLink('${it.id}')">${lbl} ›</button>` : ''}
         <div class="nw-sbtns">${acts}</div>
       </div>
+      ${nwProjSide(it)}
       ${others.length ? `<div class="nw-sbox"><div class="nw-sh">Berita lainnya</div>
         ${others.map(x => { const im = nwThumb(x); return `<button class="nw-oth" onclick="openNews('${x.id}')">
           <span class="nw-oimg${im ? '' : ' ph'}">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '📰'}${nwPlayIc(x)}</span>
@@ -366,8 +402,10 @@ function openNwForm(id) {
   if (!isEditor()) return;
   if (nwMissing) { nwCopySql(); return; }
   const it = id && nwItems?.find(x => x.id === id);
-  nwForm = it ? { id: it.id, title: it.title, summary: it.summary || '', body: it.body || '', category: it.category || '', image: nwImgPath(it.image), fr: nwImgFr(it.image), file: null, preview: '', link_url: it.link_url || '', link_label: it.link_label || '', post_date: it.post_date, published: it.published, busy: false }
-    : { id: null, title: '', summary: '', body: '', category: NEWS_CATS[0], image: '', fr: { x: 50, y: 50, z: 1 }, file: null, preview: '', link_url: '', link_label: '', post_date: todayWIB(), published: true, busy: false };
+  nwForm = it ? { id: it.id, title: it.title, summary: it.summary || '', body: it.body || '', category: it.category || '', image: nwImgPath(it.image), fr: nwImgFr(it.image), file: null, preview: '', link_url: it.link_url || '', link_label: it.link_label || '', post_date: it.post_date, published: it.published, projects: nwProj(it).map(p => ({ ...p })), hadProj: 'projects' in it, busy: false }
+    : { id: null, title: '', summary: '', body: '', category: NEWS_CATS[0], image: '', fr: { x: 50, y: 50, z: 1 }, file: null, preview: '', link_url: '', link_label: '', post_date: todayWIB(), published: true, projects: [], hadProj: false, busy: false };
+  if (typeof loadGaleri === 'function' && !glItems) loadGaleri().then(() => nwForm && renderNwForm()).catch(() => {});
+  if (typeof adEnsure === 'function') adEnsure();
   let ov = document.getElementById('nw-form');
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'nw-form'; ov.className = 'rk-pick gl-ov';
@@ -404,6 +442,7 @@ function renderNwForm() {
         <label class="cwf-chk"><input type="checkbox"${f.published ? ' checked' : ''} onchange="nwForm.published=this.checked"> Tampilkan untuk publik (hapus centang = draf)</label>
       </div>
     </div>
+    ${nwProjFormHtml(f)}
     <div class="acf-foot"><button class="gt-btn ghost" onclick="closeNwForm()">Batal</button><button class="gt-btn" onclick="saveNw()"${f.busy ? ' disabled' : ''}>${f.busy ? '⏳ Menyimpan…' : '💾 Simpan & Terbitkan'}</button></div>`;
 }
 function nwPickProduct(pid) {
@@ -439,6 +478,36 @@ function nwFrDrag(e) {
 function nwFrZoom(v) { if (!nwForm) return; nwForm.fr.z = Math.round(Number(v) * 100) / 100; nwFrApply(); }
 function nwFrReset() { if (!nwForm) return; nwForm.fr = { x: 50, y: 50, z: 1 }; renderNwForm(); }
 const nwFrSuffix = f => (f && (f.x !== 50 || f.y !== 50 || f.z !== 1)) ? `#${f.x},${f.y},${f.z}` : '';
+function nwProjFormHtml(f) {
+  const gl = typeof glLive === 'function' && glItems ? glLive() : [];
+  const carOf = g => [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ');
+  return `<div class="cwf-l nw-pjf">🔧 Project &amp; partner pemasang <small>(opsional — untuk berita kontes / acara)</small>
+    ${f.projects.length ? `<div class="nw-pjf-h"><span>Mobil</span><span>Peserta / pemilik</span><span>Hasil (opsional)</span><span>Partner pemasang</span><span></span></div>` : ''}
+    ${f.projects.map((p, i) => `<div class="nw-pjf-r">
+      <input value="${escHtml(p.car || '')}" placeholder="Merek Model Mobil" oninput="nwPjSet(${i},'car',this.value)">
+      <input value="${escHtml(p.owner || '')}" placeholder="nama peserta" oninput="nwPjSet(${i},'owner',this.value)">
+      <input value="${escHtml(p.result || '')}" placeholder="mis. Juara 1 · Kelas …" oninput="nwPjSet(${i},'result',this.value)">
+      <input class="pt" list="nw-dl-pt" value="${escHtml(p.partner || '')}" placeholder="pilih partner resmi" oninput="nwPjSet(${i},'partner',this.value)">
+      <button type="button" class="nw-pjf-x" onclick="nwPjDel(${i})" aria-label="Hapus">🗑</button></div>`).join('')}
+    <datalist id="nw-dl-pt">${adPublic().map(d => `<option value="${escHtml(d.n)}">`).join('')}</datalist>
+    <div class="nw-pjf-a"><button type="button" class="gt-btn ghost" onclick="nwPjAdd()">＋ Tambah project</button>
+      ${gl.length ? `<select onchange="nwPjFromGl(this.value);this.value=''"><option value="">📷 Ambil dari Galeri Instalasi…</option>${gl.map(g => `<option value="${escHtml(g.id)}">${escHtml(carOf(g) + (g.dealer ? ' · ' + g.dealer : ''))}</option>`).join('')}</select>` : ''}</div>
+    <small class="nw-ythint">Partner diambil dari daftar Authorized Partner sehingga tombol Profil &amp; WhatsApp tersambung otomatis. Nama di luar daftar tetap tampil sebagai teks.</small></div>`;
+}
+function nwPjSet(i, k, v) { if (nwForm?.projects[i]) nwForm.projects[i][k] = v; }
+function nwPjAdd() { if (!nwForm) return; nwForm.projects.push({ car: '', owner: '', result: '', partner: '' }); renderNwForm(); }
+function nwPjDel(i) { if (!nwForm) return; nwForm.projects.splice(i, 1); renderNwForm(); }
+function nwPjFromGl(id) {
+  const g = glItems?.find(x => x.id === id); if (!g || !nwForm) return;
+  const d = nwPd(g.dealer);
+  nwForm.projects.push({ car: [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' '), owner: '', result: '', partner: d?.n || g.dealer || '', gl: g.id });
+  renderNwForm();
+}
+function nwCopyProjSql() {
+  (navigator.clipboard?.writeText(NEWS_PROJ_SQL) || Promise.reject()).then(
+    () => showToast('📋 SQL "Project & partner" DISALIN — jalankan di Supabase → SQL Editor → Run, lalu simpan berita lagi.', 9000),
+    () => prompt('Jalankan SQL ini sekali di Supabase → SQL Editor → Run:', NEWS_PROJ_SQL));
+}
 async function saveNw() {
   const f = nwForm; if (!f || f.busy || !isEditor()) return;
   if (!f.title.trim()) return showToast('Judul belum terisi.');
@@ -458,6 +527,9 @@ async function saveNw() {
     if (image) image += nwFrSuffix(f.fr);
     const row = { title: f.title.trim(), summary: f.summary.trim() || null, body: f.body.trim() || null, category: f.category.trim() || null, image,
       link_url: f.link_url.trim() || null, link_label: f.link_label.trim() || null, post_date: f.post_date || todayWIB(), published: !!f.published, updated_at: new Date().toISOString() };
+    const pj = f.projects.map(p => ({ car: (p.car || '').trim(), owner: (p.owner || '').trim(), result: (p.result || '').trim(), partner: (p.partner || '').trim(), ...(p.gl ? { gl: p.gl } : {}) }))
+      .filter(p => p.car || p.partner).map(p => Object.fromEntries(Object.entries(p).filter(([, v]) => v)));
+    if (pj.length || f.hadProj) row.projects = pj;   // kolom baru: hanya dikirim bila dipakai (berita lama tetap bisa disimpan sebelum SQL)
     const wasPub = !!(f.id && nwItems?.find(x => x.id === f.id)?.published);
     const q = f.id ? supabase.from(NEWS_TABLE).update(row).eq('id', f.id).select().single() : supabase.from(NEWS_TABLE).insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
@@ -469,7 +541,8 @@ async function saveNw() {
     if (uploaded) supabase.storage.from('showcase').remove([uploaded]).catch(() => {});
     f.busy = false; renderNwForm();
     const m = e?.message || String(e);
-    if (/does not exist|schema cache/i.test(m)) { nwMissing = true; nwCopySql(); }
+    if (/projects/i.test(m) && /column|schema cache/i.test(m)) nwCopyProjSql();
+    else if (/does not exist|schema cache/i.test(m)) { nwMissing = true; nwCopySql(); }
     else dashErr(e, 'menyimpan berita');   // izin Storage `showcase` kurang → SQL perbaikan disalin otomatis
   }
 }
