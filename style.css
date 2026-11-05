@@ -3922,21 +3922,28 @@ body.logged-in .guest-only { display: none !important; }
   #ad-chips .filter-chip { flex: none; }
 }
 
-/* HP — pengunjung umum: kotak News headline dibuat ringkas (3 Nov 2026, permintaan pemilik — agar pengunjung
-   tidak langsung terfokus ke berita; partner yang login tetap ukuran penuh) */
+/* HP: kotak headline (News · Acara · Concerto Way) dibuat ringkas untuk SEMUA akun — gambar/DAY kiri, label + judul
+   2 baris, seluruh kotak bisa diklik (pengunjung umum sejak 3 Nov 2026; partner/Admin/Editor sejak 5 Nov 2026,
+   permintaan pemilik — dulu gambar 16:9 di atas + teks 196 px) */
 @media (max-width: 720px) {
-  body:not(.logged-in) #cway-hl .nw-hl { grid-template-columns: 34% minmax(0, 1fr); height: 112px; border-radius: 16px; }
-  body:not(.logged-in) #cway-hl .nw-img { aspect-ratio: auto; height: 100%; }
-  body:not(.logged-in) #cway-hl .nw-img::after { background: linear-gradient(90deg, transparent 55%, #0f141d); }
-  body:not(.logged-in) #cway-hl .nw-img.ph { font-size: 30px; }
-  body:not(.logged-in) #cway-hl .nw-main { height: auto; padding: 10px 14px; gap: 4px; justify-content: center; }
-  body:not(.logged-in) #cway-hl .nw-top { font-size: 9.5px; gap: 6px; letter-spacing: .16em; }
-  body:not(.logged-in) #cway-hl .nw-new { font-size: 9px; padding: 2px 7px; }
-  body:not(.logged-in) #cway-hl .nw-cat { font-size: 9.5px; }
-  body:not(.logged-in) #cway-hl .nw-t { font-size: 14.5px; line-height: 1.3; margin-top: 2px; }
-  body:not(.logged-in) #cway-hl .nw-s, body:not(.logged-in) #cway-hl .nw-foot { display: none; }
-  body:not(.logged-in) #cway-hl .hl-view { border-radius: 16px; }
-  body:not(.logged-in) #cway-hl .hl-dots { margin-top: 8px; }
+  #cway-hl .nw-hl { grid-template-columns: 34% minmax(0, 1fr); height: 112px; border-radius: 16px; }
+  #cway-hl .nw-img { aspect-ratio: auto; height: 100%; }
+  #cway-hl .nw-img::after, #cway-hl .ev-hl .nw-img::after { background: linear-gradient(90deg, transparent 55%, #0f141d); }
+  #cway-hl .nw-img.ph { font-size: 30px; }
+  #cway-hl .nw-main { height: auto; padding: 10px 14px; gap: 4px; justify-content: center; }
+  #cway-hl .nw-top { font-size: 9.5px; gap: 6px; letter-spacing: .16em; }
+  #cway-hl .nw-new, #cway-hl .ev-hl-cd { font-size: 9px; padding: 2px 7px; }
+  #cway-hl .nw-cat { font-size: 9.5px; }
+  #cway-hl .nw-t { font-size: 14.5px; line-height: 1.3; margin-top: 2px; }
+  #cway-hl .nw-s, #cway-hl .nw-foot, #cway-hl .nw-hlpj { display: none; }
+  #cway-hl .hl-view { border-radius: 16px; }
+  #cway-hl .hl-dots { margin-top: 8px; }
+  /* Concerto Way: kotak DAY kiri + label + judul, tinggi sama dengan kotak News */
+  #cway-hl .cw-hl { height: 112px; grid-template-columns: 58px minmax(0, 1fr); grid-template-rows: auto auto 1fr; padding: 12px 14px; column-gap: 12px; row-gap: 2px; border-radius: 16px; align-content: center; }
+  #cway-hl .cw-hl-day { grid-row: 1 / span 2; width: 58px; height: 58px; border-radius: 12px; } #cway-hl .cw-hl-day b { font-size: 24px; }
+  #cway-hl .cw-hl-top { font-size: 9.5px; letter-spacing: .14em; }
+  #cway-hl .cw-hl-t { font-size: 14.5px; line-height: 1.3; margin: 2px 0 0; -webkit-line-clamp: 2; }
+  #cway-hl .cw-hl-s, #cway-hl .cw-hl-res, #cway-hl .cw-hl-side, #cway-hl .cw-hl-prev { display: none; }
 }
 /* Sorotan Brand paling atas Dashboard (3 Nov 2026): jarak judul pertama & headline di bawahnya */
 #view-dashboard > .section-header:first-child { padding-top: 24px; }
