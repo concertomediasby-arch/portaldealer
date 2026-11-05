@@ -95,7 +95,7 @@ const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
 .chips span.ok{background:rgba(62,207,142,.16);color:#5fe0a6}
 .m .foot,.pp .foot{left:52%}.m .u,.pp .u{color:#d8b26a}
 .e .img{position:absolute;top:0;bottom:0;right:0;width:46%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#3a2c10,#0b0c0f 75%);display:flex;align-items:center;justify-content:center}
-.e .img img{width:100%;height:100%;object-fit:cover}.e .img .ic{font-size:200px}
+.e .img img{width:100%;height:100%;object-fit:cover}.e .img img+img{z-index:0}.e .img .ic{font-size:200px}
 .e .img::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#07080a 0%,rgba(7,8,10,.5) 22%,transparent 50%)}
 .e .l{position:absolute;left:64px;top:56px;width:690px}
 .e .pill{background:rgba(216,178,106,.16);color:#e9c98a;border:2px solid rgba(216,178,106,.55);font-size:17px}
@@ -124,7 +124,12 @@ function evRange(e) {
 }
 function eventCard(e) {
   const k = EV_IC[e.kind] || EV_IC.kompetisi, place = e.online ? 'Online' : [e.venue, e.city].filter(Boolean).join(' · ');
-  return `<div class="c e" id="c"><div class="img">${e.poster ? `<img src="${esc(pub(e.poster))}">` : `<span class="ic">${k[0]}</span>`}</div>
+  // posisi sampul dari portal (akhiran "#x,y,z" / "#fit" di kolom poster, js/events.js evPosterFr)
+  const fr = String(e.poster || '').split('#')[1] || '', [fx, fy, fz] = fr.split(',').map(Number);
+  const img = !e.poster ? `<span class="ic">${k[0]}</span>`
+    : fr === 'fit' ? `<img src="${esc(pub(e.poster))}" style="filter:blur(22px) brightness(.55);transform:scale(1.15)"><img src="${esc(pub(e.poster))}" style="position:absolute;inset:0;object-fit:contain">`
+    : `<img src="${esc(pub(e.poster))}"${fr && isFinite(fx) ? ` style="object-position:${fx}% ${fy}%;transform-origin:${fx}% ${fy}%;scale:${isFinite(fz) ? fz : 1}"` : ''}>`;
+  return `<div class="c e" id="c"><div class="img">${img}</div>
     <div class="l"><span class="pill">📅 KALENDER ACARA · ${k[1]}</span>
       <div class="dt"><div class="b"><small>${esc(evW(e.start_at, { weekday: 'short' }).toUpperCase())}</small><b>${evW(e.start_at, { day: 'numeric' })}</b><i>${esc(evW(e.start_at, { month: 'short', year: 'numeric' }))}</i></div>
         <h1${e.title.length > 48 ? ' class="sm"' : ''}>${esc(e.title)}</h1></div>

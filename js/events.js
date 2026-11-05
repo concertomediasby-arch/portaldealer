@@ -79,7 +79,24 @@ const evUpcoming = () => evShown().filter(e => !evPast(e)).sort((a, b) => evStar
 const evArchive = () => evShown().filter(evPast).sort((a, b) => evStart(b) - evStart(a));
 const evPlace = e => e.online ? 'Online' : [e.venue, e.city].filter(Boolean).join(' · ');
 const evMaps = e => e.map_url || (e.online ? '' : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([e.venue, e.city].filter(Boolean).join(', '))}`);
-const evPoster = e => e.poster ? (/^https?:/i.test(e.poster) ? e.poster : dashPublicUrl(e.poster)) : '';
+// Posisi sampul (5 Nov 2026, permintaan pemilik): disimpan di kolom `poster` yang sama sebagai akhiran —
+// "events/1.webp#x,y,z" = isi bingkai (titik fokus x/y %, zoom z), "events/1.webp#fit" = tampilkan utuh (latar buram), tanpa akhiran = otomatis.
+const evPosterPath = v => String(v || '').split('#')[0];
+function evPosterFr(v) {
+  const m = String(v || '').split('#')[1] || '';
+  if (m === 'fit') return { mode: 'fit', x: 50, y: 50, z: 1 };
+  const [x, y, z] = m ? m.split(',').map(Number) : [];
+  return m ? { mode: 'cover', x: isFinite(x) ? x : 50, y: isFinite(y) ? y : 50, z: isFinite(z) && z >= 1 ? z : 1 } : { mode: 'auto', x: 50, y: 50, z: 1 };
+}
+const evFrSuffix = f => !f || f.mode === 'auto' ? '' : f.mode === 'fit' ? '#fit' : `#${f.x},${f.y},${f.z}`;
+const evFrCss = f => `object-position:${f.x}% ${f.y}%;transform-origin:${f.x}% ${f.y}%;scale:${f.z}`;
+// big = bingkai lebar (detail/headline): mode otomatis di sana = tampilkan utuh, di kartu kecil = isi bingkai
+function evImgHtml(url, fr, big) {
+  const fit = fr.mode === 'fit' || (fr.mode === 'auto' && big);
+  return fit ? `<img class="ev-fbg" src="${escHtml(url)}" alt="" aria-hidden="true" draggable="false"><img class="ev-ffg" src="${escHtml(url)}" alt="" loading="lazy" draggable="false">`
+    : `<img src="${escHtml(url)}" alt="" loading="lazy" draggable="false"${fr.mode === 'cover' ? ` style="${evFrCss(fr)}"` : ''}>`;
+}
+const evPoster = e => { const p = evPosterPath(e.poster); return p ? (/^https?:/i.test(p) ? p : dashPublicUrl(p)) : ''; };
 const evLink = id => liveLink('e', id) || `${PORTAL_URL}/?acara=${encodeURIComponent(id)}`;
 function evRange(e) {
   const s = e.start_at, en = e.end_at, sd = evYmd(s), ed = en ? evYmd(en) : sd;
@@ -98,7 +115,7 @@ function evCountdown(e) {
 }
 function evPosterHtml(e, big) {
   const p = evPoster(e), k = evKind_(e);
-  if (p) return `<div class="ev-pst${big ? ' big' : ''}"><img src="${escHtml(p)}" alt="" loading="lazy"></div>`;
+  if (p) return `<div class="ev-pst${big ? ' big' : ''}">${evImgHtml(p, evPosterFr(e.poster), big)}</div>`;
   const words = e.title.split(/\s+/), cut = Math.ceil(words.length / 2);
   return `<div class="ev-pst ph k-${k[2]}${big ? ' big' : ''}"><b>${escHtml(words.slice(0, cut).join(' '))}</b><span>${escHtml(words.slice(cut).join(' '))}</span></div>`;
 }
@@ -120,6 +137,7 @@ async function loadEvents(force) {
     }
     evLoading = null;
     evDashRender();
+    if (typeof hlRender === 'function') hlRender();   // 📅 Acara di headline Dashboard
     if (document.getElementById('view-events')?.classList.contains('active')) renderEvents();
     if (evPending) { const id = evPending; evPending = null; openEvents(id); }
   })();
@@ -262,6 +280,7 @@ async function evLoadWatch(tries = 0) {
   evRepaint();
 }
 function evRepaint() {
+  if (typeof hlRender === 'function' && document.querySelector('#cway-hl .ev-hl')) hlRender();
   if (document.getElementById('view-events')?.classList.contains('active')) renderEvents();
   if (evDetailId && document.getElementById('ev-detail')?.classList.contains('open')) openEvDetail(evDetailId);
 }
@@ -320,7 +339,33 @@ function evDashHtml() {
       return `<button onclick="openEvents();openEvDetail('${e.id}')"><small>${escHtml(evWib(e.start_at, { day: 'numeric', month: 'short' }).toUpperCase())}${days > 0 ? ` · ${days === 1 ? 'BESOK' : days + ' HARI'}` : evStart(e) <= Date.now() ? ' · BERLANGSUNG' : ' · HARI INI'}</small>
         <b>${escHtml(e.title)}</b><span>${evKind_(e)[0]} ${escHtml(e.online ? 'Online' : (e.city || e.venue || ''))}${e.public === false ? ' · 🔒' : ''}</span></button>`; }).join('')}</div></div>`;
 }
-function evDashRender() { const el = document.getElementById('dash-ev'); if (el) el.innerHTML = evDashHtml(); }
+// Kotak "📅 Acara terdekat" disembunyikan sejak acara tampil di headline Dashboard (5 Nov 2026, permintaan pemilik); true = tampil lagi.
+const EV_DASH_BOX = false;
+function evDashRender() { const el = document.getElementById('dash-ev'); if (el) el.innerHTML = EV_DASH_BOX ? evDashHtml() : ''; }
+
+/* ── 📅 Acara di headline Dashboard (#cway-hl, js/news.js hlSlides) — 5 Nov 2026, permintaan pemilik ── */
+const EV_HL_MAX = 2;
+function evHlList() {
+  const lim = Date.now() + EV_DASH_DAYS * 864e5;
+  return (evItems || []).filter(e => e.published && !evPast(e) && evStart(e) <= lim && (e.public !== false || authUser))
+    .sort((a, b) => evStart(a) - evStart(b)).slice(0, EV_HL_MAX);
+}
+function evHlCd(e) {
+  const now = Date.now();
+  if (evStart(e) <= now && now <= evEnd(e)) return '● Sedang berlangsung';
+  const days = Math.round((Date.parse(evYmd(e.start_at)) - Date.parse(todayWIB())) / 864e5);
+  return days <= 0 ? '● Hari ini' : days === 1 ? 'Besok' : days + ' hari lagi';
+}
+function evHlHtml(e) {
+  const p = evPoster(e), k = evKind_(e), live = evStart(e) <= Date.now();
+  const pt = (e.partners || []).length;
+  return `<div class="nw-hl ev-hl" role="button" tabindex="0" onclick="openEvents();openEvDetail('${e.id}')" onkeydown="if(event.key==='Enter'){openEvents();openEvDetail('${e.id}')}">
+    <div class="nw-img${p ? '' : ' ph'}">${p ? (h => /ev-fbg/.test(h) ? `<span class="ev-fw">${h}</span>` : h)(evImgHtml(p, evPosterFr(e.poster), true)) : `<span>${k[0]}</span>`}</div>
+    <div class="nw-main"><div class="nw-top">📅 Acara <span class="ev-hl-cd${live ? ' live' : ''}">${evHlCd(e)}</span><span class="nw-cat">${k[0]} ${escHtml(k[1])}</span>${e.public === false ? '<span class="nw-cat">🔒 Partner</span>' : ''}</div>
+      <div class="nw-t">${escHtml(e.title)}</div>
+      <div class="nw-s">${escHtml(evRange(e))}${evPlace(e) ? `<br>📍 ${escHtml(evPlace(e))}` : ''}</div>
+      <div class="nw-foot"><span class="nw-date">${pt ? `🏪 ${pt} partner CAI terkait` : ''}</span>${!evPast(e) && !live ? evRemindBtn(e) : ''}<span class="nw-btn">Lihat detail ›</span></div></div></div>`;
+}
 
 /* ── Form Editor ── */
 const evDate = iso => iso ? evYmd(iso) : '';
@@ -330,9 +375,9 @@ function openEvForm(id) {
   const e = id ? evItems?.find(x => x.id === id) : null;
   const tom = new Date(Date.now() + 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
   evForm = e ? { id: e.id, title: e.title, kind: e.kind, sd: evDate(e.start_at), st: evTime(e.start_at), ed: evDate(e.end_at), et: evTime(e.end_at), online: !!e.online,
-      city: e.city || '', venue: e.venue || '', map_url: e.map_url || '', partners: [...(e.partners || [])], poster: e.poster || '', file: null, prev: '', body: e.body || '',
+      city: e.city || '', venue: e.venue || '', map_url: e.map_url || '', partners: [...(e.partners || [])], poster: evPosterPath(e.poster), fr: evPosterFr(e.poster), file: null, prev: '', body: e.body || '',
       link_url: e.link_url || '', link_label: e.link_label || '', hof_event: e.hof_event || '', public: e.public !== false, published: !!e.published, notify: !!e.notify, busy: false }
-    : { id: null, title: '', kind: 'kompetisi', sd: tom, st: '09:00', ed: '', et: '', online: false, city: '', venue: '', map_url: '', partners: [], poster: '', file: null, prev: '', body: '',
+    : { id: null, title: '', kind: 'kompetisi', sd: tom, st: '09:00', ed: '', et: '', online: false, city: '', venue: '', map_url: '', partners: [], poster: '', fr: evPosterFr(''), file: null, prev: '', body: '',
       link_url: '', link_label: '', hof_event: '', public: true, published: true, notify: true, busy: false };
   let ov = document.getElementById('ev-form');
   if (!ov) { ov = document.createElement('div'); ov.id = 'ev-form'; ov.className = 'ev-ov'; document.body.appendChild(ov); }
@@ -344,8 +389,40 @@ function evF(k, v) { if (evForm) evForm[k] = v; }
 function evFr(k, v) { if (evForm) { evForm[k] = v; renderEvForm(); } }
 function evAddPartner(v) { v = String(v || '').trim(); if (!v || !evForm || evForm.partners.includes(v)) return; evForm.partners.push(v); renderEvForm(); }
 function evDelPartner(i) { evForm.partners.splice(i, 1); renderEvForm(); }
-function evPosterPick(inp) { const f = inp.files?.[0]; if (!f || !evForm) return; evForm.file = f; if (evForm.prev) URL.revokeObjectURL(evForm.prev); evForm.prev = URL.createObjectURL(f); renderEvForm(); }
-function evPosterDel() { if (!evForm) return; evForm.file = null; evForm.poster = ''; evForm.prev = ''; renderEvForm(); }
+function evPosterPick(inp) { const f = inp.files?.[0]; if (!f || !evForm) return; evForm.file = f; if (evForm.prev) URL.revokeObjectURL(evForm.prev); evForm.prev = URL.createObjectURL(f); evForm.fr = evPosterFr(''); renderEvForm(); }
+function evPosterDel() { if (!evForm) return; evForm.file = null; evForm.poster = ''; evForm.prev = ''; evForm.fr = evPosterFr(''); renderEvForm(); }
+// Atur posisi sampul: geser di bingkai 16:9 (titik fokus), zoom 1–2,5×, atau "Tampilkan utuh"
+function evFrMode(m) { if (!evForm) return; const f = evForm.fr; f.mode = m; if (m !== 'cover') { f.x = 50; f.y = 50; f.z = 1; } renderEvForm(); }
+function evFrApply() {
+  const im = document.querySelector('#ev-form .ev-fr img'), f = evForm?.fr; if (!im || !f) return;
+  im.style.cssText = evFrCss(f);
+  const z = document.getElementById('ev-fr-zv'); if (z) z.textContent = f.z.toFixed(2).replace('.', ',') + '×';
+}
+function evFrDrag(e) {
+  const box = e.currentTarget, f = evForm?.fr; if (!f || e.button > 0 || f.mode === 'fit') return;
+  if (f.mode === 'auto') f.mode = 'cover';
+  e.preventDefault(); box.setPointerCapture?.(e.pointerId); box.classList.add('drag');
+  const r = box.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY, fx = f.x, fy = f.y;
+  const mv = ev => {   // gambar ikut jari
+    const k = 100 / Math.max(1, f.z - 1 + .6);
+    f.x = Math.round(Math.min(100, Math.max(0, fx - (ev.clientX - x0) / r.width * k)));
+    f.y = Math.round(Math.min(100, Math.max(0, fy - (ev.clientY - y0) / r.height * k)));
+    evFrApply();
+  };
+  const up = () => { box.classList.remove('drag'); box.removeEventListener('pointermove', mv); box.removeEventListener('pointerup', up); box.removeEventListener('pointercancel', up); renderEvForm(); };
+  box.addEventListener('pointermove', mv); box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+}
+function evFrZoom(v) { const f = evForm?.fr; if (!f) return; f.mode = 'cover'; f.z = Math.round(Number(v) * 100) / 100; evFrApply(); }
+function evFrReset() { if (!evForm) return; evForm.fr = evPosterFr(''); renderEvForm(); }
+function evFrHtml(img, f) {
+  const fit = f.mode === 'fit';
+  return `<div class="ev-fr${fit ? ' fit' : ' adj'}"${fit ? '' : ' onpointerdown="evFrDrag(event)"'}>${fit ? evImgHtml(img, f, true) : `<img src="${escHtml(img)}" alt="" draggable="false" style="${evFrCss(f)}">`}
+      ${fit ? '' : '<span class="ev-fhint">✥ Geser foto untuk mengatur bagian yang tampil</span>'}</div>
+    <div class="ev-frc"><span class="ev-seg"><button type="button" class="${fit ? '' : 'on'}" onclick="evFrMode('cover')">▣ Isi bingkai</button><button type="button" class="${fit ? 'on' : ''}" onclick="evFrMode('fit')">▢ Tampilkan utuh</button></span>
+      ${fit ? '' : `<label class="ev-zoom">🔍 Zoom <input type="range" min="1" max="2.5" step="0.05" value="${f.z}" oninput="evFrZoom(this.value)"> <b id="ev-fr-zv">${f.z.toFixed(2).replace('.', ',')}×</b></label>`}
+      <button type="button" class="ev-btn" onclick="evFrReset()">⊙ Reset</button></div>
+    <p class="ev-note">${fit ? 'Poster tampil utuh tanpa terpotong; sisi kosong diisi versi buram dari poster yang sama — cocok untuk poster tegak berisi tulisan.' : f.mode === 'auto' ? 'Belum diatur: kartu memotong di tengah, jendela detail menampilkan utuh. Geser / zoom untuk mengatur sendiri.' : 'Posisi ini dipakai di kartu Kalender Acara, jendela detail & headline Dashboard.'}</p>`;
+}
 function renderEvForm() {
   const f = evForm, ov = document.getElementById('ev-form'); if (!f || !ov) return;
   const ds = typeof adPublic === 'function' ? adPublic() : [];
@@ -366,7 +443,8 @@ function renderEvForm() {
       <input class="ev-in sm" list="ev-dl-pt" placeholder="ketik / pilih nama partner lalu Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();evAddPartner(this.value)}" onchange="evAddPartner(this.value)"></div>
     <datalist id="ev-dl-pt">${ds.map(d => `<option value="${escHtml(d.n)}">`).join('')}</datalist>
     <label class="ev-fl">Poster <small>(opsional — JPG/PNG/WebP, diperkecil otomatis)</small></label>
-    <div class="ev-pick">${img ? `<img src="${escHtml(img)}" alt=""><button type="button" class="ev-btn del" onclick="evPosterDel()">🗑 Hapus poster</button>` : ''}<label class="ev-btn">⬆ ${img ? 'Ganti' : 'Pilih'} poster<input type="file" accept="image/*" hidden onchange="evPosterPick(this)"></label></div>
+    ${img ? evFrHtml(img, f.fr) : ''}
+    <div class="ev-pick">${img ? `<button type="button" class="ev-btn del" onclick="evPosterDel()">🗑 Hapus poster</button>` : ''}<label class="ev-btn">⬆ ${img ? 'Ganti' : 'Pilih'} poster<input type="file" accept="image/*" hidden onchange="evPosterPick(this)"></label></div>
     <label class="ev-fl">Keterangan</label><textarea class="ev-in" rows="4" oninput="evF('body', this.value)" placeholder="Agenda, siapa yang diundang, apa yang didapat…">${escHtml(f.body)}</textarea>
     <div class="ev-r2"><div><label class="ev-fl">Link info / daftar <small>(opsional; wa.me = tombol Daftar via WA)</small></label><input class="ev-in" value="${escHtml(f.link_url)}" oninput="evF('link_url', this.value)" placeholder="https://…"></div>
       <div><label class="ev-fl">Teks tombol <small>(opsional)</small></label><input class="ev-in" value="${escHtml(f.link_label)}" oninput="evF('link_label', this.value)" placeholder="Info & daftar"></div></div>
@@ -387,7 +465,7 @@ async function saveEv() {
   const old = f.id ? evItems?.find(x => x.id === f.id) : null;
   let uploaded = null;
   try {
-    let poster = f.poster || null;
+    let poster = evPosterPath(f.poster) || null;
     if (f.file) {
       const blob = await glResize(f.file, 1600);
       uploaded = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`;
@@ -395,13 +473,15 @@ async function saveEv() {
       if (error) throw error;
       poster = uploaded;
     }
+    if (poster) poster += evFrSuffix(f.fr);
     const row = { title: f.title.trim(), kind: f.kind, start_at: start, end_at: end, online: !!f.online, city: f.online ? null : (f.city.trim() || null), venue: f.online ? null : (f.venue.trim() || null),
       map_url: f.map_url.trim() || null, partners: f.partners, poster, body: f.body.trim() || null, link_url: f.link_url.trim() || null, link_label: f.link_label.trim() || null,
       hof_event: f.kind === 'kompetisi' ? (f.hof_event.trim() || null) : null, public: !!f.public, published: !!f.published, notify: !!f.notify, updated_at: new Date().toISOString() };
     const q = f.id ? supabase.from(EV_TABLE).update(row).eq('id', f.id).select().single() : supabase.from(EV_TABLE).insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
     if (data.published && data.notify && !data.push_at && typeof pushNotify === 'function') pushNotify('event', data.id);   // "📅 Acara baru" (sekali per acara, dicek server)
-    if (old?.poster && old.poster !== poster && /^events\//.test(old.poster)) supabase.storage.from('showcase').remove([old.poster]).catch(() => {});
+    const oldP = evPosterPath(old?.poster);
+    if (oldP && oldP !== evPosterPath(poster) && /^events\//.test(oldP)) supabase.storage.from('showcase').remove([oldP]).catch(() => {});
     if (f.prev) URL.revokeObjectURL(f.prev);
     closeEvForm(); showToast(f.id ? '✓ Acara diperbarui' : (data.published ? '✓ Acara ditambahkan' : '✓ Disimpan sebagai draf'));
     await loadEvents(true); evTab = evPast(data) ? 'arc' : 'next'; openEvents(); openEvDetail(data.id);
@@ -418,7 +498,7 @@ async function deleteEv(id) {
   if (!confirm(`Hapus acara "${e.title}"?\n\nPengingat yang sudah dipasang pengunjung ikut terhapus.`)) return;
   const { error } = await supabase.from(EV_TABLE).delete().eq('id', id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
-  if (e.poster && /^events\//.test(e.poster)) supabase.storage.from('showcase').remove([e.poster]).catch(() => {});
+  if (e.poster && /^events\//.test(evPosterPath(e.poster))) supabase.storage.from('showcase').remove([evPosterPath(e.poster)]).catch(() => {});
   closeEvDetail(); showToast('Acara dihapus'); await loadEvents(true);
 }
 function evCopySql() {
