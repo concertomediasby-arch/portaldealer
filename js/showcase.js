@@ -48,6 +48,7 @@ function hofProducts(e) {
 }
 // Prestasi yang berlaku untuk satu produk: entri yang menyebut produk itu, atau entri tanpa daftar produk di line yang sama
 function hofForProduct(brandId, lineName, pid) {
+  if (!HOF_ON) return [];
   return hofData().filter(e => e.products?.length ? e.products.includes(pid) : e.brand === brandId && normKey(e.line) === normKey(lineName || ''));
 }
 function hofSeries(list) {
@@ -64,7 +65,7 @@ function hofSeries(list) {
 const hofLineCount = (brandId, lineName) => hofData().filter(e => e.brand === brandId && normKey(e.line) === normKey(lineName)).length;
 // Lencana di judul line (halaman brand) & kartu produk — dipanggil core.js
 function hofLineBadge(brandId, lineName) {
-  if (!scOn()) return '';
+  if (!scOn() || !HOF_ON) return '';
   const n = hofLineCount(brandId, lineName);
   return n ? `<button class="hof-badge" onclick="event.stopPropagation();openHallOfFame('${hofKey(brandId, lineName)}')" title="Lihat prestasi seri ini di Hall of Fame">🏆 ${n} Prestasi</button>` : '';
 }
@@ -103,6 +104,7 @@ function openHofDealer(name) {
 // Detail satu prestasi: mobil, perangkat yang dipakai (→ katalog), dealer pemasang
 const hofWinAttr = e => e.products?.length || e.other?.length ? ` onclick="event.stopPropagation();openHofWin('${e.id}')"` : hofDlAttr(e.dealer);
 function openHofWin(id) {
+  if (!HOF_ON) return;
   const e = hofData().find(x => x.id === id); if (!e) return;
   const d = hofDealer(e.dealer);
   const prods = (e.products || []).map(pid => findProductAny(pid)).filter(r => r.product);
@@ -164,6 +166,7 @@ async function hofOpenGallery(id) { closeHofDealer(); await openGaleri(); openGl
 function closeHofDealer() { document.getElementById('hof-dealer')?.classList.remove('open'); }
 
 function openHallOfFame(focusKey) {
+  if (!HOF_ON) { showView('dashboard'); return; }   // disembunyikan (HOF_ON, js/core.js)
   if (!scOn()) return;
   showView('halloffame');
   renderHallOfFame();
@@ -531,7 +534,7 @@ function glQueueHtml() {
 }
 // Banner ke Hall of Fame: jumlah mobil juara (peserta + mobil + dealer berbeda) di data Hall of Fame
 function glChampBanner() {
-  if (hofIsDemo()) return '';
+  if (hofIsDemo() || !HOF_ON) return '';
   const n = new Set(hofData().map(hofCarKey)).size;
   return n ? `<button class="gl-hofban" onclick="openHallOfFame()"><span>🏆</span><b>Lihat mobil juara di Hall of Fame</b><small>${n} mobil</small><em>→</em></button>` : '';
 }
@@ -563,7 +566,7 @@ function openGlDetail(id, photoIdx = 0) {
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
         <h3 class="gl-dt">${escHtml(it.car_model || '')}${it.car_year ? ' ' + it.car_year : ''}</h3>
-        <div class="gl-tags">${hof ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofGroupKey(hof)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${glPending(it) ? `<span class="gl-tag dr">Kiriman ${escHtml(it.submitter || 'dealer')} — menunggu persetujuan</span>` : !it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : glSched(it) ? `<span class="gl-tag sc">⏰ Tayang ${escHtml(glWhen(it.publish_at))}</span>` : ''}</div>
+        <div class="gl-tags">${hof ? (HOF_ON ? `<button class="gl-tag g" onclick="closeGlDetail();openHallOfFame('${hofGroupKey(hof)}')">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</button>` : `<span class="gl-tag g">🏆 ${escHtml(hof.award)}${hof.cls ? ' · ' + escHtml(hof.cls) : ''}</span>`) : ''}${it.body ? `<span class="gl-tag">${escHtml(it.body)}</span>` : ''}${it.city ? `<span class="gl-tag">${escHtml(it.city)}</span>` : ''}${glPending(it) ? `<span class="gl-tag dr">Kiriman ${escHtml(it.submitter || 'dealer')} — menunggu persetujuan</span>` : !it.published ? '<span class="gl-tag dr">Draf — belum tampil</span>' : glSched(it) ? `<span class="gl-tag sc">⏰ Tayang ${escHtml(glWhen(it.publish_at))}</span>` : ''}</div>
         ${it.note ? `<p class="gl-note">${escHtml(it.note)}</p>` : ''}
         ${it.published && !glPending(it) && !glSched(it) ? `<div class="gl-share"><button class="gt-btn ghost" onclick="glShare('${it.id}')">${SHARE_ICON} Bagikan</button></div>` : ''}
         ${(it.products || []).length ? `<div class="hof-lbl">Produk yang dipasang</div>${it.products.map(pid => { const r = glProd(pid); if (!r.product) return ''; const p = r.product;

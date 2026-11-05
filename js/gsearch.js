@@ -17,7 +17,7 @@ function gsHit(text, q) {
 function gsCompute(q) {
   const R = { car: null, cars: [], partners: [], prods: [], prodN: 0, prodFrom: '', acad: [], news: [] };
   // Mobil
-  const cars = typeof carList === 'function' ? carList() : [];
+  const cars = typeof carList === 'function' && CARS_ON ? carList() : [];
   R.cars = cars.filter(c => gsHit(c.name, q) || gsHit(c.make + ' ' + (c.name || ''), q));
   R.car = R.cars[0] || null;
   // Partner: nama / kota / provinsi, lalu partner yang pernah mengerjakan mobil itu

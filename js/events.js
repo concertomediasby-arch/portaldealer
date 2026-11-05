@@ -189,7 +189,7 @@ function evCardHtml(e, next) {
     ${evPosterHtml(e)}
     <div class="ev-info"><div>${evTag(e)}${next ? '<span class="ev-tg near">Paling dekat</span>' : ''}</div>
       <h3>${escHtml(e.title)}</h3><p>📍 ${escHtml(evPlace(e) || '—')} · ${escHtml(evRange(e))}</p>${evCountdown(e)}
-      <div class="ev-acts" onclick="event.stopPropagation()">${past ? (hof ? `<button class="ev-btn" onclick="openHallOfFame()">🏆 ${hof} prestasi ›</button>` : '') : evRemindBtn(e)}
+      <div class="ev-acts" onclick="event.stopPropagation()">${past ? (hof && HOF_ON ? `<button class="ev-btn" onclick="openHallOfFame()">🏆 ${hof} prestasi ›</button>` : '') : evRemindBtn(e)}
         ${!past && e.link_url ? `<a class="ev-btn${/wa\.me/.test(e.link_url) ? ' wa' : ''}" href="${escHtml(e.link_url)}" target="_blank" rel="noopener">${escHtml(e.link_label || (/wa\.me/.test(e.link_url) ? '💬 Daftar via WA' : '🔗 Info & daftar'))}</a>` : ''}
         ${!past && evMaps(e) ? `<a class="ev-btn" href="${escHtml(evMaps(e))}" target="_blank" rel="noopener">📍 Lokasi</a>` : ''}
         <button class="ev-btn" onclick="evShare('${e.id}')">${SHARE_ICON} Bagikan</button></div></div></div>`;
@@ -233,7 +233,7 @@ function openEvDetail(id) {
       ${e.link_url ? `<span>🔗</span><span><a href="${escHtml(e.link_url)}" target="_blank" rel="noopener">${escHtml(e.link_label || 'Info & pendaftaran')}</a></span>` : ''}</div>
     ${parts ? `<div class="ev-pts"><small>Partner CAI terkait</small>${parts}</div>` : ''}${body}
     <div class="ev-acts">${past ? '' : evRemindBtn(e, true)}${past ? '' : `<button class="ev-btn" onclick="evIcs('${e.id}')">📅 Tambah ke kalender HP</button>`}
-      ${past && hof ? `<button class="ev-btn g" onclick="closeEvDetail();openHallOfFame()">🏆 Lihat ${hof} prestasi di Hall of Fame ›</button>` : ''}
+      ${past && hof && HOF_ON ? `<button class="ev-btn g" onclick="closeEvDetail();openHallOfFame()">🏆 Lihat ${hof} prestasi di Hall of Fame ›</button>` : ''}
       ${past ? `<button class="ev-btn" onclick="closeEvDetail();openGaleri()">📷 Galeri Instalasi ›</button>` : ''}
       <button class="ev-btn" onclick="evShare('${e.id}')">${SHARE_ICON} Bagikan</button>
       ${isEditor() ? `<button class="ev-btn" onclick="closeEvDetail();openEvForm('${e.id}')">✏️ Edit</button><button class="ev-btn del" onclick="deleteEv('${e.id}')">🗑 Hapus</button>` : ''}</div></div></div>`;

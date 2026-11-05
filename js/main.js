@@ -65,6 +65,8 @@ function openDeepLink() {
   if (q.get('dealer')) { enterPortal(); adOpenLinked(q.get('dealer')); return; }   // link Authorized Dealer
   if (q.get('paket')) { enterPortal(); paketOpenLinked(q.get('paket')); return; }   // link Paket Audio
   if (q.get('sorotan')) { enterPortal(); dvOpenLinked(q.get('sorotan')); return; }   // link Sorotan Brand → jendela video brand itu
+  if (q.has('hof') && !HOF_ON) { enterPortal(); return; }   // Hall of Fame disembunyikan → Dashboard
+  if (q.has('mobil') && !CARS_ON) { enterPortal(); return; }   // Cari per Mobil disembunyikan → Dashboard
   if (q.has('hof') && !q.get('hof')) { enterPortal(); openHallOfFame(); return; }   // /?hof= (dari halaman Google /hall-of-fame/) = Hall of Fame
   if (q.get('hof')) { enterPortal(); hofOpenLinked(q.get('hof')); return; }
   if (q.has('temukan')) { enterPortal(); openFinder(q.get('temukan') || ''); return; }   // Tahap 8 A (js/finder.js)

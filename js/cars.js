@@ -71,6 +71,7 @@ function carMedia(g, fallbackIc) {
 // ── Daftar mobil ──
 let carQ = '', carMake = 'all', carSel = null;
 function openCars(q) {
+  if (!CARS_ON) { showView('dashboard'); return; }   // disembunyikan (CARS_ON, js/core.js)
   if (typeof q === 'string') carQ = q;
   carSel = null; showView('mobil'); document.querySelector('.main')?.scrollTo(0, 0);
   renderCars(); carEnsure();
@@ -127,6 +128,7 @@ function carProds(c) {
 
 // ── Halaman satu mobil ──
 function openCar(slug) {
+  if (!CARS_ON) { showView('dashboard'); return; }
   carSel = slug; showView('mobil'); document.querySelector('.main')?.scrollTo(0, 0);
   renderCar(); carEnsure();
   if (typeof intLog === 'function') intLog('car', slug, '', true);
@@ -208,11 +210,11 @@ function renderPartner() {
   const el = document.getElementById('partner-body'); if (!el) return;
   const d = pfFind(pfSel);
   if (!d) { el.innerHTML = `<button class="car-back" onclick="openAuthDealers()">‹ Authorized Partner</button><div class="stock-empty">${adRows || adTried ? 'Partner ini tidak ada di daftar partner resmi CAI.' : 'Memuat data partner…'}</div>`; return; }
-  const { gl, hof } = pfData(d.n), cnt = pl => hof.filter(e => e.place === pl).length;
+  const { gl } = pfData(d.n), hof = HOF_ON ? pfData(d.n).hof : [], cnt = pl => hof.filter(e => e.place === pl).length;
   const cars = new Set([...gl.map(g => carKey(g.car_make, g.car_model)), ...hof.map(e => { const s = carSplit(e.car); return s ? carKey(s.make, s.model) : ''; }).filter(Boolean)]);
   const brands = new Map(); for (const g of gl) for (const bid of new Set((g.products || []).map(id => findProductAny(id).brand?.id).filter(Boolean))) brands.set(bid, (brands.get(bid) || 0) + 1);
   const msg = `Halo ${d.n}, saya lihat profil & hasil pemasangan Anda di CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`;
-  const carChips = [...cars].map(k => carList().find(c => c.key === k)).filter(Boolean);
+  const carChips = CARS_ON ? [...cars].map(k => carList().find(c => c.key === k)).filter(Boolean) : [];
   el.innerHTML = `<button class="car-back" onclick="openAuthDealers()">‹ Authorized Partner</button>
     <div class="pf-hd"><span class="pf-av">${escHtml(pfInit(d.n))}</span><div><h2>${escHtml(d.n)}</h2>
       <small>📍 ${escHtml([d.c, d.r].filter(Boolean).join(', '))}${d.a ? ' · ' + escHtml(d.a) : ''}</small>
@@ -235,6 +237,7 @@ const pfBtn = (d, close) => d ? `<button class="ad-btn pf" onclick="${close ? cl
 
 // Kotak Dashboard pengunjung umum: "🚗 Mobil Anda apa?" + 4 mobil teratas
 function carDashHtml() {
+  if (!CARS_ON) return '';
   const top = carList().slice(0, 4);
   return `<div class="car-dash"><div class="car-dash-t"><b>🚗 Mobil Anda apa?</b><span>Lihat contoh pemasangan & perangkat yang dipakai di mobil yang sama.</span></div>
     <form class="car-dash-f" onsubmit="event.preventDefault();openCars(this.q.value)"><input name="q" type="search" placeholder="Ketik merek / model mobil, mis. “Innova”" autocomplete="off"><button>Cari</button></form>

@@ -11,7 +11,11 @@ const CAR_ALIAS = lit(carsJs, 'CAR_ALIAS') || {}, CAR_LABEL = lit(carsJs, 'CAR_L
 const GL_MAKES = lit(scJs, 'GL_MAKES') || [], HOF_DEALER_ALIAS = lit(scJs, 'HOF_DEALER_ALIAS') || {};
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(read('katalog.js') + ';this.BRANDS=BRANDS;this.HALL_OF_FAME=typeof HALL_OF_FAME!=="undefined"?HALL_OF_FAME:[];', ctx);
-const { BRANDS, HALL_OF_FAME } = ctx;
+const { BRANDS } = ctx;
+// HOF_ON / CARS_ON di js/core.js (5 Nov 2026: Hall of Fame & Cari per Mobil disembunyikan) — false = data Hall of Fame tidak dipakai di halaman Google/kartu WA
+const coreJs = read('js/core.js');
+const HOF_ON = !/const HOF_ON\s*=\s*false/.test(coreJs), CARS_ON = !/CARS_ON\s*=\s*false/.test(coreJs);
+const HALL_OF_FAME = HOF_ON ? ctx.HALL_OF_FAME : [];
 
 const normKey = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const shareSlug = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -58,4 +62,4 @@ function build(gallery, partners) {
   };
   return { cars, partnerData, partnerOf };
 }
-module.exports = { build, prod, shareSlug, normKey, carSplit, carKey, hofCarKey, BRANDS, HALL_OF_FAME };
+module.exports = { build, prod, shareSlug, normKey, carSplit, carKey, hofCarKey, BRANDS, HALL_OF_FAME, HOF_ON, CARS_ON };

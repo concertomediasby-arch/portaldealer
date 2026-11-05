@@ -228,7 +228,7 @@ function videoFrame(url, out, at) {
     : JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/partners.json'), 'utf8')).partners;
   const glPub = (data.gallery || []).filter(g => g.id && g.car_make);
   const { cars, partnerData } = CARS.build(glPub, partners);
-  for (const c of cars) {
+  for (const c of CARS.CARS_ON ? cars : []) {   // Cari per Mobil disembunyikan (CARS_ON di js/core.js) → kartu /m/ ikut dihapus bot
     // foto kartu: hanya sampul kartu WA pilihan Editor (aman plat nomor)
     let pick = null; for (const g of c.gl) { const p = (g.photos || []).find(x => x?.wa && x.path && !String(x.path).startsWith('pending/')); if (p) { pick = p; break; } }
     items.push({ dir: 'm', id: c.slug, target: `/?mobil=${encodeURIComponent(c.slug)}`, title: `${c.name} — contoh pemasangan audio`,

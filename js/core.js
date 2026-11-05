@@ -12,7 +12,14 @@ const LOGO_NAVY  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAA7CAYAAA
 const SHARE_ICON = '<svg class="ico-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>';
 // Bagikan ke WA (3 Nov 2026): gambar disiapkan lebih dulu (sharePrep) agar navigator.share tetap di dalam klik (iPhone);
 // tanpa dukungan berbagi file (umumnya desktop) → wa.me berisi teks + link.
+/* 5 Nov 2026 (permintaan pemilik): menu Hall of Fame & Cari per Mobil DISEMBUNYIKAN dari semua tampilan (termasuk Editor).
+   false = menu sidebar/HP, kotak Dashboard, lencana 🏆, kotak Achievement produk, hasil Mobil di pencarian, tombol ke Hall of Fame,
+   link ?hof= / ?mobil= (→ Dashboard) dan halaman Google /hall-of-fame/ & /mobil/ (tools/gen-seo-pages.js membaca konstanta ini).
+   Data HALL_OF_FAME tetap ada (label juara di Galeri tetap). Tampilkan lagi: ubah ke true, lalu jalankan node tools/gen-seo-pages.js. */
+const HOF_ON = false, CARS_ON = false;
 const shareFiles = {};
+if (!HOF_ON) ['nav-halloffame', 'mnav-halloffame'].forEach(id => document.getElementById(id)?.remove());
+if (!CARS_ON) ['nav-mobil', 'mnav-mobil'].forEach(id => document.getElementById(id)?.remove());
 // Halaman kartu pratinjau link per item (tools/gen-share-pages.js): /p/ produk · /h/ Hall of Fame · /a/ Academy · /k/ Paket · /d/ dealer
 const shareSlug = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const sharePage = (kind, id) => `${PORTAL_URL}/${kind}/${encodeURIComponent(id)}/`;

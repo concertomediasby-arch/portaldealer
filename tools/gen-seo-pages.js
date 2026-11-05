@@ -156,7 +156,7 @@ for (const k of KAT) {
     crumbs: [['CAI Hub', '/'], ['Kategori', url], [k.h, url]], open: `/?kat=${k.slug}`, body }) });
 }
 // ── Partner ──
-const ptx = d => { const x = CD.partnerData(d); return (x.hof.length || x.gl.length) ? `<div class="x">${x.hof.length ? `🏆 ${x.hof.length} prestasi kompetisi${x.j1 ? ` (${x.j1} Juara 1)` : ''}` : ''}${x.hof.length && x.gl.length ? ' · ' : ''}${x.gl.length ? `${x.gl.length} instalasi di Galeri` : ''}${x.cars.length ? `<br>Mobil: ${x.cars.slice(0, 5).map(c => `<a href="/mobil/${c.slug}/">${esc(c.name)}</a>`).join(', ')}` : ''}</div>` : ''; };
+const ptx = d => { const x = CD.partnerData(d); return (x.hof.length || x.gl.length) ? `<div class="x">${x.hof.length ? `🏆 ${x.hof.length} prestasi kompetisi${x.j1 ? ` (${x.j1} Juara 1)` : ''}` : ''}${x.hof.length && x.gl.length ? ' · ' : ''}${x.gl.length ? `${x.gl.length} instalasi di Galeri` : ''}${x.cars.length && CARS.CARS_ON ? `<br>Mobil: ${x.cars.slice(0, 5).map(c => `<a href="/mobil/${c.slug}/">${esc(c.name)}</a>`).join(', ')}` : ''}</div>` : ''; };
 const pt = d => `<div class="pt"><b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}${ptx(d)}
   <div class="bt">${d.wa ? `<a class="wa" data-k="wa" data-n="${esc(d.n)}" href="https://wa.me/${esc(d.wa)}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" rel="nofollow">WhatsApp</a>` : ''}
   ${d.ig ? `<a data-k="ig" data-n="${esc(d.n)}" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" rel="nofollow">Instagram</a>` : ''}
@@ -193,7 +193,7 @@ for (const c of cities) {
 
 // ── Mobil (Tahap 8 B) ──
 const glName = g => [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ');
-for (const c of CD.cars) {
+for (const c of CARS.CARS_ON ? CD.cars : []) {
   const url = `/mobil/${c.slug}/`, ps = c.products.map(id => CARS.prod(id)).filter(Boolean);
   const parts = c.partners.filter(d => d.r || d.c);
   const brandsUsed = [...new Set(ps.map(x => x.b.name))];
@@ -209,7 +209,7 @@ for (const c of CD.cars) {
     desc: `${c.cars} contoh pemasangan sistem audio di ${c.name} oleh partner resmi Concerto Audio Indonesia${c.wins ? ` · ${c.wins} prestasi kompetisi` : ''}${brandsUsed.length ? ` · perangkat ${brandsUsed.join(', ')}` : ''}.`,
     crumbs: [['CAI Hub', '/'], ['Cari per mobil', '/mobil/'], [c.name, url]], open: `/?mobil=${c.slug}`, log: true, body }) });
 }
-if (CD.cars.length) {
+if (CARS.CARS_ON && CD.cars.length) {
   const makes = [...new Set(CD.cars.map(c => c.make))].sort();
   pages.push({ url: '/mobil/', html: page({ url: '/mobil/', title: `Audio Mobil per Model — ${CD.cars.length} Contoh Pemasangan Partner Resmi | CAI Hub`,
     desc: `Contoh pemasangan sistem audio di ${CD.cars.length} model mobil (${makes.slice(0, 8).join(', ')}…) oleh partner resmi Concerto Audio Indonesia — prestasi, perangkat & partner.`,
@@ -342,7 +342,7 @@ function hofCarCards(es) {
 const hofRank = es => { const by = new Map(); for (const e of es) { const d = hofPartner(e.dealer), k = d ? d.n : (e.dealer || '—'); if (!by.has(k)) by.set(k, { n: k, j: [0, 0, 0, 0], t: 0 }); const o = by.get(k); o.t++; o.j[(e.place >= 1 && e.place <= 3 ? e.place : 4) - 1]++; }
   return [...by.values()].sort((a, b) => b.j[0] - a.j[0] || b.j[1] - a.j[1] || b.t - a.t || a.n.localeCompare(b.n)); };
 const hofRankHtml = es => hofRank(es).map((d, i) => `<div class="rk"><i>${i + 1}</i>${hofPLink(d.n)}<em>${[['🥇', d.j[0]], ['🥈', d.j[1]], ['🥉', d.j[2]]].filter(x => x[1]).map(x => x[0] + x[1]).join(' ')}</em></div>`).join('');
-for (const e0 of hofEvents) {
+for (const e0 of CARS.HOF_ON ? hofEvents : []) {
   const es = HOF_ALL.filter(e => hofEvKey(e) === hofEvKey(e0)), url = hofEvUrl(e0), cls = [...new Set(es.map(e => e.cls || '—'))];
   const j1 = es.filter(e => e.place === 1).length, cards = hofCarCards(es), brandsUsed = [...new Set(es.flatMap(e => e.team || (e.brand ? [e.brand] : [])))].map(id => BRANDS.find(b => b.id === id)).filter(Boolean);
   const where = [e0.venue, e0.city].filter(Boolean).join(', ');
@@ -366,7 +366,7 @@ for (const e0 of hofEvents) {
     desc: `Hasil ${hofEvKey(e0)}${e0.city ? ' di ' + e0.city : ''}${e0.date ? ' (' + e0.date + ')' : ''}: ${es.length} prestasi, ${j1} Juara 1 di ${cls.length} kelas — mobil juara, peserta & partner pemasang resmi Concerto Audio Indonesia.`,
     crumbs: [['CAI Hub', '/'], ['Hall of Fame', '/hall-of-fame/'], [hofEvKey(e0), url]], open: `/?hof=${encodeURIComponent(es[0].id)}`, ld2, css2: HCSS, log: true, body }) });
 }
-if (hofEvents.length) {
+if (CARS.HOF_ON && hofEvents.length) {
   const j1 = HOF_ALL.filter(e => e.place === 1).length, rk = hofRank(HOF_ALL);
   pages.push({ url: '/hall-of-fame/', html: page({ url: '/hall-of-fame/', title: `Hall of Fame — Mobil Juara Kompetisi Car Audio | CAI Hub`,
     desc: `${HOF_ALL.length} prestasi kompetisi (${j1} Juara 1) mobil yang dipasang partner resmi Concerto Audio Indonesia: ${hofEvents.map(hofEvKey).join(', ')}.`,

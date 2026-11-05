@@ -158,7 +158,7 @@ function renderFdResults() {
     ${fdRecs.length ? `<div class="fd-recs">${fdRecs.map(rec).join('')}</div>` : `<div class="stock-empty">Belum ada rekomendasi yang pas untuk pilihan ini. Coba ubah anggaran, atau tanyakan langsung ke partner resmi.</div>`}
     ${fd.taste === 'comp' && ['t1', 't2'].includes(fd.budget) ? '<div class="fd-info">🏆 Untuk ikut kelas kompetisi SQ, sistem 3-way aktif K Series / Pro Line (anggaran Rp 40 juta ke atas) lebih disarankan. Rekomendasi di atas tetap bisa jadi tahap awal.</div>' : ''}
     ${gi ? `<button class="fd-info" onclick="fdOpen('${gi.id}')">🚗 <b>Di Galeri:</b> ${escHtml(gi.t.replace(/^Seperti /, ''))} memakai ${escHtml(gi.items.slice(0, 3).map(id => findProductAny(id).product.name).join(', '))}${gi.items.length > 3 ? ' …' : ''} (Total SRP ${fmtRp(gi.all)}). <span>Lihat ›</span></button>` : ''}
-    ${fd.car && typeof carBySlug === 'function' && carBySlug(fd.car) ? `<button class="fd-info" onclick="openCar('${fd.car}')">🚙 Lihat contoh pemasangan & partner yang pernah mengerjakan ${escHtml(fd.carName)} <span>›</span></button>` : ''}
+    ${CARS_ON && fd.car && typeof carBySlug === 'function' && carBySlug(fd.car) ? `<button class="fd-info" onclick="openCar('${fd.car}')">🚙 Lihat contoh pemasangan & partner yang pernah mengerjakan ${escHtml(fd.carName)} <span>›</span></button>` : ''}
     <div class="fd-acts"><button class="car-btn o" onclick="fdRestart()">↺ Mulai lagi</button><button class="car-btn o" onclick="openRakit()">🔧 Rakit sendiri di System Simulator</button></div>
     <div class="fd-note">${T ? 'Rekomendasi disusun dari katalog resmi CAI, Paket Audio & Galeri Instalasi. ' : ''}Harga = SRP. ${escHtml(RK_EXCL)} Konsultasikan detail pemasangan dengan partner resmi.</div>`;
 }
