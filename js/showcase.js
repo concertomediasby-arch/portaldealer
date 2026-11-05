@@ -424,6 +424,14 @@ function setGlFilter(kind, v) {
   renderGaleri();
 }
 const glCarSvg = '<svg class="gl-car" viewBox="0 0 200 80" fill="none"><path d="M14 58c0-8 4-12 12-13l26-4 22-17c4-3 9-4 14-4h44c6 0 11 2 15 6l18 17 18 3c7 1 11 6 11 12v4H14v-4Z" fill="rgba(255,255,255,.08)" stroke="currentColor" stroke-width="1.6"/><circle cx="54" cy="64" r="11" fill="#0b0c0e" stroke="currentColor" stroke-width="2"/><circle cx="150" cy="64" r="11" fill="#0b0c0e" stroke="currentColor" stroke-width="2"/></svg>';
+// Label juara di sampul kartu Galeri (5 Nov 2026, permintaan pemilik — mobil juara kini tampil di daftar Galeri):
+// prestasi terbaik mobil itu (peserta + mobil + partner sama, hofCarKey) → "🥇 Juara 1" (+ "· n prestasi" bila lebih dari satu)
+function glChampLabel(it) {
+  const h = hofData().find(x => x.id === it.hof_id); if (!h) return '🏆 Juara';
+  const k = hofCarKey(h), all = hofData().filter(x => hofCarKey(x) === k);
+  const best = all.reduce((a, b) => ((b.place || 9) < (a.place || 9) ? b : a), h), p = best.place;
+  return `${p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '🏆'} ${p >= 1 && p <= 3 ? 'Juara ' + p : escHtml(best.award || 'Juara')}${all.length > 1 ? ` · ${all.length} prestasi` : ''}`;
+}
 function glCard(it) {
   const cov = (it.photos || []).find(p => glIsVid(p) && p.cover);   // video dipilih Editor sebagai sampul loop
   const ph = cov || (it.photos || []).find(p => !glIsVid(p)) || it.photos?.[0];
@@ -432,7 +440,7 @@ function glCard(it) {
   return `<button class="gl-card" onclick="openGlDetail('${it.id}')">
     <span class="gl-ph">${ph ? (cov ? `<video class="gl-cover" src="${glUrl(cov.path)}"${glCovPoster(it)} muted loop autoplay playsinline webkit-playsinline preload="auto"${glFrAttr(cov)}></video>` : glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
-      ${it.hof_id ? '<span class="gl-tro">🏆 Juara</span>' : ''}
+      ${it.hof_id ? `<span class="gl-tro">${glChampLabel(it)}</span>` : ''}
       ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : glSched(it) ? `<span class="gl-draft sched">⏰ ${escHtml(glWhen(it.publish_at))}</span>` : ''}</span>
     <span class="gl-bd"><span class="gl-mk">${escHtml(it.car_make || '')}</span>
       <b>${escHtml(it.car_model || '')}${it.car_year ? ` <small>${it.car_year}</small>` : ''}</b>
@@ -483,16 +491,15 @@ function renderGaleri() {
   }
   if (glErr) { box.innerHTML = `<div class="vs-warn">${escHtml(isAdmin() ? glErr : 'Galeri belum bisa dimuat. Periksa koneksi internet lalu muat ulang halaman.')}</div>`; return; }
   const pend = isAdmin() ? glItems.filter(glPending) : [];
-  // Jalan tengah (31 Okt 2026): mobil juara (ber-hof_id) tidak tampil di daftar Galeri — tempatnya di Hall of Fame;
-  // Galeri hanya memberi banner + petunjuk saat pencarian cocok dengan mobil juara
-  const all = glLive(), champ = all.filter(it => it.hof_id), live = all.filter(it => !it.hof_id);
+  // Mobil juara (ber-hof_id) ikut tampil di daftar Galeri dengan label juara (5 Nov 2026, permintaan pemilik —
+  // dulu 31 Okt 2026 disembunyikan & hanya ada di Hall of Fame); chip "🏆 Mobil juara" menyaring hanya mobil juara
+  const live = glLive(), champN = live.filter(it => it.hof_id).length;
   const q = normKey(glQ);
   const hay = it => normKey([it.car_make, it.car_model, it.car_year, it.body, it.dealer, it.city, ...(it.products || []).map(pid => glProd(pid).product?.name)].join(' '));
-  const base = live.filter(it => (glBody === 'all' || (glBody === 'ev' ? glIsEv(it.body) : it.body === glBody)) && (!q || hay(it).includes(q)));
+  const base = live.filter(it => (!glHofOnly || it.hof_id) && (glBody === 'all' || (glBody === 'ev' ? glIsEv(it.body) : it.body === glBody)) && (!q || hay(it).includes(q)));
   const rows = base.filter(it => glMake === 'all' || it.car_make === glMake);
   const makes = [...new Set(live.map(it => it.car_make).filter(Boolean))].sort();
   const bodies = [...new Set(live.map(it => it.body).filter(Boolean))];
-  const hint = glChampHint(champ, q, hay);
   const cnt = m => base.filter(it => m === 'all' || it.car_make === m).length;
   box.innerHTML = `
     ${!SHOWCASE_PUBLIC ? '<div class="sc-demo">PRATINJAU EDITOR — menu Showcase belum tampil untuk publik.</div>' : ''}
@@ -506,10 +513,10 @@ function renderGaleri() {
     <div class="gl-search"><span>🔎</span><input type="search" placeholder="Cari mobil Anda — mis. Fortuner, HR-V, Pajero…" value="${escHtml(glQ)}" oninput="glQ=this.value;clearTimeout(window.glQt);window.glQt=setTimeout(()=>{renderGaleri();const i=document.querySelector('.gl-search input');i?.focus();i?.setSelectionRange(i.value.length,i.value.length)},250)"></div>
     ${live.length ? `<div class="gl-makes">${['all', ...makes].map(m => `<button class="gl-make${glMake === m ? ' on' : ''}" onclick="setGlFilter('make','${escHtml(m)}')">${m === 'all' ? 'SEMUA' : escHtml(m.toUpperCase())}<small>${cnt(m)} mobil</small></button>`).join('')}</div>
     <div class="hof-filters">${bodies.length > 1 ? `<button class="filter-chip${glBody === 'all' ? ' active' : ''}" onclick="setGlFilter('body','all')">Semua tipe</button>${bodies.map(b => `<button class="filter-chip${glBody === b ? ' active' : ''}" onclick="setGlFilter('body','${escHtml(b)}')">${escHtml(b)}</button>`).join('')}` : ''}
+      ${champN ? `<button class="filter-chip${glHofOnly ? ' active' : ''}" onclick="setGlFilter('hof')">🏆 Mobil juara <b>${champN}</b></button>` : ''}
       ${live.some(it => glIsEv(it.body)) ? `<button class="filter-chip${glBody === 'ev' ? ' active' : ''}" onclick="setGlFilter('body','ev')">⚡ Mobil listrik &amp; hybrid</button>` : ''}
 </div>` : ''}
-    ${hint}
-    ${rows.length ? `<div class="gl-grid">${rows.map(glCard).join('')}</div>` : hint ? ''
+    ${rows.length ? `<div class="gl-grid">${rows.map(glCard).join('')}</div>`
       : `<div class="stock-empty">${live.length ? 'Tidak ada instalasi yang cocok. Coba kata kunci lain.' : 'Belum ada instalasi. ' + (glCanEdit() ? 'Tekan <b>＋ Tambah Instalasi</b> untuk menambahkan yang pertama.' : '')}</div>`}`;
   glCoverObs();
 }
@@ -527,14 +534,6 @@ function glChampBanner() {
   if (hofIsDemo()) return '';
   const n = new Set(hofData().map(hofCarKey)).size;
   return n ? `<button class="gl-hofban" onclick="openHallOfFame()"><span>🏆</span><b>Lihat mobil juara di Hall of Fame</b><small>${n} mobil</small><em>→</em></button>` : '';
-}
-// Pencarian / filter merek yang cocok dengan mobil juara di Galeri → petunjuk kecil (mobil itu tidak tampil di daftar)
-function glChampHint(champ, q, hay) {
-  if (!champ.length || (!q && glMake === 'all')) return '';
-  const m = champ.filter(it => (glMake === 'all' || it.car_make === glMake) && (glBody === 'all' || (glBody === 'ev' ? glIsEv(it.body) : it.body === glBody)) && (!q || hay(it).includes(q)));
-  if (!m.length) return '';
-  const what = q ? `“${escHtml(glQ.trim())}”` : escHtml(glMake);
-  return `<div class="gl-champhint">🏆 Ada juga <b>${m.length} mobil juara</b> ${what}: ${m.map(it => `<button onclick="openGlDetail('${it.id}')">${escHtml(glTitle(it))}</button>`).join('')} <button class="lnk" onclick="openHallOfFame()">Hall of Fame →</button></div>`;
 }
 
 /* ── Detail instalasi ── */
