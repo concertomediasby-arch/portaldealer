@@ -1,0 +1,637 @@
+{
+ "_note": "Teks infografis Concerto Academy disalin kata per kata dari gambar assets/academy/*.webp (5 Nov 2026). Dipakai tools/gen-seo-pages.js untuk /academy/<no>/. products/brands = tautan pilihan Claude, bukan teks gambar.",
+ "items": {
+  "1": {
+   "title": "Kenapa mobil adalah ruang dengar paling sulit?",
+   "intro": "Bayangkan penyanyi hebat tampil di dalam lift kaca sempit, sambil di luar ada orang mengebor tembok. Suaranya bagus, tapi yang terdengar justru ruangannya.",
+   "points": [
+    {
+     "h": "1. Bass kepanjangan",
+     "t": "Gelombang bass 50 Hz hampir 7 meter. Kabin cuma 2–3 meter. Bass jadi \"terlipat\": bengkak di satu titik, hilang di titik lain."
+    },
+    {
+     "h": "2. Kaca vs jok",
+     "t": "Kaca memantulkan suara seperti cermin. Jok dan karpet malah menyerap. Treble jadi tidak rata: ada yang tajam, ada yang tenggelam."
+    },
+    {
+     "h": "3. Duduk di pinggir",
+     "t": "Speaker kanan lebih dekat, suaranya tiba duluan. Beda 50 cm saja, panggung suara sudah terasa miring."
+    },
+    {
+     "h": "4. Bising tak henti",
+     "t": "Suara ban, mesin, dan angin terus menutupi detail musik, terutama nada halus dan bass rendah."
+    }
+   ],
+   "solution": {
+    "label": "BUKAN SPEAKERNYA, TAPI RUANGANNYA",
+    "t": "Speaker tepat + Pasang benar + Tuning DSP = Suara bagus"
+   },
+   "quote": "Speaker bagus tanpa tuning itu seperti penyanyi hebat di dalam lift kaca. Yang terdengar bukan suaranya, tetapi ruangannya."
+  },
+  "2": {
+   "title": "Kenapa tweeter soft dome terasa nyaman?",
+   "intro": "Bayangkan dua lampu. Lampu putih menyorot semua detail, tapi lama-lama silau. Lampu hangat tetap terang, dan mata betah berjam-jam. Tweeter soft dome adalah lampu hangat itu.",
+   "points": [
+    {
+     "h": "1. Bahannya lembut",
+     "t": "Kubahnya dari kain halus seperti sutra, bukan logam. Gerakannya ringan dan lentur, seperti bulu."
+    },
+    {
+     "h": "2. Cepat diam",
+     "t": "Logam cenderung masih \"berdenging\" setelah nada selesai (garis oranye). Soft dome cepat diam (garis biru), jadi tidak tajam."
+    },
+    {
+     "h": "3. Pas untuk kabin",
+     "t": "Kaca mobil sudah memantulkan treble. Tweeter yang halus membuat suara tetap jernih, tanpa terasa silau."
+    },
+    {
+     "h": "4. Betah berjam-jam",
+     "t": "Telinga tidak cepat lelah, bahkan di perjalanan jauh. Musik tetap enak dinikmati dari awal sampai tiba."
+    }
+   ],
+   "solution": {
+    "h": "Audio Circle • Germany",
+    "t": "Seluruh tweeter Audio Circle memilih soft dome. Detail tetap utuh, telinga tetap betah berjam-jam."
+   },
+   "quote": "Tweeter soft dome itu seperti lampu hangat di ruang tamu. Tetap terang, tapi mata betah berlama-lama.",
+   "brands": [
+    "audiocircle"
+   ]
+  },
+  "3": {
+   "title": "Kenapa kunci audio ada di midbass?",
+   "intro": "Bayangkan sebuah rumah. Atap dan jendela boleh mewah, tapi kalau pondasinya goyang, rumah tidak akan nyaman. Di sistem audio mobil, pondasi itu adalah midbass.",
+   "points": [
+    {
+     "h": "1. Isi utama musik",
+     "t": "Pukulan drum, gitar bass, dan hangatnya vokal pria sebagian besar berada di wilayah midbass."
+    },
+    {
+     "h": "2. Penyambung segalanya",
+     "t": "Midbass menyambung subwoofer dan midrange. Kalau salah, semuanya ikut kacau: bass jadi jelek, vokal pun berantakan."
+    },
+    {
+     "h": "3. Tempat tersulit",
+     "t": "Dipasang di pintu yang bergetar dan banyak celah. Salah pasang sedikit, hasilnya langsung terasa."
+    },
+    {
+     "h": "4. Musik lengkap",
+     "t": "Kalau midbass rapi, musik terasa lengkap. Vokal jadi indah, seolah benar-benar bernyanyi di depan Anda."
+    }
+   ],
+   "solution": {
+    "label": "DARI NADA TERENDAH KE TERTINGGI",
+    "items": [
+     "Subwoofer",
+     "Midbass · pondasi",
+     "Midrange",
+     "Tweeter"
+    ]
+   },
+   "quote": "Midbass itu pondasi rumah. Jendela boleh mewah, tapi kalau pondasinya goyang, rumahnya tidak nyaman."
+  },
+  "4": {
+   "title": "Kenapa getaran body merusak suara?",
+   "intro": "Coba bernyanyi sambil berdiri di panggung kayu yang goyang. Suara Anda bagus, tapi panggungnya ikut berderit dan bergetar. Begitulah speaker yang dipasang di pintu mobil.",
+   "points": [
+    {
+     "h": "1. Dorong dua arah",
+     "t": "Ke depan menuju telinga, ke belakang menuju plat pintu. Plat yang tipis itu ikut terdorong."
+    },
+    {
+     "h": "2. Plat ikut nyanyi",
+     "t": "Plat pintu punya dengung sendiri. Dengung ini bercampur dengan musik, suara jadi kotor."
+    },
+    {
+     "h": "3. Tenaga terbuang",
+     "t": "Energi yang seharusnya mendorong udara malah habis menggoyang plat. Bass jadi kurang nendang."
+    },
+    {
+     "h": "4. Bunyi krek-krek",
+     "t": "Trim, kabel, dan klip yang longgar ikut bergetar. Musik terganggu bunyi yang tidak diundang."
+    }
+   ],
+   "solution": {
+    "label": "BUKAN SPEAKER BARU, TAPI PINTU KOKOH",
+    "t": "Speaker bagus + Pintu kokoh = Bass nendang"
+   },
+   "quote": "Speaker di pintu yang bergetar itu seperti penyanyi di panggung goyang. Suaranya ikut goyang.",
+   "products": [
+    "st-s8d",
+    "st-x3",
+    "ac-deadening"
+   ]
+  },
+  "5": {
+   "title": "Kenapa harus peredam butyl yang benar?",
+   "intro": "Pintu mobil adalah panggung untuk speaker. Peredam butyl membuat panggung itu kokoh dan tenang, sehingga yang terdengar hanya musiknya. Tapi ingat, butyl pun ada kadarnya.",
+   "points": [
+    {
+     "h": "1. Pintu jadi tenang",
+     "t": "Butyl menghentikan getaran plat pintu, sehingga pintu tidak ikut berdengung saat musik diputar."
+    },
+    {
+     "h": "2. Tahan panas",
+     "t": "Tetap stabil walau mobil dijemur seharian. Tidak lembek, tidak berbau, tidak menetes."
+    },
+    {
+     "h": "3. Lentur dan awet",
+     "t": "Mengikuti lekuk plat pintu, tidak getas, dan tetap menempel kuat bertahun-tahun."
+    },
+    {
+     "h": "4. Bass lebih padat",
+     "t": "Pintu yang kokoh membuat tenaga speaker benar-benar menjadi suara. Bass terasa padat dan bersih."
+    }
+   ],
+   "solution": {
+    "label": "HATI-HATI BUTYL YANG DIMURAHKAN",
+    "items": [
+     "× Butyl ditipiskan",
+     "× Aluminium ditipiskan",
+     "× Aluminium diganti film",
+     "× Lem dikurangi"
+    ]
+   },
+   "quote": "Butyl tebal, aluminium asli, lem kuat. Kalau itu yang ditawarkan, Anda sedang dipilihkan peredam yang benar.",
+   "products": [
+    "st-s8d",
+    "st-x3",
+    "ac-deadening",
+    "dm-deadening"
+   ]
+  },
+  "6": {
+   "title": "Isolator dan absorber, apa tugasnya?",
+   "intro": "Rumah yang tenang butuh dua hal: tembok yang menahan bising dari luar, dan gorden yang meredam gema di dalam. Peredam mobil bekerja dengan cara yang sama.",
+   "points": [
+    {
+     "h": "1. Isolator: tembok",
+     "t": "Tugasnya menahan suara agar tidak lewat. Bising ban dan mesin tertahan sebelum masuk kabin."
+    },
+    {
+     "h": "2. Absorber: gorden",
+     "t": "Tugasnya menyerap pantulan. Suara yang memantul di rongga pintu diserap sampai habis."
+    },
+    {
+     "h": "3. Bahan berbeda",
+     "t": "Isolator ringan, tapi sangat rapat. Absorber lebih renggang dan berpori, supaya suara bisa masuk dan terserap."
+    },
+    {
+     "h": "4. Awas busa telur",
+     "t": "Busa telur toko kain dibuat untuk jok, bukan suara. Di pintu yang panas dan lembap, mudah menyerap air dan hancur."
+    }
+   ],
+   "solution": {
+    "h": "Steg",
+    "items": [
+     "Steg Isolator S8 · menahan bising",
+     "Steg Absorber S15 · menyerap gema"
+    ]
+   },
+   "quote": "Isolator itu tembok, absorber itu gorden. Kabin yang tenang butuh keduanya.",
+   "products": [
+    "st-s8d",
+    "st-s15"
+   ],
+   "brands": [
+    "steg"
+   ]
+  },
+  "7": {
+   "title": "Kenapa box subwoofer tidak boleh bocor?",
+   "intro": "Bayangkan mengemudi dengan ban yang bocor halus. Mobil masih jalan, tapi tidak stabil dan lama-lama rusak. Box subwoofer yang bocor mengalami hal yang sama.",
+   "points": [
+    {
+     "h": "1. Udara itu pegas",
+     "t": "Udara di dalam box menahan dan mengendalikan gerak speaker, seperti pegas pada shock mobil."
+    },
+    {
+     "h": "2. Bass hilang",
+     "t": "Suara belakang bocor keluar dan bertemu suara depan. Keduanya saling meniadakan, bass jadi hilang."
+    },
+    {
+     "h": "3. Speaker liar",
+     "t": "Tanpa pegas yang kuat, speaker bisa bergerak terlalu jauh. Lama-lama speaker bisa rusak."
+    },
+    {
+     "h": "4. Bunyi desis",
+     "t": "Udara yang menyembur lewat celah menimbulkan bunyi desis atau tiupan yang mengganggu musik."
+    }
+   ],
+   "solution": {
+    "h": "Box Subwoofer Audio Circle",
+    "t": "Rapat dan kokoh. Lubang port-nya bukan bocor, tapi dihitung dan disengaja untuk bass yang terkendali."
+   },
+   "quote": "Box subwoofer bocor itu seperti ban bocor halus. Masih jalan, tapi tidak stabil dan lama-lama rusak.",
+   "brands": [
+    "audiocircle"
+   ]
+  },
+  "8": {
+   "title": "Apakah suara bagus harus keras?",
+   "intro": "Orang yang bicara paling keras di ruangan belum tentu paling enak didengar. Justru penyanyi hebat tetap merdu, bahkan saat berbisik.",
+   "points": [
+    {
+     "h": "1. Pecah itu lelah",
+     "t": "Suara keras tapi pecah justru melelahkan. Yang dicari bukan keras, tetapi jernih."
+    },
+    {
+     "h": "2. Tetap detail",
+     "t": "Sistem yang bagus tetap terdengar detail dan penuh, walaupun volumenya pelan."
+    },
+    {
+     "h": "3. Telinga lelah",
+     "t": "Volume terlalu tinggi dalam waktu lama membuat telinga capek, bahkan bisa merusak pendengaran."
+    },
+    {
+     "h": "4. Tetap ngobrol",
+     "t": "Musik tetap jernih tanpa harus berteriak ke penumpang di sebelah. Perjalanan jadi lebih nyaman."
+    }
+   ],
+   "solution": {
+    "label": "SISTEM BAGUS DI SEMUA VOLUME",
+    "items": [
+     "Pelan — Tetap detail",
+     "Sedang — Penuh • nyaman",
+     "Keras — Tidak pecah"
+    ]
+   },
+   "quote": "Penyanyi hebat tetap merdu walau berbisik. Sistem audio yang bagus juga begitu."
+  },
+  "9": {
+   "title": "Box midrange sebaiknya diisi apa?",
+   "intro": "Pernah bernyanyi di kamar mandi kosong? Suaranya memantul ke mana-mana. Box midrange tanpa isi mengalami hal yang sama, hanya saja ukurannya kecil.",
+   "points": [
+    {
+     "h": "1. Suara belakang",
+     "t": "Speaker mengeluarkan suara ke depan dan ke belakang. Suara belakang terperangkap di dalam box."
+    },
+    {
+     "h": "2. Memantul balik",
+     "t": "Tanpa isi, suara belakang memantul di dinding box lalu ikut keluar lewat cone. Vokal jadi bergema."
+    },
+    {
+     "h": "3. Isi menyerap",
+     "t": "Serat peredam menyerap pantulan itu. Hasilnya vokal lebih bersih dan natural."
+    },
+    {
+     "h": "4. Bukan kaos bekas",
+     "t": "Isi secukupnya, jangan dipadatkan. Dan tolong, jangan masukkan kain kaos bekas ke dalam box ya!"
+    }
+   ],
+   "solution": {
+    "h": "Audio Circle Mikrofaser",
+    "t": "Serat mikro dari Jerman yang menyerap resonansi berlebih di dalam box. Suara lebih bersih dan akurat."
+   },
+   "quote": "Box midrange tanpa isi itu seperti kamar mandi kosong. Suaranya memantul ke mana-mana.",
+   "brands": [
+    "audiocircle"
+   ]
+  },
+  "10": {
+   "title": "Kenapa speaker bawaan terdengar biasa?",
+   "intro": "Speaker bawaan itu seperti kemeja seragam pabrik. Muat untuk semua orang, tapi tidak pernah benar-benar pas. Bukan jelek, hanya dibuat untuk semua orang.",
+   "points": [
+    {
+     "h": "1. Dibuat massal",
+     "t": "Pabrik mobil membuat ribuan unit dengan biaya terbatas. Speaker bukan prioritas utama."
+    },
+    {
+     "h": "2. Bahan sederhana",
+     "t": "Umumnya memakai cone tipis dan magnet kecil. Cukup untuk bunyi, belum untuk detail."
+    },
+    {
+     "h": "3. Tanpa peredam",
+     "t": "Dipasang langsung di pintu yang bergetar, tanpa peredam. Ingat materi #4 tentang getaran body?"
+    },
+    {
+     "h": "4. Tanpa tuning",
+     "t": "Tidak disetel untuk posisi duduk dan selera Anda. Semua mobil disetel sama rata."
+    }
+   ],
+   "solution": {
+    "h": "Audiocircle · STEG",
+    "t": "Dirancang khusus untuk mobil, siap dituning untuk telinga Anda."
+   },
+   "quote": "Speaker bawaan itu seperti kemeja seragam. Muat untuk semua orang, tapi tidak pas untuk siapa pun.",
+   "brands": [
+    "audiocircle",
+    "steg"
+   ]
+  },
+  "11": {
+   "title": "Kenapa sih orang pakai super tweeter?",
+   "intro": "Masakan sudah enak. Tapi chef menaburkan sedikit bumbu terakhir sebelum disajikan, dan rasanya langsung hidup. Super tweeter adalah taburan terakhir itu. Sedikit saja, tapi terasa bedanya.",
+   "points": [
+    {
+     "h": "1. Nada paling atas",
+     "t": "Super tweeter mengurus nada paling tinggi: kilau simbal, desah napas penyanyi, gesekan senar."
+    },
+    {
+     "h": "2. Tweeter santai",
+     "t": "Tweeter utama tidak perlu memaksa sampai ujung atas. Setiap speaker bekerja di wilayah nyamannya."
+    },
+    {
+     "h": "3. Lebih lapang",
+     "t": "Banyak pendengar merasakan musik jadi lebih lapang dan \"bernapas\". Panggung suara terasa lebih hidup."
+    },
+    {
+     "h": "4. Wajib dituning",
+     "t": "Seperti bumbu, kebanyakan justru merusak. Volume dan titik potongnya harus disetel, supaya tidak tajam."
+    }
+   ],
+   "solution": {
+    "h": "Steg SST50 II • Italy",
+    "t": "Ultra Air Motion Tweeter generasi terbaru. Ringkas, presisi, dan berkelas."
+   },
+   "quote": "Super tweeter itu seperti bumbu terakhir dari chef. Sedikit saja, tapi musik langsung terasa hidup.",
+   "products": [
+    "st-sst50ii",
+    "st-sst50"
+   ],
+   "brands": [
+    "steg"
+   ]
+  },
+  "12": {
+   "title": "Subwoofer tipis vs subwoofer biasa, apa bedanya?",
+   "intro": "Sudah jadi rahasia umum: pasang subwoofer, bagasi pun habis. Liburan keluarga, koper tidak muat. Akhirnya musik yang indah kalah oleh omelan istri sepanjang jalan.",
+   "points": [
+    {
+     "h": "1. Jauh lebih tipis",
+     "t": "Kedalamannya bisa sekitar separuh subwoofer biasa. Bagian magnetnya dirancang pendek dan melebar."
+    },
+    {
+     "h": "2. Muat di mana saja",
+     "t": "Bisa di bawah jok, di balik sandaran, atau di sudut bagasi. Ruang mobil tetap lega."
+    },
+    {
+     "h": "3. Box lebih ringkas",
+     "t": "Umumnya dirancang untuk box yang kecil dan tipis. Pemasangan lebih rapi, hampir tidak terlihat."
+    },
+    {
+     "h": "4. Pilih sesuai kebutuhan",
+     "t": "Subwoofer biasa butuh box besar untuk bass paling dalam. Yang tipis untuk mobil harian yang tetap lega."
+    }
+   ],
+   "solution": {
+    "h": "Steg SQW8SE • Italy",
+    "t": "Subwoofer tipis 8 inci. Bass rapi dan bertenaga, tanpa mengorbankan ruang mobil."
+   },
+   "quote": "Bass tetap dapat, koper tetap muat, istri pun tetap tersenyum sepanjang perjalanan.",
+   "brands": [
+    "steg"
+   ]
+  },
+  "13": {
+   "title": "Car audio lebih baik dari home audio?",
+   "intro": "Jawaban jujurnya: tidak. Tapi coba hitung, berapa lama sih kita benar-benar duduk di ruang audio rumah? Dan berapa lama kita di dalam mobil?",
+   "points": [
+    {
+     "h": "1. Rumah memang ideal",
+     "t": "Ruangannya lebih luas dan tenang. Ingat materi #1? Mobil adalah ruang dengar paling sulit."
+    },
+    {
+     "h": "2. Di rumah cuma sebentar",
+     "t": "Pulang kerja sudah lelah. Baru duduk di ruang audio, istri sudah memanggil. Lagu pertama pun belum selesai."
+    },
+    {
+     "h": "3. Di mobil setiap hari",
+     "t": "Berangkat kerja, menembus macet, perjalanan luar kota. Waktu terbanyak justru kita habiskan di mobil."
+    },
+    {
+     "h": "4. Ruang konser pribadi",
+     "t": "Di mobil, Anda bebas memutar lagu favorit dan bernyanyi sesuka hati, tanpa mengganggu siapa pun."
+    }
+   ],
+   "solution": {
+    "t": "Dipasang dan dituning oleh dealer terpercaya kami."
+   },
+   "quote": "Home audio menunggu Anda di rumah. Car audio menemani Anda ke mana pun pergi.",
+   "brands": [
+    "audiocircle",
+    "steg"
+   ]
+  },
+  "14": {
+   "title": "Speaker 2\", 3\", 4\", apa bedanya?",
+   "intro": "Pelukis punya kuas kecil untuk detail halus dan kuas besar untuk warna yang tebal. Tidak ada kuas yang paling hebat, yang ada kuas yang paling pas untuk tugasnya.",
+   "points": [
+    {
+     "h": "1. Ukuran 2\": detail",
+     "t": "Kecil dan ringan. Suaranya menyebar lebar, cocok di dashboard atau pilar. Nada bawahnya memang terbatas."
+    },
+    {
+     "h": "2. Ukuran 3\": seimbang",
+     "t": "Detail tetap terjaga, vokal mulai terasa penuh. Masih muat di banyak dashboard mobil."
+    },
+    {
+     "h": "3. Ukuran 4\": vokal tebal",
+     "t": "Bisa turun lebih rendah. Vokal terasa lebih berisi dan menyambung mulus ke midbass. Butuh tempat lebih besar."
+    },
+    {
+     "h": "4. Kuncinya: pas",
+     "t": "Bukan yang paling besar paling bagus. Pilih sesuai lubang di mobil, posisi, dan sistem yang dibangun."
+    }
+   ],
+   "solution": {
+    "h": "Audio Circle & Steg",
+    "t": "Semua ukuran tersedia. Tinggal pilih yang paling pas untuk mobil Anda."
+   },
+   "quote": "Ukuran speaker itu seperti kuas pelukis. Bukan yang paling besar, tapi yang paling pas tugasnya.",
+   "brands": [
+    "audiocircle",
+    "steg"
+   ]
+  },
+  "15": {
+   "title": "Apa guna DSP, dan kenapa wajib?",
+   "intro": "Orkestra berisi pemain-pemain hebat. Tapi tanpa dirigen, semuanya main sendiri-sendiri. DSP adalah dirigen untuk semua speaker di mobil Anda.",
+   "points": [
+    {
+     "h": "1. Mengatur waktu",
+     "t": "Speaker yang dekat ditahan sedikit, supaya suara semua speaker tiba bersamaan. Panggung suara pas di depan, tidak miring."
+    },
+    {
+     "h": "2. Membagi tugas",
+     "t": "Setiap speaker hanya diberi nada yang cocok. Tweeter nada tinggi, midbass nada bawah. Semua bekerja di wilayahnya."
+    },
+    {
+     "h": "3. Merapikan nada",
+     "t": "Bass yang bengkak diratakan, treble yang tajam dihaluskan. Semua gangguan dari kabin dirapikan."
+    },
+    {
+     "h": "4. Kenapa wajib?",
+     "t": "Kabin mobil tidak pernah ideal. Tanpa DSP, speaker semahal apa pun tetap terdengar biasa."
+    }
+   ],
+   "solution": {
+    "h": "Steg DSP Series • Italy",
+    "t": "Tersedia banyak varian, sesuai jumlah channel dan watt yang dibutuhkan sistem Anda."
+   },
+   "quote": "Speaker bagus itu pemain hebat, DSP adalah dirigennya. Tanpa dirigen, orkestra semahal apa pun tidak akan kompak.",
+   "products": [
+    "st-dsps6",
+    "st-dsps12",
+    "st-mdsp8",
+    "st-ssdsp12"
+   ],
+   "brands": [
+    "steg"
+   ]
+  },
+  "16": {
+   "title": "Apa yang menentukan kabel speaker bagus?",
+   "intro": "Kabel speaker itu seperti selang air dari keran ke taman. Supaya air sampai deras, selangnya harus besar, bersih, tidak kepanjangan, dan tertata rapi.",
+   "points": [
+    {
+     "h": "1. Ukuran kabel",
+     "t": "Makin tebal kabelnya, makin kecil hambatannya. Tenaga ampli sampai utuh, bass lebih terkendali."
+    },
+    {
+     "h": "2. Kualitas tembaga",
+     "t": "Tembaga murni menghantar lebih baik dan tahan korosi. Hati-hati kabel aluminium berlapis tembaga yang terlihat mirip."
+    },
+    {
+     "h": "3. Panjang kabel",
+     "t": "Makin panjang kabel, makin besar hambatannya. Pasang secukupnya, jangan dilebihkan lalu digulung."
+    },
+    {
+     "h": "4. Susunan kabel",
+     "t": "Positif dan negatif yang dipilin rapat membuat sinyal tetap rapi dan lebih tahan gangguan dari kabel lain."
+    }
+   ],
+   "solution": {
+    "h": "Kabel Speaker Diosdela Musica",
+    "t": "Dirancang dengan memperhatikan keempat dasar ini, dipilin rapi untuk kabin mobil."
+   },
+   "quote": "Kabel speaker itu seperti selang air. Besar, bersih, secukupnya, dan rapi, maka tenaga sampai utuh ke speaker.",
+   "products": [
+    "dm-cable"
+   ],
+   "brands": [
+    "dios"
+   ]
+  },
+  "17": {
+   "title": "Kabel solid core vs serabut, apa bedanya?",
+   "intro": "Bayangkan tongkat kayu dan sapu lidi. Yang satu utuh dan kokoh, yang lain terdiri dari banyak lidi yang lentur. Sifatnya beda, dan masing-masing punya tempat terbaiknya.",
+   "points": [
+    {
+     "h": "1. Solid core",
+     "t": "Satu kawat tembaga utuh. Jalurnya rapi dan bentuknya stabil. Tapi kaku, bisa retak bila sering tertekuk atau terus bergetar."
+    },
+    {
+     "h": "2. Serabut (stranded)",
+     "t": "Banyak serat tembaga halus. Lentur, tahan getaran mobil, dan mudah dirutekan. Kualitasnya bergantung pada kualitas serat."
+    },
+    {
+     "h": "3. Kombinasi",
+     "t": "Mengambil kestabilan solid core dan kelenturan serabut dalam satu kabel. Tidak perlu memilih salah satu."
+    },
+    {
+     "h": "4. Uji dengar kami",
+     "t": "Tim tuning Concerto menemukan: solid core di negatif dan serabut di positif membuat lapisan suara terdengar lebih rapi."
+    }
+   ],
+   "solution": {
+    "h": "Diosdela Musica Quadruple",
+    "t": "Solid core dan serabut dalam satu kabel, disusun persis sesuai hasil uji dengar kami."
+   },
+   "quote": "Tidak perlu memilih antara solid core atau serabut. Quadruple memakai keduanya, di tempat yang paling pas.",
+   "products": [
+    "dm-cable",
+    "dm-rca"
+   ],
+   "brands": [
+    "dios"
+   ]
+  },
+  "18": {
+   "title": "Bahan kabel: mana yang terbaik?",
+   "intro": "Semua logam bisa mengalirkan listrik, tapi tidak sama lancarnya. Seperti jalan, ada yang lebar dan mulus, ada yang sempit. Fisika mengukurnya dengan satu hal: daya hantar listrik.",
+   "points": [
+    {
+     "h": "1. Aluminium",
+     "t": "Murah, tapi daya hantarnya hanya sekitar 60% tembaga. Waspadai yang disamarkan berlapis tembaga."
+    },
+    {
+     "h": "2. Tembaga",
+     "t": "Daya hantarnya nyaris setara perak, harganya jauh lebih masuk akal. Pilihan paling seimbang."
+    },
+    {
+     "h": "3. Perak",
+     "t": "Penghantar terbaik, tapi hanya sekitar 5% di atas tembaga dengan harga jauh lebih mahal."
+    },
+    {
+     "h": "4. Emas",
+     "t": "Daya hantarnya di bawah tembaga, tapi tidak berkarat. Karena itu dipakai untuk melapisi konektor."
+    }
+   ],
+   "solution": {
+    "label": "DAYA HANTAR LISTRIK (PERAK = 100)",
+    "items": [
+     "Perak 100",
+     "Tembaga 95",
+     "Emas 65",
+     "Aluminium 60"
+    ]
+   },
+   "quote": "Perak paling lancar, tembaga paling seimbang, emas paling tahan karat, aluminium paling murah. Pilih sesuai tugasnya."
+  },
+  "19": {
+   "title": "Apa itu kapasitor, dan kenapa mobil butuh?",
+   "intro": "Air PDAM lewat pipa panjang melemah saat semua keran dibuka. Karena itu rumah punya toren. Kapasitor adalah toren listrik untuk ampli Anda.",
+   "points": [
+    {
+     "h": "1. Tangki listrik mini",
+     "t": "Kapasitor menyimpan muatan listrik lalu melepasnya sangat cepat. Rumus fisikanya sederhana: muatan = kapasitas × tegangan."
+    },
+    {
+     "h": "2. Bass butuh tenaga kilat",
+     "t": "Setiap pukulan bass menarik arus besar dalam sepersekian detik. Aki dan kabel yang panjang tidak bisa merespons secepat itu."
+    },
+    {
+     "h": "3. Tegangan pun turun",
+     "t": "Tegangan sesaat anjlok. Tandanya lampu meredup saat bass, dan bass terasa lembek."
+    },
+    {
+     "h": "4. Kecil dan besar",
+     "t": "Yang kecil dipasang langsung di unit. Yang besar untuk sistem bertenaga besar."
+    }
+   ],
+   "solution": {
+    "h": "Harrison Laboratory",
+    "t": "Kapasitor untuk unit, dan HL Ultracap 300F untuk sistem."
+   },
+   "quote": "Kapasitor itu toren listrik di dekat ampli. Saat bass memukul, tenaga tetap deras."
+  },
+  "20": {
+   "title": "Awas, kapasitor abal-abal!",
+   "intro": "Pernah beli keripik kemasan besar, tapi isinya separuh angin? Banyak kapasitor di pasaran juga begitu: gagah di luar, kosong di dalam.",
+   "points": [
+    {
+     "h": "1. Casing besar, isi kecil",
+     "t": "Tabungnya besar dan berat, tapi saat dibuka isinya kapasitor kecil. Yang dibayar casing, bukan kemampuannya."
+    },
+    {
+     "h": "2. Angka tidak jujur",
+     "t": "Tertulis besar di label, aslinya jauh di bawah. Menurut fisika, kapasitas separuh berarti cadangan energinya juga tinggal separuh."
+    },
+    {
+     "h": "3. Kenapa bisa meledak?",
+     "t": "Tegangan kerjanya di bawah tegangan mobil, atau hambatan dalamnya tinggi. Kapasitor memanas, cairan di dalamnya menguap, tekanan naik, lalu pecah."
+    },
+    {
+     "h": "4. Cara memilih aman",
+     "t": "Tegangan kerja harus di atas tegangan sistem mobil. Ukuran dan berat wajar. Beli dari distributor resmi, pasang dengan sekring."
+    }
+   ],
+   "solution": {
+    "h": "Harrison Laboratory",
+    "t": "Spesifikasi jujur sesuai labelnya, resmi dari distributor terpercaya."
+   },
+   "quote": "Kapasitor itu dinilai dari isinya, bukan dari tabungnya. Jangan sampai bayar mahal untuk angin."
+  }
+ }
+}

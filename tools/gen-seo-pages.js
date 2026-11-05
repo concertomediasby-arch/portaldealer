@@ -7,6 +7,8 @@
      • /partner/             — daftar provinsi & kota partner resmi
      • /partner/<slug>/      — partner per kota DAN per provinsi      → /?kota=<slug>
      • /mobil/ & /mobil/<slug>/ (Tahap 8 B) — contoh pemasangan per model mobil (Galeri + Hall of Fame) → /?mobil=<slug>
+     • /academy/ & /academy/<no>/ (5 Nov 2026, pratinjau .mockup/seo-academy/) — materi Concerto Academy: teks infografis disalin
+       kata per kata (tools/data/academy-text.json) + gambar, Solusi Concerto → produk, JSON-LD Article  → /?acad=<no>
      • /produk/<id>/ (5 Nov 2026, pratinjau .mockup/seo-produk/) — halaman per produk: foto, spesifikasi, SRP, partner resmi per
        provinsi, prestasi Hall of Fame, sering dipasang bersama, produk serupa + JSON-LD Product (Offer = SRP)  → /?p=<id>
    lalu menulis ulang sitemap.xml (beranda + semua halaman ini; lastmod hanya berubah bila isi halaman berubah).
@@ -293,18 +295,80 @@ for (const { b, l, p } of allProds) {
     ld2, css2: PCSS, img: ph.length ? SITE + abs(ph[0]) : '', body }) });
 }
 
+// ── Concerto Academy (5 Nov 2026, permintaan pemilik — pratinjau .mockup/seo-academy/ disetujui) ──
+// /academy/ (daftar per seri) + /academy/<no>/ : teks infografis disalin kata per kata di tools/data/academy-text.json
+// (materi bawaan repo) — materi tambahan dari portal (tools/data/academy-extra.json, ditulis bot) tampil dengan judul + gambar saja.
+const ACAD_BASE = vm.runInNewContext('(' + fs.readFileSync(path.join(ROOT, 'js/core.js'), 'utf8').match(/const ACADEMY = (\[[\s\S]*?\n\]);/)[1] + ')');
+let ACAD_TXT = {}; try { ACAD_TXT = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/academy-text.json'), 'utf8')).items || {}; } catch (e) {}
+let ACAD_EXTRA = []; try { ACAD_EXTRA = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/academy-extra.json'), 'utf8')).items || []; } catch (e) {}
+const pad2 = n => String(n).padStart(2, '0');
+const STORE = SUPA_URL + '/storage/v1/object/public/showcase/';
+const ACAD = [...ACAD_BASE.filter(a => (a.date || '') <= today).map(a => ({ no: a.no, title: a.title, series: a.series || 'Fundamental', img: `/assets/academy/fundamental-${pad2(a.no)}.webp`, thumb: `/assets/academy/fundamental-${pad2(a.no)}-thumb.webp` })),
+  ...ACAD_EXTRA.filter(x => !ACAD_BASE.some(a => a.no === x.no)).map(a => ({ no: a.no, title: a.title, series: a.series || 'Fundamental', img: STORE + a.img, thumb: STORE + (a.thumb || a.img) }))]
+  .sort((a, b) => a.no - b.no);
+const ACSS = `.ac{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:30px;margin-top:16px;align-items:start}
+.ac .pic{position:sticky;top:70px}.ac .pic img{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.1);display:block}
+.ac .pic small{display:block;color:#8b92a1;font-size:12px;margin-top:8px;text-align:center}
+.kick{font:700 11.5px Sora,sans-serif;letter-spacing:.14em;color:#d8b26a;text-transform:uppercase}
+.intro{font-size:17px;color:#d6d9df;line-height:1.7}
+.pts{display:grid;gap:12px;margin:18px 0}.pts div{border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#111317;padding:14px 16px}
+.pts h3{margin:0 0 4px;font:700 17px Sora,sans-serif}.pts p{margin:0;color:#c6cad2}
+.sol{border:1px solid rgba(216,178,106,.55);border-radius:16px;padding:16px 18px;background:linear-gradient(160deg,rgba(216,178,106,.1),transparent);margin:18px 0}
+.sol .k2{font:700 11.5px Sora;letter-spacing:.14em;color:#d8b26a}.sol b{display:block;font:700 17px Sora;margin:4px 0}.sol p{margin:0 0 12px;color:#cfd3da}
+.sol ul{margin:6px 0 12px;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}.sol li{border:1px solid rgba(216,178,106,.35);border-radius:10px;padding:6px 11px;font-size:13.5px}
+.quote{border-left:3px solid #6fd3e6;background:#0f1a22;border-radius:0 14px 14px 0;padding:14px 18px;margin:18px 0}.quote .k2{font:700 11.5px Sora;letter-spacing:.14em;color:#6fd3e6}.quote p{margin:6px 0 0;font-style:italic;font-size:16px;color:#e2e6ea}
+.nav2{display:flex;justify-content:space-between;gap:10px;margin:22px 0 0}.nav2 a{flex:1;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 14px;text-decoration:none;font-size:13.5px}.nav2 a small{display:block;color:#8b92a1;font-size:11.5px}.nav2 a:last-child{text-align:right}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.mg a{border:1px solid rgba(255,255,255,.09);border-radius:12px;background:#111317;overflow:hidden;text-decoration:none}.mg img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block}.mg span{display:block;padding:8px 10px;font-size:12.5px}.mg small{display:block;color:#d8b26a;font:700 10px Sora;letter-spacing:.1em}
+@media(max-width:820px){.ac{grid-template-columns:1fr}.ac .pic{position:static;max-width:420px;margin:0 auto}}`;
+const acadUrl = a => `/academy/${a.no}/`;
+const acadTile = a => `<a href="${acadUrl(a)}"><img src="${esc(a.thumb)}" alt="${esc(a.title)}" loading="lazy"><span><small>${esc(a.series.toUpperCase())} #${a.no}</small>${esc(a.title)}</span></a>`;
+for (const [i, a] of ACAD.entries()) {
+  const t = ACAD_TXT[a.no] || null, url = acadUrl(a), prev = ACAD[i - 1], next = ACAD[i + 1];
+  const sol = t?.solution, prods = (t?.products || []).map(id => allProds.find(x => x.p.id === id)).filter(Boolean);
+  const bs = (t?.brands || []).map(id => BRANDS.find(b => b.id === id)).filter(Boolean);
+  const plain = t ? [t.intro, ...t.points.map(p => `${p.h} ${p.t}`), sol?.label, sol?.h, sol?.t, ...(sol?.items || []), t.quote].filter(Boolean).join(' ') : '';
+  const body = `<div class="ac"><div class="pic"><img src="${esc(a.img)}" alt="${esc(a.title + (t ? ' — ' + t.intro : ''))}"><small>Infografis asli Concerto Academy #${a.no}</small></div><div>
+    <div class="kick">Concerto Academy · ${esc(a.series)} #${a.no}</div><h1>${esc(a.title)}</h1>
+    ${t ? `<p class="intro">${esc(t.intro)}</p>
+    <div class="pts">${t.points.map(p => `<div>${p.h ? `<h3>${esc(p.h)}</h3>` : ''}<p>${esc(p.t)}</p></div>`).join('')}</div>
+    ${sol ? `<div class="sol"><div class="k2">${esc(sol.label || 'SOLUSI CONCERTO')}</div>${sol.h ? `<b>${esc(sol.h)}</b>` : ''}${sol.t ? `<p>${esc(sol.t)}</p>` : ''}${sol.items ? `<ul>${sol.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      ${prods.length ? `<div class="grid">${prods.map(x => card(x.b, x.p)).join('')}</div>` : bs.length ? `<div class="chips">${bs.map(b => `<a href="/brand/${b.id}/">Katalog ${esc(b.name)} ›</a>`).join('')}</div>` : ''}</div>` : ''}
+    ${t.quote ? `<div class="quote"><div class="k2">OOO… JADI BEGINI</div><p>“${esc(t.quote)}”</p></div>` : ''}`
+    : `<p class="intro">Materi Concerto Academy #${a.no} dari Concerto Audio Indonesia — baca infografis lengkapnya di gambar atau di CAI Hub.</p>`}
+    <div class="acts" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px"><a class="btn" href="/?acad=${a.no}">Baca di CAI Hub ›</a><a class="btn ghost" href="/partner/">📍 Tanya partner resmi</a></div>
+    <div class="nav2">${prev ? `<a href="${acadUrl(prev)}"><small>‹ Sebelumnya · #${prev.no}</small>${esc(prev.title)}</a>` : '<span></span>'}${next ? `<a href="${acadUrl(next)}"><small>Berikutnya · #${next.no} ›</small>${esc(next.title)}</a>` : '<span></span>'}</div>
+    </div></div>
+    <h2>Materi Concerto Academy lainnya</h2><div class="mg">${ACAD.filter(x => x !== a).slice(Math.max(0, i - 4), Math.max(0, i - 4) + 8).map(acadTile).join('')}</div>`;
+  const desc = (t ? t.intro : `Concerto Academy ${a.series} #${a.no}: ${a.title} — materi edukasi audio mobil dari Concerto Audio Indonesia.`).slice(0, 300);
+  const ld2 = { '@context': 'https://schema.org', '@type': 'Article', headline: a.title, description: desc, image: [/^https?:/.test(a.img) ? a.img : SITE + a.img],
+    inLanguage: 'id', url: SITE + url, isPartOf: { '@type': 'CreativeWorkSeries', name: 'Concerto Academy — ' + a.series },
+    author: { '@type': 'Organization', name: 'Concerto Audio Indonesia' }, publisher: { '@type': 'Organization', name: 'Concerto Audio Indonesia', logo: { '@type': 'ImageObject', url: SITE + '/assets/icons/icon-512.png' } },
+    learningResourceType: 'Infographic', ...(plain ? { articleBody: plain } : {}) };
+  pages.push({ url, html: page({ url, title: `${a.title} — Concerto Academy #${a.no} | CAI Hub`, desc,
+    crumbs: [['CAI Hub', '/'], ['Concerto Academy', '/academy/'], [`#${a.no}`, url]], open: `/?acad=${a.no}`, ld2, css2: ACSS,
+    img: /^https?:/.test(a.img) ? a.img : SITE + a.img, body }) });
+}
+if (ACAD.length) {
+  const series = [...new Set(ACAD.map(a => a.series))];
+  pages.push({ url: '/academy/', html: page({ url: '/academy/', title: `Concerto Academy — ${ACAD.length} Materi Edukasi Audio Mobil | CAI Hub`,
+    desc: `${ACAD.length} materi Concerto Academy dari Concerto Audio Indonesia: ${ACAD.slice(0, 4).map(a => a.title).join(' · ')} — dan lainnya.`.slice(0, 300),
+    crumbs: [['CAI Hub', '/'], ['Concerto Academy', '/academy/']], open: '/?acad=', css2: ACSS,
+    body: `<h1>Concerto Academy — Edukasi Audio Mobil</h1><p class="lead">${ACAD.length} materi singkat dari Concerto Audio Indonesia untuk memahami audio mobil: ruang dengar kabin, speaker, peredam, DSP, kabel, hingga kelistrikan.</p>
+      ${series.map(sr => `<h2>${esc(sr)} <small>${ACAD.filter(a => a.series === sr).length}</small></h2><div class="mg">${ACAD.filter(a => a.series === sr).map(acadTile).join('')}</div>`).join('')}` }) });
+}
+
 // ── Tulis: hapus halaman lama di folder milik skrip ini, lalu tulis semua ──
 // lastmod sitemap hanya berubah untuk halaman yang isinya berubah (skrip ini juga dijalankan bot tiap ±15 menit)
 const oldHtml = new Map(), oldMod = new Map();
 try { for (const m of fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>([^<]+)<\/loc><lastmod>([^<]+)<\/lastmod>/g)) oldMod.set(m[1].replace(SITE, ''), m[2]); } catch (e) {}
 for (const pg of pages) { try { oldHtml.set(pg.url, fs.readFileSync(path.join(ROOT, pg.url, 'index.html'), 'utf8')); } catch (e) {} }
-for (const dir of ['brand', 'kategori', 'partner', 'mobil', 'produk']) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
+for (const dir of ['brand', 'kategori', 'partner', 'mobil', 'produk', 'academy']) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
 for (const pg of pages) { const d = path.join(ROOT, pg.url); fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'index.html'), pg.html); }
 const sm = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${SITE}/</loc><lastmod>${oldMod.get('/') || today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-${pages.map(pg => `  <url><loc>${SITE}${pg.url}</loc><lastmod>${oldHtml.get(pg.url) === pg.html && oldMod.get(pg.url) ? oldMod.get(pg.url) : today}</lastmod><changefreq>weekly</changefreq><priority>${/^\/(brand|kategori|mobil)\//.test(pg.url) ? '0.8' : /^\/produk\//.test(pg.url) ? '0.7' : '0.6'}</priority></url>`).join('\n')}
+${pages.map(pg => `  <url><loc>${SITE}${pg.url}</loc><lastmod>${oldHtml.get(pg.url) === pg.html && oldMod.get(pg.url) ? oldMod.get(pg.url) : today}</lastmod><changefreq>weekly</changefreq><priority>${/^\/(brand|kategori|mobil)\//.test(pg.url) ? '0.8' : /^\/(produk|academy)\//.test(pg.url) ? '0.7' : '0.6'}</priority></url>`).join('\n')}
 </urlset>
 `;
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sm);
-console.log(`${pages.length} halaman: ${pages.filter(p => p.url.startsWith('/brand/')).length} brand · ${pages.filter(p => p.url.startsWith('/kategori/')).length} kategori · ${pages.filter(p => p.url.startsWith('/partner/')).length} partner (index + provinsi + kota) · ${pages.filter(p => p.url.startsWith('/mobil/')).length} mobil · ${pages.filter(p => p.url.startsWith('/produk/')).length} produk · sitemap.xml diperbarui (${PARTNERS.length} partner)`);
+console.log(`${pages.length} halaman: ${pages.filter(p => p.url.startsWith('/brand/')).length} brand · ${pages.filter(p => p.url.startsWith('/kategori/')).length} kategori · ${pages.filter(p => p.url.startsWith('/partner/')).length} partner (index + provinsi + kota) · ${pages.filter(p => p.url.startsWith('/mobil/')).length} mobil · ${pages.filter(p => p.url.startsWith('/produk/')).length} produk · ${pages.filter(p => p.url.startsWith('/academy/')).length} academy · sitemap.xml diperbarui (${PARTNERS.length} partner)`);

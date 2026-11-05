@@ -49,7 +49,14 @@ async function loadData() {
     .map(r => Object.fromEntries(Object.entries({ r: r.region, n: r.name, c: r.city, a: r.address, wa: r.wa, ig: r.ig, map: r.map }).filter(([, v]) => v)));
   // 📅 Kalender Acara: hanya acara publik yang tayang (RLS anon); tabel belum dibuat → dilewati
   let events = []; try { events = await rest('cai_events?select=id,title,kind,start_at,end_at,online,city,venue,poster,body&order=start_at'); } catch (e) { console.warn('acara dilewati:', e.message); }
-  return { news, gallery, partners, events };
+  // 🎓 Materi Academy tambahan dari portal (Storage publik showcase/academy/items.json) — hanya yang sudah tayang
+  let academy = null; try {
+    const r = await fetch(`${SUPA_URL}/storage/v1/object/public/showcase/academy/items.json?t=${Date.now()}`);
+    if (r.ok) { const now = Date.now(), today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);
+      academy = ((await r.json()).items || []).filter(a => a && a.no && a.title && a.img && (a.at ? Date.parse(a.at) <= now : (a.date || '') <= today))
+        .map(a => ({ no: a.no, date: a.date, title: a.title, series: a.series || '', img: a.img, thumb: a.thumb || '' })).sort((a, b) => a.no - b.no); }
+  } catch (e) { console.warn('academy dilewati:', e.message); }
+  return { news, gallery, partners, events, academy };
 }
 
 const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
@@ -242,6 +249,8 @@ function videoFrame(url, out, at) {
         photos: (g.photos || []).filter(p => p?.path && !String(p.path).startsWith('pending/')).map(p => Object.fromEntries(Object.entries({ path: p.path, type: p.type, area: p.area, wa: p.wa, waT: p.waT, pos: p.pos }).filter(([, v]) => v != null && v !== '' && v !== false))) })) }, 'gallery'],
     ['tools/data/partners.json', { _note: 'Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.',
       updated: new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10), partners }, 'partners'],
+    ...(Array.isArray(data.academy) ? [['tools/data/academy-extra.json', { _note: 'Salinan materi Concerto Academy yang diunggah lewat portal & sudah tayang (Storage publik showcase/academy/items.json) — ditulis otomatis oleh tools/gen-live-cards.js; dipakai tools/gen-seo-pages.js untuk /academy/. Jangan diedit manual.',
+      items: data.academy }, 'items']] : []),
   ].filter(() => !process.env.LIVE_FIXTURE || process.env.LIVE_WRITE_DATA);
   const dataChanged = dataFiles.filter(([f, obj, key]) => { try { return JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'))[key]) !== JSON.stringify(obj[key]); } catch (e) { return true; } });
   const livePath = path.join(ROOT, 'share/live.json');

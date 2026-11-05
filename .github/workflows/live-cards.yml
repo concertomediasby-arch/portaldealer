@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "CAI Hub Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A n g m pp e share/live.json share/img tools/data mobil partner brand kategori produk sitemap.xml
+          git add -A n g m pp e share/live.json share/img tools/data mobil partner brand kategori produk academy sitemap.xml
           if git diff --cached --quiet; then echo "Tidak ada perubahan"; exit 0; fi
           git commit -m "Kartu WA & halaman Google diperbarui otomatis"
           for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep 5; done
