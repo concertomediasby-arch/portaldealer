@@ -4054,6 +4054,15 @@ body.logged-in .guest-only { display: none !important; }
 /* 🚗 Galeri: jadwal tayang (4 Nov 2026) */
 .gl-draft.sched { background: #0b1219; color: #6fd3e6; border: 1px solid #6fd3e6; }
 .gl-tag.sc { color: #6fd3e6; border-color: #2aa6bd; }
+/* Galeri: mobil "profil saja" (5 Nov 2026) — hanya terlihat label untuk Editor */
+.gl-draft.pf { background: #1a1408; color: #efcd8b; border: 1px solid #d8b26a; }
+.gl-tag.pf { color: var(--accent); border-color: var(--accent); }
+button.gl-tag.pfb { cursor: pointer; background: #d8b26a; color: #1a1408; border-color: #d8b26a; font-weight: 700; }
+.gl-where { border: 1px solid rgba(216,178,106,.4); background: rgba(216,178,106,.06); border-radius: 12px; padding: 10px 12px; }
+#gl-form .gl-where label.cwf-chk { display: flex; flex-direction: row; gap: 9px; align-items: flex-start; margin: 7px 0; text-transform: none; letter-spacing: normal; font: 500 14px/1.4 var(--f-body); color: var(--fg); }
+#gl-form .gl-where label.cwf-chk input { flex: none; width: 18px; height: 18px; margin: 1px 0 0; }
+#gl-form .gl-where .cwf-h { font: 700 14px var(--f-display); margin-bottom: 2px; }
+.gl-where .gl-wh { color: var(--fg-muted); font-size: 12px; }
 .gl-queue .gl-grid { margin-top: 8px; }
 .gl-queue .cw-queue-h span { font: 500 12px var(--f-body); color: var(--fg-muted); margin-left: 6px; }
 .gl-sched { margin-top: 2px; }

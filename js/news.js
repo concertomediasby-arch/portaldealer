@@ -479,7 +479,7 @@ function nwFrZoom(v) { if (!nwForm) return; nwForm.fr.z = Math.round(Number(v) *
 function nwFrReset() { if (!nwForm) return; nwForm.fr = { x: 50, y: 50, z: 1 }; renderNwForm(); }
 const nwFrSuffix = f => (f && (f.x !== 50 || f.y !== 50 || f.z !== 1)) ? `#${f.x},${f.y},${f.z}` : '';
 function nwProjFormHtml(f) {
-  const gl = typeof glLive === 'function' && glItems ? glLive() : [];
+  const gl = typeof glLiveAll === 'function' && glItems ? glLiveAll() : [];
   const carOf = g => [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ');
   return `<div class="cwf-l nw-pjf">🔧 Project &amp; partner pemasang <small>(opsional — untuk berita kontes / acara)</small>
     ${f.projects.length ? `<div class="nw-pjf-h"><span>Mobil</span><span>Peserta / pemilik</span><span>Hasil (opsional)</span><span>Partner pemasang</span><span></span></div>` : ''}

@@ -197,7 +197,7 @@ const pfFind = slug => adPublic().find(d => shareSlug(d.n) === slug) || null;
 // Instalasi & prestasi milik partner (nama di data dicocokkan lewat hofDealer — alias Hall of Fame ikut)
 function pfData(name) {
   const k = normKey(name), own = n => { const d = carPartner(n); return d ? normKey(d.n) === k : normKey(n || '') === k; };
-  const gl = (typeof glLive === 'function' && glItems ? glLive() : []).filter(g => own(g.dealer));
+  const gl = (typeof glLiveAll === 'function' && glItems ? glLiveAll() : []).filter(g => own(g.dealer));   // termasuk mobil "profil saja"
   const hof = (typeof hofData === 'function' ? hofData() : []).filter(e => own(e.dealer)).sort((a, b) => (a.place || 9) - (b.place || 9) || (b.year || 0) - (a.year || 0));
   return { gl, hof };
 }
@@ -221,8 +221,8 @@ function renderPartner() {
       <div class="pf-badges"><span class="pf-ok">✓ Partner resmi CAI</span>${hof.length ? `<span class="pf-tr">🏆 ${hof.length} prestasi${cnt(1) ? ' · ' + cnt(1) + ' Juara 1' : ''}</span>` : ''}</div></div>
       <button class="car-share" onclick="pfShare('${pfSel}')" title="Bagikan ke WhatsApp" aria-label="Bagikan">${SHARE_ICON}</button></div>
     <div class="pf-acts">${d.wa ? `<a class="wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}<a href="${adMaps(d)}" target="_blank" rel="noopener">📍 Maps</a>${d.ig ? `<a href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">📸 Instagram</a>` : ''}</div>
-    <div class="car-stats"><div><b>${gl.length}</b><small>instalasi Galeri</small></div><div><b>${hof.length}</b><small>prestasi kompetisi</small></div><div><b>${cars.size}</b><small>model mobil</small></div></div>
-    ${gl.length ? `<div class="car-h">📷 Hasil pemasangan <span>Galeri</span></div><div class="car-gal">${gl.map(g => {
+    <div class="car-stats"><div><b>${gl.length}</b><small>hasil pemasangan</small></div><div><b>${hof.length}</b><small>prestasi kompetisi</small></div><div><b>${cars.size}</b><small>model mobil</small></div></div>
+    ${gl.length ? `<div class="car-h">📷 Hasil pemasangan <span>${gl.length} mobil</span></div><div class="car-gal">${gl.map(g => {
       return `<button onclick="openGlDetail('${g.id}')"><span class="car-mw">${carMedia(g, CAR_ICON(g.body))}</span><div><b>${escHtml(glTitle(g))}${g.car_year ? ' · ' + g.car_year : ''}</b><small>${(g.photos || []).length} foto/video${g.hof_id ? ' · 🏆 Juara' : ''}</small></div></button>`; }).join('')}</div>` : ''}
     ${hof.length ? `<div class="car-h">🏆 Prestasi <span class="hof-ms">${[1, 2, 3].map(pl => cnt(pl) ? hofMedal(pl, cnt(pl)) : '').join('')}</span></div><div class="car-list">${hof.map(e => `<button class="car-it" onclick="openHofWin('${e.id}')">${hofMedal(e.place)}<div>
       <b>${e.place >= 1 && e.place <= 3 ? 'Juara ' + e.place : escHtml(e.award || 'Penghargaan')}${e.cls ? ' · ' + escHtml(e.cls) : ''}</b><small>${escHtml([e.event, e.car, e.name].filter(Boolean).join(' · '))}</small></div><i>›</i></button>`).join('')}</div>` : ''}
