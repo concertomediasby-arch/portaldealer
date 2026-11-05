@@ -2900,7 +2900,10 @@ function productShare() {
 /* ── Bagikan materi Academy (3 Nov 2026): gambar materi + judul + link ?acad=<no> ── */
 let acadPending = null;
 function acadShare() {
-  const a = acadReleased().find(x => x.no === acadCurrent); if (!a) return;
+  // 5 Nov 2026 (laporan pemilik: Fundamental 21–30 tidak bisa dibagikan): viewer memakai acadShown() — Editor ikut melihat materi
+  // TERJADWAL — sedangkan tombol ini dulu hanya mencari di acadReleased(), jadi materi terjadwal diam tanpa pesan.
+  const a = acadShown().find(x => x.no === acadCurrent); if (!a) return showToast('Materi ini tidak ditemukan.');
+  if (!acadDue(a) && !confirm(`Materi ini dijadwalkan tayang ${acadWhen(a)}. Penerima baru bisa membukanya setelah itu.\n\nTetap bagikan sekarang?`)) return;
   const text = `🎓 *Concerto Academy #${a.no}: ${a.title}*\nIlmu dari lapangan, bukan dari brosur.\n\nBaca materinya di CAI Hub:\n${ACADEMY.some(x => x.no === a.no) ? sharePage('a', a.no) : PORTAL_URL + '/?acad=' + a.no}`;
   shareWa(text, 'a:' + a.no);
 }

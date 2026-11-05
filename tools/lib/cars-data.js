@@ -58,4 +58,4 @@ function build(gallery, partners) {
   };
   return { cars, partnerData, partnerOf };
 }
-module.exports = { build, prod, shareSlug, normKey, BRANDS, HALL_OF_FAME };
+module.exports = { build, prod, shareSlug, normKey, carSplit, carKey, hofCarKey, BRANDS, HALL_OF_FAME };

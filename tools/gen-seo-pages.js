@@ -7,6 +7,8 @@
      • /partner/             — daftar provinsi & kota partner resmi
      • /partner/<slug>/      — partner per kota DAN per provinsi      → /?kota=<slug>
      • /mobil/ & /mobil/<slug>/ (Tahap 8 B) — contoh pemasangan per model mobil (Galeri + Hall of Fame) → /?mobil=<slug>
+     • /hall-of-fame/ & /hall-of-fame/<event-tahun>/ (5 Nov 2026, pratinjau .mockup/seo-hof/) — hasil kompetisi dari HALL_OF_FAME:
+       mobil juara, tabel per kelas, partner pemasang, JSON-LD Event  → /?hof=
      • /academy/ & /academy/<no>/ (5 Nov 2026, pratinjau .mockup/seo-academy/) — materi Concerto Academy: teks infografis disalin
        kata per kata (tools/data/academy-text.json) + gambar, Solusi Concerto → produk, JSON-LD Article  → /?acad=<no>
      • /produk/<id>/ (5 Nov 2026, pratinjau .mockup/seo-produk/) — halaman per produk: foto, spesifikasi, SRP, partner resmi per
@@ -295,6 +297,88 @@ for (const { b, l, p } of allProds) {
     ld2, css2: PCSS, img: ph.length ? SITE + abs(ph[0]) : '', body }) });
 }
 
+// ── Hall of Fame (5 Nov 2026, permintaan pemilik — pratinjau .mockup/seo-hof/ disetujui) ──
+// /hall-of-fame/ + /hall-of-fame/<event-tahun>/ : hasil kompetisi ASLI dari HALL_OF_FAME (katalog.js) — kelas, juara, peserta, mobil,
+// partner pemasang; foto mobil HANYA sampul kartu WA pilihan Editor (aman plat nomor). Tanpa harga.
+const HCSS = `.kick{font:700 11.5px Sora,sans-serif;letter-spacing:.14em;color:#d8b26a;text-transform:uppercase}
+.ev{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:26px;align-items:start}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}.meta span{border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:5px 12px;font-size:13px;color:#cfd3da}
+table.res{width:100%;border-collapse:collapse;font-size:14px;border:1px solid rgba(255,255,255,.09)}
+.res th{text-align:left;font:600 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:#8b92a1;padding:10px 12px;background:#0e1014;border-bottom:1px solid rgba(255,255,255,.08)}
+.res td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top}.res td small{display:block;color:#8b92a1;font-size:12px;margin-top:2px}
+.res a{color:#e9c98a;text-decoration:none}.res a:hover{text-decoration:underline}.res .gl{display:inline-block;margin-top:4px;font:600 11.5px Inter;border:1px solid rgba(216,178,106,.5);border-radius:8px;padding:2px 7px;color:#d8b26a}
+.res tr.cl td{background:#141109;font:700 13px Sora,sans-serif;color:#d8b26a;padding:8px 12px}
+.side .bx{border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#111317;padding:14px 16px;margin-bottom:14px}.side h3{margin:0 0 10px;font:700 15px Sora,sans-serif}
+.rk{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13.5px}.rk:first-of-type{border-top:0}.rk i{font-style:normal;color:#8b92a1;font:700 12px Sora,sans-serif}.rk a{text-decoration:none}.rk em{font-style:normal;font-size:12.5px;color:#d8b26a;white-space:nowrap}
+.cars{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.cr{border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#111317;overflow:hidden;text-decoration:none;display:block}.cr:hover{border-color:#d8b26a}
+.cr .ph{aspect-ratio:16/9;background:linear-gradient(135deg,#1b1e24,#0f1115);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;overflow:hidden}.cr .ph img{width:100%;height:100%;object-fit:cover}.cr .ph b{position:absolute;left:10px;top:10px;font:700 11px Inter;background:#d8b26a;color:#111;border-radius:6px;padding:2px 7px}
+.cr .in{padding:10px 12px}.cr .in b{display:block;font:700 15px Sora,sans-serif}.cr .in small{color:#8b92a1;font-size:12.5px}.cr .in em{display:block;font-style:normal;color:#e9c98a;font-size:12.5px;margin-top:4px}
+.evc{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}.evc a{border:1px solid rgba(216,178,106,.4);border-radius:16px;background:linear-gradient(160deg,rgba(216,178,106,.12),rgba(216,178,106,.02));padding:16px 18px;text-decoration:none;display:block}
+.evc b{display:block;font:800 20px Sora,sans-serif}.evc small{color:#aab0bc;font-size:13px}.evc .m{margin-top:10px;font-size:14px}
+@media(max-width:900px){.ev{grid-template-columns:1fr}.res th:nth-child(4),.res td:nth-child(4){display:none}}`;
+const STORE = SUPA_URL + '/storage/v1/object/public/showcase/';
+const HOF_ALL = HOF.filter(e => e.event && e.year);
+const hofEvKey = e => `${e.event} ${e.year}`;
+const hofEvUrl = e => `/hall-of-fame/${shareSlug(hofEvKey(e))}/`;
+const hofEvents = [...new Map(HOF_ALL.map(e => [hofEvKey(e), e])).values()];
+const HMON = { jan: 1, feb: 2, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, agu: 8, agt: 8, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, des: 12, dec: 12 };
+function hofDates(e) {   // "17–18 Okt 2026" → ['2026-10-17', '2026-10-18']
+  const m = String(e.date || '').match(/(\d{1,2})(?:\s*[–-]\s*(\d{1,2}))?\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/); if (!m || !HMON[m[3].toLowerCase()]) return null;
+  const d = n => `${m[4]}-${String(HMON[m[3].toLowerCase()]).padStart(2, '0')}-${String(n).padStart(2, '0')}`; return [d(m[1]), d(m[2] || m[1])];
+}
+const hofPartner = n => CD.partnerOf(n);
+const hofPLink = n => { const d = hofPartner(n); return d && d.c ? `<a href="/partner/${citySlug(d.c)}/">${esc(d.n)}</a>` : esc(n || '—'); };
+const hofCarOf = e => { const sp = CARS.carSplit(e.car); if (!sp) return null; const k = CARS.carKey(sp.make, sp.model); return CD.cars.find(c => c.key === k) || null; };
+const hofGl = e => GALLERY.find(g => g.hof_id === e.id || HOF.some(x => x.id === g.hof_id && CARS.hofCarKey(x) === CARS.hofCarKey(e)));
+const hofWaPhoto = g => { const p = (g?.photos || []).find(x => x.wa && x.type !== 'video' && x.path && !String(x.path).startsWith('pending/')); return p ? STORE + String(p.path).split('#')[0] : ''; };
+const hofPlace = e => e.place >= 1 && e.place <= 3 ? 'Juara ' + e.place : (e.award || 'Penghargaan');
+function hofCarCards(es) {
+  const m = new Map(); for (const e of es) { const k = CARS.hofCarKey(e); if (!m.has(k)) m.set(k, { e, n: 0, best: 9 }); const o = m.get(k); o.n++; if ((e.place || 9) < o.best) { o.best = e.place || 9; o.e = e; } }
+  return [...m.values()].sort((a, b) => a.best - b.best || b.n - a.n).map(o => { const c = hofCarOf(o.e), g = hofGl(o.e), ph = hofWaPhoto(g);
+    const ps = (o.e.products || []).map(id => CARS.prod(id)?.p.name).filter(Boolean);
+    return `<a class="cr" href="${c ? `/mobil/${c.slug}/` : `/?hof=${encodeURIComponent(o.e.id)}`}"><div class="ph">${ph ? `<img src="${esc(ph)}" alt="${esc(o.e.car)}" loading="lazy">` : (g ? '📷' : '🚗')}<b>${medal(o.best)} ${esc(o.best <= 3 ? 'Juara ' + o.best : hofPlace(o.e))}${o.n > 1 ? ' · ' + o.n + ' prestasi' : ''}</b></div>
+      <div class="in"><b>${esc(o.e.car || '—')}</b><small>${esc([o.e.name, o.e.dealer].filter(Boolean).join(' · '))}</small><em>${ps.length ? '🔧 ' + esc(ps.slice(0, 3).join(', ')) + (ps.length > 3 ? '…' : '') : o.e.team ? 'Tim ' + esc(o.e.team.map(id => BRANDS.find(b => b.id === id)?.name || id).join(' · ')) : ''}</em></div></a>`; });
+}
+const hofRank = es => { const by = new Map(); for (const e of es) { const d = hofPartner(e.dealer), k = d ? d.n : (e.dealer || '—'); if (!by.has(k)) by.set(k, { n: k, j: [0, 0, 0, 0], t: 0 }); const o = by.get(k); o.t++; o.j[(e.place >= 1 && e.place <= 3 ? e.place : 4) - 1]++; }
+  return [...by.values()].sort((a, b) => b.j[0] - a.j[0] || b.j[1] - a.j[1] || b.t - a.t || a.n.localeCompare(b.n)); };
+const hofRankHtml = es => hofRank(es).map((d, i) => `<div class="rk"><i>${i + 1}</i>${hofPLink(d.n)}<em>${[['🥇', d.j[0]], ['🥈', d.j[1]], ['🥉', d.j[2]]].filter(x => x[1]).map(x => x[0] + x[1]).join(' ')}</em></div>`).join('');
+for (const e0 of hofEvents) {
+  const es = HOF_ALL.filter(e => hofEvKey(e) === hofEvKey(e0)), url = hofEvUrl(e0), cls = [...new Set(es.map(e => e.cls || '—'))];
+  const j1 = es.filter(e => e.place === 1).length, cards = hofCarCards(es), brandsUsed = [...new Set(es.flatMap(e => e.team || (e.brand ? [e.brand] : [])))].map(id => BRANDS.find(b => b.id === id)).filter(Boolean);
+  const where = [e0.venue, e0.city].filter(Boolean).join(', ');
+  const rows = cls.map(c => `<tr class="cl"><td colspan="4">${esc(c)}</td></tr>` + es.filter(e => (e.cls || '—') === c).sort((a, b) => (a.place || 9) - (b.place || 9)).map(e => { const car = hofCarOf(e), g = hofGl(e);
+    return `<tr><td>${medal(e.place)} <b>${esc(hofPlace(e))}</b></td><td><b>${esc(e.name || '—')}</b></td><td>${car ? `<a href="/mobil/${car.slug}/">${esc(e.car)}</a>` : esc(e.car || '—')}${g ? `<br><a class="gl" href="/?gl=${encodeURIComponent(g.id)}">📷 Foto di Galeri</a>` : ''}${(e.products || []).length ? `<small>🔧 ${e.products.length} perangkat CAI</small>` : ''}</td><td>${hofPLink(e.dealer)}</td></tr>`; }).join('')).join('');
+  const body = `<div class="kick">Hall of Fame · Kompetisi Car Audio</div><h1>Hasil ${esc(hofEvKey(e0))}${e0.city ? ' — ' + esc(e0.city) : ''}</h1>
+    <div class="meta">${e0.date ? `<span>📅 ${esc(e0.date)}</span>` : ''}${where ? `<span>📍 ${esc(where)}</span>` : ''}<span>🏆 ${es.length} prestasi</span><span>🥇 ${j1} Juara 1</span><span>${cls.length} kelas</span></div>
+    <p class="lead">Daftar mobil juara ${esc(hofEvKey(e0))}${e0.city ? ' di ' + esc(e0.city) : ''} yang dipasang partner resmi Concerto Audio Indonesia${brandsUsed.length ? ' dengan perangkat ' + esc(brandsUsed.map(b => b.name).join(', ').replace(/, ([^,]*)$/, ' & $1')) : ''} — kelas, peringkat, peserta, mobil, dan partner pemasangnya.</p>
+    <div class="ev"><div><h2>Mobil juara <small>${cards.length} mobil</small></h2><div class="cars">${cards.join('')}</div>
+      <h2>Hasil per kelas <small>${cls.length} kelas</small></h2><table class="res"><thead><tr><th>Peringkat</th><th>Peserta</th><th>Mobil</th><th>Partner pemasang</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="side"><div class="bx"><h3>🏪 Partner pemasang juara</h3>${hofRankHtml(es)}</div>
+      ${brandsUsed.length ? `<div class="bx"><h3>🔊 Brand tim juara</h3><div class="chips">${brandsUsed.map(b => `<a href="/brand/${b.id}/">${esc(b.name)}</a>`).join('')}</div></div>` : ''}
+      <div class="bx"><h3>🏆 Kompetisi lainnya</h3>${hofEvents.filter(x => x !== e0).map(x => `<div class="rk"><i>›</i><a href="${hofEvUrl(x)}">${esc(hofEvKey(x))}</a><em></em></div>`).join('') || '<p style="margin:0;color:#8b92a1;font-size:13px">Bertambah otomatis saat hasil kompetisi berikutnya dimasukkan.</p>'}<p style="margin:10px 0 0"><a href="/hall-of-fame/" style="color:#d8b26a;font-size:13px">Semua Hall of Fame ›</a></p></div></div></div>`;
+  const dt = hofDates(e0);
+  const ld2 = dt ? { '@context': 'https://schema.org', '@type': 'Event', name: hofEvKey(e0) + (e0.city ? ' — ' + e0.city : ''), startDate: dt[0], endDate: dt[1],
+    eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode', url: SITE + url,
+    location: { '@type': 'Place', name: e0.venue || e0.city || 'Indonesia', address: { '@type': 'PostalAddress', addressLocality: e0.city || '', addressCountry: 'ID' } },
+    description: `Hasil ${hofEvKey(e0)}: ${es.length} prestasi (${j1} Juara 1) mobil yang dipasang partner resmi Concerto Audio Indonesia.`,
+    organizer: { '@type': 'Organization', name: String(e0.event).split(' ')[0] } } : null;
+  pages.push({ url, html: page({ url, title: `Hasil ${hofEvKey(e0)}${e0.city ? ' ' + e0.city : ''} — Mobil Juara & Partner Pemasang | CAI Hub`,
+    desc: `Hasil ${hofEvKey(e0)}${e0.city ? ' di ' + e0.city : ''}${e0.date ? ' (' + e0.date + ')' : ''}: ${es.length} prestasi, ${j1} Juara 1 di ${cls.length} kelas — mobil juara, peserta & partner pemasang resmi Concerto Audio Indonesia.`,
+    crumbs: [['CAI Hub', '/'], ['Hall of Fame', '/hall-of-fame/'], [hofEvKey(e0), url]], open: `/?hof=${encodeURIComponent(es[0].id)}`, ld2, css2: HCSS, log: true, body }) });
+}
+if (hofEvents.length) {
+  const j1 = HOF_ALL.filter(e => e.place === 1).length, rk = hofRank(HOF_ALL);
+  pages.push({ url: '/hall-of-fame/', html: page({ url: '/hall-of-fame/', title: `Hall of Fame — Mobil Juara Kompetisi Car Audio | CAI Hub`,
+    desc: `${HOF_ALL.length} prestasi kompetisi (${j1} Juara 1) mobil yang dipasang partner resmi Concerto Audio Indonesia: ${hofEvents.map(hofEvKey).join(', ')}.`,
+    crumbs: [['CAI Hub', '/'], ['Hall of Fame', '/hall-of-fame/']], open: '/?hof=', css2: HCSS,
+    body: `<div class="kick">Hall of Fame</div><h1>Hall of Fame — Mobil Juara Kompetisi Car Audio</h1>
+      <p class="lead">Prestasi kompetisi mobil yang dipasang partner resmi Concerto Audio Indonesia — lihat hasil per kompetisi, mobil juara, dan partner pemasangnya.</p>
+      <div class="st"><span><b>${HOF_ALL.length}</b>prestasi</span><span><b>${j1}</b>Juara 1</span><span><b>${hofEvents.length}</b>kompetisi</span><span><b>${rk.length}</b>partner pemasang</span></div>
+      <h2>Kompetisi</h2><div class="evc">${hofEvents.map(e0 => { const es = HOF_ALL.filter(e => hofEvKey(e) === hofEvKey(e0)); return `<a href="${hofEvUrl(e0)}"><small>${esc([e0.date, [e0.venue, e0.city].filter(Boolean).join(', ')].filter(Boolean).join(' · '))}</small><b>${esc(hofEvKey(e0))}</b><div class="m">🏆 ${es.length} prestasi · 🥇 ${es.filter(e => e.place === 1).length} Juara 1 · ${new Set(es.map(e => e.cls)).size} kelas</div><div class="m" style="color:#d8b26a">Lihat hasil lengkap ›</div></a>`; }).join('')}</div>
+      <h2>Mobil juara</h2><div class="cars">${hofCarCards(HOF_ALL).slice(0, 12).join('')}</div>
+      <h2>Partner pemasang juara</h2><div class="side"><div class="bx">${hofRankHtml(HOF_ALL)}</div></div>` }) });
+}
+
 // ── Concerto Academy (5 Nov 2026, permintaan pemilik — pratinjau .mockup/seo-academy/ disetujui) ──
 // /academy/ (daftar per seri) + /academy/<no>/ : teks infografis disalin kata per kata di tools/data/academy-text.json
 // (materi bawaan repo) — materi tambahan dari portal (tools/data/academy-extra.json, ditulis bot) tampil dengan judul + gambar saja.
@@ -302,7 +386,6 @@ const ACAD_BASE = vm.runInNewContext('(' + fs.readFileSync(path.join(ROOT, 'js/c
 let ACAD_TXT = {}; try { ACAD_TXT = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/academy-text.json'), 'utf8')).items || {}; } catch (e) {}
 let ACAD_EXTRA = []; try { ACAD_EXTRA = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/academy-extra.json'), 'utf8')).items || []; } catch (e) {}
 const pad2 = n => String(n).padStart(2, '0');
-const STORE = SUPA_URL + '/storage/v1/object/public/showcase/';
 const ACAD = [...ACAD_BASE.filter(a => (a.date || '') <= today).map(a => ({ no: a.no, title: a.title, series: a.series || 'Fundamental', img: `/assets/academy/fundamental-${pad2(a.no)}.webp`, thumb: `/assets/academy/fundamental-${pad2(a.no)}-thumb.webp` })),
   ...ACAD_EXTRA.filter(x => !ACAD_BASE.some(a => a.no === x.no)).map(a => ({ no: a.no, title: a.title, series: a.series || 'Fundamental', img: STORE + a.img, thumb: STORE + (a.thumb || a.img) }))]
   .sort((a, b) => a.no - b.no);
@@ -362,13 +445,13 @@ if (ACAD.length) {
 const oldHtml = new Map(), oldMod = new Map();
 try { for (const m of fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>([^<]+)<\/loc><lastmod>([^<]+)<\/lastmod>/g)) oldMod.set(m[1].replace(SITE, ''), m[2]); } catch (e) {}
 for (const pg of pages) { try { oldHtml.set(pg.url, fs.readFileSync(path.join(ROOT, pg.url, 'index.html'), 'utf8')); } catch (e) {} }
-for (const dir of ['brand', 'kategori', 'partner', 'mobil', 'produk', 'academy']) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
+for (const dir of ['brand', 'kategori', 'partner', 'mobil', 'produk', 'academy', 'hall-of-fame']) fs.rmSync(path.join(ROOT, dir), { recursive: true, force: true });
 for (const pg of pages) { const d = path.join(ROOT, pg.url); fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'index.html'), pg.html); }
 const sm = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${SITE}/</loc><lastmod>${oldMod.get('/') || today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-${pages.map(pg => `  <url><loc>${SITE}${pg.url}</loc><lastmod>${oldHtml.get(pg.url) === pg.html && oldMod.get(pg.url) ? oldMod.get(pg.url) : today}</lastmod><changefreq>weekly</changefreq><priority>${/^\/(brand|kategori|mobil)\//.test(pg.url) ? '0.8' : /^\/(produk|academy)\//.test(pg.url) ? '0.7' : '0.6'}</priority></url>`).join('\n')}
+${pages.map(pg => `  <url><loc>${SITE}${pg.url}</loc><lastmod>${oldHtml.get(pg.url) === pg.html && oldMod.get(pg.url) ? oldMod.get(pg.url) : today}</lastmod><changefreq>weekly</changefreq><priority>${/^\/(brand|kategori|mobil|hall-of-fame)\//.test(pg.url) ? '0.8' : /^\/(produk|academy)\//.test(pg.url) ? '0.7' : '0.6'}</priority></url>`).join('\n')}
 </urlset>
 `;
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sm);
-console.log(`${pages.length} halaman: ${pages.filter(p => p.url.startsWith('/brand/')).length} brand · ${pages.filter(p => p.url.startsWith('/kategori/')).length} kategori · ${pages.filter(p => p.url.startsWith('/partner/')).length} partner (index + provinsi + kota) · ${pages.filter(p => p.url.startsWith('/mobil/')).length} mobil · ${pages.filter(p => p.url.startsWith('/produk/')).length} produk · ${pages.filter(p => p.url.startsWith('/academy/')).length} academy · sitemap.xml diperbarui (${PARTNERS.length} partner)`);
+console.log(`${pages.length} halaman: ${pages.filter(p => p.url.startsWith('/brand/')).length} brand · ${pages.filter(p => p.url.startsWith('/kategori/')).length} kategori · ${pages.filter(p => p.url.startsWith('/partner/')).length} partner (index + provinsi + kota) · ${pages.filter(p => p.url.startsWith('/mobil/')).length} mobil · ${pages.filter(p => p.url.startsWith('/produk/')).length} produk · ${pages.filter(p => p.url.startsWith('/academy/')).length} academy · ${pages.filter(p => p.url.startsWith('/hall-of-fame/')).length} hall-of-fame · sitemap.xml diperbarui (${PARTNERS.length} partner)`);
