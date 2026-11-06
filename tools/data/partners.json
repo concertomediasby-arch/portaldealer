@@ -1,7 +1,16 @@
 {
- "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — dipakai tools/gen-seo-pages.js. Perbarui (minta Claude) setiap ada perubahan partner di portal.",
- "updated": "2026-11-04",
+ "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
+ "updated": "2026-11-06",
  "partners": [
+  {
+   "r": "Bali",
+   "n": "Blitz Tabanan",
+   "c": "Tabanan",
+   "a": "Jln. Ir Soekarno (Sebelah SMK Biwi)",
+   "wa": "6287776666263",
+   "ig": "blitztabanan",
+   "map": "https://maps.app.goo.gl/9ESCpRe5ipZshDng6"
+  },
   {
    "r": "Banten",
    "n": "HS Audio",
@@ -39,9 +48,18 @@
    "r": "Banten",
    "n": "Precision Audio",
    "c": "Tangerang Selatan",
-   "a": "Jl. Boulevard Gading Serpong, Ruko Batavia Odessa Blok AA02 No. 07",
+   "a": "PSW Ruko Batavia Jl. Boulevard Raya Gading Serpong, Blok AA-02 No. 7,",
    "wa": "6281283523559",
    "ig": "precisionaudio.tangerang"
+  },
+  {
+   "r": "Banten",
+   "n": "SP Audioworks",
+   "c": "Tangerang Selatan",
+   "a": "Ruko Bolsena Blok A/1, Gading Serpong",
+   "wa": "62817150698",
+   "ig": "sp.audioworks",
+   "map": "https://maps.app.goo.gl/zr8YzPVbDYToaGen9"
   },
   {
    "r": "DIY Yogyakarta",
@@ -110,6 +128,15 @@
    "wa": "6285288020119",
    "ig": "surya_kencana_motor",
    "map": "https://maps.app.goo.gl/yW4EFMMZFnfXXpuh9"
+  },
+  {
+   "r": "DKI Jakarta",
+   "n": "SoundX Audioworks",
+   "c": "Jakarta Barat",
+   "a": "Jl. Taman Palem Mutiara No.7 Blk B5,",
+   "wa": "6282211888735",
+   "ig": "soundxaudioworks",
+   "map": "https://share.google/C94vJ0IJI77fqimsY"
   },
   {
    "r": "Jawa Barat",
@@ -322,6 +349,15 @@
    "a": "Jln. Pelita Timur No.69",
    "wa": "6282150859800",
    "ig": "projectaudio_sampit"
+  },
+  {
+   "r": "Kepulauan Riau",
+   "n": "Nai Audioworks",
+   "c": "Batam",
+   "a": "Jln. Laksmana Bintan No. 02",
+   "wa": "628117708277",
+   "ig": "naiaudioworks_batam",
+   "map": "https://maps.app.goo.gl/4AUZ5DcoivnWs2Nb7"
   },
   {
    "r": "Sulawesi Selatan",

@@ -2,6 +2,144 @@
  "_note": "Salinan Galeri Instalasi yang tayang (data publik) — ditulis otomatis oleh tools/gen-live-cards.js (GitHub Actions). Jangan diedit manual.",
  "gallery": [
   {
+   "id": "1758f6cf-6dac-4f62-9ef2-71ba8f880690",
+   "car_make": "Mitsubishi",
+   "car_model": "Xpander",
+   "car_year": 2026,
+   "body": "MPV",
+   "dealer": "Creativ Variasi",
+   "city": "Yogyakarta",
+   "products": [
+    "ac-hlw6",
+    "ac-hlm3",
+    "ac-hlt25",
+    "st-drcv4",
+    "ac-iqles10a",
+    "ac-microfiber",
+    "st-s8d",
+    "dm-deadening"
+   ],
+   "hof_id": null,
+   "photos": [
+    {
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943116659-0.webp",
+     "area": "DSP"
+    },
+    {
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943117089-1.webp",
+     "area": "Tweeter"
+    },
+    {
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943117366-2.webp",
+     "area": "Remote / Controller"
+    },
+    {
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943117617-3.webp",
+     "area": "Midrange"
+    },
+    {
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943117883-4.webp",
+     "area": "Subwoofer"
+    },
+    {
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943118132-5.webp",
+     "area": "Bagasi / Sub"
+    }
+   ]
+  },
+  {
+   "id": "65876377-acc2-4bcb-9f4d-81cd31961100",
+   "car_make": "Honda",
+   "car_model": "CRV",
+   "car_year": 2026,
+   "body": "SUV",
+   "dealer": "Atmos Kudus",
+   "city": "Kudus",
+   "products": [
+    "ac-clt27",
+    "ac-blw6",
+    "st-s10",
+    "st-sa8w",
+    "st-mdsp10d",
+    "zl-argentum",
+    "st-drcv4"
+   ],
+   "hof_id": null,
+   "photos": [
+    {
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871748407-0.mp4",
+     "type": "video",
+     "area": "Tampak Luar"
+    },
+    {
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871756340-1.webp",
+     "area": "Amplifier",
+     "wa": true
+    },
+    {
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871756655-2.webp",
+     "area": "Subwoofer"
+    },
+    {
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871756933-3.webp",
+     "area": "Subwoofer"
+    },
+    {
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871757172-4.webp",
+     "area": "DSP"
+    },
+    {
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871757450-5.webp",
+     "area": "Remote / Controller"
+    }
+   ]
+  },
+  {
+   "id": "7113ce09-8db9-4d98-ada2-013bed59be24",
+   "car_make": "Toyota",
+   "car_model": "Zenix",
+   "car_year": 2026,
+   "body": "MPV",
+   "dealer": "Central Garage",
+   "city": "Surabaya",
+   "products": [
+    "ac-prow6c",
+    "ac-prom3c",
+    "ac-prot28",
+    "zl-argentum",
+    "ac-bls10",
+    "dm-rca",
+    "dm-fuseanl",
+    "og-reddragon",
+    "st-ssdsp16"
+   ],
+   "hof_id": null,
+   "photos": [
+    {
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862450495-0.mp4",
+     "type": "video",
+     "area": "Tampak Luar"
+    },
+    {
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862454633-1.webp",
+     "area": "Amplifier"
+    },
+    {
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862454890-2.webp",
+     "area": "Amplifier"
+    },
+    {
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862455188-3.webp",
+     "area": "Amplifier"
+    },
+    {
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862455480-4.webp",
+     "area": "DSP",
+     "pos": "33 58"
+    }
+   ]
+  },
+  {
    "id": "fbf13fba-adfc-46b0-a7dd-94e42f997b70",
    "car_make": "Hyundai",
    "car_model": "Palisade",

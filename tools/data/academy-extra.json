@@ -1,0 +1,21 @@
+{
+ "_note": "Salinan materi Concerto Academy yang diunggah lewat portal & sudah tayang (Storage publik showcase/academy/items.json) — ditulis otomatis oleh tools/gen-live-cards.js; dipakai tools/gen-seo-pages.js untuk /academy/. Jangan diedit manual.",
+ "items": [
+  {
+   "no": 21,
+   "date": "2026-11-05",
+   "title": "Watt Besar Belum Tentu Bagus",
+   "series": "Fundamental",
+   "img": "academy/21-1793783993559.webp",
+   "thumb": "academy/21-1793783993559-thumb.webp"
+  },
+  {
+   "no": 22,
+   "date": "2026-11-05",
+   "title": "Dudukan Speaker Perlu Dibevel",
+   "series": "Fundamental",
+   "img": "academy/22-1793784004535.webp",
+   "thumb": "academy/22-1793784004535-thumb.webp"
+  }
+ ]
+}
