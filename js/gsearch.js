@@ -38,7 +38,7 @@ function gsCompute(q) {
   R.acad = (typeof acadReleased === 'function' ? acadReleased() : []).filter(a => gsHit([a.title, a.series].join(' '), q));
   R.news = (typeof nwLive === 'function' && nwItems ? nwLive() : []).filter(n => gsHit([n.title, n.summary, n.category].join(' '), q));
   // 📅 Kalender Acara (js/events.js): acara mendatang dulu, lalu arsip
-  R.events = typeof evUpcoming === 'function' && evItems ? [...evUpcoming(), ...evArchive()].filter(e => e.published && gsHit([e.title, e.city, e.venue, (e.partners || []).join(' '), evKind_(e)[1]].join(' '), q)) : [];
+  R.events = typeof evUpcoming === 'function' && evItems && evOn() ? [...evUpcoming(), ...evArchive()].filter(e => e.published && gsHit([e.title, e.city, e.venue, (e.partners || []).join(' '), evKind_(e)[1]].join(' '), q)) : [];
   R.any = !!(R.cars.length || R.partners.length || R.prods.length || R.acad.length || R.news.length || R.events.length);
   return R;
 }

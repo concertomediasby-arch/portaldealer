@@ -158,6 +158,10 @@ create policy "cway push own" on public.cway_push_subs for all to authenticated
 create table if not exists public.cway_push_config (id int primary key default 1 check (id = 1), public_key text, private_key text);
 alter table public.cway_push_config enable row level security;
 
+-- 🃏 Pemicu bot kartu WA (6 Nov 2026): sidik data publik terakhir yang sudah dikirim ke GitHub. RLS tanpa policy = hanya fungsi.
+create table if not exists public.card_dispatch (id int primary key default 1 check (id = 1), sig text, sent_at timestamptz);
+alter table public.card_dispatch enable row level security;
+
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 select cron.unschedule('cway-push') where exists (select 1 from cron.job where jobname = 'cway-push');
@@ -394,7 +398,7 @@ function pnHtml(where) {
   const sel = active ? Object.fromEntries(PN_KEYS.map(k => [k, !!f[k]])) : pnSel;
   const chk = (k, ico, lbl, sub) => `<label class="pn-chk"><input type="checkbox" ${sel[k] ? 'checked' : ''} ${st === 'busy' ? 'disabled' : ''} onchange="pnToggle('${k}', this.checked)"><span>${ico} ${lbl}${sub ? ` <small>· ${sub}</small>` : ''}</span></label>`;
   const opts = chk('weekly', '🗓', 'Ringkasan mingguan', 'Senin 08.00 · semua yang baru dalam satu notifikasi') + (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + (canGd ? chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') + chk('stock', '📦', 'Stok produk pantauan', 'khusus partner') : '')
-    + chk('news', '📰', 'News CAI terbaru') + chk('event', '📅', 'Acara & kompetisi baru') + chk('acad', '🎓', 'Materi Academy baru') + chk('product', '🆕', 'Produk baru') + chk('gallery', '🚗', 'Galeri Instalasi baru');
+    + chk('news', '📰', 'News CAI terbaru') + (typeof evOn !== 'function' || evOn() ? chk('event', '📅', 'Acara & kompetisi baru') : '') + chk('acad', '🎓', 'Materi Academy baru') + chk('product', '🆕', 'Produk baru') + chk('gallery', '🚗', 'Galeri Instalasi baru');
   let title, text = '', btn = '';
   if (st === 'unsupported') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = pushUnsupportedMsg(); }
   else if (st === 'denied') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP, lalu muat ulang.'; }

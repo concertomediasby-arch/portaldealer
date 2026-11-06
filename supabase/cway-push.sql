@@ -145,6 +145,10 @@ create policy "cway push own" on public.cway_push_subs for all to authenticated
 create table if not exists public.cway_push_config (id int primary key default 1 check (id = 1), public_key text, private_key text);
 alter table public.cway_push_config enable row level security;
 
+-- 🃏 Pemicu bot kartu WA (6 Nov 2026): sidik data publik terakhir yang sudah dikirim ke GitHub. RLS tanpa policy = hanya fungsi.
+create table if not exists public.card_dispatch (id int primary key default 1 check (id = 1), sig text, sent_at timestamptz);
+alter table public.card_dispatch enable row level security;
+
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 select cron.unschedule('cway-push') where exists (select 1 from cron.job where jobname = 'cway-push');

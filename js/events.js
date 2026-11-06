@@ -139,14 +139,25 @@ async function loadEvents(force) {
     evDashRender();
     if (typeof hlRender === 'function') hlRender();   // 📅 Acara di headline Dashboard
     if (document.getElementById('view-events')?.classList.contains('active')) renderEvents();
-    if (evPending) { const id = evPending; evPending = null; openEvents(id); }
+    if (evPending && evOn()) { const id = evPending; evPending = null; openEvents(id); }
   })();
   return evLoading;
 }
-function eventsAuthChanged() { if (typeof supabase !== 'undefined' && supabase) loadEvents(true); evWatch = null; }
+/* ⛔ Kalender Acara khusus Editor (6 Nov 2026, permintaan pemilik): pengunjung, partner & Admin staff tidak melihat menu,
+   slide 📅 Acara di headline Dashboard, hasil pencarian, pilihan notifikasi 📅, dan notifikasi "Acara baru" tidak dikirim.
+   Tampilkan lagi untuk semua: EV_ON_ALL = true + hapus class editor-only dari nav-events/mnav-events (index.html). */
+const EV_ON_ALL = false;
+function evOn() { return EV_ON_ALL || (typeof isEditor === 'function' && isEditor()); }
+function eventsAuthChanged() {
+  if (typeof supabase !== 'undefined' && supabase) loadEvents(true); evWatch = null;
+  if (!evOn() && document.getElementById('view-events')?.classList.contains('active')) showView('dashboard');
+  if (evOn() && evPending) { const id = evPending; evPending = null; evOpenLinked(id); }
+  if (typeof hlRender === 'function') hlRender();
+}
 
 /* ── View Kalender Acara ── */
 function openEvents(id) {
+  if (!evOn()) { showView('dashboard'); return; }
   showView('events');
   document.getElementById('nav-events')?.classList.add('active');
   document.getElementById('mnav-events')?.classList.add('active');
@@ -161,7 +172,7 @@ function openEvents(id) {
     else showToast('Acara tidak ditemukan — mungkin khusus partner (masuk dengan Kode Akses) atau sudah dihapus.', 6000);
   }
 }
-function evOpenLinked(id) { if (!evItems) { evPending = id || '1'; openEvents(); } else openEvents(id); }
+function evOpenLinked(id) { if (!evOn()) { evPending = id || '1'; return; } if (!evItems) { evPending = id || '1'; openEvents(); } else openEvents(id); }
 function setEvTab(t) { evTab = t; evDay = ''; renderEvents(); }
 function setEvKind(k) { evKind = k; renderEvents(); }
 function evSearch(v) { evQ = v; renderEvents(true); }
@@ -346,6 +357,7 @@ function evDashRender() { const el = document.getElementById('dash-ev'); if (el)
 /* ── 📅 Acara di headline Dashboard (#cway-hl, js/news.js hlSlides) — 5 Nov 2026, permintaan pemilik ── */
 const EV_HL_MAX = 2;
 function evHlList() {
+  if (!evOn()) return [];
   const lim = Date.now() + EV_DASH_DAYS * 864e5;
   return (evItems || []).filter(e => e.published && !evPast(e) && evStart(e) <= lim && (e.public !== false || authUser))
     .sort((a, b) => evStart(a) - evStart(b)).slice(0, EV_HL_MAX);
@@ -451,7 +463,7 @@ function renderEvForm() {
     ${f.kind === 'kompetisi' ? `<label class="ev-fl">Hasil di Hall of Fame <small>(opsional — nama event persis, untuk arsip)</small></label><input class="ev-in" list="ev-dl-hof" value="${escHtml(f.hof_event)}" oninput="evF('hof_event', this.value)" placeholder="mis. EMMA Heat 02"><datalist id="ev-dl-hof">${hofEvents.map(x => `<option value="${escHtml(x)}">`).join('')}</datalist>` : ''}
     <label class="ev-chk"><input type="checkbox" ${f.public ? 'checked' : ''} onchange="evFr('public', this.checked)"> Tampil untuk publik <small>(kosong = 🔒 khusus partner yang login)</small></label>
     <label class="ev-chk"><input type="checkbox" ${f.published ? 'checked' : ''} onchange="evFr('published', this.checked)"> Tayang <small>(kosong = draf, hanya Editor)</small></label>
-    ${wasLive ? '<p class="ev-note">🔔 Notifikasi “Acara baru” untuk acara ini sudah pernah dikirim.</p>' : `<label class="ev-chk"><input type="checkbox" ${f.notify ? 'checked' : ''} onchange="evFr('notify', this.checked)"> Kirim notifikasi “📅 Acara baru” ke HP pengunjung saat tayang${f.public ? '' : ' <small>(khusus partner: tanpa judul)</small>'}</label>`}
+    ${!EV_ON_ALL ? '<p class="ev-note">🔒 Kalender Acara sedang khusus Editor — notifikasi “Acara baru” tidak dikirim.</p>' : wasLive ? '<p class="ev-note">🔔 Notifikasi “Acara baru” untuk acara ini sudah pernah dikirim.</p>' : `<label class="ev-chk"><input type="checkbox" ${f.notify ? 'checked' : ''} onchange="evFr('notify', this.checked)"> Kirim notifikasi “📅 Acara baru” ke HP pengunjung saat tayang${f.public ? '' : ' <small>(khusus partner: tanpa judul)</small>'}</label>`}
     <div class="ev-acts"><button class="gt-btn" onclick="saveEv()" ${f.busy ? 'disabled' : ''}>${f.busy ? 'Menyimpan…' : 'Simpan Acara'}</button><button class="gt-btn ghost" onclick="closeEvForm()">Batal</button></div></div>`;
 }
 const evIso = (d, t) => d ? new Date(`${d}T${t || '00:00'}:00+07:00`).toISOString() : null;
@@ -479,7 +491,7 @@ async function saveEv() {
       hof_event: f.kind === 'kompetisi' ? (f.hof_event.trim() || null) : null, public: !!f.public, published: !!f.published, notify: !!f.notify, updated_at: new Date().toISOString() };
     const q = f.id ? supabase.from(EV_TABLE).update(row).eq('id', f.id).select().single() : supabase.from(EV_TABLE).insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
-    if (data.published && data.notify && !data.push_at && typeof pushNotify === 'function') pushNotify('event', data.id);   // "📅 Acara baru" (sekali per acara, dicek server)
+    if (EV_ON_ALL && data.published && data.notify && !data.push_at && typeof pushNotify === 'function') pushNotify('event', data.id);   // "📅 Acara baru" (sekali per acara, dicek server)
     const oldP = evPosterPath(old?.poster);
     if (oldP && oldP !== evPosterPath(poster) && /^events\//.test(oldP)) supabase.storage.from('showcase').remove([oldP]).catch(() => {});
     if (f.prev) URL.revokeObjectURL(f.prev);

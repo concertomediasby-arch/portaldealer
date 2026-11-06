@@ -402,6 +402,40 @@ async function monthlyReport(key: Key) {
   return sent;
 }
 
+// 🃏 Picu bot kartu WA (6 Nov 2026, permintaan pemilik): jadwal GitHub Actions sering molor berjam-jam, jadi kartu WA berita/Galeri
+// baru telat. Tiap menit fungsi ini menghitung "sidik" data publik yang dipakai bot (berita & mobil Galeri tayang, acara publik,
+// partner, materi Academy yang sudah tayang); bila berubah → panggil workflow live-cards.yml lewat GitHub API (workflow_dispatch).
+// Butuh secret GH_DISPATCH_TOKEN (token GitHub fine-grained: hanya repo portaldealer, izin Actions = Read and write) — tanpa
+// secret = dilewati. Sidik terakhir disimpan di tabel card_dispatch (SQL supabase/cway-push.sql). Jeda min. 3 menit antar-panggilan.
+const GH_REPO = 'concertomediasby-arch/portaldealer', GH_WORKFLOW = 'live-cards.yml';
+async function cardsDispatch(acadAll: Acad[]) {
+  const token = Deno.env.get('GH_DISPATCH_TOKEN'); if (!token) return 'no-token';
+  const nowIso = new Date().toISOString();
+  const [nw, gl, ev, ad] = await Promise.all([
+    db.from('cai_news').select('id, updated_at, title, image, category, post_date, link_url').eq('published', true),
+    db.from('showcase_installs').select('id, updated_at, publish_at, photos, car_make, car_model, car_year, dealer, city, hof_id').eq('published', true),
+    db.from('cai_events').select('id, updated_at, title, poster, start_at, end_at').eq('published', true).eq('public', true),
+    db.from('auth_dealers').select('id, updated_at').eq('hidden', false),
+  ]);
+  const gal = (gl.data || []).filter(g => !g.publish_at || g.publish_at <= nowIso);
+  const acad = acadAll.filter(a => !a.at || Date.parse(a.at) <= Date.now()).map(a => [a.no, a.title, (a as { img?: string }).img]);
+  const raw = JSON.stringify([nw.data || [], gal, ev.data || [], ad.data || [], acad]);
+  const sig = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw)))).slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
+  const { data: st, error: stErr } = await db.from('card_dispatch').select('sig, sent_at').eq('id', 1).maybeSingle();
+  if (stErr) return 'no-table';
+  if (st?.sig === sig) return 'same';
+  if (!st) { await db.from('card_dispatch').upsert({ id: 1, sig, sent_at: nowIso }); return 'init'; }   // pertama kali: simpan saja
+  if (st.sent_at && Date.now() - Date.parse(st.sent_at) < 3 * 60e3) return 'wait';
+  const r = await fetch(`https://api.github.com/repos/${GH_REPO}/actions/workflows/${GH_WORKFLOW}/dispatches`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'cai-hub-cards', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main' }),
+  });
+  if (r.status !== 204) return 'gh-' + r.status;
+  await db.from('card_dispatch').upsert({ id: 1, sig, sent_at: nowIso });
+  return 'sent';
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   let body: Record<string, any> = {};
@@ -618,7 +652,9 @@ Deno.serve(async (req) => {
     let eventSent = 0; try { eventSent = await eventReminders(key); } catch (_) { /* tabel acara belum dibuat */ }
     // 11) 📊 Rapor Bulanan untuk Editor (tanggal 1 pagi)
     let raporSent = 0; try { raporSent = await monthlyReport(key); } catch (_) { /* SQL rapor belum dijalankan */ }
-    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent, eventSent, raporSent });
+    // 12) 🃏 Kartu WA: picu bot GitHub bila data publik berubah
+    let cards = ''; try { cards = await cardsDispatch(acadAll); } catch (e) { cards = 'err: ' + String((e as Error)?.message || e); }
+    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent, eventSent, raporSent, cards });
   } catch (e) {
     return json({ error: String((e as Error)?.message || e) }, 500);
   }
