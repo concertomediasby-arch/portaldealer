@@ -41,11 +41,18 @@ create policy "news write" on public.cai_news for all to authenticated
 grant select on public.cai_news to anon;
 grant select, insert, update, delete on public.cai_news to authenticated;
 -- Project & partner pemasang (5 Nov 2026)
-alter table public.cai_news add column if not exists projects jsonb not null default '[]'::jsonb;`;
+alter table public.cai_news add column if not exists projects jsonb not null default '[]'::jsonb;
+-- Foto tambahan (6 Nov 2026)
+alter table public.cai_news add column if not exists photos jsonb not null default '[]'::jsonb;`;
 // Project & partner pemasang di berita kontes (5 Nov 2026, permintaan pemilik): kolom jsonb [{car, owner, result, partner, gl}]
 const NEWS_PROJ_SQL = `-- CAI Hub News: project & partner pemasang — jalankan sekali di Supabase → SQL Editor → Run
 alter table public.cai_news add column if not exists projects jsonb not null default '[]'::jsonb;`;
 
+// Foto tambahan berita (6 Nov 2026, permintaan pemilik): kolom jsonb [{path, cap}] — disisipkan di isi lewat [foto 1] / [foto 2 3]
+const NEWS_PH_SQL = `-- CAI Hub News: foto tambahan — jalankan sekali di Supabase → SQL Editor → Run
+alter table public.cai_news add column if not exists photos jsonb not null default '[]'::jsonb;`;
+const NEWS_PH_MAX = 12;
+const NW_PH_RE = /\[\s*foto\s+([\d\s,]+)\]/gi;
 let nwItems = null, nwMissing = false, nwErr = '', nwLoading = null, nwCur = null, nwPending = null, nwForm = null, nwQ = '', nwCat = '';
 const nwImgCache = {};
 // Posisi/zoom gambar sampul disimpan di kolom `image` yang sama: "news/123.webp#x,y,z" (x/y = titik fokus %, z = zoom 1–2,5)
@@ -73,6 +80,65 @@ const nwThumb = it => nwImgUrl(it.image) || (nwYt(it.link_url) ? nwYtThumb(nwYt(
 const nwPlayIc = it => nwYt(it.link_url) ? '<span class="nw-play" aria-label="Video"></span>' : '';
 /* ── 🔧 Project & partner pemasang (berita kontes) ── */
 const nwProj = it => (Array.isArray(it?.projects) ? it.projects : []).filter(p => p && (p.car || p.partner));
+const nwPhotos = it => (Array.isArray(it?.photos) ? it.photos : []).filter(p => p && p.path);
+const nwPhUrl = p => /^(https?:|blob:)/i.test(p || '') ? p : p ? dashPublicUrl(p) : '';
+const nwPhNums = t => String(t || '').split(/[\s,]+/).map(Number).filter(n => n > 0);
+const nwPhCount = it => nwPhotos(it).length ? `<span class="nw-phn">📷 ${nwPhotos(it).length + (it.image ? 1 : 0)} foto</span>` : '';
+// Isi berita: paragraf + foto di posisi tanda [foto n] (paragraf yang hanya berisi tanda = foto; tanda di tengah teks → foto setelah paragraf itu).
+// Foto yang tidak disisipkan tampil sebagai "Foto lainnya" di bawah isi.
+function nwBodyHtml(it) {
+  const ph = nwPhotos(it), used = new Set(), base = it.image && !nwYt(it.link_url) ? 1 : 0;
+  const fig = nums => { const ok = [...new Set(nums)].filter(n => n <= ph.length); if (!ok.length) return ''; ok.forEach(n => used.add(n));
+    const caps = ok.map(n => ph[n - 1].cap).filter(Boolean).join(' · ');
+    return `<figure class="nw-fig n${Math.min(ok.length, 3)}"><div class="nw-fgrid">${ok.map(n => `<button type="button" onclick="nwLbOpen('${it.id}',${base + n - 1})" aria-label="Lihat foto ${n}"><img src="${escHtml(nwPhUrl(ph[n - 1].path))}" alt="${escHtml(ph[n - 1].cap || '')}" loading="lazy"></button>`).join('')}</div>${caps ? `<figcaption>${escHtml(caps)}</figcaption>` : ''}</figure>`; };
+  const paras = String(it.body || '').replace(/\r/g, '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  const out = paras.map(p => {
+    const only = p.replace(NW_PH_RE, '').trim() === '';
+    const nums = []; p.replace(NW_PH_RE, (m, g) => { nums.push(...nwPhNums(g)); return ''; });
+    if (only) return [...p.matchAll(NW_PH_RE)].map(m => fig(nwPhNums(m[1]))).join('');
+    const txt = p.replace(NW_PH_RE, '').replace(/[ \t]+\n/g, '\n').trim();
+    return `<p>${txt.split('\n').map(cwWa).join('<br>')}</p>${nums.length ? fig(nums) : ''}`;
+  }).join('');
+  const rest = ph.map((x, i) => i + 1).filter(n => !used.has(n));
+  return out + (rest.length ? `<div class="nw-more"><div class="nw-more-h">📷 Foto lainnya <span>${rest.length} foto · ketuk untuk lihat penuh</span></div>
+    <div class="nw-more-s">${rest.map(n => `<button type="button" onclick="nwLbOpen('${it.id}',${base + n - 1})" aria-label="Lihat foto ${n}"><img src="${escHtml(nwPhUrl(ph[n - 1].path))}" alt="${escHtml(ph[n - 1].cap || '')}" loading="lazy"></button>`).join('')}</div></div>` : '');
+}
+/* Lihat foto layar penuh: sampul (bila bukan video YouTube) + semua foto tambahan, ‹ › / geser / Esc / back HP */
+let nwLb = null;
+function nwLbOpen(id, i) {
+  const it = nwItems?.find(x => x.id === id); if (!it) return;
+  const list = [...(it.image && !nwYt(it.link_url) ? [{ src: nwImgUrl(it.image), cap: '' }] : []), ...nwPhotos(it).map(p => ({ src: nwPhUrl(p.path), cap: p.cap || '' }))];
+  if (!list.length) return;
+  nwLb = { list, i: Math.max(0, Math.min(list.length - 1, i || 0)) };
+  let ov = document.getElementById('nw-lb');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'nw-lb'; ov.className = 'nw-lb';
+    ov.onclick = e => { if (e.target === ov || e.target.classList.contains('nw-lb-stage')) nwLbClose(); };
+    let x0 = null;
+    ov.addEventListener('pointerdown', e => { x0 = e.clientX; });
+    ov.addEventListener('pointerup', e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 50) nwLbStep(dx < 0 ? 1 : -1); });
+    document.body.appendChild(ov);
+  }
+  nwLbPaint(); ov.classList.add('open'); document.body.classList.add('modal-open');
+  if (!history.state?.nwlb) history.pushState({ nwlb: 1 }, '');
+}
+function nwLbPaint() {
+  const ov = document.getElementById('nw-lb'); if (!ov || !nwLb) return;
+  const { list, i } = nwLb, c = list[i], n = list.length;
+  ov.innerHTML = `<div class="nw-lb-top"><span>${i + 1} / ${n}</span><button onclick="nwLbClose()" aria-label="Tutup">✕</button></div>
+    <div class="nw-lb-stage"><img src="${escHtml(c.src)}" alt="${escHtml(c.cap)}" draggable="false"></div>
+    ${n > 1 ? `<button class="nw-lb-ar l" onclick="nwLbStep(-1)" aria-label="Sebelumnya">‹</button><button class="nw-lb-ar r" onclick="nwLbStep(1)" aria-label="Berikutnya">›</button>` : ''}
+    ${c.cap ? `<div class="nw-lb-cap">${escHtml(c.cap)}</div>` : ''}
+    ${n > 1 ? `<div class="nw-lb-dots">${list.map((x, j) => `<i class="${j === i ? 'on' : ''}"></i>`).join('')}</div>` : ''}`;
+}
+function nwLbStep(d) { if (!nwLb) return; const n = nwLb.list.length; nwLb.i = (nwLb.i + d + n) % n; nwLbPaint(); }
+function nwLbClose(fromPop) {
+  const ov = document.getElementById('nw-lb'); if (!ov || !ov.classList.contains('open')) return;
+  ov.classList.remove('open'); document.body.classList.remove('modal-open'); nwLb = null;
+  if (!fromPop && history.state?.nwlb) history.back();
+}
+window.addEventListener('popstate', () => nwLbClose(true));
+document.addEventListener('keydown', e => { if (!nwLb) return; if (e.key === 'Escape') nwLbClose(); else if (e.key === 'ArrowRight') nwLbStep(1); else if (e.key === 'ArrowLeft') nwLbStep(-1); });
 const nwPd = name => { const n = normKey(name || ''); return n ? adPublic().find(d => normKey(d.n) === n) : null; };
 const nwIni = n => String(n || '?').replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
 function nwMedal(r) { const m = String(r || '').match(/juara\s*(\d)/i); return m ? ({ 1: ['🥇', ''], 2: ['🥈', ' s'], 3: ['🥉', ' b'] }[m[1]] || ['🏅', '']) : ['🏅', '']; }
@@ -149,7 +215,7 @@ function hlSlides() {
 function nwHlHtml(n) {
   const img = nwThumb(n);
   return `<div class="nw-hl" role="button" tabindex="0" onclick="openNews('${n.id}')" onkeydown="if(event.key==='Enter')openNews('${n.id}')">
-    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async" draggable="false"${nwImgStyle(n.image)}>` : '<span>📰</span>'}${nwPlayIc(n)}</div>
+    <div class="nw-img${img ? '' : ' ph'}">${img ? `<img src="${escHtml(img)}" alt="" decoding="async" draggable="false"${nwImgStyle(n.image)}>` : '<span>📰</span>'}${nwPlayIc(n)}${nwPhCount(n)}</div>
     <div class="nw-main"><div class="nw-top">📰 News${nwIsNew(n) ? ' <span class="nw-new">BARU</span>' : ''}${n.category ? ` <span class="nw-cat">${escHtml(n.category)}</span>` : ''}</div>
       <div class="nw-t">${escHtml(n.title)}</div>${n.summary ? `<div class="nw-s">${escHtml(n.summary)}</div>` : ''}
       <div class="nw-foot"><span class="nw-date">${escHtml(nwDate(n.post_date))}${nwProjStat(n) ? ` · <b class="nw-hlpj">${escHtml(nwProjStat(n))}</b>` : ''}</span>
@@ -337,7 +403,7 @@ function nwListHtml() {
   const list = all.filter(x => (!nwCat || x.category === nwCat) && (!q || [x.title, x.summary, x.body, x.category].join(' ').toLowerCase().includes(q)));
   if (!list.length) return '<div class="stock-empty">Tidak ada berita yang cocok.</div>';
   return `<div class="nw-grid">${list.map(x => { const img = nwThumb(x); return `<button class="nw-card${x.published ? '' : ' draft'}" onclick="openNews('${x.id}')">
-    <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '<span>📰</span>'}${nwPlayIc(x)}${nwIsNew(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}</div>
+    <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '<span>📰</span>'}${nwPlayIc(x)}${nwIsNew(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}${nwPhCount(x)}</div>
     <div class="nw-cb"><div class="nw-cm">${x.category ? `<span class="nw-cat">${escHtml(x.category)}</span>` : ''}<span>${escHtml(nwDate(x.post_date))}</span></div>
       <div class="nw-ct">${escHtml(x.title)}</div>${x.summary ? `<div class="nw-cs">${escHtml(x.summary)}</div>` : ''}${nwProjStat(x) ? `<div class="nw-cpj">${escHtml(nwProjStat(x))}</div>` : ''}</div></button>`; }).join('')}</div>`;
 }
@@ -346,7 +412,6 @@ function renderNwPost(body, it) {
   const s = cwLS(NEWS_SEEN_KEY); if (it.published && !s[it.id]) { s[it.id] = 1; cwLS(NEWS_SEEN_KEY, s); hlRender(); nwStar(); }
   const img = nwImgUrl(it.image), yt = nwYt(it.link_url);
   const lbl = escHtml(it.link_label || (yt ? 'Tonton di YouTube' : 'Lihat selengkapnya'));
-  const paras = String(it.body || '').replace(/\r/g, '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
   const others = nwLive().filter(x => x.id !== it.id).slice(0, 5);
   const acts = `<button class="gt-btn ghost" onclick="nwShare('${it.id}')">${SHARE_ICON} Bagikan</button>
         ${isEditor() ? `<button class="gt-btn ghost" onclick="openNwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteNw('${it.id}')">🗑 Hapus</button>` : ''}`;
@@ -355,11 +420,11 @@ function renderNwPost(body, it) {
     <div class="nw-layout">
     <article class="nw-art">
     ${yt ? `<div class="nw-yt" role="button" tabindex="0" aria-label="Putar video" onclick="nwYtPlay(this,'${yt}')"><img src="${escHtml(nwYtThumb(yt))}" alt=""><span class="nw-ytbtn"></span><span class="nw-ytlbl">▶ Putar video</span></div>`
-      : img ? `<div class="nw-hero-img"><img src="${escHtml(img)}" alt=""${nwImgStyle(it.image)}></div>` : ''}
+      : img ? `<div class="nw-hero-img${nwPhotos(it).length ? ' zm' : ''}"${nwPhotos(it).length ? ` role="button" tabindex="0" onclick="nwLbOpen('${it.id}',0)"` : ''}><img src="${escHtml(img)}" alt=""${nwImgStyle(it.image)}>${nwPhCount(it)}</div>` : ''}
     <div class="nw-meta">📰 News${it.category ? ` · <b>${escHtml(it.category)}</b>` : ''} · ${escHtml(nwDate(it.post_date))}${it.published ? '' : ' · <span class="cw-draft-note">DRAF — belum tampil untuk publik</span>'}</div>
     <h2 class="nw-title">${escHtml(it.title)}</h2>
     ${it.summary ? `<p class="nw-lead">${escHtml(it.summary)}</p>` : ''}
-    <div class="cw-body">${paras.map(p => `<p>${p.split('\n').map(cwWa).join('<br>')}</p>`).join('')}</div>
+    <div class="cw-body">${nwBodyHtml(it)}</div>
     ${nwProjHtml(it)}
     ${it.link_url ? `<div class="nw-cta"><button class="gt-btn" onclick="nwOpenLink('${it.id}')">${lbl} ›</button></div>` : ''}
     <div class="cw-foot"><span class="cw-date">CAI Hub · Concerto Audio Indonesia</span>
@@ -402,8 +467,8 @@ function openNwForm(id) {
   if (!isEditor()) return;
   if (nwMissing) { nwCopySql(); return; }
   const it = id && nwItems?.find(x => x.id === id);
-  nwForm = it ? { id: it.id, title: it.title, summary: it.summary || '', body: it.body || '', category: it.category || '', image: nwImgPath(it.image), fr: nwImgFr(it.image), file: null, preview: '', link_url: it.link_url || '', link_label: it.link_label || '', post_date: it.post_date, published: it.published, projects: nwProj(it).map(p => ({ ...p })), hadProj: 'projects' in it, busy: false }
-    : { id: null, title: '', summary: '', body: '', category: NEWS_CATS[0], image: '', fr: { x: 50, y: 50, z: 1 }, file: null, preview: '', link_url: '', link_label: '', post_date: todayWIB(), published: true, projects: [], hadProj: false, busy: false };
+  nwForm = it ? { id: it.id, title: it.title, summary: it.summary || '', body: it.body || '', category: it.category || '', image: nwImgPath(it.image), fr: nwImgFr(it.image), file: null, preview: '', link_url: it.link_url || '', link_label: it.link_label || '', post_date: it.post_date, published: it.published, projects: nwProj(it).map(p => ({ ...p })), hadProj: 'projects' in it, photos: nwPhotos(it).map(p => ({ ...p })), hadPh: 'photos' in it, sel: null, busy: false }
+    : { id: null, title: '', summary: '', body: '', category: NEWS_CATS[0], image: '', fr: { x: 50, y: 50, z: 1 }, file: null, preview: '', link_url: '', link_label: '', post_date: todayWIB(), published: true, projects: [], hadProj: false, photos: [], hadPh: false, sel: null, busy: false };
   if (typeof loadGaleri === 'function' && !glItems) loadGaleri().then(() => nwForm && renderNwForm()).catch(() => {});
   if (typeof adEnsure === 'function') adEnsure();
   let ov = document.getElementById('nw-form');
@@ -415,7 +480,7 @@ function openNwForm(id) {
   }
   renderNwForm(); ov.classList.add('open');
 }
-function closeNwForm() { if (nwForm?.preview) URL.revokeObjectURL(nwForm.preview); nwForm = null; document.getElementById('nw-form')?.classList.remove('open'); }
+function closeNwForm() { if (nwForm?.preview) URL.revokeObjectURL(nwForm.preview); (nwForm?.photos || []).forEach(p => p.preview && URL.revokeObjectURL(p.preview)); nwForm = null; document.getElementById('nw-form')?.classList.remove('open'); }
 function renderNwForm() {
   const f = nwForm, box = document.querySelector('#nw-form .rk-pick-box'); if (!f || !box) return;
   const img = f.preview || nwImgUrl(f.image);
@@ -425,7 +490,8 @@ function renderNwForm() {
       <div class="cwf-col">
         <label class="cwf-l">Judul<input value="${escHtml(f.title)}" maxlength="140" oninput="nwForm.title=this.value"></label>
         <label class="cwf-l">Ringkasan (1–2 kalimat, tampil di headline)<textarea class="nw-sum" maxlength="260" oninput="nwForm.summary=this.value">${escHtml(f.summary)}</textarea></label>
-        <label class="cwf-l">Isi berita<textarea class="nw-body" placeholder="Pisahkan paragraf dengan baris kosong. Format WA *tebal* _miring_ ikut terbaca." oninput="nwForm.body=this.value">${escHtml(f.body)}</textarea></label>
+        <label class="cwf-l">Isi berita<textarea class="nw-body" placeholder="Pisahkan paragraf dengan baris kosong. Format WA *tebal* _miring_ ikut terbaca." oninput="nwForm.body=this.value" onblur="nwForm.sel=this.selectionStart">${escHtml(f.body)}</textarea></label>
+        <small class="nw-ythint">Sisipkan foto tambahan di antara paragraf: <code>[foto 1]</code> = satu foto lebar · <code>[foto 2 3]</code> = foto berdampingan (atau klik <b>↳ Sisipkan</b> di bawah).</small>
         <div class="gl-hint">⚠️ Berita bisa dibaca semua orang — jangan masukkan harga dealer, diskon, atau info internal.</div>
       </div>
       <div class="cwf-col">
@@ -442,6 +508,7 @@ function renderNwForm() {
         <label class="cwf-chk"><input type="checkbox"${f.published ? ' checked' : ''} onchange="nwForm.published=this.checked"> Tampilkan untuk publik (hapus centang = draf)</label>
       </div>
     </div>
+    ${nwPhFormHtml(f)}
     ${nwProjFormHtml(f)}
     <div class="acf-foot"><button class="gt-btn ghost" onclick="closeNwForm()">Batal</button><button class="gt-btn" onclick="saveNw()"${f.busy ? ' disabled' : ''}>${f.busy ? '⏳ Menyimpan…' : '💾 Simpan & Terbitkan'}</button></div>`;
 }
@@ -478,6 +545,59 @@ function nwFrDrag(e) {
 function nwFrZoom(v) { if (!nwForm) return; nwForm.fr.z = Math.round(Number(v) * 100) / 100; nwFrApply(); }
 function nwFrReset() { if (!nwForm) return; nwForm.fr = { x: 50, y: 50, z: 1 }; renderNwForm(); }
 const nwFrSuffix = f => (f && (f.x !== 50 || f.y !== 50 || f.z !== 1)) ? `#${f.x},${f.y},${f.z}` : '';
+/* Foto tambahan di form */
+function nwPhFormHtml(f) {
+  const used = new Set(); String(f.body || '').replace(NW_PH_RE, (m, g) => { nwPhNums(g).forEach(n => used.add(n)); return ''; });
+  const gl = typeof glLiveAll === 'function' && glItems ? glLiveAll().filter(g => (g.photos || []).some(p => !glIsVid(p))) : [];
+  const carOf = g => [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ');
+  return `<div class="cwf-l nw-phf"><div class="nw-phf-h"><span>📷 Foto tambahan <small>· ${f.photos.length} dari maks. ${NEWS_PH_MAX} · otomatis diperkecil</small></span>
+    <span class="nw-phf-a">${f.photos.length < NEWS_PH_MAX ? `<label class="gt-btn">＋ Tambah foto<input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onchange="nwPhAdd(this)"></label>` : ''}
+      ${gl.length && f.photos.length < NEWS_PH_MAX ? `<select onchange="nwPhFromGl(this.value);this.value=''"><option value="">📷 Ambil dari Galeri Instalasi…</option>${gl.map(g => `<option value="${escHtml(g.id)}">${escHtml(carOf(g) + (g.dealer ? ' · ' + g.dealer : ''))}</option>`).join('')}</select>` : ''}</span></div>
+    ${f.photos.length ? `<div class="nw-phf-g">${f.photos.map((p, i) => `<div class="nw-phf-t"><span class="nw-phf-no">${i + 1}</span>${used.has(i + 1) ? '<span class="nw-phf-u">di isi ✓</span>' : ''}
+      <img src="${escHtml(p.preview || nwPhUrl(p.path))}" alt="" loading="lazy">
+      <input value="${escHtml(p.cap || '')}" maxlength="80" placeholder="+ keterangan" oninput="nwForm.photos[${i}].cap=this.value">
+      <div class="nw-phf-b"><button type="button" onclick="nwPhMove(${i},-1)"${i ? '' : ' disabled'} aria-label="Geser kiri">◀</button><button type="button" class="ins" onclick="nwPhInsert(${i})">↳ Sisipkan</button><button type="button" onclick="nwPhMove(${i},1)"${i < f.photos.length - 1 ? '' : ' disabled'} aria-label="Geser kanan">▶</button><button type="button" onclick="nwPhDel(${i})" aria-label="Hapus">🗑</button></div></div>`).join('')}</div>`
+      : '<small class="nw-ythint">Belum ada foto tambahan. Foto yang tidak disisipkan ke isi tampil sebagai “Foto lainnya” di bawah berita.</small>'}</div>`;
+}
+function nwPhAdd(input) {
+  const f = nwForm, files = [...(input.files || [])]; input.value = ''; if (!f) return;
+  const room = NEWS_PH_MAX - f.photos.length; if (files.length > room) showToast(`Maksimal ${NEWS_PH_MAX} foto — ${files.length - room} foto tidak ditambahkan.`);
+  files.slice(0, Math.max(0, room)).forEach(file => f.photos.push({ file, preview: URL.createObjectURL(file), cap: '' }));
+  renderNwForm();
+}
+function nwPhFromGl(id) {
+  const g = glItems?.find(x => x.id === id), f = nwForm; if (!g || !f) return;
+  const have = new Set(f.photos.map(p => p.path)), add = (g.photos || []).filter(p => !glIsVid(p) && p.path && !have.has(p.path));
+  const room = NEWS_PH_MAX - f.photos.length;
+  add.slice(0, room).forEach(p => f.photos.push({ path: p.path, cap: p.area || '' }));
+  if (add.length > room) showToast(`Maksimal ${NEWS_PH_MAX} foto — ${add.length - room} foto tidak ditambahkan.`);
+  renderNwForm();
+}
+// Nomor di tanda [foto n] ikut berubah saat foto digeser/dihapus (map: nomor lama → nomor baru, 0 = dibuang)
+function nwPhRenum(map) {
+  const f = nwForm; if (!f) return;
+  f.body = String(f.body || '').replace(NW_PH_RE, (m, g) => { const n = nwPhNums(g).map(x => map[x] ?? x).filter(x => x > 0); return n.length ? `[foto ${n.join(' ')}]` : ''; })
+    .replace(/\n{3,}/g, '\n\n');
+}
+function nwPhMove(i, d) {
+  const f = nwForm, j = i + d; if (!f || j < 0 || j >= f.photos.length) return;
+  [f.photos[i], f.photos[j]] = [f.photos[j], f.photos[i]]; nwPhRenum({ [i + 1]: j + 1, [j + 1]: i + 1 }); renderNwForm();
+}
+function nwPhDel(i) {
+  const f = nwForm; if (!f) return; const p = f.photos[i]; if (p?.preview) URL.revokeObjectURL(p.preview);
+  f.photos.splice(i, 1); const map = { [i + 1]: 0 }; for (let k = i + 2; k <= f.photos.length + 1; k++) map[k] = k - 1; nwPhRenum(map); renderNwForm();
+}
+function nwPhInsert(i) {
+  const f = nwForm; if (!f) return; const b = String(f.body || ''), at = f.sel == null ? b.length : Math.min(f.sel, b.length);
+  const pre = b.slice(0, at).replace(/\s+$/, ''), post = b.slice(at).replace(/^\s+/, ''), tag = `[foto ${i + 1}]`;
+  f.body = (pre ? pre + '\n\n' : '') + tag + (post ? '\n\n' + post : ''); f.sel = (pre ? pre.length + 2 : 0) + tag.length; renderNwForm();
+  const ta = document.querySelector('#nw-form .nw-body'); if (ta) { ta.focus(); ta.setSelectionRange(f.sel, f.sel); }
+}
+function nwCopyPhSql() {
+  (navigator.clipboard?.writeText(NEWS_PH_SQL) || Promise.reject()).then(
+    () => showToast('📋 SQL "Foto tambahan" DISALIN — jalankan di Supabase → SQL Editor → Run, lalu simpan berita lagi.', 9000),
+    () => prompt('Jalankan SQL ini sekali di Supabase → SQL Editor → Run:', NEWS_PH_SQL));
+}
 function nwProjFormHtml(f) {
   const gl = typeof glLiveAll === 'function' && glItems ? glLiveAll() : [];
   const carOf = g => [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ');
@@ -513,7 +633,8 @@ async function saveNw() {
   if (!f.title.trim()) return showToast('Judul belum terisi.');
   f.busy = true; renderNwForm();
   const old = f.id && nwImgPath(nwItems?.find(x => x.id === f.id)?.image);
-  let uploaded = null;
+  let uploaded = null; const upPh = [];
+  const oldPh = f.id ? nwPhotos(nwItems?.find(x => x.id === f.id)).map(p => p.path) : [];
   try {
     let image = f.image || null;
     if (f.file) {
@@ -529,19 +650,34 @@ async function saveNw() {
       link_url: f.link_url.trim() || null, link_label: f.link_label.trim() || null, post_date: f.post_date || todayWIB(), published: !!f.published, updated_at: new Date().toISOString() };
     const pj = f.projects.map(p => ({ car: (p.car || '').trim(), owner: (p.owner || '').trim(), result: (p.result || '').trim(), partner: (p.partner || '').trim(), ...(p.gl ? { gl: p.gl } : {}) }))
       .filter(p => p.car || p.partner).map(p => Object.fromEntries(Object.entries(p).filter(([, v]) => v)));
-    if (pj.length || f.hadProj) row.projects = pj;   // kolom baru: hanya dikirim bila dipakai (berita lama tetap bisa disimpan sebelum SQL)
+    if (pj.length || f.hadProj) row.projects = pj;
+    const ph = [];
+    for (const p of f.photos) {
+      if (p.file) {
+        const blob = await glResize(p.file, 1600);
+        const path = `news/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`;
+        const { error } = await supabase.storage.from('showcase').upload(path, blob, { contentType: blob.type, cacheControl: '3600' });
+        if (error) throw error; upPh.push(path); p.path = path;
+      }
+      if (p.path) ph.push(Object.fromEntries(Object.entries({ path: p.path, cap: (p.cap || '').trim() }).filter(([, v]) => v)));
+    }
+    if (ph.length || f.hadPh) row.photos = ph;   // kolom baru: hanya dikirim bila dipakai   // kolom baru: hanya dikirim bila dipakai (berita lama tetap bisa disimpan sebelum SQL)
     const wasPub = !!(f.id && nwItems?.find(x => x.id === f.id)?.published);
     const q = f.id ? supabase.from(NEWS_TABLE).update(row).eq('id', f.id).select().single() : supabase.from(NEWS_TABLE).insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
     if (data.published && !wasPub) pushNotify('news', data.id);   // notifikasi HP "CAI Hub News" (sekali per berita, js/push.js)
     if (old && old !== path && /^news\//.test(old)) supabase.storage.from('showcase').remove([old]).catch(() => {});
+    const gone = oldPh.filter(x => /^news\//.test(x) && !ph.some(p => p.path === x));   // foto dari Galeri tidak ikut dihapus
+    if (gone.length) supabase.storage.from('showcase').remove(gone).catch(() => {});
     closeNwForm(); showToast(f.id ? '✓ Berita diperbarui' : '✓ Berita diterbitkan');
     await loadNews(true); openNews(data.id);
   } catch (e) {
     if (uploaded) supabase.storage.from('showcase').remove([uploaded]).catch(() => {});
+    if (upPh.length) { supabase.storage.from('showcase').remove(upPh).catch(() => {}); f.photos.forEach(p => { if (p.file && upPh.includes(p.path)) delete p.path; }); }
     f.busy = false; renderNwForm();
     const m = e?.message || String(e);
     if (/projects/i.test(m) && /column|schema cache/i.test(m)) nwCopyProjSql();
+    else if (/photos/i.test(m) && /column|schema cache/i.test(m)) nwCopyPhSql();
     else if (/does not exist|schema cache/i.test(m)) { nwMissing = true; nwCopySql(); }
     else dashErr(e, 'menyimpan berita');   // izin Storage `showcase` kurang → SQL perbaikan disalin otomatis
   }
@@ -552,6 +688,7 @@ async function deleteNw(id) {
   const { error } = await supabase.from(NEWS_TABLE).delete().eq('id', id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
   if (it.image && /^news\//.test(it.image)) supabase.storage.from('showcase').remove([nwImgPath(it.image)]).catch(() => {});
+  const ph = nwPhotos(it).map(p => p.path).filter(x => /^news\//.test(x)); if (ph.length) supabase.storage.from('showcase').remove(ph).catch(() => {});
   showToast('Berita dihapus'); nwCur = null; await loadNews(true); renderNews();
 }
 function nwCopySql() {
