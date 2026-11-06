@@ -4794,6 +4794,25 @@ body[data-view="rapor"] .wa-float, body[data-view="prapor"] .wa-float { display:
 .chg-box .rp-btn { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #f3f1ec; } .chg-box .rp-btn.g { background: #c9a45c; border-color: #c9a45c; color: #17120a; }
 @media (max-width: 640px) { .chg-box { padding: 20px 16px 18px; border-radius: 18px; } .chg-res { grid-template-columns: 1fr; } .chg-qr { width: 200px; margin: 0 auto; } .chg-link { font-size: 15px; } .chg-h { font-size: 22px; } }
 
+/* ── 🔎 Google Search di Rapor Bulanan (Editor, js/report.js — Branding no. 8 C) ── */
+.rp-gsc { margin-top: 12px; }
+.rp-gsc-in { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.rp-gks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rp-gk { background: var(--surface2, rgba(255,255,255,.04)); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; }
+.rp-gk small { display: block; color: var(--fg-muted); font-size: 12.5px; } .rp-gk b { display: block; font: 700 24px var(--f-display); margin: 3px 0 2px; color: #4f8df7; }
+.rp-gk .x { display: block; color: var(--fg-muted); font-size: 11.5px; margin-top: 2px; }
+.rp-gq { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(79,141,247,.16); color: #4f8df7; font: 700 10.5px var(--f-mono, monospace); margin-right: 7px; }
+.rp-gnew { color: #4f8df7 !important; font-weight: 600; }
+.rp-sheet.png .rp-gsc-in { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+@media (max-width: 1100px) { .rp-gsc-in { grid-template-columns: minmax(0, 1fr); } }
+.gsc-box { width: min(620px, 100%); } .gsc-box .chg-sub a { color: #e9cf98; }
+.gsc-f3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0 6px; }
+.gsc-qs { display: grid; gap: 7px; margin: 8px 0 16px; }
+.gsc-q { display: grid; grid-template-columns: 22px minmax(0, 1fr) 96px; gap: 8px; align-items: center; } .gsc-q span { font: 600 12px var(--f-mono, monospace); color: rgba(243,241,236,.5); }
+.gsc-q input, .gsc-f3 input { width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.16); border-radius: 10px; color: #f3f1ec; padding: 9px 11px; font: 15px var(--f-body); }
+.gsc-steps { margin: 12px 0 0; padding-left: 22px; line-height: 1.6; font-size: 14px; } .gsc-steps li { margin: 6px 0; } .gsc-steps code { background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px; }
+@media (max-width: 640px) { .gsc-f3 { grid-template-columns: 1fr; } .rp-gks { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rp-gk b { font-size: 20px; } }
+
 /* ── 🚗 Stiker kaca Featured on CAI Hub (Editor, js/channel.js — Branding no. 6) ── */
 .stk-box { width: min(900px, 100%); }
 .stk-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 22px; align-items: start; }
