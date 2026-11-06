@@ -87,9 +87,11 @@ function insInit() {
 }
 // Kartu QR di toko partner (4 Nov 2026, permintaan pemilik): QR = https://hub.concerto.id/?src=kartu → dicatat 'qr' (sekali per sesi tab),
 // lalu penanda dibuang dari alamat agar tidak ikut terbawa saat link dibagikan / ikon dipasang.
+// Sejak no. 7 (6 Nov 2026) ?src=kartu juga tercatat sebagai kanal 'kartu' oleh js/channel.js (chInit).
 function insSrcCheck() {
   let q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
-  if (q.get('src') !== 'kartu') return;
+  const src = typeof CH_LAND !== 'undefined' ? CH_LAND.src : q.get('src');   // ditangkap js/channel.js saat dimuat
+  if (String(src || '').toLowerCase() !== 'kartu') return;
   q.delete('src');
   try { history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); } catch (e) {}
   let done = ''; try { done = sessionStorage.getItem(INS_SES + '-qr'); sessionStorage.setItem(INS_SES + '-qr', '1'); } catch (e) {}

@@ -113,3 +113,4 @@ if (document.documentElement.classList.contains('spl-on')) {
   setTimeout(splDone, 3000);   // cadangan bila gambar lambat dimuat
 }
 insInit();   // ajakan "Pasang CAI Hub" di Layar Utama (js/install.js)
+chInit();    // 📍 kanal kunjungan ?src= / referrer (js/channel.js) — sesudah insInit (kartu QR ?src=kartu)

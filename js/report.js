@@ -3,10 +3,11 @@
    Angka dari RPC monthly_report(p_from, p_to) (supabase/report.sql = REPORT_SQL); Academy dihitung di klien (acadAll()).
    Notifikasi tiap tanggal 1 pukul 08.00 WIB ke HP Editor (Edge Function cway-push → monthlyReport()), ketuk = /?rapor=YYYY-MM.
    Unduh PNG / Bagikan: html2canvas (cdnjs, dimuat saat dipakai).
+   📍 Kotak "Pengunjung datang dari" + tombol 🔗 Link & QR promosi: js/channel.js (Branding no. 7, 6 Nov 2026).
 ══════════════════════════════════════════ */
 const RP_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 const RP_MIN = '2026-10';   // data pengunjung mulai dicatat 30 Okt 2026
-const REPORT_SQL = `-- 📊 Rapor Bulanan Editor (4 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run (aman dijalankan ulang)
+const REPORT_SQL = `-- 📊 Rapor Bulanan Editor (4 Nov 2026; + kotak 📍 kanal 6 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run (aman dijalankan ulang)
 -- Butuh tabel dari SQL sebelumnya: site_visits (Pengunjung Portal), site_app_events (Pemasangan CAI Hub),
 -- site_interest (Minat Pengunjung), cway_push_subs (Notifikasi). Tanpa data pribadi.
 
@@ -55,10 +56,14 @@ create or replace function public.monthly_report(p_from date, p_to date)
 returns json language plpgsql security definer set search_path = public as $$
 declare a date := p_from; b date := least(p_to, p_from + 31);
   pa date := (p_from - interval '1 month')::date; pb date := least((b - interval '1 month')::date, p_from - 1);
-  g text := coalesce(auth.jwt() ->> 'role', '');
+  g text := coalesce(auth.jwt() ->> 'role', ''); ch json;
 begin
   if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' and g <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
+  -- 📍 kanal kunjungan (supabase/channels.sql, 6 Nov 2026) — null bila SQL kanal belum dijalankan
+  begin execute 'select public.channel_stats($1, $2, $3, $4)' into ch using a, b, pa, pb;
+  exception when undefined_function or undefined_table then ch := null; end;
   return json_build_object(
+    'channels', ch,
     'from', a, 'to', b, 'pfrom', pa, 'pto', pb,
     'first_day', (select min(day) from site_visits),
     'vis', (select json_build_object(
@@ -146,6 +151,7 @@ function rpAuthChanged() {
 }
 async function rpLoad(force) {
   const m = rpMonth, r = rpRange(m), k = `${m}|${r.to}`;
+  if (force) gscData = {};   // ↻ juga memuat ulang angka Google Search
   rpRender();
   if (rpCache[k] && !force) return;
   if (typeof supabase === 'undefined' || !supabase) { setTimeout(() => rpLoad(force), 800); return; }
@@ -230,6 +236,7 @@ function rpRender() {
     <div class="rp-acts" data-html2canvas-ignore>
       <div class="rp-mon"><button class="rp-btn" onclick="rpGo(-1)" ${prev < RP_MIN ? 'disabled' : ''} aria-label="Bulan sebelumnya">‹</button><span>${rpShort(m)}</span><button class="rp-btn" onclick="rpGo(1)" ${next > rpNow() ? 'disabled' : ''} aria-label="Bulan berikutnya">›</button></div>
       <button class="rp-btn" onclick="rpLoad(true)" title="Muat ulang">↻</button>
+      <button class="rp-btn" onclick="chGenOpen()" title="Link & QR promosi per kanal">🔗 Link & QR</button>
       <button class="rp-btn" onclick="rpShare()" ${S ? '' : 'disabled'}>${typeof SHARE_ICON !== 'undefined' ? SHARE_ICON : ''} Bagikan</button>
       <button class="rp-btn g" onclick="rpPng()" ${S ? '' : 'disabled'}>⬇ Unduh PNG</button></div></div>`;
   if (rpMissing) { box.innerHTML = `<div class="rp-sheet">${head}<div class="rp-ins"><h3>⚙️ SQL Rapor Bulanan belum dijalankan</h3><p>Jalankan sekali di Supabase → SQL Editor → Run (file <code>supabase/report.sql</code>).</p><button class="rp-btn g" onclick="rpCopySql()">📋 Salin SQL Rapor Bulanan</button></div></div>`; return; }
@@ -277,6 +284,8 @@ function rpRender() {
       ${kpi('📞', 'Klik ke partner', rpN(ct), rpDelta(ct, c.total0), `WA ${rpN(c.wa)} · Maps ${rpN(c.maps)} · IG ${rpN(c.ig)}`)}
       ${kpi('🔔', 'Notifikasi aktif', rpN(P.now) + ' HP', P.logged ? `<span class="rp-d up">+${rpN(P.on)}</span>` : '', P.logged ? `${rpN(P.off)} berhenti` : 'mulai dicatat bulan ini')}
     </div>
+    ${typeof chBoxHtml === 'function' ? chBoxHtml(S, m) : ''}
+    ${gscBoxHtml(m)}
     <div class="rp-g2">
       <div class="rp-c"><h2>Pengunjung harian <small>orang berbeda per hari</small></h2>
         <div class="rp-chart">${days.join('')}</div>
@@ -325,10 +334,133 @@ async function rpShare() {
   const r = rpRange(rpMonth), S = rpCache[`${rpMonth}|${r.to}`]; if (!S) return;
   const c = S.click || {}, ct = (c.wa || 0) + (c.maps || 0) + (c.ig || 0), v = S.vis || {};
   const d = v.people0 ? Math.round((v.people - v.people0) / v.people0 * 100) : null;
-  const text = `📊 Rapor CAI Hub · ${rpLabel(rpMonth)}${r.running ? ' (sampai ' + Number(r.to.slice(8)) + ' ' + RP_MONTHS[Number(rpMonth.slice(5)) - 1] + ')' : ''}\n👥 ${rpN(v.people)} pengunjung${d == null ? '' : ` (${d >= 0 ? '▲' : '▼'}${Math.abs(d)}%)`}\n📞 ${rpN(ct)} klik ke partner\n📲 ${rpN(S.app?.install)} pasang di HP`;
+  const text = `📊 Rapor CAI Hub · ${rpLabel(rpMonth)}${r.running ? ' (sampai ' + Number(r.to.slice(8)) + ' ' + RP_MONTHS[Number(rpMonth.slice(5)) - 1] + ')' : ''}\n👥 ${rpN(v.people)} pengunjung${d == null ? '' : ` (${d >= 0 ? '▲' : '▼'}${Math.abs(d)}%)`}\n📞 ${rpN(ct)} klik ke partner\n📲 ${rpN(S.app?.install)} pasang di HP` + (gscData[rpMonth] ? `\n🔎 Google: ${rpN(gscData[rpMonth].clicks)} klik · posisi ${gscPos(gscData[rpMonth].position)}` : '') + (S.channels?.rows?.length ? `\n📍 Kanal teratas: ${[...S.channels.rows].sort((a, b) => b.n - a.n).slice(0, 3).map(x => `${chInfo(x.ch).t} ${rpN(x.n)}`).join(' · ')}` : '');
   const b = await rpBlob();
   if (b) { const f = new File([b], rpFile(), { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], text }); return; } catch (e) { if (e?.name === 'AbortError') return; } }
     const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = rpFile(); document.body.appendChild(a); a.click(); a.remove(); }
   window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');
+}
+
+// ── 🔎 GOOGLE SEARCH DI RAPOR BULANAN (Branding no. 8 C, 6 Nov 2026) — khusus Editor, diisi manual dari Search Console ──
+// Tabel gsc_monthly (SQL sekali jalan supabase/gsc.sql = GSC_SQL). Kotak ikut PNG rapor bila sudah diisi.
+const GSC_SQL = `-- 🔎 Google Search di Rapor Bulanan (Branding CAI Hub no. 8 C) — SQL sekali jalan, aman dijalankan ulang.
+-- Editor mengetik angka dari Google Search Console tiap bulan; khusus Editor (baca & tulis).
+create table if not exists public.gsc_monthly (
+  month text primary key check (month ~ '^[0-9]{4}-[0-9]{2}$'),
+  clicks integer not null default 0 check (clicks >= 0),
+  impressions integer not null default 0 check (impressions >= 0),
+  position numeric(5,1) check (position is null or position > 0),
+  queries jsonb not null default '[]'::jsonb check (jsonb_typeof(queries) = 'array'),
+  updated_at timestamptz not null default now(),
+  updated_by uuid default auth.uid()
+);
+alter table public.gsc_monthly enable row level security;
+drop policy if exists "gsc editor" on public.gsc_monthly;
+create policy "gsc editor" on public.gsc_monthly for all to authenticated
+  using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor')
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'editor');
+revoke all on public.gsc_monthly from anon;
+grant select, insert, update, delete on public.gsc_monthly to authenticated;`;
+let gscData = {}, gscMissing = false, gscBusy = {};
+const gscPrev = m => { const [y, mo] = m.split('-').map(Number), d = new Date(Date.UTC(y, mo - 2, 1)); return d.toISOString().slice(0, 7); };
+async function gscLoad(m, force) {
+  if (!m || (!force && (m in gscData)) || gscBusy[m] || typeof supabase === 'undefined' || !supabase?.from) return;
+  gscBusy[m] = true;
+  const p = gscPrev(m), { data, error } = await supabase.from('gsc_monthly').select('*').in('month', [m, p]);
+  gscBusy[m] = false;
+  if (error) { gscMissing = /gsc_monthly|does not exist|PGRST205|42P01/i.test(error.message + ' ' + error.code); gscData[m] = null; }
+  else { gscMissing = false; gscData[m] = (data || []).find(x => x.month === m) || null; if (!(p in gscData)) gscData[p] = (data || []).find(x => x.month === p) || null; }
+  if (rpMonth === m || (!rpMonth && m === rpDefault())) rpRender();
+}
+const gscN = v => Number(v || 0).toLocaleString('id-ID');
+const gscPos = v => v == null ? '–' : Number(v).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const gscCtr = x => x && x.impressions ? x.clicks / x.impressions * 100 : null;
+function gscPosDelta(a, b) {   // posisi: makin KECIL makin baik
+  if (a == null || b == null) return '';
+  const d = Math.round((b - a) * 10) / 10;
+  if (!d) return '<span class="rp-d">= sama</span>';
+  return `<span class="rp-d ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '▲ naik' : '▼ turun'} ${Math.abs(d).toLocaleString('id-ID')}</span>`;
+}
+function gscBoxHtml(m) {
+  if (!(m in gscData)) { gscLoad(m); return `<div class="rp-c rp-gsc" data-html2canvas-ignore><h2>🔎 Google Search · ${rpShort(m)}</h2><div class="rp-empty">⏳ Memuat…</div></div>`; }
+  const acts = `<div class="rp-ch-acts" data-html2canvas-ignore><button class="rp-btn g" onclick="gscOpenForm('${m}')">✏️ ${gscData[m] ? 'Ubah angka' : 'Isi angka'}</button><button class="rp-btn" onclick="gscGuide()">📖 Cara ambil angka</button></div>`;
+  if (gscMissing) return `<div class="rp-c rp-gsc" data-html2canvas-ignore><h2>🔎 Google Search · ${rpShort(m)}</h2>
+    <div class="rp-empty">⚙️ Tabel Google Search belum dibuat. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (file <code>supabase/gsc.sql</code>).</div>
+    <div class="rp-ch-acts"><button class="rp-btn g" onclick="gscCopySql()">📋 Salin SQL Google Search</button><button class="rp-btn" onclick="gscGuide()">📖 Cara ambil angka</button></div></div>`;
+  const G = gscData[m], P = gscData[gscPrev(m)];
+  if (!G) return `<div class="rp-c rp-gsc" data-html2canvas-ignore><h2>🔎 Google Search · ${rpShort(m)} <small>diisi manual dari Search Console</small></h2>
+    <div class="rp-empty">Angka Google Search bulan ini belum diisi. Search Console biasanya lengkap ±2–3 hari setelah bulan berakhir.</div>${acts}</div>`;
+  const ctr = gscCtr(G), ctr0 = gscCtr(P);
+  const kp = (lbl, v, d, x) => `<div class="rp-gk"><small>${lbl}</small><b>${v}</b>${d || ''}${x ? `<span class="x">${x}</span>` : ''}</div>`;
+  const qs = (G.queries || []).filter(q => q && q.q).slice(0, 5), M = Math.max(1, ...qs.map(q => q.c || 0));
+  const prevQ = Object.fromEntries((P?.queries || []).map(q => [String(q.q).toLowerCase(), q.c || 0]));
+  return `<div class="rp-c rp-gsc"><h2>🔎 Google Search · ${rpShort(m)} <small>dari Google Search Console · vs bulan lalu</small></h2>
+    <div class="rp-gsc-in"><div class="rp-gks">
+      ${kp('Klik dari Google', gscN(G.clicks), P ? rpDelta(G.clicks, P.clicks) : '')}
+      ${kp('Tayangan', gscN(G.impressions), P ? rpDelta(G.impressions, P.impressions) : '', 'muncul di hasil pencarian')}
+      ${kp('CTR', ctr == null ? '–' : ctr.toLocaleString('id-ID', { maximumFractionDigits: 1 }) + '%', '', ctr0 == null ? '' : 'bulan lalu ' + ctr0.toLocaleString('id-ID', { maximumFractionDigits: 1 }) + '%')}
+      ${kp('Posisi rata-rata', gscPos(G.position), P ? gscPosDelta(G.position, P.position) : '', 'makin kecil makin atas')}</div>
+    <div><div class="rp-mini">5 kata kunci teratas <small>klik</small></div>
+      ${qs.length ? qs.map((q, i) => { const p0 = prevQ[String(q.q).toLowerCase()]; return `<div class="rp-row"><div><span class="rp-gq">${i + 1}</span><b>${escHtml(q.q)}</b>${p0 == null ? ' <small class="rp-gnew">baru</small>' : ''}</div><span class="val">${gscN(q.c)}</span><div class="bar"><i style="width:${(q.c || 0) / M * 100}%;background:#4f8df7"></i></div></div>`; }).join('') : '<div class="rp-empty">Kata kunci belum diisi.</div>'}
+      ${acts}</div></div></div>`;
+}
+function gscCopySql() {
+  const done = () => showToast('✓ SQL Google Search disalin — tempel di Supabase → SQL Editor → Run.', 6000);
+  if (navigator.clipboard) navigator.clipboard.writeText(GSC_SQL).then(done, () => prompt('Salin SQL ini:', GSC_SQL)); else prompt('Salin SQL ini:', GSC_SQL);
+}
+function gscOv(id) {
+  let ov = document.getElementById(id);
+  if (!ov) { ov = document.createElement('div'); ov.id = id; ov.className = 'chg-ov'; ov.onclick = e => { if (e.target === ov) ov.classList.remove('open'); }; document.body.appendChild(ov); }
+  return ov;
+}
+function gscOpenForm(m) {
+  if (typeof isEditor === 'function' && !isEditor()) { showToast('Khusus Editor.'); return; }
+  const G = gscData[m] || {}, q = [...(G.queries || [])]; while (q.length < 5) q.push({ q: '', c: '' });
+  const ov = gscOv('gsc-form');
+  ov.innerHTML = `<div class="chg-box gsc-box" role="dialog" aria-label="Isi angka Google Search"><button class="chg-x" onclick="this.closest('.chg-ov').classList.remove('open')" aria-label="Tutup">✕</button>
+    <div class="chg-k">🔒 Khusus Editor</div><h2 class="chg-h">🔎 Google Search <em>${rpLabel(m)}</em></h2>
+    <p class="chg-sub">Salin dari Search Console → <b>Performa → Hasil penelusuran</b>, tanggal 1–${new Date(Date.UTC(+m.slice(0, 4), +m.slice(5), 0)).getUTCDate()} ${rpLabel(m)}. <a href="#" onclick="gscGuide();return false">📖 Cara ambil angka</a></p>
+    <div class="gsc-f3"><label class="chg-in"><span>Total klik</span><input id="gsc-c" inputmode="numeric" value="${G.clicks ?? ''}" placeholder="mis. 1240"></label>
+      <label class="chg-in"><span>Total tayangan</span><input id="gsc-i" inputmode="numeric" value="${G.impressions ?? ''}" placeholder="mis. 38500"></label>
+      <label class="chg-in"><span>Posisi rata-rata</span><input id="gsc-p" inputmode="decimal" value="${G.position == null ? '' : String(G.position).replace('.', ',')}" placeholder="mis. 14,2"></label></div>
+    <div class="chg-lbl">5 kata kunci teratas (tab Kueri, urut Klik)</div>
+    <div class="gsc-qs">${q.slice(0, 5).map((x, i) => `<div class="gsc-q"><span>${i + 1}</span><input class="gsc-qq" value="${escHtml(x.q || '')}" placeholder="kata kunci"><input class="gsc-qc" inputmode="numeric" value="${x.c ?? ''}" placeholder="klik"></div>`).join('')}</div>
+    <div class="chg-acts"><button class="rp-btn g" id="gsc-save" onclick="gscSave('${m}')">✓ Simpan</button>${gscData[m] ? `<button class="rp-btn" onclick="gscDel('${m}')">🗑 Hapus angka bulan ini</button>` : ''}</div></div>`;
+  ov.classList.add('open'); setTimeout(() => document.getElementById('gsc-c')?.focus(), 50);
+}
+const gscInt = v => { const n = parseInt(String(v || '').replace(/[^\d]/g, ''), 10); return Number.isFinite(n) ? n : null; };
+async function gscSave(m) {
+  const c = gscInt(document.getElementById('gsc-c').value), i = gscInt(document.getElementById('gsc-i').value);
+  const ps = document.getElementById('gsc-p').value.trim().replace(/\./g, '').replace(',', '.'), p = ps ? Number(ps) : null;
+  if (c == null || i == null) { showToast('Isi Total klik & Total tayangan.'); return; }
+  if (c > i) { showToast('Klik tidak mungkin lebih besar dari tayangan — periksa lagi.'); return; }
+  if (ps && !(p > 0)) { showToast('Posisi rata-rata tidak valid (contoh 14,2).'); return; }
+  const qq = [...document.querySelectorAll('#gsc-form .gsc-q')].map(r => ({ q: r.querySelector('.gsc-qq').value.trim().slice(0, 80), c: gscInt(r.querySelector('.gsc-qc').value) || 0 })).filter(x => x.q);
+  const b = document.getElementById('gsc-save'); b.disabled = true; b.textContent = '⏳ Menyimpan…';
+  const row = { month: m, clicks: c, impressions: i, position: p == null ? null : Math.round(p * 10) / 10, queries: qq, updated_at: new Date().toISOString() };
+  const { error } = await supabase.from('gsc_monthly').upsert(row);
+  if (error) { b.disabled = false; b.textContent = '✓ Simpan'; if (/gsc_monthly|does not exist|PGRST205|42P01/i.test(error.message + ' ' + error.code)) { gscCopySql(); showToast('Tabel belum ada — SQL disalin, jalankan dulu di Supabase.', 7000); } else showToast('Gagal menyimpan: ' + error.message, 6000); return; }
+  gscData[m] = row; document.getElementById('gsc-form').classList.remove('open'); showToast('✓ Angka Google Search tersimpan'); rpRender();
+}
+async function gscDel(m) {
+  if (!confirm(`Hapus angka Google Search ${rpLabel(m)}?`)) return;
+  const { error } = await supabase.from('gsc_monthly').delete().eq('month', m);
+  if (error) { showToast('Gagal menghapus: ' + error.message, 6000); return; }
+  gscData[m] = null; document.getElementById('gsc-form')?.classList.remove('open'); rpRender();
+}
+function gscGuide() {
+  const ov = gscOv('gsc-guide');
+  ov.innerHTML = `<div class="chg-box gsc-box" role="dialog" aria-label="Cara ambil angka Google Search"><button class="chg-x" onclick="this.closest('.chg-ov').classList.remove('open')" aria-label="Tutup">✕</button>
+    <div class="chg-k">📖 Panduan · ±3 menit sebulan</div><h2 class="chg-h">Cara ambil angka <em>Google Search</em></h2>
+    <ol class="gsc-steps">
+      <li>Buka <b>search.google.com/search-console</b> dengan akun Google CAI, pilih properti <code>https://hub.concerto.id/</code>.</li>
+      <li>Menu kiri <b>Performa → Hasil penelusuran</b>.</li>
+      <li>Klik filter <b>Tanggal → Khusus</b>: tanggal 1 sampai tanggal terakhir bulan yang dilaporkan → <b>Terapkan</b>.</li>
+      <li>Klik keempat kotak di atas grafik sampai aktif: <b>Total klik · Total tayangan · CTR rata-rata · Posisi rata-rata</b>.</li>
+      <li>Ketik <b>Total klik</b>, <b>Total tayangan</b> dan <b>Posisi rata-rata</b> ke form (CTR dihitung otomatis).</li>
+      <li>Di bawah grafik, tab <b>Kueri</b>, urutkan kolom <b>Klik</b> (terbesar di atas) → salin 5 kata kunci teratas + jumlah kliknya.</li>
+      <li>Tekan <b>✓ Simpan</b> — angka langsung masuk Rapor & ikut gambar PNG.</li></ol>
+    <p class="chg-tip">Isi setelah tanggal 3 tiap bulan: data Search Console terlambat ±2–3 hari. Klik di sini = orang yang mengklik CAI Hub di hasil Google (bukan iklan); kunjungan yang tercatat di kotak <b>📍 Pengunjung datang dari</b> sebagai 🔎 Google bisa sedikit berbeda karena cara hitungnya beda.</p></div>`;
+  ov.classList.add('open');
 }

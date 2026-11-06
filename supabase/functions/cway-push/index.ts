@@ -392,7 +392,7 @@ async function monthlyReport(key: Key) {
   const v = r.vis || {}, c = r.click || {}, people = v.people || 0, clicks = (c.wa || 0) + (c.maps || 0) + (c.ig || 0), install = r.app?.install || 0;
   const pct = v.people0 ? Math.round((people - v.people0) / v.people0 * 100) : null, nf = (n: number) => n.toLocaleString('id-ID');
   await db.from('monthly_push').update({ counts: { people, people0: v.people0 || 0, clicks, install } }).eq('month', f);
-  const body = `${nf(people)} pengunjung${pct == null ? '' : ` (${pct >= 0 ? '▲' : '▼'}${Math.abs(pct)}%)`} · ${nf(clicks)} klik ke partner · ${nf(install)} pasang di HP\nKetuk untuk lihat rapor lengkap.`;
+  const body = `${nf(people)} pengunjung${pct == null ? '' : ` (${pct >= 0 ? '▲' : '▼'}${Math.abs(pct)}%)`} · ${nf(clicks)} klik ke partner · ${nf(install)} pasang di HP\nKetuk untuk lihat rapor lengkap. Jangan lupa isi angka Google Search di Rapor (mulai tgl 3).`;
   const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').eq('staff', true);
   let sent = 0;
   for (const s of subs || []) {
