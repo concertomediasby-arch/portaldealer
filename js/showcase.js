@@ -1072,20 +1072,22 @@ function glSchedInit(e, it) {
 const glSchedIso = e => e.mode === 'sched' && e.sd && e.st ? new Date(`${e.sd}T${e.st}:00+07:00`).toISOString() : null;
 function glSchedSet(k, v) {
   if (!glEdit) return; glEdit[k] = v;
-  if (k === 'mode') { glEdit.published = v !== 'draft'; document.getElementById('glf-sched').outerHTML = glSchedHtml(); }
+  if (k === 'mode') { glEdit.published = v !== 'draft'; glSchedRedraw(); }
   glSchedNote();
 }
+// Gambar ulang kotak 📍 Tampil di + Tayang sekaligus (dulu hanya #glf-sched yang diganti sehingga kotak Tampil di bertambah tiap klik)
+function glSchedRedraw() { const w = document.getElementById('glf-schedw'); if (w) w.outerHTML = glSchedHtml(); glSchedNote(); }
 function glSchedHtml() {
   const e = glEdit, seg = (m, t) => `<button type="button" class="${e.mode === m ? 'on' : ''}" onclick="glSchedSet('mode','${m}')">${t}</button>`;
   const ing = e.in_gallery !== false, dl = (e.dealer || '').trim();
-  return `<div class="w4 gl-where"><div class="cwf-h">📍 Tampil di</div>
+  return `<div id="glf-schedw" style="display:contents"><div class="w4 gl-where"><div class="cwf-h">📍 Tampil di</div>
     <label class="cwf-chk"><input type="checkbox" checked disabled><span>🏪 Profil partner${dl ? ' <b>' + escHtml(dl) + '</b>' : ''} &amp; Contoh pemasangan di halaman produk</span></label>
-    <label class="cwf-chk"><input type="checkbox"${ing ? ' checked' : ''} onchange="glEdit.in_gallery=this.checked;document.getElementById('glf-sched').outerHTML=glSchedHtml();glSchedNote()"><span>🚗 Galeri Instalasi <span class="gl-wh">— menu Galeri, Dashboard, Baru minggu ini &amp; notifikasi “Instalasi baru”</span></span></label></div>
+    <label class="cwf-chk"><input type="checkbox"${ing ? ' checked' : ''} onchange="glEdit.in_gallery=this.checked;glSchedRedraw()"><span>🚗 Galeri Instalasi <span class="gl-wh">— menu Galeri, Dashboard, Baru minggu ini &amp; notifikasi “Instalasi baru”</span></span></label></div>
   <div class="w4 cwf-sched gl-sched" id="glf-sched"><div class="cwf-h">Tayang</div>
     <div class="cwf-seg">${seg('draft', glPending(e) ? 'Belum disetujui' : 'Draf')}${seg('now', glPending(e) ? 'Setujui &amp; tampilkan' : 'Tayang sekarang')}${seg('sched', '⏰ Jadwalkan')}</div>
     ${e.mode === 'sched' ? `<div class="cwf-row"><label>Tanggal<input type="date" value="${escHtml(e.sd)}" min="${todayWIB()}" oninput="glSchedSet('sd',this.value)"></label><label>Jam (WIB)<input type="time" value="${escHtml(e.st)}" step="300" oninput="glSchedSet('st',this.value)"></label></div>` : ''}
     ${e.mode !== 'draft' && !e.wasLive && !e.push_at && ing ? `<label class="cwf-chk"><input type="checkbox"${e.notify ? ' checked' : ''} onchange="glEdit.notify=this.checked;glSchedNote()"> 🔔 Kirim notifikasi “Instalasi baru” ke HP pengunjung saat tayang</label>` : ''}
-    <div class="cwf-snote" id="glf-snote"></div></div>`;
+    <div class="cwf-snote" id="glf-snote"></div></div></div>`;
 }
 function glSchedNote() {
   const e = glEdit, el = document.getElementById('glf-snote'), btn = document.getElementById('glf-save'); if (!e) return;
