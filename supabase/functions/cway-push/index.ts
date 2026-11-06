@@ -402,6 +402,31 @@ async function monthlyReport(key: Key) {
   return sent;
 }
 
+// 💬 Komentar baru di Galeri (6 Nov 2026, permintaan pemilik): komentar langsung tampil tanpa persetujuan, jadi Editor
+// dikabari (HP ber-pengingat Editor, kolom staff) agar bisa menghapus yang tidak pantas. Komentar Tim CAI sendiri tidak dikabari.
+// Satu notifikasi per mobil; ditandai notified_at. Tabel gl_comments dari SQL supabase/gallery-social.sql.
+async function glComments(key: Key) {
+  const since = new Date(Date.now() - 24 * 3600e3).toISOString();
+  const { data, error } = await db.from('gl_comments').update({ notified_at: new Date().toISOString() }).is('notified_at', null).gt('created_at', since)
+    .select('install_id, name, body, badge');
+  if (error || !data?.length) return 0;
+  const rows = (data as { install_id: string; name: string; body: string; badge: string | null }[]).filter(r => r.badge !== 'cai');
+  if (!rows.length) return 0;
+  const byCar = new Map<string, typeof rows>();
+  for (const r of rows) byCar.set(r.install_id, [...(byCar.get(r.install_id) || []), r]);
+  const { data: cars } = await db.from('showcase_installs').select('id, car_make, car_model, car_year').in('id', [...byCar.keys()]);
+  const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').eq('staff', true);
+  let sent = 0;
+  for (const [id, list] of byCar) {
+    const g = (cars || []).find(c => c.id === id) as Gl | undefined, r = list[list.length - 1];
+    const snip = r.body.length > 90 ? r.body.slice(0, 88) + '…' : r.body;
+    const payload = { title: `💬 Komentar baru di Galeri${list.length > 1 ? ` (${list.length})` : ''}`,
+      body: `${g ? glName(g) + ' — ' : ''}${r.name}${r.badge === 'partner' ? ' (partner)' : ''}: "${snip}"`, url: `/?gl=${encodeURIComponent(id)}`, tag: `glc-${id}` };
+    for (const s of subs || []) { const st = await send(s, payload, key).catch(() => 0); if (st > 0 && st < 300) sent++; }
+  }
+  return sent;
+}
+
 // 🃏 Picu bot kartu WA (6 Nov 2026, permintaan pemilik): jadwal GitHub Actions sering molor berjam-jam, jadi kartu WA berita/Galeri
 // baru telat. Tiap menit fungsi ini menghitung "sidik" data publik yang dipakai bot (berita & mobil Galeri tayang, acara publik,
 // partner, materi Academy yang sudah tayang); bila berubah → panggil workflow live-cards.yml lewat GitHub API (workflow_dispatch).
@@ -652,9 +677,11 @@ Deno.serve(async (req) => {
     let eventSent = 0; try { eventSent = await eventReminders(key); } catch (_) { /* tabel acara belum dibuat */ }
     // 11) 📊 Rapor Bulanan untuk Editor (tanggal 1 pagi)
     let raporSent = 0; try { raporSent = await monthlyReport(key); } catch (_) { /* SQL rapor belum dijalankan */ }
-    // 12) 🃏 Kartu WA: picu bot GitHub bila data publik berubah
+    // 12) 💬 Komentar baru di Galeri → HP Editor
+    let commentSent = 0; try { commentSent = await glComments(key); } catch (_) { /* SQL komentar belum dijalankan */ }
+    // 13) 🃏 Kartu WA: picu bot GitHub bila data publik berubah
     let cards = ''; try { cards = await cardsDispatch(acadAll); } catch (e) { cards = 'err: ' + String((e as Error)?.message || e); }
-    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent, eventSent, raporSent, cards });
+    return json({ staffSent, liveSent, acadSent, guideSent, gallerySent, productSent, stockSent, weeklySent, eventSent, raporSent, commentSent, cards });
   } catch (e) {
     return json({ error: String((e as Error)?.message || e) }, 500);
   }

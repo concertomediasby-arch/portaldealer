@@ -415,7 +415,8 @@ function loadGaleri(force) {
     try {
       const { data, error } = await supabase.from(GL_TABLE).select('*').order('sort', { ascending: true }).order('created_at', { ascending: false });
       if (error) throw error;
-      glItems = (data || []).filter(it => isEditor() || (it.published && !glSched(it))); glErr = '';   // draf, kiriman menunggu & terjadwal khusus Editor (5 Nov 2026) glLoadedAt = Date.now(); glSchedTimer();
+      glItems = (data || []).filter(it => isEditor() || (it.published && !glSched(it))); glErr = '';   // draf, kiriman menunggu & terjadwal khusus Editor (5 Nov 2026)
+      glLoadedAt = Date.now(); glSchedTimer(); glSocLoad();
     } catch (e) {
       const m = String(e.message || e);
       glItems = [];
@@ -455,6 +456,7 @@ function glCard(it) {
   const prods = (it.products || []).map(pid => glProd(pid).product?.name).filter(Boolean);
   return `<button class="gl-card" onclick="openGlDetail('${it.id}')">
     <span class="gl-ph">${ph ? (cov ? `<video class="gl-cover" src="${glUrl(cov.path)}"${glCovPoster(it)} muted loop autoplay playsinline webkit-playsinline preload="auto"${glFrAttr(cov)}></video>` : glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
+      ${glSocPills(it)}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? `<span class="gl-tro">${glChampLabel(it)}</span>` : ''}
       ${glPending(it) ? '<span class="gl-draft pend">MENUNGGU</span>' : !it.published ? '<span class="gl-draft">DRAF</span>' : glSched(it) ? `<span class="gl-draft sched">⏰ ${escHtml(glWhen(it.publish_at))}</span>` : it.in_gallery === false && isEditor() ? '<span class="gl-draft pf">🏪 PROFIL SAJA</span>' : ''}</span>
@@ -575,6 +577,7 @@ function openGlDetail(id, photoIdx = 0) {
         return `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
         ? `<span>✥ Geser ${what} di atas & atur zoom — bingkai itu sama dengan sampul kartu Galeri.</span><label class="gl-zm">🔍 Zoom <input type="range" min="1" max="3" step="0.05" value="${glFr(cur).z}" oninput="glZoomLive(this.value)" onchange="glZoomCommit()"><b id="gl-zmv">${glFr(cur).z.toFixed(1)}×</b></label><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Reset</button>${rot}<button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
         : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi & zoom ${what} ini</button>${rot}${it.published && !glPending(it) && !glSched(it) && typeof stkOpen === 'function' ? `<button onclick="stkOpen('${it.id}')" title="Stiker kaca Ø 10 cm dengan QR ke mobil ini di Galeri">🖨 Cetak stiker mobil ini</button>` : ''}`}</div>`; })() : ''}
+        ${glSocLikeHtml(it)}
       </div>
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>
@@ -586,11 +589,13 @@ function openGlDetail(id, photoIdx = 0) {
           return `<button class="gl-prod" onclick="closeGlDetail();showProduct('${r.brand.id}','${p.id}')">${p.photo ? `<img src="${p.photo}" alt="">` : `<span class="hof-ph">${p.emoji}</span>`}<span><b>${escHtml(p.name)}</b><small>${escHtml(r.brand.name)}${r.line ? ' · ' + escHtml(r.line) : ''}</small></span><em>Lihat →</em></button>`; }).join('')}` : ''}
         ${it.dealer ? `<div class="gl-dcard"><div class="hof-lbl">Dipasang oleh</div><b>${escHtml(it.dealer)}${d ? ' <span class="ad-badge">✓ Resmi</span>' : ''}</b><div class="gl-dc">${escHtml(d ? [d.c, d.r].join(', ') : it.city || '')}</div>
           ${d ? `<div class="ad-btns">${d.wa ? `<a class="ad-btn wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(`Halo ${d.n}, saya lihat contoh instalasi ${glTitle(it)} di CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>${pfBtn(d, 'closeGlDetail()')}</div>` : ''}</div>` : ''}
+        <div id="gl-cmt" data-gl="${it.id}">${glCmHtml(it)}</div>
         ${glCanEdit() ? `<div class="gl-adm"><button class="gt-btn" onclick="closeGlDetail();openGlForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost gt-del" onclick="deleteGlItem('${it.id}')">🗑 Hapus</button></div>` : ''}
       </div>
     </div>`;
   ov.classList.add('open');
   if (it.published && !glSched(it)) glPrepShare(it);
+  if (glSocOk(it) && (!photoIdx || !glCm[it.id])) glCmLoad(it.id);
 }
 function closeGlDetail() { glAdj = false; glAdjCtx = null; document.querySelectorAll('#gl-detail video').forEach(v => v.pause()); document.getElementById('gl-detail')?.classList.remove('open'); }
 // Atur posisi / putar foto langsung dari jendela detail (Editor, 2 Nov 2026 — permintaan pemilik): disimpan langsung ke tabel.
@@ -1301,3 +1306,230 @@ async function glOpenLinked(id) {
   const it = glItems?.find(x => x.id === id && x.published && !glPending(x) && (!glSched(x) || isEditor()));
   if (it) openGlDetail(id); else showToast('Instalasi ini tidak ditemukan atau belum ditampilkan.');
 }
+
+/* ── ❤ Suka & 💬 Komentar Galeri Instalasi (6 Nov 2026, permintaan pemilik — pratinjau .mockup/gl-social/ disetujui) ──
+   Semua pengunjung, tanpa login: ❤ sekali per browser (visitId()), komentar langsung tampil (tanpa persetujuan).
+   Pengaman di fungsi SQL gl_comment_add: link, nomor HP/WA, kata kasar, maks. 3 komentar per browser per jam, nama partner resmi /
+   Concerto / CAI hanya untuk yang login. Partner login = label ✓ Partner resmi, Admin/Editor = ✓ Tim CAI. Editor bisa 🗑 hapus
+   dan dikabari lewat notifikasi HP (Edge Function cway-push → glComments()). SQL: supabase/gallery-social.sql = GL_SOCIAL_SQL. */
+const GL_SOCIAL_SQL = `-- ❤ Suka & 💬 Komentar Galeri Instalasi (6 Nov 2026, permintaan pemilik) — jalankan sekali di Supabase → SQL Editor → Run.
+-- Semua pengunjung (tanpa login) boleh menyukai & berkomentar; komentar langsung tampil (tanpa persetujuan).
+-- Tabel tanpa policy RLS = hanya bisa diakses lewat fungsi di bawah (SECURITY DEFINER). Aman dijalankan ulang.
+
+create table if not exists public.gl_likes (
+  install_id uuid not null references public.showcase_installs(id) on delete cascade,
+  vid text not null,
+  created_at timestamptz not null default now(),
+  primary key (install_id, vid)
+);
+alter table public.gl_likes enable row level security;
+
+create table if not exists public.gl_comments (
+  id uuid primary key default gen_random_uuid(),
+  install_id uuid not null references public.showcase_installs(id) on delete cascade,
+  name text not null,
+  body text not null,
+  badge text,                    -- null = pengunjung, 'partner' = partner login, 'cai' = Tim CAI (Admin/Editor)
+  vid text,
+  created_at timestamptz not null default now(),
+  notified_at timestamptz        -- notifikasi HP Editor sudah dikirim (Edge Function cway-push)
+);
+create index if not exists gl_comments_install on public.gl_comments (install_id, created_at desc);
+create index if not exists gl_comments_vid on public.gl_comments (vid, created_at desc);
+alter table public.gl_comments enable row level security;
+
+create or replace function public.gl_visible(p uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from showcase_installs where id = p and published and (publish_at is null or publish_at <= now()));
+$$;
+revoke all on function public.gl_visible(uuid) from public, anon, authenticated;
+
+-- Hitungan untuk kartu & jendela detail: suka, komentar, dan apakah browser ini sudah menyukai
+create or replace function public.gl_social(p_ids uuid[], p_vid text)
+returns table (id uuid, likes int, comments int, liked boolean)
+language sql stable security definer set search_path = public as $$
+  select i,
+    (select count(*)::int from gl_likes l where l.install_id = i),
+    (select count(*)::int from gl_comments c where c.install_id = i),
+    coalesce(p_vid <> '' and exists (select 1 from gl_likes l where l.install_id = i and l.vid = p_vid), false)
+  from unnest(p_ids[1:400]) as i;
+$$;
+
+-- Suka / batal suka (sekali per browser)
+create or replace function public.gl_like(p_id uuid, p_vid text, p_on boolean)
+returns int language plpgsql security definer set search_path = public as $$
+begin
+  if p_vid is null or length(p_vid) < 8 or length(p_vid) > 64 then raise exception 'gl:vid'; end if;
+  if not gl_visible(p_id) then raise exception 'gl:gone'; end if;
+  if p_on then insert into gl_likes (install_id, vid) values (p_id, p_vid) on conflict do nothing;
+  else delete from gl_likes where install_id = p_id and vid = p_vid; end if;
+  return (select count(*)::int from gl_likes where install_id = p_id);
+end $$;
+
+-- Daftar komentar (terbaru dulu)
+create or replace function public.gl_comment_list(p_id uuid)
+returns table (id uuid, name text, body text, badge text, created_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select c.id, c.name, c.body, c.badge, c.created_at from gl_comments c
+  where c.install_id = p_id and (gl_visible(p_id) or coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'editor')
+  order by c.created_at desc limit 200;
+$$;
+
+-- Kirim komentar — pengaman otomatis: panjang, link, nomor HP/WA, kata kasar, maks. 3 per browser per jam,
+-- nama partner resmi / Concerto / CAI hanya untuk yang login. Kesalahan dikirim sebagai 'gl:<kode>'.
+create or replace function public.gl_comment_add(p_id uuid, p_vid text, p_name text, p_body text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  nm text := regexp_replace(btrim(coalesce(p_name, '')), '\\s+', ' ', 'g');
+  bd text := regexp_replace(btrim(coalesce(p_body, '')), '[ \\t]+', ' ', 'g');
+  role text := coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '');
+  bdg text := case when auth.uid() is null then null when role in ('admin', 'editor') then 'cai' else 'partner' end;
+  nk text; all_txt text; nid uuid;
+begin
+  if p_vid is null or length(p_vid) < 8 or length(p_vid) > 64 then raise exception 'gl:vid'; end if;
+  if not gl_visible(p_id) then raise exception 'gl:gone'; end if;
+  bd := regexp_replace(bd, '\\n{3,}', E'\\n\\n', 'g');
+  if length(nm) < 2 or length(nm) > 40 then raise exception 'gl:name'; end if;
+  if length(bd) < 2 or length(bd) > 300 then raise exception 'gl:len'; end if;
+  all_txt := lower(nm || ' ' || bd);
+  if all_txt ~ '(https?://|www\\.|wa\\.me|bit\\.ly|t\\.me/|\\m[a-z0-9-]+\\.(com|id|net|org|co|xyz|me|io|info|biz|shop|store|link|ly|site|online|my)\\M)' then raise exception 'gl:link'; end if;
+  if regexp_replace(all_txt, '[\\s\\.\\-\\(\\)\\+/]', '', 'g') ~ '\\d{9,}' then raise exception 'gl:phone'; end if;
+  if all_txt ~ '\\m(anjing|anjir|anjg|bangsat|babi|kontol|memek|ngentot|ngentod|entot|goblok|goblog|tolol|bajingan|keparat|jancok|jancuk|cuk|jembut|kampret|asu|tai|tahi|bego|idiot|pepek|peler|lonte|fuck|fucking|shit|bitch|bastard)\\M' then raise exception 'gl:rude'; end if;
+  if bdg is null then
+    nk := regexp_replace(lower(nm), '[^a-z0-9]', '', 'g');
+    if nk ~ '(concerto|caihub|^cai$|^admin|^editor)' then raise exception 'gl:reserved'; end if;
+    if exists (select 1 from auth_dealers d where regexp_replace(lower(d.name), '[^a-z0-9]', '', 'g') = nk) then raise exception 'gl:partner'; end if;
+    if (select count(*) from gl_comments where vid = p_vid and created_at > now() - interval '1 hour') >= 3 then raise exception 'gl:rate'; end if;
+  end if;
+  insert into gl_comments (install_id, name, body, badge, vid) values (p_id, nm, bd, bdg, p_vid) returning id into nid;
+  return nid;
+end $$;
+
+-- Hapus komentar — khusus Editor
+create or replace function public.gl_comment_del(p_cid uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' then raise exception 'gl:role'; end if;
+  delete from gl_comments where id = p_cid;
+  return found;
+end $$;
+
+revoke all on function public.gl_social(uuid[], text), public.gl_like(uuid, text, boolean), public.gl_comment_list(uuid),
+  public.gl_comment_add(uuid, text, text, text), public.gl_comment_del(uuid) from public;
+grant execute on function public.gl_social(uuid[], text), public.gl_like(uuid, text, boolean), public.gl_comment_list(uuid),
+  public.gl_comment_add(uuid, text, text, text) to anon, authenticated;
+grant execute on function public.gl_comment_del(uuid) to authenticated;`;
+let glSoc = {}, glSocOff = false, glSocBusy = null, glCm = {}, glCmAll = {}, glCmSending = false;
+const glSocOk = it => !glSocOff && it && it.published && !glPending(it) && !glSched(it);
+const glSocVid = () => (typeof visitId === 'function' && visitId()) || '';
+const glSocMissing = e => /gl_social|gl_like|gl_comment|PGRST202|does not exist|schema cache|404/i.test(String(e?.message || e));
+function glSocLoad() {
+  if (glSocOff || !supabase || !glItems?.length) return Promise.resolve();
+  const ids = glItems.filter(glSocOk).map(it => it.id); if (!ids.length) return Promise.resolve();
+  return glSocBusy = (async () => {
+    const { data, error } = await supabase.rpc('gl_social', { p_ids: ids, p_vid: glSocVid() });
+    if (error) { if (glSocMissing(error)) glSocOff = true; glSocBusy = null; glSocRepaint(); return; }
+    (data || []).forEach(r => { glSoc[r.id] = { l: r.likes, c: r.comments, me: !!r.liked }; });
+    glSocBusy = null; glSocRepaint();
+  })();
+}
+function glSocRepaint() {
+  if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri();
+  const box = document.getElementById('gl-detail');
+  if (box?.classList.contains('open')) { const id = document.getElementById('gl-cmt')?.dataset.gl, it = glItems?.find(x => x.id === id); if (it) glSocPaintDetail(it); }
+}
+function glSocPills(it) {
+  const s = glSocOk(it) && glSoc[it.id]; if (!s || (!s.l && !s.c)) return '';
+  return `<span class="gl-soc">${s.l ? `<span class="${s.me ? 'on' : ''}">${s.me ? '❤' : '♥'} ${s.l}</span>` : ''}${s.c ? `<span>💬 ${s.c}</span>` : ''}</span>`;
+}
+function glSocLikeHtml(it) {
+  if (!glSocOk(it)) return '';
+  const s = glSoc[it.id] || { l: 0, c: 0, me: false };
+  const txt = s.me ? (s.l > 1 ? `Anda &amp; ${s.l - 1} orang lainnya menyukai pemasangan ini` : 'Anda menyukai pemasangan ini') : s.l ? `${s.l} orang menyukai pemasangan ini` : 'Jadilah yang pertama menyukai';
+  return `<div class="gl-like" id="gl-like"><button class="${s.me ? 'on' : ''}" onclick="glLike('${it.id}')" aria-pressed="${s.me}"><span>${s.me ? '❤' : '♡'}</span> ${s.me ? 'Disukai' : 'Suka'}${s.l ? ' · ' + s.l : ''}</button>
+    <button class="gl-cmgo" onclick="document.getElementById('gl-cmt')?.scrollIntoView({behavior:'smooth',block:'start'})">💬 ${s.c || 0}</button><small>${txt}</small></div>`;
+}
+function glSocPaintDetail(it) {
+  const a = document.getElementById('gl-like'); if (a) a.outerHTML = glSocLikeHtml(it);
+  const b = document.getElementById('gl-cmt'); if (b && !b.contains(document.activeElement)) b.innerHTML = glCmHtml(it);
+}
+async function glLike(id) {
+  const it = glItems?.find(x => x.id === id); if (!glSocOk(it)) return;
+  const vid = glSocVid(); if (!vid) { showToast('⚠ Browser ini tidak mengizinkan penyimpanan data — tidak bisa menyukai.', 5000); return; }
+  const s = glSoc[id] = glSoc[id] || { l: 0, c: 0, me: false }, on = !s.me;
+  s.me = on; s.l = Math.max(0, s.l + (on ? 1 : -1)); glSocPaintDetail(it);   // langsung berubah, lalu disamakan dengan server
+  const { data, error } = await supabase.rpc('gl_like', { p_id: id, p_vid: vid, p_on: on });
+  if (error) { s.me = !on; s.l = Math.max(0, s.l + (on ? -1 : 1)); glSocPaintDetail(it); if (glSocMissing(error)) { glSocOff = true; glSocRepaint(); } else showToast('⚠ Gagal: ' + error.message, 5000); return; }
+  s.l = data ?? s.l; glSocPaintDetail(it);
+}
+async function glCmLoad(id) {
+  const { data, error } = await supabase.rpc('gl_comment_list', { p_id: id });
+  if (error) { if (glSocMissing(error)) { glSocOff = true; glSocRepaint(); } return; }
+  glCm[id] = data || [];
+  const s = glSoc[id] = glSoc[id] || { l: 0, c: 0, me: false }; s.c = glCm[id].length;
+  const it = glItems?.find(x => x.id === id); if (it && document.getElementById('gl-cmt')?.dataset.gl === id) glSocPaintDetail(it);
+}
+const glCmAgo = iso => {
+  const m = (Date.now() - Date.parse(iso)) / 60e3;
+  if (m < 1) return 'baru saja'; if (m < 60) return Math.floor(m) + ' menit lalu'; if (m < 1440) return Math.floor(m / 60) + ' jam lalu';
+  if (m < 2880) return 'kemarin';
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: m > 300 * 1440 ? 'numeric' : undefined, timeZone: 'Asia/Jakarta' });
+};
+const glCmIni = n => String(n || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+function glCmHtml(it) {
+  if (!glSocOk(it)) return isEditor() && glSocOff && it?.published ? `<div class="gl-cm-setup">💬 Suka &amp; komentar belum aktif — jalankan SQL sekali di Supabase.<button class="gt-btn" onclick="glSocCopySql()">📋 Salin SQL Suka &amp; Komentar</button></div>` : '';
+  const list = glCm[it.id], all = glCmAll[it.id], show = !list ? [] : all ? list : list.slice(0, 3);
+  let nm = ''; try { nm = localStorage.getItem('cai-gl-name') || ''; } catch (e) {}
+  if (!nm && authUser && !isAdmin()) nm = authUser.user_metadata?.store || '';
+  return `<div class="hof-lbl gl-cm-h"><span>💬 Komentar${list ? ` (${list.length})` : ''}</span>${list?.length > 1 ? '<small>terbaru dulu</small>' : ''}</div>
+    <div class="gl-cm">
+      <div class="gl-cmf">
+        <input id="gl-cmn" maxlength="40" placeholder="Nama Anda" value="${escHtml(nm)}" autocomplete="nickname">
+        <textarea id="gl-cmb" maxlength="300" placeholder="Tulis komentar… (maks. 300 huruf)" oninput="document.getElementById('gl-cmc').textContent=this.value.length+'/300'"></textarea>
+        <div class="gl-cmact"><small>${authUser ? (isAdmin() ? 'Tampil dengan label ✓ Tim CAI' : 'Tampil dengan label ✓ Partner resmi') : 'Tampil langsung · tanpa link &amp; nomor HP'} · <span id="gl-cmc">0/300</span></small><button class="gt-btn confirm" onclick="glCmSend('${it.id}')">Kirim</button></div>
+      </div>
+      ${!list ? '<div class="gl-cm-empty">⏳ Memuat komentar…</div>' : !list.length ? '<div class="gl-cm-empty">Belum ada komentar. Jadilah yang pertama!</div>'
+      : show.map(c => `<div class="gl-ci"><span class="gl-av${c.badge ? ' ' + c.badge : ''}">${escHtml(glCmIni(c.name))}</span><div class="gl-cb">
+          <div class="gl-cn"><b>${escHtml(c.name)}</b>${c.badge === 'partner' ? '<em>✓ Partner resmi</em>' : c.badge === 'cai' ? '<em class="cai">✓ Tim CAI</em>' : ''}<small>${escHtml(glCmAgo(c.created_at))}</small></div>
+          <p>${escHtml(c.body)}</p></div>${isEditor() ? `<button class="gl-cdel" onclick="glCmDel('${it.id}','${c.id}')">🗑 Hapus</button>` : ''}</div>`).join('')
+        + (list.length > 3 && !all ? `<button class="gl-cmore" onclick="glCmAll['${it.id}']=1;glSocPaintDetail(glItems.find(x=>x.id==='${it.id}'))">Lihat ${list.length - 3} komentar lainnya ›</button>` : '')}
+    </div>`;
+}
+const GL_CM_ERR = {
+  link: 'Komentar tidak boleh berisi link / alamat situs.', phone: 'Komentar tidak boleh berisi nomor HP / WhatsApp.',
+  rude: 'Mohon gunakan bahasa yang sopan.', rate: 'Terlalu banyak komentar — coba lagi sekitar 1 jam lagi.',
+  name: 'Nama minimal 2 huruf, maksimal 40.', len: 'Komentar minimal 2 huruf, maksimal 300.',
+  reserved: 'Nama itu tidak bisa dipakai. Gunakan nama Anda sendiri.', partner: 'Nama itu milik partner resmi CAI — partner silakan masuk dengan Kode Akses dulu.',
+  gone: 'Instalasi ini sudah tidak tampil.', vid: 'Browser ini tidak mengizinkan penyimpanan data — tidak bisa berkomentar.',
+};
+async function glCmSend(id) {
+  if (glCmSending) return;
+  const it = glItems?.find(x => x.id === id); if (!glSocOk(it)) return;
+  const n = document.getElementById('gl-cmn'), b = document.getElementById('gl-cmb');
+  const name = (n?.value || '').trim(), body = (b?.value || '').trim();
+  if (name.length < 2) { showToast('Isi nama Anda dulu.', 3000); n?.focus(); return; }
+  if (body.length < 2) { showToast('Tulis komentarnya dulu.', 3000); b?.focus(); return; }
+  try { localStorage.setItem('cai-gl-name', name); } catch (e) {}
+  glCmSending = true;
+  const { error } = await supabase.rpc('gl_comment_add', { p_id: id, p_vid: glSocVid(), p_name: name, p_body: body });
+  glCmSending = false;
+  if (error) {
+    const k = (String(error.message).match(/gl:(\w+)/) || [])[1];
+    if (!k && glSocMissing(error)) { glSocOff = true; glSocRepaint(); return; }
+    showToast('⚠ ' + (GL_CM_ERR[k] || 'Gagal mengirim: ' + error.message), 6000); return;
+  }
+  if (b) b.value = '';
+  showToast('✓ Komentar terkirim', 2500);
+  document.activeElement?.blur?.();
+  await glCmLoad(id);
+  if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri();
+}
+async function glCmDel(id, cid) {
+  if (!isEditor() || !confirm('Hapus komentar ini? Tidak bisa dikembalikan.')) return;
+  const { error } = await supabase.rpc('gl_comment_del', { p_cid: cid });
+  if (error) { showToast('⚠ Gagal menghapus: ' + error.message, 6000); return; }
+  showToast('✓ Komentar dihapus', 2500);
+  await glCmLoad(id);
+  if (document.getElementById('view-galeri')?.classList.contains('active')) renderGaleri();
+}
+function glSocCopySql() { (navigator.clipboard?.writeText(GL_SOCIAL_SQL) || Promise.reject()).then(() => showToast('📋 SQL disalin — jalankan sekali di Supabase → SQL Editor, lalu muat ulang.', 9000)).catch(() => prompt('Salin SQL ini, jalankan di Supabase → SQL Editor:', GL_SOCIAL_SQL)); }

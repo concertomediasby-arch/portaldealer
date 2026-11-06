@@ -5025,3 +5025,37 @@ body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tay
 .nw-phf-b button:disabled { opacity: .35; cursor: default; }
 .nw-phf-b button.ins { flex: 1; background: #14161c; color: #efcd8b; border-color: #14161c; font-weight: 700; }
 @media (max-width: 720px) { .nw-fig.n3 .nw-fgrid { grid-template-columns: 1fr 1fr; } .nw-phf-g { grid-template-columns: 1fr 1fr; } }
+
+/* ❤ Suka & 💬 Komentar Galeri Instalasi (6 Nov 2026) */
+.gl-soc { position: absolute; left: 8px; bottom: 8px; display: flex; gap: 5px; pointer-events: none; }
+.gl-soc span { font: 600 10.5px var(--f-mono); background: rgba(0,0,0,.6); color: #eee; border-radius: 999px; padding: 2px 8px; }
+.gl-soc span.on { background: #fff; color: #e0475b; }
+.gl-like { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.gl-like button { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--border); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 8px 16px; font: 700 14px var(--f-body); cursor: pointer; }
+.gl-like button span { font-size: 17px; line-height: 1; }
+.gl-like button.on { border-color: rgba(224,71,91,.45); background: rgba(224,71,91,.1); color: #e0475b; }
+.gl-like button.on span { animation: glHeart .35s ease; }
+.gl-like small { color: var(--fg-muted); font-size: 12.5px; flex-basis: 100%; }
+@keyframes glHeart { 40% { transform: scale(1.35); } }
+@media (prefers-reduced-motion: reduce) { .gl-like button.on span { animation: none; } }
+.gl-cm-h { display: flex; justify-content: space-between; align-items: baseline; margin-top: 16px; }
+.gl-cm-h small { font: 500 10px var(--f-mono); letter-spacing: .08em; color: var(--fg-muted); text-transform: none; }
+.gl-cm { border: 1px solid var(--border); background: var(--surface); border-radius: 14px; padding: 12px; }
+.gl-cmf { display: grid; gap: 7px; }
+.gl-cmf input, .gl-cmf textarea { width: 100%; border: 1px solid var(--border); background: var(--bg); color: var(--fg); border-radius: 10px; padding: 9px 11px; font: 16px var(--f-body); }
+.gl-cmf textarea { min-height: 62px; resize: vertical; }
+.gl-cmact { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.gl-cmact small { color: var(--fg-muted); font-size: 11.5px; }
+.gl-cm-empty { color: var(--fg-muted); font-size: 13px; padding: 12px 2px 2px; }
+.gl-ci { display: flex; gap: 10px; padding: 11px 0 2px; border-top: 1px solid var(--border); margin-top: 10px; }
+.gl-av { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--f-display); color: #fff; background: #6b6f78; }
+.gl-av.partner, .gl-av.cai { background: linear-gradient(135deg, var(--accent-hi), #8c6a1e); color: #1b1405; }
+.gl-cb { flex: 1; min-width: 0; }
+.gl-cn { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 7px; }
+.gl-cn b { font: 600 13.5px var(--f-body); }
+.gl-cn em { font: 600 9.5px var(--f-mono); font-style: normal; color: var(--accent); border: 1px solid rgba(216,178,106,.5); background: rgba(216,178,106,.1); border-radius: 6px; padding: 1px 6px; }
+.gl-cn small { color: var(--fg-muted); font-size: 11.5px; }
+.gl-cb p { margin: 3px 0 0; font-size: 13.5px; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere; }
+.gl-cdel { flex: none; align-self: flex-start; border: 1px solid rgba(220,80,80,.35); background: transparent; color: #d65c5c; border-radius: 8px; padding: 3px 8px; font-size: 11.5px; cursor: pointer; }
+.gl-cmore { display: block; width: 100%; margin-top: 10px; border: 0; background: none; color: var(--accent); font: 600 13px var(--f-body); cursor: pointer; }
+.gl-cm-setup { margin-top: 14px; border: 1px dashed rgba(216,178,106,.5); border-radius: 12px; padding: 10px 12px; font-size: 12.5px; color: var(--fg-muted); display: grid; gap: 8px; }
