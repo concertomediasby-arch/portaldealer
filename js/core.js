@@ -2340,6 +2340,7 @@ function showView(viewId) {
   if (viewId === 'authdealer' || viewId === 'partner') document.getElementById('mnav-authdealer')?.classList.add('active');
   if (viewId === 'mobil') document.getElementById('mnav-mobil')?.classList.add('active');
   if (viewId === 'events') document.getElementById('mnav-events')?.classList.add('active');
+  if (viewId === 'finder') document.getElementById('mnav-finder')?.classList.add('active');
   if (viewId === 'updates') document.getElementById('mnav-updates')?.classList.add('active');
   if (viewId === 'guides') document.getElementById('mnav-guides')?.classList.add('active');
   if (viewId === 'dsp') document.getElementById('mnav-dsp')?.classList.add('active');
