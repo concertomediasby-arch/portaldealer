@@ -4747,6 +4747,53 @@ textarea.ev-in { resize: vertical; }
 @media (max-width: 720px) { .rp-wrap { padding: 4px 16px 30px; } .rp-h { font-size: 24px; } .rp-kpi { grid-template-columns: 1fr 1fr; } .rp-kpi .rp-c:last-child { grid-column: 1 / -1; } .rp-cnt { grid-template-columns: 1fr 1fr; } .rp-chart { height: 100px; gap: 2px; } }
 body[data-view="rapor"] .wa-float, body[data-view="prapor"] .wa-float { display: none !important; }   /* Rapor Bulanan: tombol WA tidak menutupi angka */
 
+/* ── 📍 Pengunjung datang dari (Rapor Bulanan) + 🔗 Link & QR promosi (js/channel.js, Branding no. 7) ── */
+.rp-ch { margin-top: 14px; }
+.rp-ch-in { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.rp-cht { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.rp-cht th { text-align: left; font: 600 11.5px var(--f-body); color: var(--fg-muted); text-transform: uppercase; letter-spacing: .06em; padding: 0 8px 8px; border-bottom: 1px solid var(--border); }
+.rp-cht th:nth-child(n+3), .rp-cht td:nth-child(n+3) { text-align: right; white-space: nowrap; }
+.rp-cht td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.rp-cht tr:last-child td { border-bottom: 0; }
+.rp-cht td:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; font-weight: 600; }
+.rp-cht td small { color: var(--fg-muted); font-weight: 400; font-size: 11.5px; }
+.rp-cht tr.dim td { color: var(--fg-muted); } .rp-cht tr.dim td:first-child { font-weight: 500; } .rp-cht tr.dim .bar i { background: var(--fg-muted); opacity: .45; }
+.rp-ch-ic { display: inline-block; width: 24px; }
+.rp-ch-n { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 8px; align-items: center; min-width: 140px; }
+.rp-ch-n b { font: 600 13px var(--f-mono, monospace); text-align: right; }
+.rp-ch-n .bar { height: 7px; border-radius: 4px; background: var(--surface2, rgba(255,255,255,.06)); overflow: hidden; } .rp-ch-n .bar i { display: block; height: 100%; background: var(--rp-g); border-radius: 4px; }
+.rp-cht td:last-child b { font: 600 13px var(--f-mono, monospace); } .rp-cht td:last-child small { margin-left: 4px; color: var(--rp-ok); font-weight: 600; }
+.rp-ch-sum { margin: 0 0 12px; font-size: 13.5px; line-height: 1.5; background: var(--accent-lo); border: 1px solid var(--accent); border-radius: 12px; padding: 10px 12px; } .rp-ch-sum b { color: var(--accent-hi); }
+.rp-ch-mix { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 6px 0 8px; background: var(--surface2, rgba(255,255,255,.06)); } .rp-ch-mix i { display: block; }
+.rp-ch-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.rp-sheet.png .rp-ch-in { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+@media (max-width: 1100px) { .rp-ch-in { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 720px) { .rp-ch h2 small { display: none; } .rp-cht th { white-space: normal !important; padding: 0 5px 8px; } .rp-cht td { padding: 8px 5px; } .rp-cht th:nth-child(3), .rp-cht td:nth-child(3) { display: none; } .rp-ch-n { min-width: 90px; grid-template-columns: 30px minmax(0, 1fr); } .rp-cht td:first-child { max-width: 150px; } }
+
+.chg-ov { position: fixed; inset: 0; z-index: 1200; background: rgba(4,5,8,.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 18px; }
+.chg-ov.open { display: flex; }
+.chg-box { position: relative; width: min(860px, 100%); max-height: calc(100vh - 36px); overflow: auto; background: #0d0e12; color: #f3f1ec; border: 1px solid rgba(233,207,152,.28); border-radius: 22px; padding: 24px 26px 22px; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.chg-x { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #fff; font-size: 15px; cursor: pointer; }
+.chg-k { color: #c9a45c; font: 600 11px/1 var(--f-mono, monospace); letter-spacing: .14em; text-transform: uppercase; }
+.chg-h { font: 700 26px/1.2 var(--f-display); margin: 8px 0 4px; } .chg-h em { color: #e9cf98; font-style: normal; }
+.chg-sub { margin: 0 0 16px; color: rgba(243,241,236,.66); font-size: 14px; } .chg-sub b { color: #f3f1ec; }
+.chg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.chg-chip { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #f3f1ec; border-radius: 99px; padding: 8px 14px; font: 600 13px var(--f-body); cursor: pointer; }
+.chg-chip.on { background: #c9a45c; border-color: #c9a45c; color: #17120a; }
+.chg-in { display: grid; gap: 6px; margin-bottom: 14px; font-size: 13px; } .chg-in small { color: rgba(243,241,236,.55); } .chg-in code, .chg-story code { font-size: 12px; color: #e9cf98; }
+.chg-in input { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.16); color: #fff; border-radius: 12px; padding: 11px 13px; font: 500 16px var(--f-mono, monospace); outline: none; } .chg-in input:focus { border-color: #c9a45c; }
+.chg-res { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; align-items: center; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 16px; }
+.chg-qr { background: #fff; border-radius: 14px; padding: 8px; line-height: 0; } .chg-qr canvas { width: 100%; height: auto; image-rendering: pixelated; }
+.chg-lbl { font: 600 11px var(--f-mono, monospace); letter-spacing: .1em; text-transform: uppercase; color: rgba(243,241,236,.5); }
+.chg-link { font: 500 19px var(--f-mono, monospace); margin: 6px 0 14px; word-break: break-all; } .chg-link b { color: #e9cf98; } .chg-link .mut { color: rgba(243,241,236,.4); }
+.chg-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.chg-tip { margin: 12px 0 0; font-size: 12.5px; color: rgba(243,241,236,.62); line-height: 1.5; } .chg-tip b { color: #f3f1ec; }
+.chg-story { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 18px; align-items: center; margin-top: 16px; border-top: 1px dashed rgba(255,255,255,.12); padding-top: 16px; }
+.chg-story p { margin: 6px 0 12px; font-size: 13px; color: rgba(243,241,236,.62); }
+.chg-sth { border-radius: 10px; overflow: hidden; border: 1px solid rgba(233,207,152,.3); line-height: 0; } .chg-sth canvas { width: 100%; height: auto; }
+.chg-box .rp-btn { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #f3f1ec; } .chg-box .rp-btn.g { background: #c9a45c; border-color: #c9a45c; color: #17120a; }
+@media (max-width: 640px) { .chg-box { padding: 20px 16px 18px; border-radius: 18px; } .chg-res { grid-template-columns: 1fr; } .chg-qr { width: 200px; margin: 0 auto; } .chg-link { font-size: 15px; } .chg-h { font-size: 22px; } }
+
 /* ── ⏰ JADWAL TAYANG (khusus Editor, js/schedule.js) ── */
 .jd-wrap { padding: 18px 28px 40px; max-width: 1240px; }
 .jd-top { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; align-items: flex-start; }

@@ -1,4 +1,4 @@
--- 📊 Rapor Bulanan Editor (4 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run (aman dijalankan ulang)
+-- 📊 Rapor Bulanan Editor (4 Nov 2026; + kotak 📍 kanal 6 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run (aman dijalankan ulang)
 -- Butuh tabel dari SQL sebelumnya: site_visits (Pengunjung Portal), site_app_events (Pemasangan CAI Hub),
 -- site_interest (Minat Pengunjung), cway_push_subs (Notifikasi). Tanpa data pribadi.
 
@@ -47,10 +47,14 @@ create or replace function public.monthly_report(p_from date, p_to date)
 returns json language plpgsql security definer set search_path = public as $$
 declare a date := p_from; b date := least(p_to, p_from + 31);
   pa date := (p_from - interval '1 month')::date; pb date := least((b - interval '1 month')::date, p_from - 1);
-  g text := coalesce(auth.jwt() ->> 'role', '');
+  g text := coalesce(auth.jwt() ->> 'role', ''); ch json;
 begin
   if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' and g <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
+  -- 📍 kanal kunjungan (supabase/channels.sql, 6 Nov 2026) — null bila SQL kanal belum dijalankan
+  begin execute 'select public.channel_stats($1, $2, $3, $4)' into ch using a, b, pa, pb;
+  exception when undefined_function or undefined_table then ch := null; end;
   return json_build_object(
+    'channels', ch,
     'from', a, 'to', b, 'pfrom', pa, 'pto', pb,
     'first_day', (select min(day) from site_visits),
     'vis', (select json_build_object(

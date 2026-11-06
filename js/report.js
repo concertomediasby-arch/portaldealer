@@ -3,10 +3,11 @@
    Angka dari RPC monthly_report(p_from, p_to) (supabase/report.sql = REPORT_SQL); Academy dihitung di klien (acadAll()).
    Notifikasi tiap tanggal 1 pukul 08.00 WIB ke HP Editor (Edge Function cway-push → monthlyReport()), ketuk = /?rapor=YYYY-MM.
    Unduh PNG / Bagikan: html2canvas (cdnjs, dimuat saat dipakai).
+   📍 Kotak "Pengunjung datang dari" + tombol 🔗 Link & QR promosi: js/channel.js (Branding no. 7, 6 Nov 2026).
 ══════════════════════════════════════════ */
 const RP_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 const RP_MIN = '2026-10';   // data pengunjung mulai dicatat 30 Okt 2026
-const REPORT_SQL = `-- 📊 Rapor Bulanan Editor (4 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run (aman dijalankan ulang)
+const REPORT_SQL = `-- 📊 Rapor Bulanan Editor (4 Nov 2026; + kotak 📍 kanal 6 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run (aman dijalankan ulang)
 -- Butuh tabel dari SQL sebelumnya: site_visits (Pengunjung Portal), site_app_events (Pemasangan CAI Hub),
 -- site_interest (Minat Pengunjung), cway_push_subs (Notifikasi). Tanpa data pribadi.
 
@@ -55,10 +56,14 @@ create or replace function public.monthly_report(p_from date, p_to date)
 returns json language plpgsql security definer set search_path = public as $$
 declare a date := p_from; b date := least(p_to, p_from + 31);
   pa date := (p_from - interval '1 month')::date; pb date := least((b - interval '1 month')::date, p_from - 1);
-  g text := coalesce(auth.jwt() ->> 'role', '');
+  g text := coalesce(auth.jwt() ->> 'role', ''); ch json;
 begin
   if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' and g <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
+  -- 📍 kanal kunjungan (supabase/channels.sql, 6 Nov 2026) — null bila SQL kanal belum dijalankan
+  begin execute 'select public.channel_stats($1, $2, $3, $4)' into ch using a, b, pa, pb;
+  exception when undefined_function or undefined_table then ch := null; end;
   return json_build_object(
+    'channels', ch,
     'from', a, 'to', b, 'pfrom', pa, 'pto', pb,
     'first_day', (select min(day) from site_visits),
     'vis', (select json_build_object(
@@ -230,6 +235,7 @@ function rpRender() {
     <div class="rp-acts" data-html2canvas-ignore>
       <div class="rp-mon"><button class="rp-btn" onclick="rpGo(-1)" ${prev < RP_MIN ? 'disabled' : ''} aria-label="Bulan sebelumnya">‹</button><span>${rpShort(m)}</span><button class="rp-btn" onclick="rpGo(1)" ${next > rpNow() ? 'disabled' : ''} aria-label="Bulan berikutnya">›</button></div>
       <button class="rp-btn" onclick="rpLoad(true)" title="Muat ulang">↻</button>
+      <button class="rp-btn" onclick="chGenOpen()" title="Link & QR promosi per kanal">🔗 Link & QR</button>
       <button class="rp-btn" onclick="rpShare()" ${S ? '' : 'disabled'}>${typeof SHARE_ICON !== 'undefined' ? SHARE_ICON : ''} Bagikan</button>
       <button class="rp-btn g" onclick="rpPng()" ${S ? '' : 'disabled'}>⬇ Unduh PNG</button></div></div>`;
   if (rpMissing) { box.innerHTML = `<div class="rp-sheet">${head}<div class="rp-ins"><h3>⚙️ SQL Rapor Bulanan belum dijalankan</h3><p>Jalankan sekali di Supabase → SQL Editor → Run (file <code>supabase/report.sql</code>).</p><button class="rp-btn g" onclick="rpCopySql()">📋 Salin SQL Rapor Bulanan</button></div></div>`; return; }
@@ -277,6 +283,7 @@ function rpRender() {
       ${kpi('📞', 'Klik ke partner', rpN(ct), rpDelta(ct, c.total0), `WA ${rpN(c.wa)} · Maps ${rpN(c.maps)} · IG ${rpN(c.ig)}`)}
       ${kpi('🔔', 'Notifikasi aktif', rpN(P.now) + ' HP', P.logged ? `<span class="rp-d up">+${rpN(P.on)}</span>` : '', P.logged ? `${rpN(P.off)} berhenti` : 'mulai dicatat bulan ini')}
     </div>
+    ${typeof chBoxHtml === 'function' ? chBoxHtml(S, m) : ''}
     <div class="rp-g2">
       <div class="rp-c"><h2>Pengunjung harian <small>orang berbeda per hari</small></h2>
         <div class="rp-chart">${days.join('')}</div>
@@ -325,7 +332,7 @@ async function rpShare() {
   const r = rpRange(rpMonth), S = rpCache[`${rpMonth}|${r.to}`]; if (!S) return;
   const c = S.click || {}, ct = (c.wa || 0) + (c.maps || 0) + (c.ig || 0), v = S.vis || {};
   const d = v.people0 ? Math.round((v.people - v.people0) / v.people0 * 100) : null;
-  const text = `📊 Rapor CAI Hub · ${rpLabel(rpMonth)}${r.running ? ' (sampai ' + Number(r.to.slice(8)) + ' ' + RP_MONTHS[Number(rpMonth.slice(5)) - 1] + ')' : ''}\n👥 ${rpN(v.people)} pengunjung${d == null ? '' : ` (${d >= 0 ? '▲' : '▼'}${Math.abs(d)}%)`}\n📞 ${rpN(ct)} klik ke partner\n📲 ${rpN(S.app?.install)} pasang di HP`;
+  const text = `📊 Rapor CAI Hub · ${rpLabel(rpMonth)}${r.running ? ' (sampai ' + Number(r.to.slice(8)) + ' ' + RP_MONTHS[Number(rpMonth.slice(5)) - 1] + ')' : ''}\n👥 ${rpN(v.people)} pengunjung${d == null ? '' : ` (${d >= 0 ? '▲' : '▼'}${Math.abs(d)}%)`}\n📞 ${rpN(ct)} klik ke partner\n📲 ${rpN(S.app?.install)} pasang di HP` + (S.channels?.rows?.length ? `\n📍 Kanal teratas: ${[...S.channels.rows].sort((a, b) => b.n - a.n).slice(0, 3).map(x => `${chInfo(x.ch).t} ${rpN(x.n)}`).join(' · ')}` : '');
   const b = await rpBlob();
   if (b) { const f = new File([b], rpFile(), { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], text }); return; } catch (e) { if (e?.name === 'AbortError') return; } }
