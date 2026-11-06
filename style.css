@@ -4922,7 +4922,7 @@ body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tay
 .nw-more-s { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
 .nw-more-s button { flex: none; width: 150px; padding: 0; border: 0; border-radius: 10px; overflow: hidden; scroll-snap-align: start; cursor: zoom-in; background: #0b0d12; }
 .nw-more-s img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
-.nw-lb { position: fixed; inset: 0; z-index: 9800; background: rgba(0,0,0,.94); display: none; color: #fff; touch-action: pan-y; user-select: none; }
+.nw-lb { position: fixed; inset: 0; z-index: 9800; background: #050608; display: none; color: #fff; touch-action: pan-y; user-select: none; }
 .nw-lb.open { display: block; }
 .nw-lb-top { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; font: 700 14px var(--f-body); z-index: 2; }
 .nw-lb-top button { background: rgba(255,255,255,.12); border: 0; color: #fff; width: 38px; height: 38px; border-radius: 50%; font-size: 17px; cursor: pointer; }
