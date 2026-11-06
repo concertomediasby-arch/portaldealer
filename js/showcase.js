@@ -574,7 +574,7 @@ function openGlDetail(id, photoIdx = 0) {
         rot += `<button class="gl-wa${cur.wa ? ' on' : ''}" onclick="glAdjWa('${it.id}',${photoIdx})" title="${vid ? 'Putar lalu jeda video di adegan yang aman (tanpa plat nomor), lalu tekan — adegan itu jadi gambar kartu WhatsApp mobil ini' : 'Foto ini jadi gambar kartu WhatsApp saat mobil ini dibagikan'}">${cur.wa ? `📲 Sampul kartu WA${vid && cur.waT != null ? ' (detik ' + cur.waT + ')' : ''} · lepas` : '📲 Jadikan sampul kartu WA'}</button>`;
         return `<div class="gl-adjbar${glAdj ? ' on' : ''}">${glAdj
         ? `<span>✥ Geser ${what} di atas & atur zoom — bingkai itu sama dengan sampul kartu Galeri.</span><label class="gl-zm">🔍 Zoom <input type="range" min="1" max="3" step="0.05" value="${glFr(cur).z}" oninput="glZoomLive(this.value)" onchange="glZoomCommit()"><b id="gl-zmv">${glFr(cur).z.toFixed(1)}×</b></label><button onclick="glAdjSet('${it.id}',${photoIdx},null)">⊙ Reset</button>${rot}<button class="pri" onclick="glAdj=false;openGlDetail('${it.id}',${photoIdx})">✓ Selesai</button>`
-        : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi & zoom ${what} ini</button>${rot}`}</div>`; })() : ''}
+        : `<button onclick="glAdj=true;openGlDetail('${it.id}',${photoIdx})">🎯 Atur posisi & zoom ${what} ini</button>${rot}${it.published && !glPending(it) && !glSched(it) && typeof stkOpen === 'function' ? `<button onclick="stkOpen('${it.id}')" title="Stiker kaca Ø 10 cm dengan QR ke mobil ini di Galeri">🖨 Cetak stiker mobil ini</button>` : ''}`}</div>`; })() : ''}
       </div>
       <div>
         <div class="gl-mk">${escHtml(it.car_make || '')}</div>

@@ -269,7 +269,7 @@ async function chStoryCanvas(target) {
   x.fillStyle = gold(sx + w1, 0); x.shadowColor = 'rgba(201,164,92,.45)'; x.shadowBlur = 40; x.fillText('Hub', sx + w1, 630); x.shadowBlur = 0; x.textAlign = 'center';
   // tagline 3 poin
   x.font = '500 36px Inter, sans-serif'; x.fillStyle = 'rgba(255,255,255,.86)';
-  x.fillText('Spesifikasi lengkap · Harga SRP', W / 2, 714);
+  x.fillText('Spesifikasi lengkap · Video produk', W / 2, 714);
   x.fillText('Partner resmi terdekat', W / 2, 764);
   // kartu QR putih bertepi emas
   const qs = 520, qx = (W - qs) / 2, qy = 840, rr = 34;
@@ -291,3 +291,122 @@ async function chStoryCanvas(target) {
   return cv;
 }
 async function chStoryPng() { showToast('⏳ Menyiapkan template Story…', 4000); chDownload(await chStoryCanvas(), 'Story-CAI-Hub-1080x1920.png'); }
+
+// ── 🚗 STIKER KACA "FEATURED ON CAI HUB" Ø 10 cm (Branding no. 6, 6 Nov 2026) ──
+// Digambar di canvas (tanpa library) → PNG 300 dpi + PDF siap cetak (jsPDF): hal. 1 = gambar + bleed 3 mm + garis potong sudut,
+// hal. 2 = garis potong lingkaran Ø 100 mm (untuk mesin die-cut). QR → https://hub.concerto.id/?gl=<id>&src=stiker (ECC Q).
+// Dua versi: 'champ' (tepi emas, pil juara dari prestasi tertaut) & 'gallery' (tepi perak, pil "Galeri Instalasi").
+const STK_MM = 100, STK_BLEED = 3, STK_DPI = 300;
+const stkLink = id => `https://hub.concerto.id/?gl=${id}&src=stiker`;
+const STK_PAL = {
+  champ: { rim: ['#6e5222', '#c9a45c', '#fff1cf', '#e9cf98', '#8d6a2c', '#d8b56a', '#6e5222'], ink: '#e9cf98', glow: 'rgba(201,164,92,.28)', pillBg: ['#8d6a2c', '#e9cf98', '#fff3d6', '#c9a45c'], pillInk: '#17120a' },
+  gallery: { rim: ['#5d6066', '#b9bec7', '#ffffff', '#d7dbe2', '#7c8189', '#c4c9d1', '#5d6066'], ink: '#dfe3ea', glow: 'rgba(200,206,216,.18)', pillBg: null, pillInk: '#e9edf3' },
+};
+// Teks pil bawaan: "Juara 1 · EMMA 2026" dari prestasi tertaut (hof_id), selain itu "Galeri Instalasi"
+function stkDefaultPill(it, hof) {
+  if (!hof) return 'Galeri Instalasi';
+  const p = hof.place, lbl = p >= 1 && p <= 3 ? 'Juara ' + p : (hof.award || 'Juara');
+  const ev = `${hof.event || ''} ${hof.year || ''}`.trim(), short = `${String(hof.event || '').split(' ')[0]} ${hof.year || ''}`.trim();
+  return `${lbl} · ${(lbl + ev).length > 20 ? short : ev}`;
+}
+function stkTrophy(x, cx, cy, s, col) {   // ikon piala kecil (bukan emoji, agar sama di semua perangkat & cetakan)
+  x.save(); x.translate(cx - s / 2, cy - s / 2); x.scale(s / 24, s / 24);
+  x.strokeStyle = col; x.fillStyle = col; x.lineWidth = 2; x.lineJoin = x.lineCap = 'round';
+  x.beginPath(); x.moveTo(7, 4); x.lineTo(17, 4); x.lineTo(17, 9); x.arc(12, 9, 5, 0, Math.PI); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(7, 6); x.lineTo(4, 6); x.lineTo(4, 7.5); x.quadraticCurveTo(4, 11, 7.5, 11); x.moveTo(17, 6); x.lineTo(20, 6); x.lineTo(20, 7.5); x.quadraticCurveTo(20, 11, 16.5, 11);
+  x.moveTo(12, 14); x.lineTo(12, 18); x.moveTo(8.5, 20.5); x.lineTo(15.5, 20.5); x.moveTo(10, 18); x.lineTo(14, 18); x.stroke(); x.restore();
+}
+async function stkCanvas(o) {   // o: { id, type: 'champ' | 'gallery', pill, px? }
+  const P = STK_PAL[o.type] || STK_PAL.gallery, full = STK_MM + 2 * STK_BLEED;
+  const px = o.px || Math.round(full / 25.4 * STK_DPI), cv = document.createElement('canvas'); cv.width = cv.height = px;
+  const x = cv.getContext('2d'), u = px / full, c = px / 2, R = STK_MM / 2 * u;
+  try { await Promise.all(['700 40px Sora', '600 40px "JetBrains Mono"'].map(f => document.fonts.load(f))); } catch (e) {}
+  // latar (sampai bleed) + cahaya
+  x.fillStyle = '#060608'; x.fillRect(0, 0, px, px);
+  const g = x.createRadialGradient(c, c - 14 * u, 0, c, c, R); g.addColorStop(0, P.glow); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, px, px);
+  // tepi logam (emas / perak) dari r = 45,6 mm sampai melewati garis potong (bleed)
+  const rim = x.createConicGradient ? x.createConicGradient(-Math.PI / 3, c, c) : x.createLinearGradient(0, 0, px, px);
+  P.rim.forEach((col, i) => rim.addColorStop(i / (P.rim.length - 1), col));
+  x.beginPath(); x.arc(c, c, (STK_MM / 2 + STK_BLEED + 1) * u, 0, Math.PI * 2); x.arc(c, c, 45.6 * u, 0, Math.PI * 2, true); x.fillStyle = rim; x.fill('evenodd');
+  x.beginPath(); x.arc(c, c, 44.4 * u, 0, Math.PI * 2); x.strokeStyle = P.ink; x.globalAlpha = .45; x.lineWidth = .25 * u; x.stroke(); x.globalAlpha = 1;
+  // bintik bintang kecil di kiri-kanan judul
+  x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+  // FEATURED ON
+  x.font = `600 ${3.3 * u}px "JetBrains Mono", monospace`; x.fillStyle = P.ink;
+  const sp = t => { const ch = [...t], gap = .9 * u, w = ch.reduce((s, k) => s + x.measureText(k).width + gap, -gap); let cx = c - w / 2; x.textAlign = 'left'; ch.forEach(k => { x.fillText(k, cx, c - 31.5 * u); cx += x.measureText(k).width + gap; }); x.textAlign = 'center'; };
+  sp('FEATURED ON');
+  // CAI Hub
+  x.font = `700 ${10.5 * u}px Sora, sans-serif`;
+  const w1 = x.measureText('CAI ').width, w2 = x.measureText('Hub').width, sx = c - (w1 + w2) / 2;
+  x.textAlign = 'left'; x.fillStyle = '#fff'; x.fillText('CAI ', sx, c - 21.5 * u);
+  const hg = x.createLinearGradient(sx + w1, 0, sx + w1 + w2, 0); ['#8d6a2c', '#e9cf98', '#fff3d6', '#c9a45c'].forEach((k, i) => hg.addColorStop(i / 3, k));
+  x.fillStyle = o.type === 'champ' ? hg : '#e9edf3'; x.fillText('Hub', sx + w1, c - 21.5 * u); x.textAlign = 'center';
+  // QR di kotak putih membulat
+  const qs = 37 * u, qx = c - qs / 2, qy = c - 17.5 * u, rr = 3.2 * u;
+  const rect = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
+  rect(qx, qy, qs, qs, rr); x.fillStyle = '#fff'; x.fill();
+  qrDraw(x, qrMatrix(stkLink(o.id), 'Q'), qx + 1.6 * u, qy + 1.6 * u, qs - 3.2 * u, { margin: 1.5, fg: '#060608', bg: null });
+  // pil (juara: emas penuh · galeri: garis perak)
+  const pill = String(o.pill || '').slice(0, 30), ic = o.type === 'champ';
+  x.font = `700 ${3.5 * u}px Sora, sans-serif`;
+  const tw = x.measureText(pill).width, pw = Math.min(70 * u, tw + (ic ? 11 : 7) * u), ph = 7 * u, py = c + 23.5 * u, px0 = c - pw / 2;
+  rect(px0, py, pw, ph, ph / 2);
+  if (P.pillBg) { const pg = x.createLinearGradient(px0, 0, px0 + pw, 0); P.pillBg.forEach((k, i) => pg.addColorStop(i / (P.pillBg.length - 1), k)); x.fillStyle = pg; x.fill(); }
+  else { x.fillStyle = 'rgba(223,227,234,.10)'; x.fill(); x.strokeStyle = P.ink; x.lineWidth = .35 * u; x.stroke(); }
+  if (ic) stkTrophy(x, px0 + 4.6 * u, py + ph / 2, 4.2 * u, P.pillInk);
+  x.fillStyle = P.pillInk; x.textBaseline = 'middle'; x.fillText(pill, c + (ic ? 2.1 * u : 0), py + ph / 2 + .2 * u); x.textBaseline = 'alphabetic';
+  // alamat
+  x.font = `600 ${2.9 * u}px "JetBrains Mono", monospace`; x.fillStyle = P.ink; x.globalAlpha = .9; x.fillText('hub.concerto.id', c, c + 38.2 * u); x.globalAlpha = 1;
+  return cv;
+}
+// PDF siap cetak: halaman 126 × 126 mm (gambar 106 mm = 100 + bleed 3 mm, garis potong sudut), hal. 2 = garis potong lingkaran
+function stkPdf(cv, meta) {
+  const { jsPDF } = window.jspdf, M = 10, full = STK_MM + 2 * STK_BLEED, S = full + 2 * M;
+  const doc = new jsPDF({ unit: 'mm', format: [S, S], compress: true });
+  doc.addImage(cv.toDataURL('image/jpeg', .95), 'JPEG', M, M, full, full);
+  doc.setLineWidth(.2); doc.setDrawColor(0);
+  const a = M + STK_BLEED, b = M + STK_BLEED + STK_MM;
+  [[a, a, -1, -1], [b, a, 1, -1], [a, b, -1, 1], [b, b, 1, 1]].forEach(([X, Y, dx, dy]) => { doc.line(X + dx * 4, Y, X + dx * 9, Y); doc.line(X, Y + dy * 4, X, Y + dy * 9); });
+  doc.setFontSize(6); doc.setTextColor(90); doc.text(`Stiker kaca CAI Hub · Ø ${STK_MM / 10} cm · bleed ${STK_BLEED} mm · ${meta}`, M, S - 3);
+  doc.addPage([S, S]);
+  doc.setDrawColor(236, 0, 140); doc.setLineWidth(.25); doc.circle(S / 2, S / 2, STK_MM / 2, 'S');
+  doc.setTextColor(236, 0, 140); doc.text(`GARIS POTONG (die-cut) · lingkaran Ø ${STK_MM} mm · posisi sama dengan halaman 1`, M, S - 3);
+  return doc;
+}
+
+// ── Jendela "🖨 Cetak stiker mobil ini" (khusus Editor, dari jendela detail Galeri) ──
+let stkCur = null;
+function stkOpen(id) {
+  if (typeof isEditor === 'function' && !isEditor()) { showToast('Khusus Editor.'); return; }
+  const it = (glItems || []).find(x => x.id === id); if (!it) return;
+  if (!it.published || glPending(it) || glSched(it)) { showToast('Stiker hanya untuk mobil yang sudah tayang.'); return; }
+  const hof = it.hof_id ? hofData().find(e => e.id === it.hof_id) : null;
+  stkCur = { id, it, hof, type: hof ? 'champ' : 'gallery', pill: stkDefaultPill(it, hof) };
+  let ov = document.getElementById('stk-ov');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'stk-ov'; ov.className = 'chg-ov stk-ov'; ov.onclick = e => { if (e.target === ov) stkClose(); }; document.body.appendChild(ov); }
+  ov.innerHTML = `<div class="chg-box stk-box" role="dialog" aria-label="Cetak stiker mobil"><button class="chg-x" onclick="stkClose()" aria-label="Tutup">✕</button>
+    <div class="chg-k">🔒 Khusus Editor</div><h2 class="chg-h">🖨 Stiker kaca <em>Featured on CAI Hub</em></h2>
+    <p class="chg-sub">${escHtml(glTitle(it))}${it.dealer ? ' · ' + escHtml(it.dealer) : ''} — scan stiker membuka mobil ini di Galeri CAI Hub.</p>
+    <div class="stk-grid"><div class="stk-prev"><canvas id="stk-cv" width="560" height="560"></canvas></div><div>
+      <div class="chg-lbl">Versi</div>
+      <div class="chg-chips"><button class="chg-chip${stkCur.type === 'champ' ? ' on' : ''}" onclick="stkSet('type','champ')">🏆 Juara · tepi emas</button><button class="chg-chip${stkCur.type === 'gallery' ? ' on' : ''}" onclick="stkSet('type','gallery')">🚗 Galeri Instalasi · tepi perak</button></div>
+      <label class="chg-in"><span>Teks pil <small>maks. 30 huruf${hof ? ' · dari prestasi tertaut, bisa diubah' : ''}</small></span><input id="stk-pill" value="${escHtml(stkCur.pill)}" maxlength="30" oninput="stkSet('pill',this.value)"></label>
+      <div class="chg-lbl">Link QR</div><div class="chg-link stk-link">hub.concerto.id/?gl=…&amp;src=<b>stiker</b></div>
+      <div class="chg-acts"><button class="rp-btn g" onclick="stkPdfDl()">⬇ PDF siap cetak</button><button class="rp-btn" onclick="stkPngDl()">⬇ PNG 300 dpi</button></div>
+      <p class="chg-tip">Ukuran Ø 10 cm, bleed 3 mm. PDF berisi 2 halaman: gambar + garis potong sudut, dan garis potong lingkaran untuk die-cut. Cetak di <b>vinyl / stiker kaca</b>, tempel dari luar di kaca belakang atau kaca samping belakang (bukan kaca film gelap pekat agar QR terbaca). Scan tercatat di Rapor sebagai kanal 🚗 Stiker mobil.</p>
+    </div></div></div>`;
+  ov.classList.add('open');
+  stkPaint();
+}
+function stkClose() { document.getElementById('stk-ov')?.classList.remove('open'); }
+function stkSet(k, v) { if (!stkCur) return; stkCur[k] = v; if (k === 'type') document.querySelectorAll('#stk-ov .chg-chip').forEach((b, i) => b.classList.toggle('on', (i === 0) === (v === 'champ'))); stkPaint(); }
+let stkPT = 0;
+function stkPaint() { clearTimeout(stkPT); stkPT = setTimeout(async () => { const t = document.getElementById('stk-cv'); if (!t || !stkCur) return; const cv = await stkCanvas({ ...stkCur, px: 560 }); const x = t.getContext('2d'); x.clearRect(0, 0, 560, 560); x.save(); x.beginPath(); x.arc(280, 280, 280 * STK_MM / (STK_MM + 2 * STK_BLEED), 0, Math.PI * 2); x.clip(); x.drawImage(cv, 0, 0); x.restore(); }, 60); }
+const stkName = ext => `Stiker-CAI-Hub-${(glTitle(stkCur.it) || 'mobil').replace(/[^\w]+/g, '-')}-${stkCur.type === 'champ' ? 'juara' : 'galeri'}.${ext}`;
+async function stkPngDl() { if (!stkCur) return; const cv = await stkCanvas(stkCur); chDownload(cv, stkName('png')); }
+async function stkPdfDl() {
+  if (!stkCur) return;
+  if (!window.jspdf) { showToast('Komponen PDF belum termuat — periksa koneksi lalu coba lagi.'); return; }
+  const cv = await stkCanvas(stkCur), doc = stkPdf(cv, glTitle(stkCur.it));
+  doc.save(stkName('pdf')); showToast('✓ PDF stiker diunduh');
+}

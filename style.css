@@ -4794,6 +4794,14 @@ body[data-view="rapor"] .wa-float, body[data-view="prapor"] .wa-float { display:
 .chg-box .rp-btn { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #f3f1ec; } .chg-box .rp-btn.g { background: #c9a45c; border-color: #c9a45c; color: #17120a; }
 @media (max-width: 640px) { .chg-box { padding: 20px 16px 18px; border-radius: 18px; } .chg-res { grid-template-columns: 1fr; } .chg-qr { width: 200px; margin: 0 auto; } .chg-link { font-size: 15px; } .chg-h { font-size: 22px; } }
 
+/* ── 🚗 Stiker kaca Featured on CAI Hub (Editor, js/channel.js — Branding no. 6) ── */
+.stk-box { width: min(900px, 100%); }
+.stk-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 22px; align-items: start; }
+.stk-prev { background: repeating-conic-gradient(#1a1b20 0 25%, #111216 0 50%) 0 0 / 18px 18px; border-radius: 18px; padding: 14px; line-height: 0; }
+.stk-prev canvas { width: 100%; height: auto; }
+.stk-box .chg-chips { margin: 6px 0 14px; } .stk-link { font-size: 15px; margin: 6px 0 14px; }
+@media (max-width: 640px) { .stk-grid { grid-template-columns: 1fr; } .stk-prev { width: 240px; margin: 0 auto; } }
+
 /* ── ⏰ JADWAL TAYANG (khusus Editor, js/schedule.js) ── */
 .jd-wrap { padding: 18px 28px 40px; max-width: 1240px; }
 .jd-top { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
