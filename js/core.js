@@ -2133,6 +2133,7 @@ function adRerender() {
   if (typeof carsRerender === 'function') carsRerender();   // Cari per Mobil, Profil Partner, kotak Dashboard (js/cars.js)
   if (on('view-halloffame') && typeof renderHallOfFame === 'function') renderHallOfFame();
   if (on('view-galeri') && typeof renderGaleri === 'function') renderGaleri();
+  if (on('view-news') && typeof nwProjRefresh === 'function') nwProjRefresh();   // kotak Project & partner pemasang di berita (js/news.js)
   if (document.getElementById('rks')?.classList.contains('open')) rkSendRender();   // jendela Kirim rakitan ke partner
 }
 function adEnsure() { if (adTried || adLoading) return; loadAuthDealers().then(adRerender); }

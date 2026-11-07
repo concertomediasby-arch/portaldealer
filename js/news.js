@@ -146,20 +146,20 @@ function nwProjStat(it) { const pj = nwProj(it); if (!pj.length) return ''; cons
   return `🏪 ${pj.length} project${n ? ` · ${n} partner resmi CAI` : ''}`; }
 function nwProjHtml(it) {
   const pj = nwProj(it); if (!pj.length) return '';
-  return `<div class="nw-pj"><div class="nw-pj-h"><b>🔧 Project &amp; partner pemasang</b><span>${escHtml(nwProjStat(it).replace('🏪 ', ''))}</span></div>
+  return `<div class="nw-pj" id="nw-pj"><div class="nw-pj-h"><b>🔧 Project &amp; partner pemasang</b><span>${escHtml(nwProjStat(it).replace('🏪 ', ''))}</span></div>
     <div class="nw-pj-g">${pj.map(p => { const d = nwPd(p.partner), md = nwMedal(p.result);
       const wa = d?.wa ? `https://wa.me/${d.wa}?text=${waText(`Halo ${d.n}, saya lihat project ${p.car || 'mobil'} di berita CAI Hub "${it.title}". Saya ingin bertanya tentang pemasangan audio.`)}` : '';
       return `<div class="nw-pc">${p.result ? `<span class="nw-res${md[1]}">${md[0]} ${escHtml(p.result)}</span>` : ''}
         ${p.car ? `<div class="nw-pc-car">${escHtml(p.car)}</div>` : ''}${p.owner ? `<div class="nw-pc-who">Peserta: ${escHtml(p.owner)}</div>` : ''}
         ${p.partner ? `<div class="nw-pc-pt"><span class="nw-ini">${escHtml(nwIni(d?.n || p.partner))}</span><span class="nw-pc-nm">${escHtml(d?.n || p.partner)}${d?.c ? ` <small>· ${escHtml(d.c)}</small>` : ''}</span>
-          ${d ? `<span class="nw-pc-b">${typeof pfBtn === 'function' ? pfBtn(d) : ''}${wa ? `<a class="ad-btn wa" href="${wa}" target="_blank" rel="noopener">💬 WA</a>` : `<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>`}</span>` : ''}</div>` : ''}
+          ${d ? `<div class="ad-btns nw-pc-btns">${wa ? `<a class="ad-btn wa" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>${typeof pfBtn === 'function' ? pfBtn(d) : ''}</div>` : ''}</div>` : ''}
         ${p.gl ? `<button class="nw-pc-gl" onclick="nwOpenGl('${escHtml(p.gl)}')">📷 Lihat di Galeri ›</button>` : ''}</div>`; }).join('')}</div></div>`;
 }
 function nwProjSide(it) {
   const pj = nwProj(it); if (!pj.length) return '';
   const m = new Map(); pj.forEach(p => { if (!p.partner) return; const k = normKey(p.partner); m.set(k, { name: p.partner, n: (m.get(k)?.n || 0) + 1 }); });
   if (!m.size) return '';
-  return `<div class="nw-sbox nw-pjs"><div class="nw-sh">🏪 Partner di berita ini</div>${[...m.values()].sort((a, b) => b.n - a.n).map(x => { const d = nwPd(x.name);
+  return `<div class="nw-sbox nw-pjs" id="nw-pjs"><div class="nw-sh">🏪 Partner di berita ini</div>${[...m.values()].sort((a, b) => b.n - a.n).map(x => { const d = nwPd(x.name);
     return `<${d ? `button onclick="openPartner('${shareSlug(d.n)}')"` : 'div'} class="nw-pl"><span class="nw-ini">${escHtml(nwIni(d?.n || x.name))}</span><span class="nw-pl-t"><b>${escHtml(d?.n || x.name)}</b>${d ? `<small>${escHtml(d.c || d.r || '')} · Profil ›</small>` : ''}</span><em>${x.n} project</em></${d ? 'button' : 'div'}>`; }).join('')}</div>`;
 }
 async function nwOpenGl(id) {
@@ -447,6 +447,17 @@ function renderNwPost(body, it) {
     </div>
   </div>`;
   document.querySelector('.main')?.scrollTo?.({ top: 0 }); window.scrollTo({ top: 0 });
+  // Partner yang baru ditambahkan lewat Editor hanya ada di tabel database (belum di AUTH_DEALERS bawaan):
+  // muat daftar terbaru agar WhatsApp/Instagram/Maps tetap muncul — nwProjRefresh() menggambar ulang kotaknya
+  if (nwProj(it).some(p => p.partner) && typeof adEnsure === 'function') adEnsure();
+}
+// Dipanggil adRerender() (js/core.js) setelah daftar partner dari database dimuat: hanya kotak partner yang diganti
+// (tanpa render ulang halaman — posisi gulir & catatan "dibuka" tidak berubah)
+function nwProjRefresh() {
+  if (!nwCur || !document.getElementById('view-news')?.classList.contains('active')) return;
+  const it = nwShown().find(x => x.id === nwCur); if (!it) return;
+  const swap = (id, html) => { const el = document.getElementById(id); if (el && html) el.outerHTML = html; };
+  swap('nw-pj', nwProjHtml(it)); swap('nw-pjs', nwProjSide(it));
 }
 // Tombol link: link produk portal (?p=… / ?news=… / ?cw=…) dibuka di dalam portal, selain itu tab baru
 function nwOpenLink(id) {
