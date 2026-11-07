@@ -184,7 +184,7 @@ function pageHtml({ dir, id, title, desc, img, target }) {
 <meta name="twitter:image" content="${img}">
 <link rel="icon" href="/favicon.ico">
 <meta http-equiv="refresh" content="0; url=${esc(target)}">
-<script>location.replace(${JSON.stringify(target)} + location.hash);</script>
+<script>location.replace(${JSON.stringify(target)} + (location.search ? '&' + location.search.slice(1) : '') + location.hash);</script>
 </head><body style="background:#07080a;color:#eceef2;font-family:sans-serif;text-align:center;padding:40px">
 <p>Membuka CAI Hub…</p><p><a style="color:#d8b26a" href="${esc(target)}">${esc(title)}</a></p>
 </body></html>
