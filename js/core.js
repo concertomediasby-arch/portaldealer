@@ -2192,7 +2192,7 @@ async function saveAdDealer() {
 }
 async function deleteAdDealer(id) {
   const d = adRows?.find(x => x.id === id); if (!d || !supabase) return;
-  if (!confirm(`Hapus partner "${d.n}" dari daftar Authorized Partner?\n\nTips: untuk menyembunyikan sementara, pakai ✏️ Edit lalu hilangkan centang "Tampilkan".`)) return;
+  if (!confirm(`Hapus partner "${d.n}" dari daftar Enthusiast Partner?\n\nTips: untuk menyembunyikan sementara, pakai ✏️ Edit lalu hilangkan centang "Tampilkan".`)) return;
   const { error } = await supabase.from(AD_TABLE).delete().eq('id', id);
   if (error) { showToast('⚠ Gagal menghapus: ' + error.message, 6000); return; }
   showToast('✓ Partner dihapus');
@@ -2925,7 +2925,7 @@ function acadOpenLinked(no) {
 /* ── Bagikan Authorized Dealer (3 Nov 2026, permintaan pemilik): nama, kota, alamat, WA & Maps dealer + link ?dealer=<nama> ── */
 function adShare(name) {
   const d = adPublic().find(x => x.n === name) || (adRows || []).find(x => x.n === name); if (!d) return;
-  const text = `📍 *${d.n}* — Authorized Partner Concerto Audio Indonesia\n${[d.c, d.r].filter(Boolean).join(', ')}` +
+  const text = `📍 *${d.n}* — Enthusiast Partner Concerto Audio Indonesia\n${[d.c, d.r].filter(Boolean).join(', ')}` +
     (d.a ? `\n${d.a}` : '') + (d.wa ? `\nWhatsApp: https://wa.me/${d.wa}` : '') + (d.ig ? `\nInstagram: @${d.ig}` : '') +
     `\nMaps: ${adMaps(d)}\n\nDaftar partner resmi di CAI Hub:\n${AUTH_DEALERS.some(x => x.n === d.n) ? sharePage('d', shareSlug(d.n)) : PORTAL_URL + '/?dealer=' + encodeURIComponent(d.n)}`;
   shareWa(text);

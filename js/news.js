@@ -612,7 +612,7 @@ function nwProjFormHtml(f) {
     <datalist id="nw-dl-pt">${adPublic().map(d => `<option value="${escHtml(d.n)}">`).join('')}</datalist>
     <div class="nw-pjf-a"><button type="button" class="gt-btn ghost" onclick="nwPjAdd()">＋ Tambah project</button>
       ${gl.length ? `<select onchange="nwPjFromGl(this.value);this.value=''"><option value="">📷 Ambil dari Galeri Instalasi…</option>${gl.map(g => `<option value="${escHtml(g.id)}">${escHtml(carOf(g) + (g.dealer ? ' · ' + g.dealer : ''))}</option>`).join('')}</select>` : ''}</div>
-    <small class="nw-ythint">Partner diambil dari daftar Authorized Partner sehingga tombol Profil &amp; WhatsApp tersambung otomatis. Nama di luar daftar tetap tampil sebagai teks.</small></div>`;
+    <small class="nw-ythint">Partner diambil dari daftar Enthusiast Partner sehingga tombol Profil &amp; WhatsApp tersambung otomatis. Nama di luar daftar tetap tampil sebagai teks.</small></div>`;
 }
 function nwPjSet(i, k, v) { if (nwForm?.projects[i]) nwForm.projects[i][k] = v; }
 function nwPjAdd() { if (!nwForm) return; nwForm.projects.push({ car: '', owner: '', result: '', partner: '' }); renderNwForm(); }

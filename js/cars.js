@@ -209,13 +209,13 @@ function openPartner(slug) {
 function renderPartner() {
   const el = document.getElementById('partner-body'); if (!el) return;
   const d = pfFind(pfSel);
-  if (!d) { el.innerHTML = `<button class="car-back" onclick="openAuthDealers()">‹ Authorized Partner</button><div class="stock-empty">${adRows || adTried ? 'Partner ini tidak ada di daftar partner resmi CAI.' : 'Memuat data partner…'}</div>`; return; }
+  if (!d) { el.innerHTML = `<button class="car-back" onclick="openAuthDealers()">‹ Enthusiast Partner</button><div class="stock-empty">${adRows || adTried ? 'Partner ini tidak ada di daftar partner resmi CAI.' : 'Memuat data partner…'}</div>`; return; }
   const { gl } = pfData(d.n), hof = HOF_ON ? pfData(d.n).hof : [], cnt = pl => hof.filter(e => e.place === pl).length;
   const cars = new Set([...gl.map(g => carKey(g.car_make, g.car_model)), ...hof.map(e => { const s = carSplit(e.car); return s ? carKey(s.make, s.model) : ''; }).filter(Boolean)]);
   const brands = new Map(); for (const g of gl) for (const bid of new Set((g.products || []).map(id => findProductAny(id).brand?.id).filter(Boolean))) brands.set(bid, (brands.get(bid) || 0) + 1);
   const msg = `Halo ${d.n}, saya lihat profil & hasil pemasangan Anda di CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya.`;
   const carChips = CARS_ON ? [...cars].map(k => carList().find(c => c.key === k)).filter(Boolean) : [];
-  el.innerHTML = `<button class="car-back" onclick="openAuthDealers()">‹ Authorized Partner</button>
+  el.innerHTML = `<button class="car-back" onclick="openAuthDealers()">‹ Enthusiast Partner</button>
     <div class="pf-hd"><span class="pf-av">${escHtml(pfInit(d.n))}</span><div><h2>${escHtml(d.n)}</h2>
       <small>📍 ${escHtml([d.c, d.r].filter(Boolean).join(', '))}${d.a ? ' · ' + escHtml(d.a) : ''}</small>
       <div class="pf-badges"><span class="pf-ok">✓ Partner resmi CAI</span>${hof.length ? `<span class="pf-tr">🏆 ${hof.length} prestasi${cnt(1) ? ' · ' + cnt(1) + ' Juara 1' : ''}</span>` : ''}</div></div>

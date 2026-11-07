@@ -162,7 +162,7 @@ function cpResHtml() {
   let res = '';
   if (cpRes && cpRes.length) res = cpRes.map(d => `<div class="cp-res ok"><b class="t ok-t">✅ ${escHtml(d.n)} — Partner Resmi CAI</b>
       <span class="meta">📍 ${escHtml([d.c, d.r].filter(Boolean).join(', '))}${d.a ? ' · ' + escHtml(d.a) : ''}</span>
-      <div class="cp-acts">${d.wa ? `<a class="wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(cpWaMsg(d))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<a href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a><button onclick='adOpenLinked(${escHtml(JSON.stringify(d.n))})'>Lihat di Authorized Partner ›</button></div></div>`).join('');
+      <div class="cp-acts">${d.wa ? `<a class="wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(cpWaMsg(d))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<a href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a><button onclick='adOpenLinked(${escHtml(JSON.stringify(d.n))})'>Lihat di Enthusiast Partner ›</button></div></div>`).join('');
   else if (cpRes) res = `<div class="cp-res no"><b class="t no-t">Nama “${escHtml(cpQ)}” belum ada di daftar partner resmi CAI</b>
       <span class="meta">Bisa jadi namanya berbeda. Agar dapat produk resmi &amp; harga sesuai, belanja di partner resmi terdekat.</span>
       <div class="cp-acts"><button onclick="openAuthDealers()">Lihat partner resmi terdekat ›</button></div></div>`;

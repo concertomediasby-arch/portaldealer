@@ -165,7 +165,7 @@ async function loadIntStats() {
   if (vsTab === 'int') renderVisitors();
 }
 function intCopySql() { (navigator.clipboard?.writeText(INT_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => prompt('Salin SQL ini:', INT_SQL)); }
-const INT_SRC = { produk: ['Halaman produk “Tanya”', 'var(--accent)'], simulator: ['System Simulator “Kirim rakitan”', '#f0c75e'], partner: ['Authorized Partner', '#6fd3e6'], cek: ['Cek Partner Resmi', '#52c38a'], profil: ['Profil Partner', '#e8c14a'], mobil: ['Cari per Mobil', '#7aa7ff'], finder: ['Temukan Sistem', '#ff9bd2'], cari: ['Pencarian Dashboard', '#a3e07a'], news: ['Berita News (project)', '#3fb8cf'],
+const INT_SRC = { produk: ['Halaman produk “Tanya”', 'var(--accent)'], simulator: ['System Simulator “Kirim rakitan”', '#f0c75e'], partner: ['Enthusiast Partner', '#6fd3e6'], cek: ['Cek Partner Resmi', '#52c38a'], profil: ['Profil Partner', '#e8c14a'], mobil: ['Cari per Mobil', '#7aa7ff'], finder: ['Temukan Sistem', '#ff9bd2'], cari: ['Pencarian Dashboard', '#a3e07a'], news: ['Berita News (project)', '#3fb8cf'],
   google: ['Halaman Google /partner/', '#b48cf2'], hof: ['Hall of Fame', '#f0a35e'], galeri: ['Galeri Instalasi', '#e2685f'], lain: ['Lainnya', '#8b92a1'] };
 function intTrend(n, n0) {
   if (!n0) return n ? '<small class="int-up">baru</small>' : '';
@@ -208,7 +208,7 @@ function intHtml() {
       <div>
         <div class="vs-box"><h3>📞 Klik ke partner</h3><div class="vs-note" style="margin:2px 0 8px">Tombol WhatsApp · Maps · Instagram partner yang diklik pengunjung (tercatat saat ditekan — belum tentu pesan WA terkirim).</div>
           ${parts ? `<div class="int-pt h"><span>Partner</span><span>WA</span><span>Maps</span><span>IG</span><span>Total</span></div>${parts}<div class="vs-note" style="margin:12px 0 0">Dari mana kliknya</div>${src}` : empty('Belum ada klik.')}</div>
-        <div class="vs-box"><h3>📍 Kota paling banyak dicari</h3><div class="vs-note" style="margin:2px 0 8px">Provinsi di “Beli &amp; pasang di partner resmi”, chip provinsi &amp; pencarian kota di Authorized Partner.</div>${chips(S.cities) || empty('Belum ada data.')}</div>
+        <div class="vs-box"><h3>📍 Kota paling banyak dicari</h3><div class="vs-note" style="margin:2px 0 8px">Provinsi di “Beli &amp; pasang di partner resmi”, chip provinsi &amp; pencarian kota di Enthusiast Partner.</div>${chips(S.cities) || empty('Belum ada data.')}</div>
       </div>
     </div>
     <div class="int-g2">

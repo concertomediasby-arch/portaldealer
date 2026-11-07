@@ -74,7 +74,7 @@ for (const k of PAKET_AUDIO) items.push({ kind: 'k', id: k.id, target: `/?paket=
   title: k.title, desc: clip(`${k.segment} · Komponen: ${k.products.join(', ')}. Lihat detail & unduh PDF paket di CAI Hub.`, 200),
   card: { t: 'k', title: k.title, seg: k.segment, prods: k.products, icon: k.icon, file: k.available ? k.file : '' } });
 for (const d of AUTH_DEALERS) items.push({ kind: 'd', id: shareSlug(d.n), target: `/?dealer=${encodeURIComponent(d.n)}`,
-  title: `${d.n} — Authorized Partner Concerto Audio Indonesia`, desc: clip([[d.c, d.r].filter(Boolean).join(', '), d.a, 'Dealer resmi Audiocircle · STEG · Zelos · Diosdela · OG One Sound · Audio System.'].filter(Boolean).join(' · '), 200),
+  title: `${d.n} — Enthusiast Partner Concerto Audio Indonesia`, desc: clip([[d.c, d.r].filter(Boolean).join(', '), d.a, 'Dealer resmi Audiocircle · STEG · Zelos · Diosdela · OG One Sound · Audio System.'].filter(Boolean).join(' · '), 200),
   card: { t: 'd', name: d.n, city: d.c || '', region: d.r || '', addr: d.a || '', ig: d.ig || '' } });
 
 // Sorotan Brand (4 Nov 2026, permintaan pemilik): /s/<brand>/ → /?sorotan=<brand> (jendela video kotak Dashboard).
@@ -215,7 +215,7 @@ function cardHtml(c) {
   if (c.t === 'k') return `<div class="c split" id="c"><div class="im">${c.cover ? `<img src="/${esc(c.cover)}" style="object-position:left top">` : `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:160px">${c.icon}</span>`}</div><div class="in">
     <img class="lg" src="${LOGO_WHITE}"><div class="kk">Paket Audio · ${esc(c.seg)}</div><h1 style="font-size:40px">${esc(c.title)}</h1>
     <ul>${c.prods.slice(0, 4).map(p => `<li>${esc(p)}</li>`).join('')}</ul><div class="ft"><span style="font-size:18px;color:#9aa0ad">PDF paket di CAI Hub</span><span class="u">hub.concerto.id</span></div></div></div>`;
-  if (c.t === 'd') return `<div class="c gold dl" id="c"><div class="top">${LOGO}<span class="k">AUTHORIZED PARTNER</span></div>
+  if (c.t === 'd') return `<div class="c gold dl" id="c"><div class="top">${LOGO}<span class="k">ENTHUSIAST PARTNER</span></div>
     <div class="badge">Partner Resmi Concerto Audio Indonesia <i>✓ Resmi</i></div><h1${c.name.length > 22 ? ' class="sm"' : ''}>${esc(c.name)}</h1>
     <div class="city">📍 ${esc([c.city, c.region].filter(Boolean).join(', '))}</div>${c.addr ? `<div class="addr">${esc(clip(c.addr, 110))}</div>` : ''}
     <div class="brands">Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System</div>
