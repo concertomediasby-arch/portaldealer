@@ -35,13 +35,16 @@ const adminNote = n => String(n || '').replace(DEALER_HIDDEN_NOTE[0], '').replac
   .split(/[|;]/).map(x => x.replace(/^[\s.,]+|[\s,]+$/g, '').replace(/\s{2,}/g, ' ')).filter(Boolean).join(' | ');
 const dealerNote = n => DEALER_HIDDEN_NOTE.reduce((s, re) => s.replace(re, ''), String(n || ''))
   .split(/[|;]/).map(x => x.replace(/^[\s.,]+|[\s,]+$/g, '').replace(/\s{2,}/g, ' ')).filter(Boolean).join(' | ');
-const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || otwFromNote(r.note), updated_at: r.updated_at || null });
+const stockRow = r => ({ status: r.status, note: r.note || '', qty: r.qty ?? null, incoming: r.incoming || otwFromNote(r.note), updated_at: r.updated_at || null, show: r.show === true });
 let stockLoaded = false, stockBrand = 'all', stockStatus = 'all';
 // Produk di luar katalog BRANDS disimpan dengan product_id "x:<KODE GUDANG>"
 const EXTRA_PREFIX = 'x:';
 const EXTRA_GROUP = { id: '_extra', name: 'Produk Lain (di luar katalog)' };
 const extraId = raw => EXTRA_PREFIX + String(raw).toUpperCase().replace(/[^A-Z0-9 .\-\/+]/g, '').replace(/\s+/g, ' ').trim();
-const extraProducts = () => Object.keys(stockMap).filter(k => k.startsWith(EXTRA_PREFIX)).sort()
+// 7 Nov 2026 (permintaan pemilik): produk di luar katalog hanya tampil di panel Admin — baru masuk menu Stok partner
+// setelah Editor menekan *Tampilkan di katalog* (kolom stock.show, SQL supabase/stock-show.sql = STOCK_SHOW_SQL).
+// extraProducts(true) = semua (panel Admin, template Excel); tanpa argumen = hanya yang diizinkan Editor.
+const extraProducts = (all = false) => Object.keys(stockMap).filter(k => k.startsWith(EXTRA_PREFIX) && (all || stockMap[k].show)).sort()
   .map(id => ({ id, name: id.slice(EXTRA_PREFIX.length), model: 'Belum ada di katalog' }));
 // Stok per varian (kabel per panjang: OG-AE1M, DIOS2M, …) disimpan sebagai baris tambahan `v:<id produk>:<varian>`;
 // baris produk tetap memuat jumlah total semua varian
@@ -444,7 +447,7 @@ function openStockView() {
   const search = document.getElementById('stock-search');
   if (search) search.value = '';
   document.getElementById('stock-brand-chips').innerHTML =
-    [{id:'all', name:'Semua'}, ...BRANDS.map(b => ({id:b.id, name:b.name})), {id: EXTRA_GROUP.id, name: 'Lainnya'}].map(b =>
+    [{id:'all', name:'Semua'}, ...BRANDS.map(b => ({id:b.id, name:b.name})), ...(extraProducts().length ? [{id: EXTRA_GROUP.id, name: 'Lainnya'}] : [])].map(b =>
       `<button class="filter-chip${b.id==='all'?' active':''}" data-brand="${b.id}" onclick="setStockBrand('${b.id}')">${b.name}</button>`
     ).join('');
   renderStockView();
@@ -623,13 +626,14 @@ function renderAdminList() {
   if (!container) return;
 
   let html = '';
-  [...BRANDS.map(b => [b, brandProducts(b)]), [EXTRA_GROUP, extraProducts()]].forEach(([brand, list]) => {
+  [...BRANDS.map(b => [b, brandProducts(b)]), [EXTRA_GROUP, extraProducts(true)]].forEach(([brand, list]) => {
     const products = list.filter(p =>
       !q || p.name.toLowerCase().includes(q) || p.model.toLowerCase().includes(q) || brand.name.toLowerCase().includes(q)
     );
     if (!products.length) return;
+    const ex = brand === EXTRA_GROUP;
     html += `<div class="admin-brand-section">
-      <div class="admin-brand-title">${brand.name}</div>`;
+      <div class="admin-brand-title">${brand.name}</div>${ex ? `<div class="admin-ex-note">Hanya terlihat di panel ini. Partner baru melihatnya di menu Stok setelah Editor menekan <b>👁 Tampilkan di katalog</b>.</div>` : ''}`;
     products.forEach(p => {
       const s = stockMap[p.id] || {};
       const status = s.status || '';
@@ -638,7 +642,7 @@ function renderAdminList() {
       html += `<div class="admin-product-row">
         <div class="admin-prod-info">
           <div class="admin-prod-name">${escHtml(p.name)}</div>
-          <div class="admin-prod-model">${escHtml(p.model)}</div>
+          <div class="admin-prod-model">${ex ? extraShowHtml(p.id) : escHtml(p.model)}</div>
         </div>
         <select class="admin-stock-select" data-pid="${p.id}" onchange="scheduleSave('${p.id}')">
           <option value=""       ${status===''      ?'selected':''}>— Belum diatur</option>
@@ -746,7 +750,7 @@ async function downloadStockTemplate() {
       const s = stockMap[p.id] || {};
       rows.push([b.name, p.model, p.name, s.qty ?? '', s.status ? STOCK_LABEL[s.status] : '', s.note || '']);
     }));
-    extraProducts().forEach(p => {
+    extraProducts(true).forEach(p => {
       const s = stockMap[p.id];
       rows.push(['Lainnya', p.name, p.name, s.qty ?? '', s.status ? STOCK_LABEL[s.status] : '', s.note || '']);
     });
@@ -1123,5 +1127,28 @@ function slogBadge() {
   let seen = 0; try { seen = +localStorage.getItem(SLOG_SEEN) || 0; } catch (e) {}
   const n = isAdmin() && slogRows ? slogItems().filter(i => Date.parse(i.at) > seen).length : 0;
   for (const id of ['nav-sheet-badge', 'mnav-sheet-badge']) { const b = document.getElementById(id); if (b) { b.hidden = !n; b.textContent = n > 99 ? '99+' : n; } }
+}
+/* Izin tampil produk di luar katalog (7 Nov 2026, permintaan pemilik) — khusus Editor.
+   SQL sekali jalan: supabase/stock-show.sql (= STOCK_SHOW_SQL). */
+const STOCK_SHOW_SQL = "-- CAI Hub — izin tampil \"Produk Lain (di luar katalog)\" (7 Nov 2026, permintaan pemilik).\n-- Baris stok x:<KODE> (kode gudang yang belum ada di katalog) hanya terlihat di panel Admin;\n-- partner baru melihatnya di menu Stok setelah Editor menekan \"Tampilkan di katalog\" (show = true).\n-- Sinkron sheet / Import tidak mengirim kolom ini, jadi pilihan Editor tetap tersimpan. Aman dijalankan ulang.\n-- Sama dengan konstanta STOCK_SHOW_SQL di js/stock.js.\nalter table public.stock add column if not exists show boolean not null default false;\n";
+function extraShowHtml(pid) {
+  const on = !!stockMap[pid]?.show;
+  if (!isEditor()) return `<span class="admin-ex-tag${on ? ' on' : ''}">${on ? '👁 Tampil di katalog' : '🔒 Hanya di panel Admin'}</span>`;
+  return `<button class="admin-ex-tag btn${on ? ' on' : ''}" onclick="extraShowToggle('${escHtml(pid)}')" title="${on ? 'Klik untuk menyembunyikan lagi dari menu Stok partner' : 'Klik untuk mengizinkan tampil di menu Stok partner'}">${on ? '👁 Tampil di katalog · sembunyikan' : '🔒 Hanya di panel Admin · 👁 Tampilkan di katalog'}</button>`;
+}
+async function extraShowToggle(pid) {
+  if (!isEditor() || !supabase || !stockMap[pid]) return;
+  const on = !stockMap[pid].show;
+  const { error } = await supabase.from('stock').update({ show: on }).eq('product_id', pid);
+  if (error) {
+    if (/show/i.test(error.message || '')) {
+      (navigator.clipboard?.writeText(STOCK_SHOW_SQL) || Promise.reject()).then(() => showToast('SQL izin tampil belum dijalankan — SQL sudah disalin. Tempel di Supabase → SQL Editor → Run.'), () => prompt('Jalankan SQL ini di Supabase:', STOCK_SHOW_SQL));
+    } else showToast('Gagal menyimpan: ' + error.message);
+    return;
+  }
+  stockMap[pid].show = on;
+  renderAdminList();
+  if (document.getElementById('view-stock')?.classList.contains('active')) renderStockView();
+  showToast(on ? '👁 ' + pid.slice(EXTRA_PREFIX.length) + ' kini tampil di menu Stok partner' : '🔒 ' + pid.slice(EXTRA_PREFIX.length) + ' disembunyikan dari menu Stok partner');
 }
 function slogCopySql() { (navigator.clipboard?.writeText(STOCK_LOG_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => prompt('Salin SQL ini:', STOCK_LOG_SQL)); }
