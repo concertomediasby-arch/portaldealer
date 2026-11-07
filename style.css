@@ -4966,7 +4966,9 @@ body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tay
 .nw-pc-pt { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px dashed var(--border); padding-top: 9px; margin-top: 2px; }
 .nw-ini { flex: none; width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(180deg, #efcd8b, #b8892e); color: #2a1d05; display: grid; place-content: center; font: 800 11.5px var(--f-display); }
 .nw-pc-nm { font: 700 13px var(--f-body); color: var(--fg); min-width: 0; } .nw-pc-nm small { font-weight: 500; color: var(--fg-muted); }
-.nw-pc-b { margin-left: auto; display: flex; gap: 6px; } .nw-pc-b .ad-btn { padding: 6px 10px; font-size: 12px; }
+/* tombol partner di kartu project = sama seperti kartu Enthusiast Partner: WhatsApp · Instagram · Maps · Profil (7 Nov 2026) */
+.nw-pc-btns { flex-basis: 100%; margin-top: 2px; padding-top: 2px; }
+.nw-pc-btns .ad-btn { padding: 7px 10px; font-size: 12.5px; }
 .nw-pc-gl { align-self: flex-start; border: 0; background: none; padding: 0; color: var(--accent); font: 600 12.5px var(--f-body); cursor: pointer; }
 .nw-pjs .nw-pl { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; border: 0; border-top: 1px solid var(--border); background: none; padding: 8px 0; color: var(--fg); font: inherit; cursor: pointer; }
 .nw-pjs .nw-pl:first-of-type { border-top: 0; } div.nw-pl { cursor: default; }
@@ -4984,7 +4986,7 @@ body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tay
   .nw-pj { padding: 14px; } .nw-pj-g { grid-template-columns: 1fr; }
   .nw-pjf-h { display: none; } .nw-pjf-r { grid-template-columns: 1fr 1fr; padding: 8px; border: 1px solid var(--border); border-radius: 10px; } .nw-pjf-x { justify-self: end; }
 }
-.nw-pc-b .ad-btn { display: inline-flex; flex-direction: row; align-items: center; gap: 5px; white-space: nowrap; }
+.nw-pc-btns .ad-btn { display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; }
 .cw-fbox .nw-pjf { padding: 4px 18px 0; }
 
 /* ── News: foto tambahan disisipkan di isi ([foto 1] / [foto 2 3]) + lihat layar penuh (6 Nov 2026) ── */
