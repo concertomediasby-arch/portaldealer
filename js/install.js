@@ -7,6 +7,8 @@
 // Pengukuran (menu Pengunjung Portal): RPC log_app_event → tabel site_app_events; angka lewat app_event_stats (Admin/Editor). SQL: APP_SQL.
 const INS_KEY = 'cai-ins', INS_SES = 'cai-ins-ses', INS_SNOOZE_DAYS = 14;
 const INS_VIDEO = 'assets/intro/tutorial-layar-utama.mp4';
+// Datang dari link yang dibagikan (?p=, ?gl=, ?news=, …) — dicatat saat skrip dimuat, sebelum alamat dirapikan
+const INS_DEEP = (() => { try { return new URLSearchParams(location.search).toString().replace(/(^|&)src=[^&]*/g, '') !== ''; } catch (e) { return false; } })();
 const APP_SQL = `-- Pengukuran pemasangan CAI Hub (ajakan "Pasang CAI Hub", 4 Nov 2026) — jalankan sekali di Supabase → SQL Editor → Run
 create table if not exists public.site_app_events (
   day date not null,
@@ -83,7 +85,38 @@ function insInit() {
   addEventListener('beforeinstallprompt', e => { e.preventDefault(); insBip = e; insPaint(); });
   addEventListener('appinstalled', () => { const t = insState(); t.done = 1; if (!t.logged) { t.logged = 1; insLog('install'); } insSave(t); insClose(true); insPaint(); showToast('✅ CAI Hub terpasang — buka dari ikonnya di layar HP', 6000); });
   insPaint();
+  if (insAppTipCheck(s)) return;   // iPhone yang pernah memasang: pengingat "buka dari ikon", tanpa ajakan pasang di kunjungan ini
   if ((s.visits || 0) >= 2) setTimeout(() => insMaybe('visit'), 8000);   // kunjungan ke-2 dst.
+}
+
+// ── Link dibuka di aplikasi CAI Hub (7 Nov 2026, permintaan pemilik — pratinjau .mockup/applink/ disetujui) ──
+// Android: manifest.webmanifest launch_handler navigate-existing + handle_links preferred → link hub.concerto.id dibuka di
+// aplikasi CAI Hub yang terpasang (Chrome WebAPK). iPhone tidak bisa (Apple selalu membuka link di Safari) → pengingat kecil
+// di Safari bila perangkat itu pernah membuka CAI Hub dari ikon (s.done) atau pernah membuka panduan pasang iPhone (s.iosGuide;
+// Safari & ikon Layar Utama memakai penyimpanan terpisah). Hanya saat datang dari link yang dibagikan, maks. 1× per hari,
+// "Jangan tampilkan lagi" = s.noAppTip.
+function insAppTipCheck(s) {
+  if (!insIosSafari() || !INS_DEEP || !(s.done || s.iosGuide) || s.noAppTip) return false;
+  const d = todayWIB(); if (s.tipDay === d) return false;
+  s.tipDay = d; insSave(s);
+  try { sessionStorage.setItem(INS_SES + '-shown', '1'); } catch (e) {}
+  setTimeout(insAppTip, 2500);
+  return true;
+}
+function insAppTip() {
+  if (document.getElementById('ins-tip')) return;
+  const el = document.createElement('div'); el.id = 'ins-tip'; el.className = 'ins-tip'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Buka dari ikon CAI Hub');
+  el.innerHTML = `<button class="ins-x" onclick="insAppTipClose()" aria-label="Tutup">✕</button>
+    <b>📲 CAI Hub sudah ada di HP Anda?</b>
+    <p>iPhone selalu membuka link di Safari. Lain kali buka dari ikon <b>CAI Hub</b> di Layar Utama — login &amp; favorit Anda ada di sana.</p>
+    <div class="ins-tip-bt"><button onclick="insAppTipClose(true)">Jangan tampilkan lagi</button><button class="g" onclick="insAppTipClose()">Mengerti</button></div>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('open'));
+}
+function insAppTipClose(never) {
+  const el = document.getElementById('ins-tip'); if (!el) return;
+  el.classList.remove('open'); setTimeout(() => el.remove(), 400);
+  if (never) { const s = insState(); s.noAppTip = 1; insSave(s); }
 }
 // Kartu QR di toko partner (4 Nov 2026, permintaan pemilik): QR = https://hub.concerto.id/?src=kartu → dicatat 'qr' (sekali per sesi tab),
 // lalu penanda dibuang dari alamat agar tidak ikut terbawa saat link dibagikan / ikon dipasang.
@@ -141,6 +174,7 @@ function insOpen(manual) {
   el.className = 'ins-sheet' + (insIosSafari() && !insBip ? ' ios' : '');
   el.dataset.auto = manual ? '' : '1';   // dibuka sendiri lewat pil/ajakan kecil → menutupnya tidak menunda ajakan otomatis
   el.innerHTML = insSheetHtml();
+  if (insIosSafari() && !insBip) { const s = insState(); if (!s.iosGuide) { s.iosGuide = 1; insSave(s); } }   // untuk pengingat "buka dari ikon"
   requestAnimationFrame(() => el.classList.add('open'));
   try { sessionStorage.setItem(INS_SES + '-shown', '1'); } catch (e) {}
   if (!manual) insLog('shown');
