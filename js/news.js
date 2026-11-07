@@ -144,6 +144,31 @@ const nwIni = n => String(n || '?').replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(
 function nwMedal(r) { const m = String(r || '').match(/juara\s*(\d)/i); return m ? ({ 1: ['🥇', ''], 2: ['🥈', ' s'], 3: ['🥉', ' b'] }[m[1]] || ['🏅', '']) : ['🏅', '']; }
 function nwProjStat(it) { const pj = nwProj(it); if (!pj.length) return ''; const n = new Set(pj.map(p => normKey(p.partner || '')).filter(Boolean)).size;
   return `🏪 ${pj.length} project${n ? ` · ${n} partner resmi CAI` : ''}`; }
+// 🔊 Perangkat terpasang per mobil project (7 Nov 2026): p.products = id katalog, p.other = teks perangkat di luar katalog
+const nwPjProds = p => [...new Set(Array.isArray(p?.products) ? p.products : [])].filter(id => findProductAny(id).product);
+const nwPjOther = p => String(p?.other || '').split(/[,;\n]/).map(x => x.trim()).filter(Boolean);
+const nwPrLabel = (b, p) => `${b.name} ${p.model || p.name}`;
+function nwPrImg(p) { return (Array.isArray(p.photos) && p.photos[0]) || p.photo || ''; }
+function nwPrItem(pid) {
+  const { brand: b, product: p } = findProductAny(pid); if (!p) return '';
+  const im = nwPrImg(p);
+  return `<button class="nw-pr" onclick="showProduct('${b.id}','${p.id}')"><span class="nw-pr-im">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy">` : (p.emoji || '🔊')}</span>
+    <span class="nw-pr-t"><small>${escHtml(b.name)} · ${escHtml(p.category || '')}</small><b>${escHtml(p.name)}</b><em>${hasPrice(p) ? 'SRP ' + escHtml(srpText(p)) : 'Harga: hubungi partner resmi'}</em></span><span class="nw-pr-go">›</span></button>`;
+}
+function nwPjGearHtml(p) {
+  const ids = nwPjProds(p), oth = nwPjOther(p); if (!ids.length && !oth.length) return '';
+  return `<div class="nw-pg"><div class="nw-pg-h"><b>🔊 Perangkat terpasang</b>${ids.length ? `<span>${ids.length} produk CAI</span>` : ''}</div>
+    ${ids.length ? `<div class="nw-pg-g">${ids.map(nwPrItem).join('')}</div>` : ''}
+    ${oth.length ? `<div class="nw-pg-o">Perangkat lain: ${oth.map(x => `<span>${escHtml(x)}</span>`).join('')}</div>` : ''}
+    ${ids.length ? `<button class="nw-pg-rk" onclick='coRakit(${JSON.stringify(ids)})'>🔧 Rakit sistem seperti mobil ini</button>` : ''}</div>`;
+}
+function nwProdSide(it) {
+  const m = new Map(); nwProj(it).forEach(p => nwPjProds(p).forEach(id => m.set(id, (m.get(id) || 0) + 1)));
+  if (!m.size) return '';
+  return `<div class="nw-sbox nw-pps" id="nw-pps"><div class="nw-sh">🔊 Produk di berita ini</div>${[...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, n]) => {
+    const { brand: b, product: p } = findProductAny(id); const im = nwPrImg(p);
+    return `<button class="nw-pl" onclick="showProduct('${b.id}','${p.id}')"><span class="nw-ini nw-pp-im">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy">` : '🔊'}</span><span class="nw-pl-t"><b>${escHtml(p.name)}</b><small>${escHtml(b.name)}</small></span><em>${n} mobil</em></button>`; }).join('')}</div>`;
+}
 function nwProjHtml(it) {
   const pj = nwProj(it); if (!pj.length) return '';
   return `<div class="nw-pj" id="nw-pj"><div class="nw-pj-h"><b>🔧 Project &amp; partner pemasang</b><span>${escHtml(nwProjStat(it).replace('🏪 ', ''))}</span></div>
@@ -153,6 +178,7 @@ function nwProjHtml(it) {
         ${p.car ? `<div class="nw-pc-car">${escHtml(p.car)}</div>` : ''}${p.owner ? `<div class="nw-pc-who">Peserta: ${escHtml(p.owner)}</div>` : ''}
         ${p.partner ? `<div class="nw-pc-pt"><span class="nw-ini">${escHtml(nwIni(d?.n || p.partner))}</span><span class="nw-pc-nm">${escHtml(d?.n || p.partner)}${d?.c ? ` <small>· ${escHtml(d.c)}</small>` : ''}</span>
           ${d ? `<div class="ad-btns nw-pc-btns">${wa ? `<a class="ad-btn wa" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${d.ig ? `<a class="ad-btn" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" target="_blank" rel="noopener">Instagram</a>` : ''}<a class="ad-btn" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>${typeof pfBtn === 'function' ? pfBtn(d) : ''}</div>` : ''}</div>` : ''}
+        ${nwPjGearHtml(p)}
         ${p.gl ? `<button class="nw-pc-gl" onclick="nwOpenGl('${escHtml(p.gl)}')">📷 Lihat di Galeri ›</button>` : ''}</div>`; }).join('')}</div></div>`;
 }
 function nwProjSide(it) {
@@ -438,6 +464,7 @@ function renderNwPost(body, it) {
         <div class="nw-sbtns">${acts}</div>
       </div>
       ${nwProjSide(it)}
+      ${nwProdSide(it)}
       ${others.length ? `<div class="nw-sbox"><div class="nw-sh">Berita lainnya</div>
         ${others.map(x => { const im = nwThumb(x); return `<button class="nw-oth" onclick="openNews('${x.id}')">
           <span class="nw-oimg${im ? '' : ' ph'}">${im ? `<img src="${escHtml(im)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '📰'}${nwPlayIc(x)}</span>
@@ -619,19 +646,40 @@ function nwProjFormHtml(f) {
       <input value="${escHtml(p.owner || '')}" placeholder="nama peserta" oninput="nwPjSet(${i},'owner',this.value)">
       <input value="${escHtml(p.result || '')}" placeholder="mis. Juara 1 · Kelas …" oninput="nwPjSet(${i},'result',this.value)">
       <input class="pt" list="nw-dl-pt" value="${escHtml(p.partner || '')}" placeholder="pilih partner resmi" oninput="nwPjSet(${i},'partner',this.value)">
-      <button type="button" class="nw-pjf-x" onclick="nwPjDel(${i})" aria-label="Hapus">🗑</button></div>`).join('')}
+      <button type="button" class="nw-pjf-x" onclick="nwPjDel(${i})" aria-label="Hapus">🗑</button></div>
+      <div class="nw-pjf-p"><div class="nw-pjf-ph">🔊 Perangkat terpasang <span>${nwPjProds(p).length} produk</span></div>
+        ${nwPjProds(p).length ? `<div class="nw-pjf-ch">${nwPjProds(p).map(id => { const { product: q } = findProductAny(id); return `<span>${escHtml(q.model || q.name)}<button type="button" onclick="nwPjPDel(${i},'${id}')" aria-label="Hapus">✕</button></span>`; }).join('')}</div>` : ''}
+        <div class="nw-pjf-pa"><input id="nw-pjp-${i}" list="nw-dl-pr" placeholder="Ketik produk katalog, mis. “SQW”…" onkeydown="if(event.key==='Enter'){event.preventDefault();nwPjPAdd(${i})}"><button type="button" class="gt-btn ghost" onclick="nwPjPAdd(${i})">＋ Tambah</button></div>
+        <input class="nw-pjf-oth" value="${escHtml(p.other || '')}" placeholder="Perangkat lain di luar katalog (opsional), pisahkan dengan koma" oninput="nwPjSet(${i},'other',this.value)"></div>`).join('')}
+    <datalist id="nw-dl-pr">${BRANDS.flatMap(b => brandProducts(b).map(q => `<option value="${escHtml(nwPrLabel(b, q))}">`)).join('')}</datalist>
     <datalist id="nw-dl-pt">${adPublic().map(d => `<option value="${escHtml(d.n)}">`).join('')}</datalist>
     <div class="nw-pjf-a"><button type="button" class="gt-btn ghost" onclick="nwPjAdd()">＋ Tambah project</button>
       ${gl.length ? `<select onchange="nwPjFromGl(this.value);this.value=''"><option value="">📷 Ambil dari Galeri Instalasi…</option>${gl.map(g => `<option value="${escHtml(g.id)}">${escHtml(carOf(g) + (g.dealer ? ' · ' + g.dealer : ''))}</option>`).join('')}</select>` : ''}</div>
-    <small class="nw-ythint">Partner diambil dari daftar Enthusiast Partner sehingga tombol Profil &amp; WhatsApp tersambung otomatis. Nama di luar daftar tetap tampil sebagai teks.</small></div>`;
+    <small class="nw-ythint">Perangkat terisi otomatis bila project diambil dari Galeri Instalasi (bisa diubah). Partner diambil dari daftar Enthusiast Partner sehingga tombol Profil &amp; WhatsApp tersambung otomatis. Nama di luar daftar tetap tampil sebagai teks.</small></div>`;
 }
 function nwPjSet(i, k, v) { if (nwForm?.projects[i]) nwForm.projects[i][k] = v; }
 function nwPjAdd() { if (!nwForm) return; nwForm.projects.push({ car: '', owner: '', result: '', partner: '' }); renderNwForm(); }
+function nwPrFind(txt) {
+  const k = normKey(txt || ''); if (!k) return null;
+  for (const b of BRANDS) for (const q of brandProducts(b)) if ([nwPrLabel(b, q), q.model, q.name, `${b.name} ${q.name}`].some(x => x && normKey(x) === k)) return q.id;
+  return null;
+}
+function nwPjPAdd(i) {
+  const pj = nwForm?.projects[i], inp = document.getElementById('nw-pjp-' + i); if (!pj || !inp) return;
+  const id = nwPrFind(inp.value); if (!id) { showToast('Produk tidak ditemukan — pilih dari daftar katalog.'); return; }
+  pj.products = [...new Set([...(pj.products || []), id])]; renderNwForm();
+  document.getElementById('nw-pjp-' + i)?.focus();
+}
+function nwPjPDel(i, id) { const pj = nwForm?.projects[i]; if (!pj) return; pj.products = (pj.products || []).filter(x => x !== id); renderNwForm(); }
 function nwPjDel(i) { if (!nwForm) return; nwForm.projects.splice(i, 1); renderNwForm(); }
 function nwPjFromGl(id) {
   const g = glItems?.find(x => x.id === id); if (!g || !nwForm) return;
   const d = nwPd(g.dealer);
-  nwForm.projects.push({ car: [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' '), owner: '', result: '', partner: d?.n || g.dealer || '', gl: g.id });
+  let prods = (Array.isArray(g.products) ? g.products : []).filter(id => findProductAny(id).product), other = '';
+  const h = g.hof_id && typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME.find(e => e.id === g.hof_id) : null;
+  if (!prods.length && h?.products) prods = h.products.filter(id => findProductAny(id).product);
+  if (h?.other?.length) other = h.other.join(', ');
+  nwForm.projects.push({ car: [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' '), owner: h?.name || '', result: h ? [h.award, h.cls].filter(Boolean).join(' · ') : '', partner: d?.n || g.dealer || '', gl: g.id, products: [...new Set(prods)], other });
   renderNwForm();
 }
 function nwCopyProjSql() {
@@ -659,7 +707,8 @@ async function saveNw() {
     if (image) image += nwFrSuffix(f.fr);
     const row = { title: f.title.trim(), summary: f.summary.trim() || null, body: f.body.trim() || null, category: f.category.trim() || null, image,
       link_url: f.link_url.trim() || null, link_label: f.link_label.trim() || null, post_date: f.post_date || todayWIB(), published: !!f.published, updated_at: new Date().toISOString() };
-    const pj = f.projects.map(p => ({ car: (p.car || '').trim(), owner: (p.owner || '').trim(), result: (p.result || '').trim(), partner: (p.partner || '').trim(), ...(p.gl ? { gl: p.gl } : {}) }))
+    const pj = f.projects.map(p => { const pr = nwPjProds(p), ot = (p.other || '').trim();
+      return { car: (p.car || '').trim(), owner: (p.owner || '').trim(), result: (p.result || '').trim(), partner: (p.partner || '').trim(), ...(p.gl ? { gl: p.gl } : {}), ...(pr.length ? { products: pr } : {}), ...(ot ? { other: ot } : {}) }; })
       .filter(p => p.car || p.partner).map(p => Object.fromEntries(Object.entries(p).filter(([, v]) => v)));
     if (pj.length || f.hadProj) row.projects = pj;
     const ph = [];

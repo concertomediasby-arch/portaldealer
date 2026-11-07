@@ -5080,3 +5080,32 @@ body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tay
 .gl-cdel { flex: none; align-self: flex-start; border: 1px solid rgba(220,80,80,.35); background: transparent; color: #d65c5c; border-radius: 8px; padding: 3px 8px; font-size: 11.5px; cursor: pointer; }
 .gl-cmore { display: block; width: 100%; margin-top: 10px; border: 0; background: none; color: var(--accent); font: 600 13px var(--f-body); cursor: pointer; }
 .gl-cm-setup { margin-top: 14px; border: 1px dashed rgba(216,178,106,.5); border-radius: 12px; padding: 10px 12px; font-size: 12.5px; color: var(--fg-muted); display: grid; gap: 8px; }
+
+/* 🔊 Perangkat terpasang per mobil project di News (7 Nov 2026) */
+.nw-pg { margin-top: 6px; border-top: 1px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.nw-pg-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.nw-pg-h b { font: 700 13.5px var(--f-display); } .nw-pg-h span { font: 600 11.5px var(--f-body); color: var(--fg-muted); }
+.nw-pg-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px; }
+.nw-pr { display: flex; align-items: center; gap: 9px; min-width: 0; text-align: left; border: 1px solid var(--border); background: var(--bg); border-radius: 11px; padding: 6px 8px; color: var(--fg); font: inherit; cursor: pointer; }
+.nw-pr:hover { border-color: var(--accent); }
+.nw-pr-im { flex: none; width: 44px; height: 44px; border-radius: 8px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 20px; }
+.nw-pr-im img { width: 100%; height: 100%; object-fit: contain; }
+.nw-pr-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nw-pr-t small { font: 700 10px var(--f-body); letter-spacing: .05em; text-transform: uppercase; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nw-pr-t b { font: 700 13px var(--f-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nw-pr-t em { font: 500 11.5px var(--f-body); font-style: normal; color: var(--fg-muted); }
+.nw-pr-go { color: var(--accent); font-weight: 700; }
+.nw-pg-o { font: 500 12px var(--f-body); color: var(--fg-muted); display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.nw-pg-o span { border: 1px dashed var(--border); border-radius: 7px; padding: 2px 8px; color: var(--fg); }
+.nw-pg-rk { align-self: flex-start; border: 1px solid var(--accent); background: none; color: var(--accent); border-radius: 9px; padding: 6px 11px; font: 600 12.5px var(--f-body); cursor: pointer; }
+.nw-pps .nw-pl { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; border: 0; border-top: 1px solid var(--border); background: none; padding: 8px 0; color: var(--fg); font: inherit; cursor: pointer; }
+.nw-pps .nw-pl:first-of-type { border-top: 0; }
+.nw-pp-im { background: #fff !important; overflow: hidden; padding: 0; }
+.nw-pp-im img { width: 100%; height: 100%; object-fit: contain; }
+.nw-pjf-p { margin: 4px 0 4px; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 10px; display: flex; flex-direction: column; gap: 6px; }
+.nw-pjf-ph { font: 700 12px var(--f-body); display: flex; justify-content: space-between; } .nw-pjf-ph span { color: var(--fg-muted); font-weight: 600; }
+.nw-pjf-ch { display: flex; flex-wrap: wrap; gap: 5px; }
+.nw-pjf-ch span { display: inline-flex; align-items: center; gap: 4px; background: var(--accent); color: #14110a; border-radius: 20px; padding: 3px 4px 3px 10px; font: 700 11.5px var(--f-body); }
+.nw-pjf-ch button { border: 0; background: rgba(0,0,0,.15); color: inherit; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; line-height: 1; }
+.nw-pjf-pa { display: flex; gap: 6px; } .nw-pjf-pa input { flex: 1; min-width: 0; }
+.nw-pjf-oth { width: 100%; }
