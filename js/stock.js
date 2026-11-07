@@ -57,10 +57,14 @@ const stockVariants = p => p?.priceList ? Object.keys(p.priceList).filter(v => s
 // Stok yang tampil di katalog / menu Stok / detail produk (27 Okt 2026, permintaan pemilik): angka tabel stok dikurangi
 // pembelian Shopping Gathering berstatus *dikonfirmasi* (fungsi SQL gathering_sold()); *selesai* dianggap sudah dipotong dari
 // sheet gudang, *batal* tidak dihitung. Hanya tampilan — tabel stok & Google Sheet tidak diubah; panel admin tetap angka asli.
+// ⛔ DIMATIKAN 7 Nov 2026 (laporan pemilik: MSS3 tampil Habis padahal sheet masih ada stok): pesanan gathering 28 Okt yang
+// masih berstatus *dikonfirmasi* sudah dipotong dari sheet gudang, jadi dikurangi dua kali. Katalog kini = angka sheet.
+// Nyalakan lagi (true) hanya saat Shopping Gathering berikutnya berjalan.
+const GT_SOLD_DEDUCT = false;
 let gtSold = new Map(), gtSoldErr = '', gtSoldKey = new Map();   // gtSoldKey = per kunci stok gathering (termasuk Clearance c:), tanpa penjumlahan ke total
 function stockShown(id) {
   const s = stockAt(id);
-  if (!s || s.inf || s.qty == null) return s;
+  if (!GT_SOLD_DEDUCT || !s || s.inf || s.qty == null) return s;
   const n = gtSold.get(id) || 0;
   if (!n) return s;
   const qty = Math.max(0, s.qty - n);
