@@ -269,7 +269,7 @@ function findProduct(brandId, productId) {
 const DASH_TILES = [
   { id: 'audiocircle', tag: 'Featured', label: 'Hamburg Line', video: 'assets/dash/audiocircle.mp4?v=1', poster: 'assets/dash/audiocircle.jpg?v=1' },
   { id: 'steg', tag: 'New Arrival', label: 'DSP-S12', video: 'assets/dash/steg.mp4?v=1', poster: 'assets/dash/steg.jpg?v=1' },
-  { id: 'zelos', tag: 'Featured', label: 'ZLS-HD5.4', photos: ['assets/zl-hd54-1.webp', 'assets/zl-hd54-2.webp', 'assets/zl-hd54-3.webp', 'assets/zl-hd54-4.webp'] },
+  { id: 'zelos', tag: 'Featured', label: 'ZLS-HD5.4', video: 'assets/dash/zelos.mp4?v=2', poster: 'assets/dash/zelos.jpg?v=2', photos: ['assets/zl-hd54-1.webp', 'assets/zl-hd54-2.webp', 'assets/zl-hd54-3.webp', 'assets/zl-hd54-4.webp'] },
   { id: 'audiosystem', tag: 'New Arrival', label: 'AY65C', video: 'assets/dash/audiosystem.mp4?v=1', poster: 'assets/dash/audiosystem.jpg?v=1' },
 ];
 // Pilihan tag pojok kiri atas (2 Nov 2026, permintaan pemilik); teks bebas juga boleh lewat ✏️
@@ -278,7 +278,9 @@ const DASH_DIR = 'dashboard', DASH_MANIFEST = 'dashboard/tiles.json', DASH_VIDEO
 // 8 Nov 2026: kuota cached egress Supabase gratis (5 GB) habis karena video kotak Zelos 20,8 MB di Storage diputar
 // setiap kunjungan Dashboard → video kotak kini dari repo (DASH_TILES); video unggahan Editor hanya dipakai bila
 // ukurannya tercatat ≤ DASH_VIDEO_MAX_MB (field `mb` di tiles.json; unggahan lama tanpa `mb` diabaikan)
-const dashOvVid = o => (o?.path && o.mb && o.mb <= DASH_VIDEO_MAX_MB) ? o.path : '';
+// Unggahan Editor yang sudah disalin & dikompres ke repo (workflow "Video kotak Dashboard") → pakai file repo di DASH_TILES
+const DASH_REPO_COPIES = new Set(['dashboard/zelos-1794119157102.mp4']);
+const dashOvVid = o => (o?.path && o.mb && o.mb <= DASH_VIDEO_MAX_MB && !DASH_REPO_COPIES.has(o.path)) ? o.path : '';
 let dashOverrides = {}, dashSlideTimer = null, dashIO = null, dashOvP = null;
 // 2 Nov 2026: Storage `showcase` belum punya policy SELECT → menimpa tiles.json (upsert) & menghapus file ditolak RLS
 // ("new row violates row-level security policy"). SQL ini dijalankan sekali oleh Editor (aman diulang).
