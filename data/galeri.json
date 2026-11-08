@@ -1,0 +1,755 @@
+{
+ "_note": "Salinan cadangan data publik yang sudah tayang (dibaca dengan kunci publik, sama seperti pengunjung) — ditulis otomatis oleh tools/gen-live-cards.js; dipakai portal bila Supabase tidak bisa diakses. Jangan diedit manual.",
+ "items": [
+  {
+   "id": "1758f6cf-6dac-4f62-9ef2-71ba8f880690",
+   "created_at": "2026-11-06T05:31:56.668747+00:00",
+   "updated_at": "2026-11-06T05:31:56.233+00:00",
+   "car_make": "Mitsubishi",
+   "car_model": "Xpander",
+   "car_year": 2026,
+   "body": "MPV",
+   "dealer": "Creativ Variasi",
+   "city": "Yogyakarta",
+   "note": null,
+   "products": [
+    "ac-hlw6",
+    "ac-hlm3",
+    "ac-hlt25",
+    "st-drcv4",
+    "ac-iqles10a",
+    "ac-microfiber",
+    "st-s8d",
+    "dm-deadening"
+   ],
+   "photos": [
+    {
+     "area": "DSP",
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943116659-0.webp"
+    },
+    {
+     "area": "Tweeter",
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943117089-1.webp"
+    },
+    {
+     "area": "Remote / Controller",
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943117366-2.webp"
+    },
+    {
+     "area": "Midrange",
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943117617-3.webp"
+    },
+    {
+     "area": "Subwoofer",
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943117883-4.webp"
+    },
+    {
+     "area": "Bagasi / Sub",
+     "path": "1758f6cf-6dac-4f62-9ef2-71ba8f880690/1793943118132-5.webp"
+    }
+   ],
+   "hof_id": null,
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": false,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": false
+  },
+  {
+   "id": "65876377-acc2-4bcb-9f4d-81cd31961100",
+   "created_at": "2026-11-05T09:42:30.248079+00:00",
+   "updated_at": "2026-11-05T09:42:28.226+00:00",
+   "car_make": "Honda",
+   "car_model": "CRV",
+   "car_year": 2026,
+   "body": "SUV",
+   "dealer": "Atmos Kudus",
+   "city": "Kudus",
+   "note": null,
+   "products": [
+    "ac-clt27",
+    "ac-blw6",
+    "st-s10",
+    "st-sa8w",
+    "st-mdsp10d",
+    "zl-argentum",
+    "st-drcv4"
+   ],
+   "photos": [
+    {
+     "area": "Tampak Luar",
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871748407-0.mp4",
+     "type": "video",
+     "cover": true
+    },
+    {
+     "wa": true,
+     "area": "Amplifier",
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871756340-1.webp"
+    },
+    {
+     "area": "Subwoofer",
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871756655-2.webp"
+    },
+    {
+     "area": "Subwoofer",
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871756933-3.webp"
+    },
+    {
+     "area": "DSP",
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871757172-4.webp"
+    },
+    {
+     "area": "Remote / Controller",
+     "path": "65876377-acc2-4bcb-9f4d-81cd31961100/1793871757450-5.webp"
+    }
+   ],
+   "hof_id": null,
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": "2026-11-05T09:42:40.271+00:00",
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "7113ce09-8db9-4d98-ada2-013bed59be24",
+   "created_at": "2026-11-05T07:07:32.252512+00:00",
+   "updated_at": "2026-11-05T07:07:30.198+00:00",
+   "car_make": "Toyota",
+   "car_model": "Zenix",
+   "car_year": 2026,
+   "body": "MPV",
+   "dealer": "Central Garage",
+   "city": "Surabaya",
+   "note": null,
+   "products": [
+    "ac-prow6c",
+    "ac-prom3c",
+    "ac-prot28",
+    "zl-argentum",
+    "ac-bls10",
+    "dm-rca",
+    "dm-fuseanl",
+    "og-reddragon",
+    "st-ssdsp16"
+   ],
+   "photos": [
+    {
+     "area": "Tampak Luar",
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862450495-0.mp4",
+     "type": "video",
+     "cover": true
+    },
+    {
+     "area": "Amplifier",
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862454633-1.webp"
+    },
+    {
+     "area": "Amplifier",
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862454890-2.webp"
+    },
+    {
+     "area": "Amplifier",
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862455188-3.webp"
+    },
+    {
+     "pos": "33 58",
+     "area": "DSP",
+     "path": "7113ce09-8db9-4d98-ada2-013bed59be24/1793862455480-4.webp"
+    }
+   ],
+   "hof_id": null,
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": "2026-11-05T07:07:38.362+00:00",
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "fbf13fba-adfc-46b0-a7dd-94e42f997b70",
+   "created_at": "2026-11-03T04:38:59.689261+00:00",
+   "updated_at": "2026-11-03T04:39:16.037+00:00",
+   "car_make": "Hyundai",
+   "car_model": "Palisade",
+   "car_year": null,
+   "body": "SUV",
+   "dealer": "Concerto Malang",
+   "city": "Malang",
+   "note": null,
+   "products": [
+    "ac-prow6c",
+    "ac-prom3c",
+    "ac-prot28",
+    "st-sff3",
+    "st-ssdsp16v1",
+    "st-sqw6",
+    "zl-aurum",
+    "zl-argentum"
+   ],
+   "photos": [
+    {
+     "wa": true,
+     "waT": 16.7,
+     "area": "Tampak Luar",
+     "path": "fbf13fba-adfc-46b0-a7dd-94e42f997b70/1793680739097-0.mov",
+     "type": "video",
+     "cover": true
+    }
+   ],
+   "hof_id": null,
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "4cde33f8-0ddc-435d-8385-148af4588883",
+   "created_at": "2026-11-03T04:06:31.286786+00:00",
+   "updated_at": "2026-11-03T04:06:29.913+00:00",
+   "car_make": "Hyundai",
+   "car_model": "Creta",
+   "car_year": 2026,
+   "body": "SUV",
+   "dealer": "The Peak Garage",
+   "city": "Semarang",
+   "note": null,
+   "products": [
+    "st-sst50",
+    "ms-mss6",
+    "ms-mss3",
+    "ms-mss1pro",
+    "zl-argentum",
+    "st-st10pro",
+    "st-ssdsp12",
+    "st-dk5001"
+   ],
+   "photos": [
+    {
+     "wa": true,
+     "waT": 0.5,
+     "area": "Tampak Luar",
+     "path": "4cde33f8-0ddc-435d-8385-148af4588883/1793678790788-0.mp4",
+     "type": "video",
+     "cover": true
+    }
+   ],
+   "hof_id": null,
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "06fb39f3-0fae-448e-bfff-b83527d154d0",
+   "created_at": "2026-11-03T04:01:10.10621+00:00",
+   "updated_at": "2026-11-03T04:03:19.078+00:00",
+   "car_make": "BMW",
+   "car_model": "F10",
+   "car_year": 2026,
+   "body": "Sedan",
+   "dealer": "The Peak Garage",
+   "city": "Semarang",
+   "note": null,
+   "products": [
+    "st-qk2002",
+    "st-ssdsp12"
+   ],
+   "photos": [
+    {
+     "wa": true,
+     "pos": "50 57",
+     "waT": 7.9,
+     "area": "Tampak Luar",
+     "path": "06fb39f3-0fae-448e-bfff-b83527d154d0/1793678469343-0.mp4",
+     "type": "video",
+     "cover": true
+    }
+   ],
+   "hof_id": null,
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "12ffd1e9-21fc-4267-ad56-daebdb63530e",
+   "created_at": "2026-11-03T02:13:39.957338+00:00",
+   "updated_at": "2026-11-03T02:28:35.891+00:00",
+   "car_make": "Nissan",
+   "car_model": "Xtrail",
+   "car_year": 2026,
+   "body": "SUV",
+   "dealer": "Concerto Surabaya",
+   "city": "Surabaya",
+   "note": null,
+   "products": [
+    "st-ssdsp12",
+    "ac-prow6c",
+    "ac-prom3c",
+    "ac-prot28",
+    "st-sqw6",
+    "dm-rca",
+    "dm-fuseanl",
+    "ms-ss10",
+    "zl-dualmono"
+   ],
+   "photos": [
+    {
+     "area": "Tampak Luar",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672020150-0.mov",
+     "type": "video",
+     "cover": true
+    },
+    {
+     "area": "Dasbor",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672915891-1.jpg"
+    },
+    {
+     "pos": "49 50",
+     "area": "Dasbor",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672916458-2.jpg"
+    },
+    {
+     "area": "Midbass",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672916742-3.jpg"
+    },
+    {
+     "pos": "40 50",
+     "area": "Bagasi / Sub",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672917040-4.jpg"
+    },
+    {
+     "area": "Amplifier",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672917440-5.jpg"
+    },
+    {
+     "pos": "96 50",
+     "area": "Amplifier",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672917781-6.jpg"
+    },
+    {
+     "pos": "59 50",
+     "area": "DSP",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672918172-7.jpg"
+    },
+    {
+     "area": "Subwoofer",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672918506-8.jpg"
+    },
+    {
+     "pos": "66 50",
+     "area": "Fuse / Distribution Block",
+     "path": "12ffd1e9-21fc-4267-ad56-daebdb63530e/1793672918821-9.jpg"
+    }
+   ],
+   "hof_id": "emma26h2-29",
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "17e48bd8-f150-4a73-9334-9551d4bc132c",
+   "created_at": "2026-11-02T13:15:42.42295+00:00",
+   "updated_at": "2026-11-02T13:25:00.375+00:00",
+   "car_make": "BYD",
+   "car_model": "Seal",
+   "car_year": 2026,
+   "body": "Sedan",
+   "dealer": "Concerto Malang",
+   "city": "Malang",
+   "note": null,
+   "products": [
+    "st-ssdsp12",
+    "zl-argentum",
+    "st-dk5001",
+    "ms-mgl1",
+    "ms-mgl3",
+    "ms-mgl6",
+    "ac-blx3",
+    "st-st10",
+    "st-drcv5"
+   ],
+   "photos": [
+    {
+     "pos": "50 66",
+     "area": "",
+     "path": "17e48bd8-f150-4a73-9334-9551d4bc132c/1793625342254-0.mov",
+     "type": "video",
+     "cover": true
+    }
+   ],
+   "hof_id": "emma26h2-17",
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "3781143d-43a6-4878-80a3-6233ea460e6b",
+   "created_at": "2026-11-02T13:04:04.220473+00:00",
+   "updated_at": "2026-11-02T13:04:47.488+00:00",
+   "car_make": "Mazda",
+   "car_model": "Hatchback 3",
+   "car_year": 2026,
+   "body": "Hatchback",
+   "dealer": "Concerto Malang",
+   "city": "Malang",
+   "note": null,
+   "products": [
+    "ac-prow6c",
+    "ac-prom3c",
+    "ac-prot28",
+    "st-ssdsp16v1",
+    "st-drcv5",
+    "zl-argentum",
+    "zl-aurum",
+    "st-dk10001",
+    "ac-hlt25",
+    "ac-blx3",
+    "st-sqw8",
+    "st-sff3",
+    "ac-bls10"
+   ],
+   "photos": [
+    {
+     "area": "",
+     "path": "3781143d-43a6-4878-80a3-6233ea460e6b/1793624644121-0.mov",
+     "type": "video",
+     "cover": true
+    }
+   ],
+   "hof_id": "emma26h2-03",
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "e6cd5c25-6964-4a2d-ab3c-a696477719e3",
+   "created_at": "2026-11-02T09:17:23.505535+00:00",
+   "updated_at": "2026-11-02T12:44:29.781+00:00",
+   "car_make": "Toyota",
+   "car_model": "Innova Zenix",
+   "car_year": 2026,
+   "body": "MPV",
+   "dealer": "Concerto Malang",
+   "city": "Malang",
+   "note": null,
+   "products": [
+    "ms-ss10",
+    "ac-prow6c",
+    "ac-prom3c",
+    "ac-prot28",
+    "zl-dualmono",
+    "dm-fuseanl"
+   ],
+   "photos": [
+    {
+     "area": "Interior",
+     "path": "e6cd5c25-6964-4a2d-ab3c-a696477719e3/1793623469781-0.mov",
+     "type": "video",
+     "cover": true
+    },
+    {
+     "pos": "50 52",
+     "area": "Bagasi / Sub",
+     "mute": true,
+     "path": "e6cd5c25-6964-4a2d-ab3c-a696477719e3/1793611043966-1.mov",
+     "type": "video"
+    },
+    {
+     "pos": "20 100",
+     "area": "Tampak Luar",
+     "path": "e6cd5c25-6964-4a2d-ab3c-a696477719e3/1793611043535-0.webp",
+     "zoom": 1.15
+    },
+    {
+     "area": "Bagasi / Sub",
+     "mute": true,
+     "path": "e6cd5c25-6964-4a2d-ab3c-a696477719e3/1793611045212-2.mov",
+     "type": "video"
+    },
+    {
+     "pos": "50 51",
+     "area": "Bagasi / Sub",
+     "mute": true,
+     "path": "e6cd5c25-6964-4a2d-ab3c-a696477719e3/1793611046533-3.mov",
+     "type": "video"
+    },
+    {
+     "pos": "50 49",
+     "area": "Bagasi / Sub",
+     "mute": true,
+     "path": "e6cd5c25-6964-4a2d-ab3c-a696477719e3/1793611047818-4.mov",
+     "type": "video"
+    },
+    {
+     "pos": "50 49",
+     "area": "Tweeter",
+     "mute": true,
+     "path": "e6cd5c25-6964-4a2d-ab3c-a696477719e3/1793611049304-5.mov",
+     "type": "video"
+    },
+    {
+     "pos": "50 54",
+     "area": "Midrange",
+     "mute": true,
+     "path": "e6cd5c25-6964-4a2d-ab3c-a696477719e3/1793611050622-6.mov",
+     "type": "video"
+    }
+   ],
+   "hof_id": null,
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b",
+   "created_at": "2026-11-02T05:45:25.075094+00:00",
+   "updated_at": "2026-11-03T02:20:08.781+00:00",
+   "car_make": "Toyota",
+   "car_model": "Etios Valco",
+   "car_year": 2026,
+   "body": "Hatchback",
+   "dealer": "Concerto Surabaya",
+   "city": "Surabaya",
+   "note": null,
+   "products": [
+    "zl-aurum",
+    "zl-verdi2",
+    "ac-bls10",
+    "st-ssdsp12",
+    "dm-fuseanl",
+    "dm-rca",
+    "zl-tantalum",
+    "ac-prow6c",
+    "ac-prom3c",
+    "ac-prot28",
+    "st-drcv5"
+   ],
+   "photos": [
+    {
+     "area": "Tampak Luar",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793607290737-1.mov",
+     "type": "video",
+     "cover": true
+    },
+    {
+     "area": "Tampak Luar",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598325171-0.jpg"
+    },
+    {
+     "area": "Midbass",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598325674-1.jpg"
+    },
+    {
+     "area": "Midbass",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598325941-2.jpg"
+    },
+    {
+     "area": "Interior",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598326194-3.jpg"
+    },
+    {
+     "pos": "50 50",
+     "area": "Midrange",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598326449-4.jpg"
+    },
+    {
+     "area": "Tweeter",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598326687-5.jpg"
+    },
+    {
+     "pos": "50 50",
+     "area": "Bagasi / Sub",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598326916-6.jpg"
+    },
+    {
+     "wa": true,
+     "area": "Amplifier",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598327170-7.jpg"
+    },
+    {
+     "pos": "52 55",
+     "area": "DSP",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598327902-9.jpg"
+    },
+    {
+     "pos": "46 83",
+     "area": "Kabel RCA",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598328176-10.jpg"
+    },
+    {
+     "pos": "50 50",
+     "area": "Subwoofer",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793598327619-8.jpg"
+    },
+    {
+     "pos": "72 87",
+     "area": "Fuse / Distribution Block",
+     "path": "61d9a535-52e3-4a9f-9f1e-1b6094155f1b/1793601796492-11.webp"
+    }
+   ],
+   "hof_id": null,
+   "published": true,
+   "sort": 0,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  },
+  {
+   "id": "3f703b32-2753-46ab-a52b-9e4977eafa81",
+   "created_at": "2026-10-31T04:56:24.02243+00:00",
+   "updated_at": "2026-11-03T02:15:53.679+00:00",
+   "car_make": "Aion",
+   "car_model": "Hyptec HT",
+   "car_year": 2026,
+   "body": "SUV Listrik (EV)",
+   "dealer": "Concerto Surabaya",
+   "city": "Surabaya",
+   "note": null,
+   "products": [
+    "ac-prow6c",
+    "ac-prot28",
+    "ac-prom3c",
+    "st-sqw6",
+    "st-ssdsp12",
+    "ac-bls10",
+    "zl-hd54",
+    "dm-fuseanl",
+    "dm-rca"
+   ],
+   "photos": [
+    {
+     "area": "Tampak Luar",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793433144720-1.mp4",
+     "type": "video",
+     "cover": true
+    },
+    {
+     "area": "Bagasi / Sub",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422584013-0.webp"
+    },
+    {
+     "area": "Bagasi / Sub",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422584473-1.webp"
+    },
+    {
+     "area": "Lainnya",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422584725-2.webp"
+    },
+    {
+     "area": "Amplifier",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422584995-3.webp"
+    },
+    {
+     "area": "Pintu",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422585228-4.webp"
+    },
+    {
+     "area": "Bagasi / Sub",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422585648-5.webp"
+    },
+    {
+     "area": "Pintu",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422586352-7.webp"
+    },
+    {
+     "area": "Dasbor",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422586572-8.webp"
+    },
+    {
+     "area": "Dasbor",
+     "path": "3f703b32-2753-46ab-a52b-9e4977eafa81/1793422586772-9.webp"
+    }
+   ],
+   "hof_id": "emma26h2-07",
+   "published": true,
+   "sort": 3,
+   "created_by": "8c02fccb-dc18-4f48-bdae-1f63be529902",
+   "source": "editor",
+   "submitter": null,
+   "submitted_at": null,
+   "publish_at": null,
+   "notify": true,
+   "push_at": null,
+   "remind_at": null,
+   "in_gallery": true
+  }
+ ]
+}
