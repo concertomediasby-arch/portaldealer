@@ -274,7 +274,11 @@ const DASH_TILES = [
 ];
 // Pilihan tag pojok kiri atas (2 Nov 2026, permintaan pemilik); teks bebas juga boleh lewat ✏️
 const DASH_TAGS = ['Featured', 'New Arrival', 'Coming Soon', 'Best Seller', 'Juara EMMA'];
-const DASH_DIR = 'dashboard', DASH_MANIFEST = 'dashboard/tiles.json', DASH_VIDEO_MAX_MB = 50;
+const DASH_DIR = 'dashboard', DASH_MANIFEST = 'dashboard/tiles.json', DASH_VIDEO_MAX_MB = 5;
+// 8 Nov 2026: kuota cached egress Supabase gratis (5 GB) habis karena video kotak Zelos 20,8 MB di Storage diputar
+// setiap kunjungan Dashboard → video kotak kini dari repo (DASH_TILES); video unggahan Editor hanya dipakai bila
+// ukurannya tercatat ≤ DASH_VIDEO_MAX_MB (field `mb` di tiles.json; unggahan lama tanpa `mb` diabaikan)
+const dashOvVid = o => (o?.path && o.mb && o.mb <= DASH_VIDEO_MAX_MB) ? o.path : '';
 let dashOverrides = {}, dashSlideTimer = null, dashIO = null, dashOvP = null;
 // 2 Nov 2026: Storage `showcase` belum punya policy SELECT → menimpa tiles.json (upsert) & menghapus file ditolak RLS
 // ("new row violates row-level security policy"). SQL ini dijalankan sekali oleh Editor (aman diulang).
@@ -301,9 +305,9 @@ function dashTile(t) {
   const b = BRANDS.find(x => x.id === t.id); if (!b) return '';
   const o = dashOverrides[t.id] || {};
   const label = o.label || t.label || '';
-  const vid = o.path ? dashPublicUrl(o.path) : t.video;
+  const ovp = dashOvVid(o), vid = ovp ? dashPublicUrl(ovp) : t.video;
   const media = vid
-    ? `<video class="dt-media" src="${vid}"${!o.path && t.poster ? ` poster="${t.poster}"` : ''} autoplay muted loop playsinline preload="metadata"></video>`
+    ? `<video class="dt-media" src="${vid}"${!ovp && t.poster ? ` poster="${t.poster}"` : ''} autoplay muted loop playsinline preload="metadata"></video>`
     : `<div class="dt-media dt-slides">${(t.photos || []).map((src, i) => `<img src="${src}" alt="" class="${i ? '' : 'on'}" loading="lazy">`).join('')}</div>`;
   const tag = 'tag' in o ? o.tag : (t.tag || '');
   return `<div class="dt" role="button" tabindex="0" onclick="openDashVideo('${t.id}')" onkeydown="if(event.key==='Enter')openDashVideo('${t.id}')" style="--bc:${b.color || '#d8b26a'}">
@@ -341,7 +345,7 @@ const dvNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 function dvTile(id) {
   const t = DASH_TILES.find(x => x.id === id), b = BRANDS.find(x => x.id === id); if (!t || !b) return null;
   const o = dashOverrides[id] || {};
-  return { t, b, label: o.label || t.label || '', tag: 'tag' in o ? o.tag : (t.tag || ''), video: o.path ? dashPublicUrl(o.path) : t.video, poster: o.path ? '' : (t.poster || ''), photos: t.photos || [] };
+  return { t, b, label: o.label || t.label || '', tag: 'tag' in o ? o.tag : (t.tag || ''), video: dashOvVid(o) ? dashPublicUrl(dashOvVid(o)) : t.video, poster: dashOvVid(o) ? '' : (t.poster || ''), photos: t.photos || [] };
 }
 // Tujuan tombol utama: produk yang model/namanya = label, atau line yang namanya = label.
 function dvTarget(d) {
@@ -457,7 +461,7 @@ async function saveDashManifest(data = dashOverrides) {
 async function uploadDashVideo(id, input) {
   const f = input.files?.[0]; input.value = '';
   if (!f || !isEditor() || !supabase) return;
-  if (f.size > DASH_VIDEO_MAX_MB * 1048576) { showToast(`⚠ Video terlalu besar (${(f.size / 1048576).toFixed(1)} MB). Maksimal ${DASH_VIDEO_MAX_MB} MB — sebaiknya ≤ 5 MB agar Dashboard cepat dimuat.`, 6000); return; }
+  if (f.size > DASH_VIDEO_MAX_MB * 1048576) { showToast(`⚠ Video terlalu besar (${(f.size / 1048576).toFixed(1)} MB). Maksimal ${DASH_VIDEO_MAX_MB} MB agar Dashboard ringan & kuota Supabase aman — kompres dulu (mis. 854×480, tanpa suara, 10–15 detik).`, 6000); return; }
   const ext = (f.name.match(/\.(mp4|m4v|mov|webm)$/i)?.[1] || 'mp4').toLowerCase();
   const path = `${DASH_DIR}/${id}-${Date.now()}.${ext}`;
   showToast('⏳ Mengunggah video…', 60000);
@@ -465,7 +469,7 @@ async function uploadDashVideo(id, input) {
     const { error } = await supabase.storage.from('showcase').upload(path, f, { contentType: f.type || 'video/mp4', cacheControl: '31536000', upsert: false });
     if (error) throw error;
     const old = dashOverrides[id]?.path;
-    const next = { ...dashOverrides, [id]: { ...(dashOverrides[id] || {}), path } };
+    const next = { ...dashOverrides, [id]: { ...(dashOverrides[id] || {}), path, mb: +(f.size / 1048576).toFixed(2) } };
     try { await saveDashManifest(next); }
     catch (e) { supabase.storage.from('showcase').remove([path]).catch(() => {}); throw e; }   // catatan gagal → buang video yang baru diunggah
     dashOverrides = next;
@@ -487,7 +491,7 @@ async function editDashLabel(id) {
 async function resetDashVideo(id) {
   if (!isEditor() || !supabase || !confirm('Kembalikan kotak ini ke video/foto bawaan?')) return;
   const old = dashOverrides[id]?.path;
-  const next = { ...dashOverrides }; if (next[id]) { next[id] = { ...next[id] }; delete next[id].path; if (!Object.keys(next[id]).length) delete next[id]; }
+  const next = { ...dashOverrides }; if (next[id]) { next[id] = { ...next[id] }; delete next[id].path; delete next[id].mb; if (!Object.keys(next[id]).length) delete next[id]; }
   try { await saveDashManifest(next); dashOverrides = next; if (old) await supabase.storage.from('showcase').remove([old]); renderDashTiles(); showToast('✓ Kembali ke tampilan bawaan'); dashShareSync([id]); }
   catch (e) { dashErr(e, 'menyimpan'); }
 }
@@ -501,7 +505,7 @@ const DASH_SHARE_VER = 1;
 const dashSharePath = id => `${DASH_DIR}/share-${id}.jpg`;
 function dashShareHash(id) {
   const d = dvTile(id); if (!d) return '';
-  const s = [DASH_SHARE_VER, d.label, d.tag, (dashOverrides[id] || {}).path || 'bawaan'].join('|');
+  const s = [DASH_SHARE_VER, d.label, d.tag, dashOvVid(dashOverrides[id]) || 'bawaan'].join('|');
   let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0;
   return (h >>> 0).toString(36);
 }
@@ -519,7 +523,7 @@ async function dashShareImage(id) {
   const o = dashOverrides[id] || {};
   try { await Promise.all(['800 64px Sora', '700 16px Sora', '800 14px Sora', '400 21px Inter', '700 19px Sora'].map(f => document.fonts.load(f))); } catch (e) {}
   let bg = null;
-  try { bg = o.path ? await dsFrame(dashPublicUrl(o.path)) : await dsImg(d.t.poster || d.photos[0]); } catch (e) { bg = null; }
+  try { bg = dashOvVid(o) ? await dsFrame(dashPublicUrl(dashOvVid(o))) : await dsImg(d.t.poster || d.photos[0]); } catch (e) { bg = null; }
   const [logo, cai] = await Promise.all([d.b.logo ? dsImg(d.b.logo).catch(() => null) : null, dsImg(LOGO_WHITE).catch(() => null)]);
   const W = 1200, H = 630, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const x = cv.getContext('2d');
