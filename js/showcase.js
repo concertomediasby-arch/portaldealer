@@ -359,7 +359,7 @@ let glEdit = null;   // { id?, …field, photos:[{path?, area, blob?, url}], rem
 
 // Video instalasi (31 Okt 2026, permintaan pemilik): disimpan di array photos yang sama dengan type:'video'.
 // File sudah dikonversi pemilik — tidak diolah di browser, hanya dibatasi ukurannya (batas unggah Supabase paket gratis 50 MB per file).
-const GL_VIDEO_MAX_MB = 50;
+const GL_VIDEO_MAX_MB = 15;   // 8 Nov 2026: dulu 50 MB — video besar di Storage menghabiskan kuota cached egress Supabase gratis (5 GB/bulan)
 /* Kiriman dealer (31 Okt 2026, permintaan pemilik): dealer yang login mengirim foto/video instalasinya → masuk sebagai
    baris source='dealer', published=false (file di Storage `pending/<id>/…`) → tampil hanya setelah Editor menyetujui. */
 const GL_SUB_MAX_PHOTOS = 10, GL_SUB_MAX_VIDEOS = 2;   // 31 Okt 2026, permintaan pemilik (sempat 20 foto + 3 video)
@@ -451,11 +451,12 @@ function glChampLabel(it) {
 }
 function glCard(it) {
   const cov = (it.photos || []).find(p => glIsVid(p) && p.cover);   // video dipilih Editor sebagai sampul loop
-  const ph = cov || (it.photos || []).find(p => !glIsVid(p)) || it.photos?.[0];
+  // 8 Nov 2026 (hemat kuota Supabase): sampul kartu tidak lagi memutar video loop — foto pertama dipakai; video hanya bila tak ada foto
+  const ph = (it.photos || []).find(p => !glIsVid(p)) || cov || it.photos?.[0];
   const nVid = (it.photos || []).filter(glIsVid).length, nImg = (it.photos || []).length - nVid;
   const prods = (it.products || []).map(pid => glProd(pid).product?.name).filter(Boolean);
   return `<button class="gl-card" onclick="openGlDetail('${it.id}')">
-    <span class="gl-ph">${ph ? (cov ? `<video class="gl-cover" src="${glUrl(cov.path)}"${glCovPoster(it)} muted loop autoplay playsinline webkit-playsinline preload="auto"${glFrAttr(cov)}></video>` : glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
+    <span class="gl-ph">${ph ? (glIsVid(ph) ? glVidTag(glUrl(ph.path), '', ph) : `<img src="${glUrl(ph.path)}" alt="${escHtml(glTitle(it))}" loading="lazy"${glFrAttr(ph)}>`) : glCarSvg}
       ${glSocPills(it)}
       ${it.photos?.length ? `<span class="gl-cnt">${[nImg ? `📷 ${nImg}` : '', nVid ? `🎬 ${nVid}` : ''].filter(Boolean).join(' · ')}</span>` : ''}
       ${it.hof_id ? `<span class="gl-tro">${glChampLabel(it)}</span>` : ''}
@@ -953,7 +954,7 @@ const GL_GEAR = [
     ['Peredam pintu / kabin / kap', 0, 'Saat panel terbuka (dokumentasi proses)', 'STEG X3, S-8, S-15, Hoodliner · Audiocircle / Diosdela Sound Deadening']]],
 ];
 const GL_TEK = () => ['HP <b>horizontal</b> (16:9) · 4K/1080p 30fps — 60fps untuk slow motion', 'Pakai gimbal, gerak pelan satu arah: maju · mundur · geser · orbit', '<b>Reveal</b>: mulai dari objek di depan, lalu buka ke perangkat', 'Ruang agak gelap + lampu LED samping; bodi & kaca dilap'];
-const GL_EDIT = () => ['Potongan mengikuti ketukan musik, transisi cut / whip', 'Color grading seragam, teks seminimal mungkin', 'Musik <b>wajib bebas royalti</b> — tanpa musik = set tayang tanpa suara', `Ekspor MP4 (H.264) 1080p · maks. ${GL_VIDEO_MAX_MB} MB`];
+const GL_EDIT = () => ['Potongan mengikuti ketukan musik, transisi cut / whip', 'Color grading seragam, teks seminimal mungkin', 'Musik <b>wajib bebas royalti</b> — tanpa musik = set tayang tanpa suara', `Ekspor MP4 (H.264) 720p · maks. ${GL_VIDEO_MAX_MB} MB`];
 const GL_TIP = '📌 <b>Fokus hanya pada produk brand CAI</b> (Audiocircle · STEG · Zelos · Diosdela Musica · OG One Sound · Audio System) — perangkat merek lain (head unit, dll.) jangan di-close-up. Logo & model harus terbaca · 2–3 dtk per perangkat · bersihkan debu & sidik jari dulu.';
 const GL_WARN = '⚠️ <b>Wajib:</b> plat nomor ditutup / diburamkan · STNK, kartu tol & barang pribadi tidak terlihat · wajah pemilik mobil hanya dengan izin';
 // Unduh panduan (kedua tab) sebagai PNG landscape 16:9 — 4 kolom, digambar langsung ke canvas tanpa library (2 Nov 2026, permintaan pemilik)
@@ -1126,7 +1127,7 @@ function renderGlForm() {
       ${e.submit ? '' : !isEditor() ? '<div class="w2 gl-hint">⏳ Setelah disimpan, foto/video menunggu persetujuan Editor sebelum tampil.</div>' : glSchedHtml()}
       <div class="w4"><div class="gl-flbl">Foto & Video <small>(foto otomatis diperkecil; video diunggah apa adanya)</small></div>
         <div class="gl-upr"><label class="gt-btn gl-up">📷 Tambah Foto<input type="file" accept="image/*" multiple hidden onchange="glAddPhotos(this)"></label><label class="gt-btn gl-up">🎬 Tambah Video<input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple hidden onchange="glAddVideos(this)"></label></div>
-        <div class="gl-hint gl-vhint">Video: MP4 (H.264), maksimal ${GL_VIDEO_MAX_MB} MB per file — disarankan ≤ 30 MB agar cepat diputar di HP. Video tidak dikompres ulang di sini.</div>
+        <div class="gl-hint gl-vhint">Video: MP4 (H.264), maksimal ${GL_VIDEO_MAX_MB} MB per file (720p, 30–60 dtk) agar cepat diputar di HP & kuota server aman. Video tidak dikompres ulang di sini.</div>
         <div class="gl-fphotos" id="glf-photos"></div></div>
       ${e.submit ? `<label class="w4 gl-pub gl-agree"><input type="checkbox"${e.agree ? ' checked' : ''} onchange="glField('agree',this.checked)"> Foto/video ini milik partner kami, <b>plat nomor sudah diburamkan</b>, dan pemilik mobil tidak keberatan ditampilkan.</label>` : ''}
     </div>
