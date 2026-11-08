@@ -16,6 +16,12 @@ const SUPA_URL = process.env.MIRROR_BASE || stockJs.match(/const SUPA_URL\s*=\s*
 const DIR = 'media', MAP = path.join(ROOT, DIR, 'map.json');
 const VIDEO_KEEP_MB = 8;     // video ≤ 8 MB disalin apa adanya
 const VIDEO_MAX_MB = 20;     // hasil kompres > 20 MB tidak disalin (tetap dari Supabase)
+// Jeda 24 jam (8 Nov 2026, permintaan pemilik): repo publik menyimpan riwayat selamanya — media baru disalin
+// setelah tayang ≥ 24 jam, supaya salah unggah (plat nomor, wajah, foto keliru) sempat dihapus Editor dulu.
+const DELAY_H = 24;
+const tms = v => { const t = Date.parse(v || ''); return isNaN(t) ? 0 : t; };
+// waktu unggah dari nama file (<Date.now()>-…), mis. 1730000000000-1.webp
+const fileTs = p => { const m = String(p).split('/').pop().match(/(?:^|\D)(1[6-9]\d{11})(?!\d)/); return m ? +m[1] : 0; };
 const isVid = p => /\.(mp4|mov|webm|m4v)$/i.test(p);
 const clean = p => String(p || '').split('#')[0].trim();
 const ok = p => p && !/^(https?:|blob:|data:)/i.test(p) && !p.startsWith('pending/') && !p.includes('..');
@@ -28,17 +34,18 @@ async function rest(q, optional) {
   return r.json();
 }
 async function wanted() {
-  const set = new Set(), add = p => { p = clean(p); if (ok(p)) set.add(p); };
-  for (const g of await rest('showcase_installs?select=photos&published=eq.true'))
-    for (const p of Array.isArray(g.photos) ? g.photos : []) add(p?.path);
+  // Map path → sejak kapan tayang (ms) = paling akhir dari waktu unggah file & waktu item tayang/diubah
+  const set = new Map(), add = (p, ...ts) => { p = clean(p); if (!ok(p)) return; const t = Math.max(fileTs(p), ...ts.map(tms)); set.set(p, Math.max(set.get(p) || 0, t)); };
+  for (const g of await rest('showcase_installs?select=*&published=eq.true'))
+    for (const p of Array.isArray(g.photos) ? g.photos : []) add(p?.path, g.publish_at, g.created_at);
   for (const n of await rest('cai_news?select=*&published=eq.true')) {
-    add(n.image); for (const p of Array.isArray(n.photos) ? n.photos : []) add(p?.path);
+    add(n.image, n.created_at, n.push_at); for (const p of Array.isArray(n.photos) ? n.photos : []) add(p?.path, n.created_at, n.push_at);
   }
-  for (const e of await rest('cai_events?select=poster', true)) add(e.poster);
+  for (const e of await rest('cai_events?select=*', true)) add(e.poster, e.created_at, e.push_at);
   try {
     const r = await fetch(pub('academy/items.json') + '?t=' + Date.now());
     if (r.ok) { const now = Date.now(), today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);
-      for (const a of (await r.json()).items || []) if (a && (a.at ? Date.parse(a.at) <= now : (a.date || '') <= today)) { add(a.img); add(a.thumb); } }
+      for (const a of (await r.json()).items || []) if (a && (a.at ? Date.parse(a.at) <= now : (a.date || '') <= today)) { add(a.img, a.at); add(a.thumb, a.at); } }
   } catch (e) { console.warn('academy dilewati:', e.message); }
   return set;
 }
@@ -47,7 +54,10 @@ async function wanted() {
   const want = await wanted();
   const map = fs.existsSync(MAP) ? JSON.parse(fs.readFileSync(MAP, 'utf8')) : {};
   const files = map.files || {}, skip = map.skip || {};
-  const todo = [...want].filter(p => !files[p] && !skip[p]);
+  const due = Date.now() - DELAY_H * 3600e3;
+  const fresh = [...want.keys()].filter(p => !files[p] && !skip[p]);
+  const todo = fresh.filter(p => want.get(p) <= due);   // baru tayang < 24 jam → tunggu
+  if (fresh.length > todo.length) console.log(`Media: ${fresh.length - todo.length} file menunggu jeda ${DELAY_H} jam`);
   const gone = Object.keys(files).filter(p => !want.has(p));
   const changed = todo.length > 0 || gone.length > 0 || Object.keys(skip).some(p => !want.has(p));
   if (process.argv.includes('--check')) {
