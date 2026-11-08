@@ -294,7 +294,12 @@ function dashErr(e, what) {
       () => prompt('Izin Storage belum lengkap. Jalankan SQL ini sekali di Supabase → SQL Editor → Run, lalu coba lagi:', DASH_SQL));
   } else showToast(`⚠ Gagal ${what}: ` + m, 7000);
 }
-const dashPublicUrl = path => `${SUPA_URL}/storage/v1/object/public/showcase/${path}`;
+// 📦 Tahap 2 hemat kuota (8 Nov 2026): media publik (Galeri, News, Acara, Academy) disalin bot GitHub ke folder media/ repo
+// (tools/mirror-media.js → media/map.json). File yang sudah ada salinannya diambil dari situs sendiri, bukan dari Supabase Storage.
+let mediaMap = {};
+const mediaP = fetch('media/map.json?build=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j?.files) mediaMap = j.files; }, () => {});
+const mediaLocal = p => { const m = mediaMap[String(p || '').split('#')[0]]; return m?.f ? m.f.split('/').map(encodeURIComponent).join('/') : ''; };
+const dashPublicUrl = path => mediaLocal(path) || `${SUPA_URL}/storage/v1/object/public/showcase/${path}`;
 async function loadDashOverrides() {
   try {
     const r = await fetch(dashPublicUrl(DASH_MANIFEST) + '?t=' + Date.now(), { cache: 'no-store' });
@@ -1640,6 +1645,7 @@ const ACAD_DIR = 'academy', ACAD_MANIFEST = 'academy/items.json';
 let acadExtra = [], acadForm = null;
 async function loadAcadExtra() {
   try {
+    await mediaP;
     const r = await fetch(dashPublicUrl(ACAD_MANIFEST) + '?t=' + Date.now(), { cache: 'no-store' });
     const j = r.ok ? await r.json() : null;
     acadExtra = Array.isArray(j?.items) ? j.items.filter(a => a && a.no && a.img && a.date) : [];

@@ -127,6 +127,7 @@ async function loadEvents(force) {
   if (evLoading && !force) return evLoading;
   evLoading = (async () => {
     try {
+      await mediaP;
       const { data, error } = await supabase.from(EV_TABLE).select('*').order('start_at');
       if (error) throw error;
       evItems = data || []; evMissing = false; evErr = '';

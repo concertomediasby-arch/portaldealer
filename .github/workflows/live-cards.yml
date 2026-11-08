@@ -15,12 +15,24 @@ concurrency:
 jobs:
   cards:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      # Tahap 2 hemat kuota (8 Nov 2026): salin media publik Galeri/News/Acara/Academy dari Supabase Storage ke media/ (tools/mirror-media.js)
+      - name: Cek media
+        id: med
+        continue-on-error: true
+        run: node tools/mirror-media.js --check
+      - name: Pasang ffmpeg
+        if: steps.med.outputs.media == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+      - name: Salin media
+        if: steps.med.outputs.media == 'true'
+        continue-on-error: true
+        run: node tools/mirror-media.js
       - name: Cek perubahan
         id: chk
         run: node tools/gen-live-cards.js --check
@@ -37,16 +49,16 @@ jobs:
         if: steps.chk.outputs.changed == 'true'
         run: node tools/gen-seo-pages.js
       - name: Commit
-        if: steps.chk.outputs.changed == 'true'
+        if: steps.chk.outputs.changed == 'true' || steps.med.outputs.media == 'true'
         run: |
           git config user.name "CAI Hub Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # Hanya path yang ada (di disk atau di git) — folder yang belum pernah dibuat / sudah dihapus
           # (mis. e/ sebelum acara pertama, mobil/ & hall-of-fame/ saat disembunyikan) dulu membuat git add gagal.
-          for p in n g m pp e share/live.json share/img tools/data mobil partner brand kategori produk academy hall-of-fame sitemap.xml; do
+          for p in media n g m pp e share/live.json share/img tools/data mobil partner brand kategori produk academy hall-of-fame sitemap.xml; do
             if [ -e "$p" ] || [ -n "$(git ls-files -- "$p")" ]; then git add -A -- "$p"; fi
           done
           if git diff --cached --quiet; then echo "Tidak ada perubahan"; exit 0; fi
-          git commit -m "Kartu WA & halaman Google diperbarui otomatis"
+          git commit -m "Kartu WA, media & halaman Google diperbarui otomatis"
           for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep 5; done
           exit 1

@@ -27,7 +27,11 @@ const VER = 1;   // naikkan bila tampilan kartu (CSS/HTML) diubah → semua kart
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…' : s; };
 const TEST_IMG = process.env.LIVE_TEST_IMG ? 'data:image/jpeg;base64,' + fs.readFileSync(process.env.LIVE_TEST_IMG).toString('base64') : '';   // uji lokal tanpa Storage
-const pub = p => TEST_IMG || `${SUPA_URL}/storage/v1/object/public/showcase/${String(p).split('#')[0].split('/').map(encodeURIComponent).join('/')}`;
+// Tahap 2 hemat kuota: pakai salinan media/ di repo (tools/mirror-media.js) bila ada — gambar sebagai data URI, video sebagai path lokal untuk ffmpeg
+let MEDIA = {}; try { MEDIA = JSON.parse(fs.readFileSync(path.join(ROOT, 'media/map.json'), 'utf8')).files || {}; } catch (e) {}
+const localMedia = p => { const m = MEDIA[String(p).split('#')[0]], f = m && path.join(ROOT, m.f); if (!f || !fs.existsSync(f)) return '';
+  return /\.(mp4|mov|webm|m4v)$/i.test(f) ? f : `data:image/${/\.png$/i.test(f) ? 'png' : /\.jpe?g$/i.test(f) ? 'jpeg' : 'webp'};base64,` + fs.readFileSync(f).toString('base64'); };
+const pub = p => TEST_IMG || localMedia(p) || `${SUPA_URL}/storage/v1/object/public/showcase/${String(p).split('#')[0].split('/').map(encodeURIComponent).join('/')}`;
 const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 const tgl = d => { const m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${+m[3]} ${BULAN[+m[2] - 1]} ${m[1]}` : ''; };
 const ytId = u => (String(u || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/) || [])[1] || '';

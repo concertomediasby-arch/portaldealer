@@ -403,7 +403,7 @@ async function glCheckSubmit() {
 }
 const glIsVid = p => p?.type === 'video' || /\.(mp4|m4v|mov|webm)$/i.test(p?.path || '');
 const glVidTag = (src, cls = '', p = null) => `<video class="${cls}" src="${src}#t=0.5" muted playsinline preload="metadata"${p ? glFrAttr(p) : ''}></video>`;
-const glUrl = path => supabase ? supabase.storage.from(GL_BUCKET).getPublicUrl(path).data.publicUrl : '';
+const glUrl = path => mediaLocal(path) || (supabase ? supabase.storage.from(GL_BUCKET).getPublicUrl(path).data.publicUrl : '');
 const glTitle = it => [it.car_make, it.car_model].filter(Boolean).join(' ');
 const glProd = pid => findProductAny(pid);
 function glCopySql() { (navigator.clipboard?.writeText(SHOWCASE_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => { prompt('Salin SQL ini:', SHOWCASE_SQL); }); }
@@ -413,6 +413,7 @@ function loadGaleri(force) {
   if (glLoading && !force) return glLoading;
   glLoading = (async () => {
     try {
+      await mediaP;
       const { data, error } = await supabase.from(GL_TABLE).select('*').order('sort', { ascending: true }).order('created_at', { ascending: false });
       if (error) throw error;
       glItems = (data || []).filter(it => isEditor() || (it.published && !glSched(it))); glErr = '';   // draf, kiriman menunggu & terjadwal khusus Editor (5 Nov 2026)

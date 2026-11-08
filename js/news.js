@@ -208,6 +208,7 @@ async function loadNews(force) {
   if (nwLoading && !force) return nwLoading;
   nwLoading = (async () => {
     try {
+      await mediaP;
       const { data, error } = await supabase.from(NEWS_TABLE).select('*');
       if (error) throw error;
       nwItems = data || []; nwMissing = false; nwErr = '';
