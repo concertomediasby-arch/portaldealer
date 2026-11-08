@@ -1,0 +1,65 @@
+# 🎬 Video kotak Sorotan Brand di Dashboard (8 Nov 2026, permintaan pemilik)
+# Mengambil video yang pernah diunggah Editor ke Storage publik Supabase (showcase/<src>), mengompresnya
+# menjadi klip loop ringan 854×480 tanpa suara (crf 27, fade 0,4 dtk, faststart) + poster JPG, lalu
+# menyimpannya di assets/dash/<id>.mp4 / <id>.jpg di repo — supaya kotak Dashboard tidak memakai kuota Supabase.
+# Jalankan manual: Actions → "Video kotak Dashboard" → Run workflow (isi src, id, mulai, durasi).
+name: Video kotak Dashboard
+on:
+  workflow_dispatch:
+    inputs:
+      src:
+        description: 'Path file di Storage showcase (mis. dashboard/zelos-1793592580762.mp4)'
+        required: true
+      id:
+        description: 'ID brand kotak (audiocircle / steg / zelos / audiosystem)'
+        required: true
+      start:
+        description: 'Mulai dari detik ke-'
+        default: '0'
+      dur:
+        description: 'Durasi klip (detik)'
+        default: '15'
+permissions:
+  contents: write
+concurrency:
+  group: live-cards
+  cancel-in-progress: false
+jobs:
+  clip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pasang ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg
+      - name: Unduh & kompres
+        env:
+          SRC: ${{ inputs.src }}
+          ID: ${{ inputs.id }}
+          START: ${{ inputs.start }}
+          DUR: ${{ inputs.dur }}
+        run: |
+          set -e
+          case "$ID" in audiocircle|steg|zelos|audiosystem) ;; *) echo "id tidak dikenal: $ID"; exit 1;; esac
+          echo "$SRC" | grep -Eq '^[A-Za-z0-9/_.-]+$' || { echo "src tidak valid"; exit 1; }
+          echo "$START$DUR" | grep -Eq '^[0-9.]+$' || { echo "start/dur harus angka"; exit 1; }
+          URL=$(grep -o "const SUPA_URL *= *'[^']*'" js/stock.js | cut -d"'" -f2)
+          curl -fsSL "$URL/storage/v1/object/public/showcase/$SRC" -o /tmp/src.mp4
+          echo "Durasi sumber: $(ffprobe -v error -show_entries format=duration -of csv=p=0 /tmp/src.mp4) dtk · $(du -h /tmp/src.mp4 | cut -f1)"
+          FO=$(python3 -c "print(max(0, float('$DUR') - 0.4))")
+          ffmpeg -y -loglevel error -ss "$START" -i /tmp/src.mp4 -t "$DUR" -an \
+            -vf "scale=854:480:force_original_aspect_ratio=increase,crop=854:480,fps=30,fade=t=in:st=0:d=0.4,fade=t=out:st=$FO:d=0.4" \
+            -c:v libx264 -preset slow -crf 27 -pix_fmt yuv420p -movflags +faststart "assets/dash/$ID.mp4"
+          ffmpeg -y -loglevel error -ss 1 -i "assets/dash/$ID.mp4" -frames:v 1 -q:v 3 "assets/dash/$ID.jpg"
+          ls -la "assets/dash/$ID.mp4" "assets/dash/$ID.jpg"
+      - name: Commit
+        env:
+          ID: ${{ inputs.id }}
+        run: |
+          git config user.name "CAI Hub Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "assets/dash/$ID.mp4" "assets/dash/$ID.jpg"
+          if git diff --cached --quiet; then echo "Tidak ada perubahan"; exit 0; fi
+          git commit -m "Video kotak Dashboard $ID dari Storage (dikompres)"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep 5; done
+          exit 1
