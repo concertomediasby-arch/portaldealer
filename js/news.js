@@ -204,7 +204,10 @@ const nwIsNew = it => it?.published && cwDaysAgo(it.post_date) < NEWS_NEW_DAYS &
 const nwDate = d => cwDate(d);
 
 async function loadNews(force) {
-  if (!supabase) return;
+  if (!supabase) {   // pustaka Supabase gagal dimuat → salinan cadangan (Tahap 3)
+    const bk = await backupJson('data/news.json'); if (bk) { nwItems = bk; hlRender(); nwStar(); if (nwPending) { const id = nwPending; nwPending = null; openNews(id); } }
+    return;
+  }
   if (nwLoading && !force) return nwLoading;
   nwLoading = (async () => {
     try {
@@ -216,6 +219,7 @@ async function loadNews(force) {
       const m = e?.message || String(e);
       nwMissing = /does not exist|schema cache|42P01|PGRST205/i.test(m + ' ' + (e?.code || ''));
       nwErr = m; nwItems = [];
+      if (!nwMissing) { const bk = await backupJson('data/news.json'); if (bk) { nwItems = bk; nwErr = ''; } }
     }
     nwLoading = null;
     hlRender(); nwStar();

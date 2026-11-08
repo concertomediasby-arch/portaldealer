@@ -23,6 +23,7 @@ const SITE = 'https://hub.concerto.id';
 const stockJs = fs.readFileSync(path.join(ROOT, 'js/stock.js'), 'utf8');
 const SUPA_URL = stockJs.match(/const SUPA_URL\s*=\s*'([^']+)'/)[1], SUPA_KEY = stockJs.match(/const SUPA_KEY\s*=\s*'([^']+)'/)[1];
 const LOGO_WHITE = fs.readFileSync(path.join(ROOT, 'js/core.js'), 'utf8').match(/const LOGO_WHITE = "([^"]+)"/)[1];
+const BK_NOTE = 'Salinan cadangan data publik yang sudah tayang (dibaca dengan kunci publik, sama seperti pengunjung) — ditulis otomatis oleh tools/gen-live-cards.js; dipakai portal bila Supabase tidak bisa diakses. Jangan diedit manual.';
 const VER = 1;   // naikkan bila tampilan kartu (CSS/HTML) diubah → semua kartu digambar ulang
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…' : s; };
@@ -46,13 +47,13 @@ async function rest(q) {
 }
 async function loadData() {
   if (process.env.LIVE_FIXTURE) return JSON.parse(fs.readFileSync(process.env.LIVE_FIXTURE, 'utf8'));
-  const news = await rest('cai_news?select=id,title,summary,category,image,link_url,post_date&published=eq.true&order=post_date.desc');
+  const news = await rest('cai_news?select=*&published=eq.true&order=post_date.desc');
   // RLS publik sudah menyaring draf, kiriman tertunda & yang masih terjadwal
-  const gallery = await rest('showcase_installs?select=id,car_make,car_model,car_year,body,dealer,city,products,photos,hof_id,created_at&published=eq.true&order=created_at.desc');
+  const gallery = await rest('showcase_installs?select=*&published=eq.true&order=created_at.desc');
   const partners = (await rest('auth_dealers?select=region,name,city,address,wa,ig,map,sort&order=region,sort,name'))
     .map(r => Object.fromEntries(Object.entries({ r: r.region, n: r.name, c: r.city, a: r.address, wa: r.wa, ig: r.ig, map: r.map }).filter(([, v]) => v)));
   // 📅 Kalender Acara: hanya acara publik yang tayang (RLS anon); tabel belum dibuat → dilewati
-  let events = []; try { events = await rest('cai_events?select=id,title,kind,start_at,end_at,online,city,venue,poster,body&order=start_at'); } catch (e) { console.warn('acara dilewati:', e.message); }
+  let events = null; try { events = await rest('cai_events?select=*&order=start_at'); } catch (e) { console.warn('acara dilewati:', e.message); }
   // 🎓 Materi Academy tambahan dari portal (Storage publik showcase/academy/items.json) — hanya yang sudah tayang
   let academy = null; try {
     const r = await fetch(`${SUPA_URL}/storage/v1/object/public/showcase/academy/items.json?t=${Date.now()}`);
@@ -260,6 +261,10 @@ function videoFrame(url, out, at) {
       updated: new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10), partners }, 'partners'],
     ...(Array.isArray(data.academy) ? [['tools/data/academy-extra.json', { _note: 'Salinan materi Concerto Academy yang diunggah lewat portal & sudah tayang (Storage publik showcase/academy/items.json) — ditulis otomatis oleh tools/gen-live-cards.js; dipakai tools/gen-seo-pages.js untuk /academy/. Jangan diedit manual.',
       items: data.academy }, 'items']] : []),
+    // 🛟 Tahap 3 (8 Nov 2026): salinan cadangan data publik untuk portal (js/core.js backupJson) bila Supabase tidak bisa diakses
+    ...(Array.isArray(data.news) ? [['data/news.json', { _note: BK_NOTE, items: data.news }, 'items']] : []),
+    ...(Array.isArray(data.gallery) ? [['data/galeri.json', { _note: BK_NOTE, items: data.gallery }, 'items']] : []),
+    ...(Array.isArray(data.events) ? [['data/acara.json', { _note: BK_NOTE, items: data.events }, 'items']] : []),
   ].filter(() => !process.env.LIVE_FIXTURE || process.env.LIVE_WRITE_DATA);
   const dataChanged = dataFiles.filter(([f, obj, key]) => { try { return JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'))[key]) !== JSON.stringify(obj[key]); } catch (e) { return true; } });
   const livePath = path.join(ROOT, 'share/live.json');
@@ -274,7 +279,7 @@ function videoFrame(url, out, at) {
     if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `changed=${changed}\n`);
     return;
   }
-  for (const [f, obj] of dataChanged) fs.writeFileSync(path.join(ROOT, f), JSON.stringify(obj, null, 1) + '\n');
+  for (const [f, obj] of dataChanged) { fs.mkdirSync(path.dirname(path.join(ROOT, f)), { recursive: true }); fs.writeFileSync(path.join(ROOT, f), JSON.stringify(obj, null, 1) + '\n'); }
   fs.mkdirSync(path.join(ROOT, 'share/img'), { recursive: true });
   const { chromium } = require('playwright');
   const browser = await chromium.launch(); const pg = await browser.newPage({ viewport: { width: 1200, height: 630 } });

@@ -123,7 +123,7 @@ const evTag = e => { const k = evKind_(e); return `<span class="ev-tg k-${k[2]}"
 const evHofCount = e => e.hof_event && typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME.filter(x => x.event === e.hof_event).length : 0;
 
 async function loadEvents(force) {
-  if (typeof supabase === 'undefined' || !supabase) return;
+  if (typeof supabase === 'undefined' || !supabase) { const bk = await backupJson('data/acara.json'); if (bk) { evItems = bk; evDashRender(); if (typeof hlRender === 'function') hlRender(); } return; }
   if (evLoading && !force) return evLoading;
   evLoading = (async () => {
     try {
@@ -135,6 +135,7 @@ async function loadEvents(force) {
       const m = e?.message || String(e);
       evMissing = /does not exist|schema cache|42P01|PGRST205/i.test(m + ' ' + (e?.code || ''));
       evErr = m; evItems = [];
+      if (!evMissing) { const bk = await backupJson('data/acara.json'); if (bk) { evItems = bk; evErr = ''; } }
     }
     evLoading = null;
     evDashRender();

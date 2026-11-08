@@ -55,7 +55,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # Hanya path yang ada (di disk atau di git) — folder yang belum pernah dibuat / sudah dihapus
           # (mis. e/ sebelum acara pertama, mobil/ & hall-of-fame/ saat disembunyikan) dulu membuat git add gagal.
-          for p in media n g m pp e share/live.json share/img tools/data mobil partner brand kategori produk academy hall-of-fame sitemap.xml; do
+          for p in data media n g m pp e share/live.json share/img tools/data mobil partner brand kategori produk academy hall-of-fame sitemap.xml; do
             if [ -e "$p" ] || [ -n "$(git ls-files -- "$p")" ]; then git add -A -- "$p"; fi
           done
           if git diff --cached --quiet; then echo "Tidak ada perubahan"; exit 0; fi

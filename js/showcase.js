@@ -409,7 +409,14 @@ const glProd = pid => findProductAny(pid);
 function glCopySql() { (navigator.clipboard?.writeText(SHOWCASE_SQL) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => { prompt('Salin SQL ini:', SHOWCASE_SQL); }); }
 
 function loadGaleri(force) {
-  if (!supabase) { glErr = 'Koneksi database belum siap.'; return Promise.resolve(); }
+  if (!supabase) {   // pustaka Supabase gagal dimuat → salinan cadangan (Tahap 3)
+    if (glLoading) return glLoading;
+    return (glLoading = backupJson('data/galeri.json').then(bk => {
+      glLoading = null;
+      if (bk) { glItems = bk.filter(it => it.published && !glSched(it)); glErr = ''; glLoadedAt = Date.now(); if (typeof carsRerender === 'function') carsRerender(); }
+      else glErr = 'Koneksi database belum siap.';
+    }));
+  }
   if (glLoading && !force) return glLoading;
   glLoading = (async () => {
     try {
@@ -422,6 +429,7 @@ function loadGaleri(force) {
       const m = String(e.message || e);
       glItems = [];
       glErr = /relation|does not exist|schema cache|404|PGRST205/i.test(m) ? 'setup' : 'Galeri tidak bisa dimuat: ' + m;
+      if (glErr !== 'setup') { const bk = await backupJson('data/galeri.json'); if (bk) { glItems = bk.filter(it => it.published && !glSched(it)); glErr = ''; glLoadedAt = Date.now(); } }
     }
     glLoading = null;
     if (typeof carsRerender === 'function') carsRerender();   // Cari per Mobil / Profil Partner / kotak Dashboard (js/cars.js)

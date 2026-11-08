@@ -299,6 +299,18 @@ function dashErr(e, what) {
 let mediaMap = {};
 const mediaP = fetch('media/map.json?build=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j?.files) mediaMap = j.files; }, () => {});
 const mediaLocal = p => { const m = mediaMap[String(p || '').split('#')[0]]; return m?.f ? m.f.split('/').map(encodeURIComponent).join('/') : ''; };
+// 🛟 Tahap 3 mode cadangan (8 Nov 2026): bila Supabase menolak / tak terjangkau, isi publik dibaca dari salinan
+// di repo yang ditulis bot GitHub (data/news.json, data/galeri.json, data/acara.json, tools/data/partners.json,
+// tools/data/academy-extra.json). Login, stok & fitur Editor tetap butuh Supabase.
+let backupMode = false;
+async function backupJson(file, key = 'items') {
+  try {
+    const r = await fetch(file + '?build=' + Date.now(), { cache: 'no-store' });
+    const j = r.ok ? await r.json() : null; const v = Array.isArray(j?.[key]) ? j[key] : null;
+    if (v) { if (!backupMode) console.warn('CAI Hub: mode cadangan — data dari salinan repo', file); backupMode = true; }
+    return v;
+  } catch (e) { return null; }
+}
 const dashPublicUrl = path => mediaLocal(path) || `${SUPA_URL}/storage/v1/object/public/showcase/${path}`;
 async function loadDashOverrides() {
   try {
@@ -1648,8 +1660,9 @@ async function loadAcadExtra() {
     await mediaP;
     const r = await fetch(dashPublicUrl(ACAD_MANIFEST) + '?t=' + Date.now(), { cache: 'no-store' });
     const j = r.ok ? await r.json() : null;
+    if (!j) throw new Error('HTTP ' + r.status);
     acadExtra = Array.isArray(j?.items) ? j.items.filter(a => a && a.no && a.img && a.date) : [];
-  } catch (e) { acadExtra = []; }
+  } catch (e) { acadExtra = ((await backupJson('tools/data/academy-extra.json')) || []).filter(a => a && a.no && a.img && a.date); }
   updateAcademyStar();
   if (document.getElementById('view-academy')?.classList.contains('active')) openAcademy(true);
   acadSchedTimer();
@@ -2118,7 +2131,10 @@ where not exists (select 1 from public.auth_dealers);`;
 }
 function adCopySql() { const sql = adSql(); (navigator.clipboard?.writeText(sql) || Promise.reject()).then(() => showToast('✓ SQL disalin — tempel di Supabase → SQL Editor → Run.'), () => prompt('Salin SQL ini:', sql)); }
 function loadAuthDealers(force) {
-  if (typeof supabase === 'undefined' || !supabase) return Promise.resolve();
+  if (typeof supabase === 'undefined' || !supabase) {   // pustaka Supabase gagal dimuat → salinan cadangan (Tahap 3)
+    if (adTried) return Promise.resolve();
+    return backupJson('tools/data/partners.json', 'partners').then(bk => { adTried = true; if (bk?.length) adRows = bk.map(d => ({ ...d, hidden: false })); });
+  }
   if (adLoading && !force) return adLoading;
   adLoading = (async () => {
     try {
@@ -2130,6 +2146,7 @@ function loadAuthDealers(force) {
       const m = String(e.message || e);
       adRows = null;
       adErr = /relation|does not exist|schema cache|404|PGRST205/i.test(m) ? 'setup' : 'Daftar partner dari database tidak bisa dimuat: ' + m;
+      if (adErr !== 'setup') { const bk = await backupJson('tools/data/partners.json', 'partners'); if (bk?.length) { adRows = bk.map(d => ({ ...d, hidden: false })); adErr = ''; } }
     }
     adTried = true; adLoading = null;
   })();
