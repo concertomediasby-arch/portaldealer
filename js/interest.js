@@ -81,6 +81,7 @@ begin
     'fdgo', (select coalesce(json_object_agg(ref, n), '{}') from (
         select ref, sum(n) n from site_interest where kind = 'fdgo' and day > a group by ref) t));
 end $$;
+revoke execute on function public.interest_stats(int) from public, anon;
 grant execute on function public.interest_stats(int) to authenticated;`;
 
 // ── Pencatatan ──

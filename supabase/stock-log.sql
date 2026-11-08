@@ -37,3 +37,4 @@ begin
 end $$;
 drop trigger if exists stock_log_mark on public.stock;
 create trigger stock_log_mark after insert or update or delete on public.stock for each row execute function public.stock_log_mark();
+revoke execute on function public.stock_log_mark() from public, anon, authenticated;   -- hanya dipakai sebagai trigger (8 Nov 2026, saran pemeriksa keamanan Supabase)

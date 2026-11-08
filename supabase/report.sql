@@ -18,6 +18,7 @@ begin
 end $$;
 drop trigger if exists push_sub_log_mark on public.cway_push_subs;
 create trigger push_sub_log_mark after insert or delete on public.cway_push_subs for each row execute function public.push_sub_log_mark();
+revoke execute on function public.push_sub_log_mark() from public, anon, authenticated;   -- hanya dipakai sebagai trigger (8 Nov 2026, saran pemeriksa keamanan Supabase)
 
 -- 2) Minat Pengunjung: + kind 'open' (News / Galeri / Academy / Concerto Way / Acara dibuka; 1× per orang per hari)
 --    (definisi sama dengan supabase/interest.sql — bila diubah, samakan kedua file & konstanta INT_SQL / REPORT_SQL)

@@ -1910,12 +1910,14 @@ begin
   insert into academy_views (no, vid) values (p_no, p_vid)
   on conflict (no, vid) do update set views = academy_views.views + 1, last_at = now();
 end $$;
+revoke execute on function public.log_academy_view(int, text) from public, anon;
 grant execute on function public.log_academy_view(int, text) to authenticated;
 
 create or replace function public.academy_view_counts()
 returns table (no int, views bigint, viewers bigint) language sql security definer set search_path = public as $$
   select no, sum(views)::bigint, count(*)::bigint from academy_views group by no;
 $$;
+revoke execute on function public.academy_view_counts() from public, anon;
 grant execute on function public.academy_view_counts() to authenticated;`;
 let acadViews = null, acadViewsErr = '', acadViewsAt = 0;
 function acadViewsText(no, sep) {

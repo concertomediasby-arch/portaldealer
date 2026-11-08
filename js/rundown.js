@@ -57,6 +57,7 @@ begin
     'total_visits', (select coalesce(sum(visits), 0) from site_visits),
     'first_day', (select min(day) from site_visits));
 end $$;
+revoke execute on function public.site_visit_stats(int) from public, anon;
 grant execute on function public.site_visit_stats(int) to authenticated;`;
 
 function visitId() {

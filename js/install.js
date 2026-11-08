@@ -49,6 +49,7 @@ begin
                     and exists (select 1 from site_app_events q where q.vid = e.vid and q.kind = 'qr')),
     'total_install', (select count(distinct vid) from site_app_events where kind = 'install'));
 end $$;
+revoke execute on function public.app_event_stats(int) from public, anon;
 grant execute on function public.app_event_stats(int) to authenticated;`;
 
 let insBip = null;   // event beforeinstallprompt (Android/Chrome)

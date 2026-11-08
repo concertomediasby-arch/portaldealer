@@ -102,6 +102,7 @@ begin
 end $f$;
 drop trigger if exists stock_ready_mark on public.stock;
 create trigger stock_ready_mark after insert or update on public.stock for each row execute function public.stock_ready_mark();
+revoke execute on function public.stock_ready_mark() from public, anon, authenticated;   -- hanya dipakai sebagai trigger (8 Nov 2026, saran pemeriksa keamanan Supabase)
 
 -- 🚗 Galeri Instalasi: jadwal tayang + notifikasi. Sebelum publish_at, mobil dikunci (hanya Admin/Editor yang bisa membaca).
 alter table public.showcase_installs add column if not exists publish_at timestamptz;

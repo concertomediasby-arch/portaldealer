@@ -1428,6 +1428,7 @@ revoke all on function public.gl_social(uuid[], text), public.gl_like(uuid, text
   public.gl_comment_add(uuid, text, text, text), public.gl_comment_del(uuid) from public;
 grant execute on function public.gl_social(uuid[], text), public.gl_like(uuid, text, boolean), public.gl_comment_list(uuid),
   public.gl_comment_add(uuid, text, text, text) to anon, authenticated;
+revoke execute on function public.gl_comment_del(uuid) from public, anon;
 grant execute on function public.gl_comment_del(uuid) to authenticated;`;
 let glSoc = {}, glSocOff = false, glSocBusy = null, glCm = {}, glCmAll = {}, glCmSending = false;
 const glSocOk = it => !glSocOff && it && it.published && !glPending(it) && !glSched(it);
