@@ -1600,7 +1600,9 @@ body {
   }
   /* ── Tanya Jawab Partner (admin) ── */
   body:not(.is-staff):not(.is-mgr) .staff-sec, body:not(.is-staff) .staff-nav { display: none !important; }
-  body:not(.is-editor):not(.is-mgr) .rep-only { display: none !important; }   /* Editor + akun Ricky (manager): Pengunjung, Laporan Partner, Rapor */
+  body:not(.is-editor):not(.is-mgr) .rep-only { display: none !important; }
+  .sidebar-label .lbl-mgr, body.is-mgr .sidebar-label .lbl-staff { display: none; }   /* akun Ricky: judul bagian = "Akses Ricky" */
+  body.is-mgr .sidebar-label .lbl-mgr { display: inline; }   /* Editor + akun Ricky (manager): Pengunjung, Laporan Partner, Rapor */
   .rd-tabs { margin-top: 12px; }
   .rd-actions[hidden], #qa-pane[hidden], #rd-pane[hidden] { display: none !important; }
   .qa-live { margin-bottom: 16px; padding: 16px 18px; border-radius: 14px; border: 1px solid var(--border); background: linear-gradient(135deg, #0d1424, #151d33); color: #e8ecf5; }
