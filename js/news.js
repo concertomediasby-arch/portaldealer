@@ -201,8 +201,10 @@ const nwLive = () => nwSorted().filter(x => x.published);
 const nwShown = () => isReporter() ? nwSorted() : nwLive();
 const nwLink = id => liveLink('n', id) || `${PORTAL_URL}/news/?news=${encodeURIComponent(id)}`;   // /n/<id>/ = kartu WA berita itu (bila sudah dibuat jadwal GitHub)   // /news/ = kartu pratinjau WA News, lalu diteruskan ke /?news=
 const nwIsNew = it => it?.published && cwDaysAgo(it.post_date) < NEWS_NEW_DAYS && !cwLS(NEWS_SEEN_KEY)[it.id];
-// Kartu daftar News: tanda BARU selama NEWS_NEW_DAYS hari sejak terbit, walau sudah dibuka (9 Nov 2026, permintaan pemilik)
-const nwIsFresh = it => it?.published && cwDaysAgo(it.post_date) < NEWS_NEW_DAYS;
+// Kartu daftar News: tanda BARU hanya untuk NEWS_FRESH_MAX (3) berita terbaru yang terbit ≤ NEWS_FRESH_DAYS (3) hari,
+// walau sudah dibuka (9 Nov 2026, permintaan pemilik — dulu semua berita ≤ 5 hari sehingga semua kartu bertanda BARU)
+const NEWS_FRESH_MAX = 3, NEWS_FRESH_DAYS = 3;
+const nwIsFresh = it => !!it?.published && cwDaysAgo(it.post_date) < NEWS_FRESH_DAYS && nwLive().slice(0, NEWS_FRESH_MAX).some(x => x.id === it.id);
 const nwDate = d => cwDate(d);
 
 async function loadNews(force) {
