@@ -112,6 +112,7 @@ function dashNewRender() { if (authUser) dashSet('dash-new', dashNewHtml()); }
 function dashRender() {
   const keepQ = ['dash-q', 'dash-q2'].map(id => document.getElementById(id)?.value || '');
   dashSet('dash-hero', dashHeroHtml());
+  dashSet('dash-mug', mugBannerHtml());
   dashSet('dash-trust', trustHtml());
   dashSet('dash-cta', dashCtaHtml());
   dashSet('dash-check', cpHtml());
@@ -206,9 +207,11 @@ function pdNearRender(reshuffle) {
   if (reshuffle || !pdOrder) pdOrder = pdShuffle(parts.map(d => d.n));
   const rank = n => { const i = pdOrder.indexOf(n); return i < 0 ? 1e9 : i; };
   const list = prov ? parts.filter(d => d.r === prov).sort((a, b) => rank(a.n) - rank(b.n)) : [], show = list.slice(0, 3);
-  const msg = d => `Halo ${d.n}, saya lihat ${brand.name} ${p.name} di CAI Hub. Apakah tersedia dan bisa bantu pemasangan?`;
+  const mug = mugOn(brand.id) ? MUG_PROMO.mugs[brand.id] : '';
+  const msg = d => `Halo ${d.n}, saya lihat ${brand.name} ${p.name} di CAI Hub. Apakah tersedia dan bisa bantu pemasangan?${mug ? ` (promo ${mug} CAI Hub)` : ''}`;
   el.innerHTML = `<div class="pd-near-h"><b>📍 Beli &amp; pasang di partner resmi</b>
       <select onchange="pdSetProv(this.value)" aria-label="Pilih provinsi"><option value="">Pilih provinsi Anda…</option>${provs.map(r => `<option ${r === prov ? 'selected' : ''}>${escHtml(r)}</option>`).join('')}</select></div>
+    ${mug ? mugGiftHtml(brand, p, mug) : ''}
     ${prov ? `<div class="pd-near-l">${show.map(d => `<div class="pd-it"><div><b class="pd-pf" onclick="openPartner('${shareSlug(d.n)}')" title="Lihat profil partner">${escHtml(d.n)} ›</b><small>📍 ${escHtml(d.c || d.r)}</small></div>${d.wa
       ? `<a href="https://wa.me/${d.wa}?text=${encodeURIComponent(msg(d))}" target="_blank" rel="noopener">💬 Tanya</a>` : `<a class="mp" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>`}</div>`).join('')}</div>
     <div class="pd-near-f">${list.length > 3 ? `<button onclick="pdAll()">Lihat semua ${list.length} partner di ${escHtml(prov)} ›</button> · ` : ''}Pesan WA otomatis menyebut produk ini.</div>`
@@ -217,3 +220,27 @@ function pdNearRender(reshuffle) {
 }
 function pdSetProv(v) { try { localStorage.setItem(PD_PROV_KEY, v); } catch (e) {} pdNearRender(true); if (typeof intCity === 'function') intCity(v); }
 function pdAll() { const prov = pdProv(); openAuthDealers(); if (prov) setAdRegion(prov); }
+
+// ── 🎁 Promo Mug eksklusif (9 Nov 2026, permintaan pemilik — pratinjau .mockup/mug/ disetujui, opsi 1) ──
+// Hanya produk STEG & Audiocircle; mug mengikuti brand yang dibeli. Pembeli menghubungi Enthusiast Partner lewat
+// tombol 💬 Tanya di halaman produk (pesan WA otomatis memuat "(promo Mug … CAI Hub)") lalu membeli di partner itu.
+// Matikan: on = false (banner Dashboard & kotak hadiah di halaman produk hilang).
+const MUG_PROMO = { on: true, img: 'assets/promo/mug-cai.webp', mugs: { steg: 'Mug STEG Italy', audiocircle: 'Mug Audiocircle' } };
+const mugOn = id => MUG_PROMO.on && !!MUG_PROMO.mugs[id];
+function mugBannerHtml() {
+  if (!MUG_PROMO.on) return '';
+  const bs = Object.keys(MUG_PROMO.mugs).map(id => BRANDS.find(b => b.id === id)).filter(Boolean);
+  return `<div class="mug-ban"><div class="mug-tx">
+    <span class="mug-k">🎁 Merchandise eksklusif · Limited</span>
+    <h2>Beli lewat Enthusiast Partner,<br><em>bawa pulang Mug eksklusif.</em></h2>
+    <p>Beli produk <b>${bs.map(b => escHtml(b.name)).join('</b> atau <b>')}</b> di Enthusiast Partner lewat CAI Hub, dapatkan <b class="g">mug keramik ${bs.map(b => escHtml(b.id === 'steg' ? 'STEG Italy' : b.name)).join(' / ')}</b> dalam box premium CAI — sesuai brand yang Anda beli.</p>
+    <div class="mug-st"><div><b>1</b>Pilih produk ${bs.map(b => escHtml(b.name)).join(' / ')} di CAI Hub</div><div><b>2</b>Tekan <i>💬 Tanya</i> ke Enthusiast Partner di halaman produk</div><div><b>3</b>Beli &amp; tunjukkan chat dari CAI Hub → mug untuk Anda</div></div>
+    <div class="mug-bt">${bs.map(b => `<button class="mug-b${b.id === bs[0].id ? ' g' : ''}" onclick="showBrand('${b.id}')">Lihat produk ${escHtml(b.name)} ›</button>`).join('')}<button class="mug-b" onclick="openAuthDealers()">Enthusiast Partner</button></div>
+    <small>Selama persediaan masih ada · S&amp;K berlaku</small>
+  </div><div class="mug-art"><img src="${MUG_PROMO.img}" alt="Mug keramik STEG Italy dan Audiocircle dalam box premium CAI" loading="lazy"></div></div>`;
+}
+function mugGiftHtml(brand, p, mug) {
+  return `<div class="mug-gift"><img src="${MUG_PROMO.img}" alt="${escHtml(mug)}" loading="lazy"><div>
+    <b>🎁 Gratis ${escHtml(mug)}</b>
+    <span>Beli <b>${escHtml(p.name)}</b> di Enthusiast Partner lewat 💬 Tanya di bawah, dapatkan mug keramik + box premium CAI. <small>Persediaan terbatas · S&amp;K berlaku</small></span></div></div>`;
+}

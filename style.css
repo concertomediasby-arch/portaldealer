@@ -5109,3 +5109,30 @@ body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tay
 .nw-pjf-ch button { border: 0; background: rgba(0,0,0,.15); color: inherit; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; line-height: 1; }
 .nw-pjf-pa { display: flex; gap: 6px; } .nw-pjf-pa input { flex: 1; min-width: 0; }
 .nw-pjf-oth { width: 100%; }
+
+/* 🎁 Promo Mug eksklusif (9 Nov 2026) — banner Dashboard (selalu gelap) + kotak hadiah di #pd-near */
+#dash-mug:empty { display: none; }
+.mug-ban { margin: 18px 28px 0; border-radius: 20px; overflow: hidden; display: grid; grid-template-columns: 1fr minmax(260px, 36%); color: #eceef2;
+  background: radial-gradient(120% 140% at 85% 30%, rgba(214,184,120,.22), transparent 55%), linear-gradient(135deg, #15171d, #0b0c0f); border: 1px solid rgba(214,184,120,.35); }
+.mug-tx { padding: 26px 30px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.mug-k { width: max-content; max-width: 100%; font: 700 11px var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: #111; background: linear-gradient(90deg, #d6b878, #f1d9a0); padding: 5px 10px; border-radius: 99px; }
+.mug-ban h2 { margin: 2px 0 0; font: 800 28px/1.15 var(--f-display); }
+.mug-ban h2 em, .mug-ban .g { font-style: normal; color: #ecd39c; }
+.mug-ban p { margin: 0; color: #c9c5bb; font-size: 14.5px; line-height: 1.55; }
+.mug-st { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mug-st div { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 9px 11px; font-size: 12.5px; color: #d8d4ca; line-height: 1.4; }
+.mug-st b { display: block; color: #d6b878; font: 700 17px var(--f-display); }
+.mug-bt { display: flex; flex-wrap: wrap; gap: 8px; }
+.mug-b { font: 600 13.5px var(--f-body); padding: 10px 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: transparent; color: #eceef2; cursor: pointer; }
+.mug-b.g { background: linear-gradient(90deg, #d6b878, #f1d9a0); color: #111; border-color: transparent; }
+.mug-ban small { color: #8f8c85; font-size: 11.5px; }
+.mug-art { display: flex; align-items: center; justify-content: center; padding: 10px; }
+.mug-art img { width: 100%; max-width: 380px; display: block; -webkit-mask: radial-gradient(75% 75% at 50% 50%, #000 60%, transparent 100%); mask: radial-gradient(75% 75% at 50% 50%, #000 60%, transparent 100%); }
+.mug-gift { margin-top: 10px; display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: center; border: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 9%, transparent); border-radius: 12px; padding: 10px 12px; }
+.mug-gift img { width: 84px; height: 60px; object-fit: cover; border-radius: 9px; display: block; }
+.mug-gift b { font: 700 14.5px var(--f-display); color: var(--accent); }
+.mug-gift span { display: block; margin-top: 3px; font-size: 13px; line-height: 1.45; color: var(--fg); }
+.mug-gift span b { font: inherit; font-weight: 700; color: inherit; }
+.mug-gift small { display: block; margin-top: 2px; color: var(--fg-muted); font-size: 11.5px; }
+@media (max-width: 1100px) { .mug-ban { grid-template-columns: 1fr; } .mug-art { order: -1; padding: 14px 14px 0; } .mug-art img { max-width: 420px; } }
+@media (max-width: 720px) { .mug-ban { margin: 14px 16px 0; } .mug-tx { padding: 18px; } .mug-ban h2 { font-size: 22px; } .mug-st { grid-template-columns: 1fr; } .mug-gift { grid-template-columns: 84px 1fr; } .mug-gift img { width: 84px; height: 60px; } }
