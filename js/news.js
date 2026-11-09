@@ -201,6 +201,8 @@ const nwLive = () => nwSorted().filter(x => x.published);
 const nwShown = () => isReporter() ? nwSorted() : nwLive();
 const nwLink = id => liveLink('n', id) || `${PORTAL_URL}/news/?news=${encodeURIComponent(id)}`;   // /n/<id>/ = kartu WA berita itu (bila sudah dibuat jadwal GitHub)   // /news/ = kartu pratinjau WA News, lalu diteruskan ke /?news=
 const nwIsNew = it => it?.published && cwDaysAgo(it.post_date) < NEWS_NEW_DAYS && !cwLS(NEWS_SEEN_KEY)[it.id];
+// Kartu daftar News: tanda BARU selama NEWS_NEW_DAYS hari sejak terbit, walau sudah dibuka (9 Nov 2026, permintaan pemilik)
+const nwIsFresh = it => it?.published && cwDaysAgo(it.post_date) < NEWS_NEW_DAYS;
 const nwDate = d => cwDate(d);
 
 async function loadNews(force) {
@@ -436,7 +438,7 @@ function nwListHtml() {
   const list = all.filter(x => (!nwCat || x.category === nwCat) && (!q || [x.title, x.summary, x.body, x.category].join(' ').toLowerCase().includes(q)));
   if (!list.length) return '<div class="stock-empty">Tidak ada berita yang cocok.</div>';
   return `<div class="nw-grid">${list.map(x => { const img = nwThumb(x); return `<button class="nw-card${x.published ? '' : ' draft'}" onclick="openNews('${x.id}')">
-    <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '<span>📰</span>'}${nwPlayIc(x)}${nwIsNew(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}${nwPhCount(x)}</div>
+    <div class="nw-cimg">${img ? `<img src="${escHtml(img)}" alt="" loading="lazy"${nwImgStyle(x.image)}>` : '<span>📰</span>'}${nwPlayIc(x)}${nwIsFresh(x) ? '<span class="nw-new abs">BARU</span>' : ''}${x.published ? '' : '<span class="cw-draft">DRAF</span>'}${nwPhCount(x)}</div>
     <div class="nw-cb"><div class="nw-cm">${x.category ? `<span class="nw-cat">${escHtml(x.category)}</span>` : ''}<span>${escHtml(nwDate(x.post_date))}</span></div>
       <div class="nw-ct">${escHtml(x.title)}</div>${x.summary ? `<div class="nw-cs">${escHtml(x.summary)}</div>` : ''}${nwProjStat(x) ? `<div class="nw-cpj">${escHtml(nwProjStat(x))}</div>` : ''}</div></button>`; }).join('')}</div>`;
 }

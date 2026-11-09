@@ -3683,7 +3683,7 @@ body:not(.is-editor) .acad-ed { display: none; }
 .nw-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font: 700 11px var(--f-display); letter-spacing: .2em; text-transform: uppercase; color: #6fd3e6; }
 .nw-cat { color: #9097a4; letter-spacing: .12em; font: 700 11px var(--f-display); text-transform: uppercase; }
 .nw-new { background: #6fd3e6; color: #06222a; border-radius: 999px; padding: 3px 9px; font: 700 10.5px var(--f-display); letter-spacing: .1em; }
-.nw-new.abs { position: absolute; top: 10px; left: 10px; }
+.nw-new.abs { position: absolute; top: 10px; left: 10px; z-index: 2; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
 .nw-t { font: 800 24px/1.2 var(--f-display); color: #fff; margin-top: 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .nw-s { color: #c9ccd3; font-size: 14px; line-height: 1.55; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .nw-foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 10px; }
