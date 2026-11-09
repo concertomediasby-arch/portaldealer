@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-07",
+ "updated": "2026-11-09",
  "partners": [
   {
    "r": "Bali",
@@ -126,7 +126,7 @@
    "c": "Jakarta Barat",
    "a": "Komplek Taman Aries H-4/1 Meruya Utara Kembangan",
    "wa": "6281511209895",
-   "ig": "xtremeaudio_",
+   "ig": "Xtreme.audiomeruya",
    "map": "https://maps.app.goo.gl/7LTWCMDUSXa1Z9Bw5"
   },
   {
