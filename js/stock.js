@@ -17,7 +17,12 @@ let   authUser = null;   // akun yang sedang login (dealer atau admin)
 const userRole = () => authUser?.app_metadata?.role || 'dealer';
 const isEditor = () => userRole() === 'editor';
 const isAdmin = () => ['admin', 'editor'].includes(userRole());
-const ROLE_LABEL = { editor: 'Editor', admin: 'Admin Staff', dealer: 'Partner' };
+// 'manager' (label "Ricky", 9 Nov 2026 permintaan pemilik — akun atasan): masuk dengan Kode Akses seperti partner;
+// boleh tulis/ubah/hapus News + lihat Pengunjung Portal, Laporan Partner & Rapor Bulanan (RLS & fungsi SQL: supabase/manager-role.sql).
+const isManager = () => userRole() === 'manager';
+const isReporter = () => isEditor() || isManager();   // News, Pengunjung Portal, Laporan Partner, Rapor Bulanan
+const isStaffAcct = () => isAdmin() || isManager();   // akun internal CAI → tidak dihitung sebagai pengunjung
+const ROLE_LABEL = { editor: 'Editor', admin: 'Admin Staff', manager: 'Ricky', dealer: 'Partner' };
 let   stockChannel = null, afterLogin = null, lastAuthId;
 
 const STOCK_LABEL = { ready: 'Ready', indent: 'Indent', habis: 'Habis' };
@@ -193,6 +198,8 @@ function closeLogin() {
 const DEALER_CODE_DOMAIN = 'dealer.concerto.id';
 // ID dealer bersama (satu akun untuk semua dealer: cai@dealer.concerto.id). Kosongkan '' jika kelak tiap dealer punya kode sendiri.
 const SHARED_DEALER_CODE = 'CAI';
+// Akun peran "Ricky" (manager): kode akses = password akun ini (HURUF BESAR). Dicoba bila kode bukan kode partner.
+const MANAGER_LOGIN_EMAIL = 'concertosoerabaya@gmail.com';
 const normDealerCode = c => String(c || '').trim().toUpperCase().replace(/\s+/g, '-');
 const validDealerCode = c => /^[A-Z0-9](?:[A-Z0-9-]{1,28})[A-Z0-9]$/.test(c);
 const loginEmailFor = id => id.includes('@') ? id.toLowerCase() : `${normDealerCode(id).toLowerCase()}@${DEALER_CODE_DOMAIN}`;
@@ -252,13 +259,18 @@ async function dealerLogin() {
   try {
     idleTouch(true);   // login baru = aktivitas baru (sesi lama yang kedaluwarsa tidak ikut menendang)
     const tok = await captchaToken('login-captcha');
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass, ...signInOpts(tok) });
+    let { data, error } = await supabase.auth.signInWithPassword({ email, password: pass, ...signInOpts(tok) });
+    // Bukan kode partner → coba sebagai kode akun "Ricky" (manager); token CAPTCHA sekali pakai → minta baru
+    if (error && !loginStaffMode && MANAGER_LOGIN_EMAIL && /invalid login/i.test(error.message || '')) {
+      const tok2 = await captchaToken('login-captcha');
+      ({ data, error } = await supabase.auth.signInWithPassword({ email: MANAGER_LOGIN_EMAIL, password: pass, ...signInOpts(tok2) }));
+    }
     if (error) throw error;
     authUser = data.user;
     const next = afterLogin;
     document.getElementById('login-password').value = '';
     closeLogin();
-    showToast(`Masuk sebagai ${authUser.user_metadata?.store || accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Partner'}`);
+    showToast(isManager() ? `Masuk sebagai ${ROLE_LABEL.manager}` : `Masuk sebagai ${authUser.user_metadata?.store || accountLabel(authUser)} · ${ROLE_LABEL[userRole()] || 'Partner'}`);
     if (next) next();
   } catch (e) {
     err.textContent = /invalid login/i.test(e.message || '') ? (loginStaffMode ? 'Email atau password salah.' : 'Kode akses salah.') : 'Login gagal: ' + (e.message || e);
@@ -333,12 +345,17 @@ function updateAuthUI() {
   document.body.classList.toggle('logged-in', !!authUser);
   document.body.classList.toggle('is-editor', isEditor());
   document.body.classList.toggle('is-staff', isAdmin());
+  document.body.classList.toggle('is-mgr', isManager());
+  // status akun di header: login sebagai apa (9 Nov 2026, permintaan pemilik)
+  [['topbar-role', 'topbar-role'], ['tb-role', 'tb-role']].forEach(([id, cls]) => { const rb = document.getElementById(id); if (!rb) return;   // HP: tb-role di bawah "CAI HUB"
+    rb.hidden = !authUser; rb.className = `${cls} r-${userRole()}`; rb.innerHTML = authUser ? `<i></i>${ROLE_LABEL[userRole()] || 'Partner'}` : ''; rb.title = authUser ? `Login sebagai ${ROLE_LABEL[userRole()] || 'Partner'} — klik ikon akun untuk keluar` : ''; });
   if (isAdmin() && typeof QA_SCREEN_MODE !== 'undefined' && !QA_SCREEN_MODE) setTimeout(() => loadStockLog(false), 3000);   // badge 🔔 menu Update Stok
   else slogBadge();
   if (isAdmin()) qsRegisterSW();   // panel Admin/Editor juga bisa dibuka ulang tanpa internet (mode offline videotron)
   updateWaAccess();
   if (!isEditor() && document.getElementById('view-dealers')?.classList.contains('active')) showView('dashboard');
-  if (!isEditor() && (document.getElementById('view-rundown')?.classList.contains('active') || document.getElementById('view-visitors')?.classList.contains('active'))) showView('dashboard');
+  if (!isEditor() && document.getElementById('view-rundown')?.classList.contains('active')) showView('dashboard');
+  if (!isReporter() && document.getElementById('view-visitors')?.classList.contains('active')) showView('dashboard');
   qaScreenAuth();
   if (typeof scAuthChanged === 'function') scAuthChanged();
   const btn = document.getElementById('auth-btn');

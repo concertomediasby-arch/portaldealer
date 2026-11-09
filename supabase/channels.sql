@@ -33,7 +33,7 @@ create or replace function public.channel_stats(p_from date, p_to date, p_pfrom 
 returns json language plpgsql stable security definer set search_path = public as $$
 declare r json;
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' and coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('editor', 'manager') and coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
   with cur as (select distinct vid, ch from site_channels where day between p_from and p_to),
   prev as (select distinct vid, ch from site_channels where day between p_pfrom and p_pto),
   inst as (select e.vid, (select s.ch from site_channels s where s.vid = e.vid and s.day <= e.day order by s.first_at, s.ch limit 1) ch

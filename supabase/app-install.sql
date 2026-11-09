@@ -24,7 +24,7 @@ create or replace function public.app_event_stats(p_days int default 30)
 returns json language plpgsql security definer set search_path = public as $$
 declare today date := (now() at time zone 'Asia/Jakarta')::date; nd int := least(greatest(coalesce(p_days, 30), 1), 366);
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('admin', 'editor') then raise exception 'not allowed'; end if;
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('admin', 'editor', 'manager') then raise exception 'not allowed'; end if;
   return json_build_object(
     'standalone', (select count(distinct vid) from site_app_events where kind = 'standalone' and day > today - nd),
     'install', (select count(distinct vid) from site_app_events where kind = 'install' and day > today - nd),

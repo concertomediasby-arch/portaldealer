@@ -59,7 +59,7 @@ declare a date := p_from; b date := least(p_to, p_from + 31);
   pa date := (p_from - interval '1 month')::date; pb date := least((b - interval '1 month')::date, p_from - 1);
   g text := coalesce(auth.jwt() ->> 'role', ''); ch json;
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' and g <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('editor', 'manager') and g <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
   -- 📍 kanal kunjungan (supabase/channels.sql, 6 Nov 2026) — null bila SQL kanal belum dijalankan
   begin execute 'select public.channel_stats($1, $2, $3, $4)' into ch using a, b, pa, pb;
   exception when undefined_function or undefined_table then ch := null; end;
@@ -136,7 +136,7 @@ function rpDefault() { const p = rpShift(rpNow(), -1); return p > RP_MIN ? p : r
 
 function openRapor(m) {
   if (!requireLogin(() => openRapor(m))) return;
-  if (!isEditor()) { showToast('Rapor Bulanan khusus Editor.'); showView('dashboard'); return; }
+  if (!isReporter()) { showToast('Rapor Bulanan khusus Editor.'); showView('dashboard'); return; }
   if (m && /^\d{4}-\d{2}$/.test(m)) rpMonth = m > rpNow() ? rpNow() : m < RP_MIN ? RP_MIN : m;
   if (!rpMonth) rpMonth = rpDefault();
   showView('rapor');
@@ -148,7 +148,7 @@ function openRapor(m) {
 function rpGo(d) { const m = rpShift(rpMonth, d); if (m < RP_MIN || m > rpNow()) return; rpMonth = m; rpLoad(); }
 function rpAuthChanged() {
   if (rpPending) { const m = rpPending; rpPending = null; openRapor(m); if (!authUser && typeof setLoginMode === 'function') setLoginMode(true); }   // link notifikasi: form login staff (email)
-  if (!isEditor() && document.getElementById('view-rapor')?.classList.contains('active')) showView('dashboard');
+  if (!isReporter() && document.getElementById('view-rapor')?.classList.contains('active')) showView('dashboard');
 }
 async function rpLoad(force) {
   const m = rpMonth, r = rpRange(m), k = `${m}|${r.to}`;
@@ -225,7 +225,7 @@ function rpInsights(S, r) {
 
 function rpRender() {
   const box = document.getElementById('rapor-body'); if (!box) return;
-  if (!isEditor()) { box.innerHTML = '<div class="stock-empty">Rapor Bulanan khusus Editor.</div>'; return; }
+  if (!isReporter()) { box.innerHTML = '<div class="stock-empty">Rapor Bulanan khusus Editor.</div>'; return; }
   const m = rpMonth || rpDefault(), r = rpRange(m), S = rpCache[`${m}|${r.to}`];
   const prev = rpShift(m, -1), next = rpShift(m, 1);
   const dr = `${Number(r.from.slice(8))}–${Number(r.to.slice(8))} ${rpLabel(m)}`;
@@ -237,7 +237,7 @@ function rpRender() {
     <div class="rp-acts" data-html2canvas-ignore>
       <div class="rp-mon"><button class="rp-btn" onclick="rpGo(-1)" ${prev < RP_MIN ? 'disabled' : ''} aria-label="Bulan sebelumnya">‹</button><span>${rpShort(m)}</span><button class="rp-btn" onclick="rpGo(1)" ${next > rpNow() ? 'disabled' : ''} aria-label="Bulan berikutnya">›</button></div>
       <button class="rp-btn" onclick="rpLoad(true)" title="Muat ulang">↻</button>
-      <button class="rp-btn" onclick="chGenOpen()" title="Link & QR promosi per kanal">🔗 Link & QR</button>
+      <button class="rp-btn editor-only" onclick="chGenOpen()" title="Link & QR promosi per kanal">🔗 Link & QR</button>
       <button class="rp-btn" onclick="rpShare()" ${S ? '' : 'disabled'}>${typeof SHARE_ICON !== 'undefined' ? SHARE_ICON : ''} Bagikan</button>
       <button class="rp-btn g" onclick="rpPng()" ${S ? '' : 'disabled'}>⬇ Unduh PNG</button></div></div>`;
   if (rpMissing) { box.innerHTML = `<div class="rp-sheet">${head}<div class="rp-ins"><h3>⚙️ SQL Rapor Bulanan belum dijalankan</h3><p>Jalankan sekali di Supabase → SQL Editor → Run (file <code>supabase/report.sql</code>).</p><button class="rp-btn g" onclick="rpCopySql()">📋 Salin SQL Rapor Bulanan</button></div></div>`; return; }
@@ -385,7 +385,7 @@ function gscPosDelta(a, b) {   // posisi: makin KECIL makin baik
 }
 function gscBoxHtml(m) {
   if (!(m in gscData)) { gscLoad(m); return `<div class="rp-c rp-gsc" data-html2canvas-ignore><h2>🔎 Google Search · ${rpShort(m)}</h2><div class="rp-empty">⏳ Memuat…</div></div>`; }
-  const acts = `<div class="rp-ch-acts" data-html2canvas-ignore><button class="rp-btn g" onclick="gscOpenForm('${m}')">✏️ ${gscData[m] ? 'Ubah angka' : 'Isi angka'}</button><button class="rp-btn" onclick="gscGuide()">📖 Cara ambil angka</button></div>`;
+  const acts = `<div class="rp-ch-acts" data-html2canvas-ignore><button class="rp-btn g editor-only" onclick="gscOpenForm('${m}')">✏️ ${gscData[m] ? 'Ubah angka' : 'Isi angka'}</button><button class="rp-btn" onclick="gscGuide()">📖 Cara ambil angka</button></div>`;
   if (gscMissing) return `<div class="rp-c rp-gsc" data-html2canvas-ignore><h2>🔎 Google Search · ${rpShort(m)}</h2>
     <div class="rp-empty">⚙️ Tabel Google Search belum dibuat. Jalankan SQL ini sekali di Supabase → SQL Editor → Run (file <code>supabase/gsc.sql</code>).</div>
     <div class="rp-ch-acts"><button class="rp-btn g" onclick="gscCopySql()">📋 Salin SQL Google Search</button><button class="rp-btn" onclick="gscGuide()">📖 Cara ambil angka</button></div></div>`;

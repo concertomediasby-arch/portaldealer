@@ -35,7 +35,7 @@ create or replace function public.app_event_stats(p_days int default 30)
 returns json language plpgsql security definer set search_path = public as $$
 declare today date := (now() at time zone 'Asia/Jakarta')::date; nd int := least(greatest(coalesce(p_days, 30), 1), 366);
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('admin', 'editor') then raise exception 'not allowed'; end if;
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('admin', 'editor', 'manager') then raise exception 'not allowed'; end if;
   return json_build_object(
     'standalone', (select count(distinct vid) from site_app_events where kind = 'standalone' and day > today - nd),
     'install', (select count(distinct vid) from site_app_events where kind = 'install' and day > today - nd),
@@ -64,7 +64,7 @@ function insSave(s) { try { localStorage.setItem(INS_KEY, JSON.stringify(s)); } 
 // Boleh ditawari: HP, belum dipasang di perangkat ini, bukan layar videotron
 const insEligible = () => !QA_SCREEN_MODE && (insIos() || insAndroid()) && !insStandalone() && !insState().done;
 function insLog(kind) {
-  if (typeof supabase === 'undefined' || !supabase || QA_SCREEN_MODE || (typeof isAdmin === 'function' && isAdmin())) return;
+  if (typeof supabase === 'undefined' || !supabase || QA_SCREEN_MODE || (typeof isStaffAcct === 'function' && isStaffAcct())) return;
   const vid = typeof visitId === 'function' ? visitId() : null; if (!vid) return;
   supabase.rpc('log_app_event', { p_vid: vid, p_kind: kind, p_plat: insPlat() }).then(() => {}, () => {});
 }
@@ -219,7 +219,7 @@ function insPaint() {
 // ── Pengukuran di menu Pengunjung Portal ──
 let appStats = null, appErr = '';
 async function loadAppStats() {
-  if (typeof supabase === 'undefined' || !supabase || !isAdmin()) return;
+  if (typeof supabase === 'undefined' || !supabase || !(isAdmin() || isManager())) return;
   try {
     const { data, error } = await supabase.rpc('app_event_stats', { p_days: typeof visitDays !== 'undefined' ? visitDays : 30 });
     if (error) throw error;

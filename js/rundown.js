@@ -45,7 +45,7 @@ create or replace function public.site_visit_stats(p_days int default 30)
 returns json language plpgsql security definer set search_path = public as $$
 declare today date := (now() at time zone 'Asia/Jakarta')::date; n int := least(greatest(coalesce(p_days, 30), 1), 366);
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('admin', 'editor') then raise exception 'not allowed'; end if;
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('admin', 'editor', 'manager') then raise exception 'not allowed'; end if;
   return json_build_object(
     'today', today,
     'daily', (select coalesce(json_agg(d order by d.day), '[]'::json) from (
@@ -70,7 +70,7 @@ function visitId() {
 // Dipanggil saat halaman dimuat dan tiap status login berubah: kunjungan dihitung sekali per sesi tab; login dealer di sesi yang sama hanya menandai "login".
 let visitBusy = false;
 async function visitLog() {
-  if (!supabase || QA_SCREEN_MODE || visitBusy || isAdmin()) return;
+  if (!supabase || QA_SCREEN_MODE || visitBusy || isStaffAcct()) return;
   const vid = visitId(); if (!vid) return;
   const logged = !!authUser;
   let st = ''; try { st = sessionStorage.getItem(VISIT_SES_KEY) || ''; } catch (e) {}
@@ -89,7 +89,7 @@ let visitStats = null, visitErr = '', visitDays = 30, visitAt = null;
 const fmtNum = n => Number(n || 0).toLocaleString('id-ID');
 function openVisitors() {
   if (!requireLogin(() => openVisitors())) return;
-  if (!isEditor()) { showToast('Menu Pengunjung Portal khusus akun Editor.'); return; }
+  if (!isReporter()) { showToast('Menu Pengunjung Portal khusus akun Editor.'); return; }
   showView('visitors');
   document.querySelector('.main')?.scrollTo(0, 0);
   renderVisitors();
@@ -101,7 +101,7 @@ function setVisitDays(n) {
   loadVisitStats();
 }
 async function loadVisitStats(quiet) {
-  if (!supabase || !isAdmin()) return;
+  if (!supabase || !(isAdmin() || isManager())) return;
   try {
     const { data, error } = await supabase.rpc('site_visit_stats', { p_days: visitDays });
     if (error) throw error;
@@ -112,7 +112,7 @@ async function loadVisitStats(quiet) {
     visitErr = /function|does not exist|schema cache|404|relation/i.test(m) ? 'setup' : 'Data pengunjung tidak bisa dimuat: ' + m;
   }
   if (typeof loadAppStats === 'function') await loadAppStats();
-  if (typeof vsTab !== 'undefined' && vsTab === 'int' && isEditor()) await loadIntStats();
+  if (typeof vsTab !== 'undefined' && vsTab === 'int' && isReporter()) await loadIntStats();
   renderVisitStat();
   if (!quiet || document.getElementById('view-visitors')?.classList.contains('active')) { renderVisitors(); loadAcadViews().then(() => { if (document.getElementById('view-visitors')?.classList.contains('active')) renderVisitors(); }); }
 }
@@ -133,7 +133,7 @@ function renderVisitors() {
   const box = document.getElementById('vs-body'); if (!box) return;
   const sub = document.getElementById('vs-subtitle');
   if (sub) sub.textContent = 'Jumlah orang yang membuka portal — khusus Admin & Editor.' + (visitAt ? ` Diperbarui pukul ${visitAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })}.` : '');
-  if (typeof vsTab !== 'undefined' && vsTab === 'int' && isEditor()) { if (sub) sub.textContent = 'Produk, partner & kata pencarian yang paling diminati pengunjung — khusus Admin & Editor.'; box.innerHTML = intHtml(); return; }   // tab 📈 Minat Pengunjung (js/interest.js)
+  if (typeof vsTab !== 'undefined' && vsTab === 'int' && isReporter()) { if (sub) sub.textContent = 'Produk, partner & kata pencarian yang paling diminati pengunjung — khusus Admin & Editor.'; box.innerHTML = intHtml(); return; }   // tab 📈 Minat Pengunjung (js/interest.js)
   if (visitErr === 'setup') {
     box.innerHTML = `<div class="vs-warn">Penghitung pengunjung belum diaktifkan. Jalankan SQL ini sekali di Supabase → SQL Editor → Run, lalu tekan ↻ Muat ulang. Kunjungan mulai dihitung setelah SQL dijalankan.<br><br><button class="gt-btn" onclick="visitCopySql()">📋 Salin SQL</button></div>`;
     return;

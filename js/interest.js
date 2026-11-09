@@ -36,7 +36,7 @@ returns json language plpgsql security definer set search_path = public as $$
 declare today date := (now() at time zone 'Asia/Jakarta')::date; nd int := least(greatest(coalesce(p_days, 30), 1), 366);
   a date := today - nd; b date := today - 2 * nd;   -- periode ini: day > a · periode sebelumnya: b < day <= a
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' then raise exception 'not allowed'; end if;   -- khusus Editor
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('editor', 'manager') then raise exception 'not allowed'; end if;   -- khusus Editor
   return json_build_object(
     'days', nd,
     'first_day', (select min(day) from site_interest),
@@ -88,7 +88,7 @@ grant execute on function public.interest_stats(int) to authenticated;`;
 const INT_SES = 'cai-int';   // sessionStorage: kejadian yang sudah dicatat di tab ini (cegah dobel)
 let intOff = false;          // true bila SQL belum dijalankan (RPC tidak ada) — berhenti mencoba di sesi ini
 function intLog(kind, ref, src = '', once) {
-  if (intOff || typeof supabase === 'undefined' || !supabase || QA_SCREEN_MODE || (typeof isAdmin === 'function' && isAdmin())) return;
+  if (intOff || typeof supabase === 'undefined' || !supabase || QA_SCREEN_MODE || (typeof isStaffAcct === 'function' && isStaffAcct())) return;
   ref = String(ref || '').trim().slice(0, 120); if (!ref) return;
   const vid = typeof visitId === 'function' ? visitId() : null; if (!vid) return;
   if (once) {   // sekali per tab per hari untuk kejadian yang sama
@@ -151,13 +151,13 @@ document.addEventListener('click', e => {
 // ── Laporan (tab di menu Pengunjung Portal) ──
 let vsTab = 'visit', intStats = null, intErr = '';
 function setVsTab(t) {
-  if (t === 'int' && !isEditor()) { showToast('Laporan Minat Pengunjung khusus akun Editor.'); t = 'visit'; }
+  if (t === 'int' && !isReporter()) { showToast('Laporan Minat Pengunjung khusus akun Editor.'); t = 'visit'; }
   vsTab = t;
   document.querySelectorAll('[data-vstab]').forEach(b => b.classList.toggle('active', b.dataset.vstab === t));
   if (t === 'int' && !intStats) loadIntStats(); else renderVisitors();
 }
 async function loadIntStats() {
-  if (typeof supabase === 'undefined' || !supabase || !isEditor()) return;
+  if (typeof supabase === 'undefined' || !supabase || !isReporter()) return;
   try {
     const { data, error } = await supabase.rpc('interest_stats', { p_days: typeof visitDays !== 'undefined' ? visitDays : 30 });
     if (error) throw error;

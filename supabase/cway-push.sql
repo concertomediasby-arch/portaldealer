@@ -128,6 +128,8 @@ alter table public.academy_remind enable row level security;
 -- 🗓 Ringkasan mingguan (Tahap 6 C, 4 Nov 2026): Senin 08.00 WIB, satu notifikasi berisi semua yang baru 7 hari terakhir.
 -- Bawaan aktif — termasuk HP yang sudah berlangganan (pilihan pemilik "a"); bisa dimatikan di menu Setting.
 alter table public.cway_push_subs add column if not exists weekly boolean not null default true;
+-- 📊 Rapor Bulanan untuk akun Ricky (peran manager, 9 Nov 2026); Editor menerimanya lewat kolom staff
+alter table public.cway_push_subs add column if not exists rapor boolean not null default false;
 -- ⏰ Pengingat Editor: waktu dipilih per HP (4 Nov 2026) — { all: [60, 5], live: true, cway?: [...], gallery?: [...], acad?, guide?, product? }
 alter table public.cway_push_subs add column if not exists remind jsonb;
 create table if not exists public.staff_remind_log (kind text not null, ref text not null, lead int not null, at timestamptz not null default now(), primary key (kind, ref, lead));

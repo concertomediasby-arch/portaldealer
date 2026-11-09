@@ -31,7 +31,7 @@ returns json language plpgsql security definer set search_path = public as $$
 declare today date := (now() at time zone 'Asia/Jakarta')::date; nd int := least(greatest(coalesce(p_days, 30), 1), 366);
   a date := today - nd; b date := today - 2 * nd;   -- periode ini: day > a · periode sebelumnya: b < day <= a
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' then raise exception 'not allowed'; end if;   -- khusus Editor
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('editor', 'manager') then raise exception 'not allowed'; end if;   -- khusus Editor
   return json_build_object(
     'days', nd,
     'first_day', (select min(day) from site_interest),

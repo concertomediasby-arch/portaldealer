@@ -28,7 +28,7 @@ returns json language plpgsql security definer set search_path = public as $$
 declare a date := p_from; b date := least(p_to, p_from + 31);
   pa date := (p_from - interval '1 month')::date; pb date := least((b - interval '1 month')::date, p_from - 1);
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' then raise exception 'not allowed'; end if;   -- khusus Editor
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('editor', 'manager') then raise exception 'not allowed'; end if;   -- khusus Editor
   return json_build_object(
     'from', a, 'to', b, 'pfrom', pa, 'pto', pb,
     'partners', (select coalesce(json_agg(t order by t.people desc, t.ref), '[]') from (
@@ -58,7 +58,7 @@ function prDefault() { const p = rpShift(rpNow(), -1); return p >= PR_MIN ? p : 
 
 function openPartnerReport(m) {
   if (!requireLogin(() => openPartnerReport(m))) return;
-  if (!isEditor()) { showToast('Laporan Partner khusus Editor.'); showView('dashboard'); return; }
+  if (!isReporter()) { showToast('Laporan Partner khusus Editor.'); showView('dashboard'); return; }
   if (m && /^\d{4}-\d{2}$/.test(m)) prMonth = m > rpNow() ? rpNow() : m < PR_MIN ? PR_MIN : m;
   if (!prMonth) prMonth = prDefault();
   showView('prapor');
@@ -70,7 +70,7 @@ function prCopySql() {
   if (navigator.clipboard) navigator.clipboard.writeText(PREPORT_SQL).then(done, () => prompt('Salin SQL ini:', PREPORT_SQL)); else prompt('Salin SQL ini:', PREPORT_SQL);
 }
 function prGo(d) { const m = rpShift(prMonth, d); if (m < PR_MIN || m > rpNow()) return; prMonth = m; prLoad(); }
-function prAuthChanged() { if (!isEditor() && document.getElementById('view-prapor')?.classList.contains('active')) showView('dashboard'); }
+function prAuthChanged() { if (!isReporter() && document.getElementById('view-prapor')?.classList.contains('active')) showView('dashboard'); }
 async function prLoad(force) {
   const m = prMonth, r = rpRange(m), k = `${m}|${r.to}`;
   prRender();

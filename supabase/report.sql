@@ -50,7 +50,7 @@ declare a date := p_from; b date := least(p_to, p_from + 31);
   pa date := (p_from - interval '1 month')::date; pb date := least((b - interval '1 month')::date, p_from - 1);
   g text := coalesce(auth.jwt() ->> 'role', ''); ch json;
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' and g <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('editor', 'manager') and g <> 'service_role' then raise exception 'not allowed'; end if;   -- khusus Editor
   -- 📍 kanal kunjungan (supabase/channels.sql, 6 Nov 2026) — null bila SQL kanal belum dijalankan
   begin execute 'select public.channel_stats($1, $2, $3, $4)' into ch using a, b, pa, pb;
   exception when undefined_function or undefined_table then ch := null; end;

@@ -73,8 +73,8 @@ const ACAD_MANIFEST = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
 type Sub = { endpoint: string; p256dh: string; auth: string };
-type Col = 'staff' | 'cway' | 'news' | 'acad' | 'guide' | 'stock' | 'gallery' | 'product' | 'weekly' | 'event';
-const FLAGS: Col[] = ['staff', 'cway', 'news', 'acad', 'guide', 'stock', 'gallery', 'product', 'weekly', 'event'];
+type Col = 'staff' | 'cway' | 'news' | 'acad' | 'guide' | 'stock' | 'gallery' | 'product' | 'weekly' | 'event' | 'rapor';
+const FLAGS: Col[] = ['staff', 'cway', 'news', 'acad', 'guide', 'stock', 'gallery', 'product', 'weekly', 'event', 'rapor'];   // rapor = Rapor Bulanan untuk akun Ricky (manager)
 type Key = { pub: string; priv: string };
 
 async function vapid(): Promise<Key> {
@@ -89,13 +89,13 @@ async function vapid(): Promise<Key> {
 // Siapa pemanggil: login? Admin/Editor?
 async function caller(req: Request) {
   const t = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  const none = { auth: false, staff: false, editor: false };
+  const none = { auth: false, staff: false, editor: false, manager: false };
   if (!t) return none;
   try {
     const { data } = await db.auth.getUser(t);
     const u = data?.user; if (!u) return none;
     const r = (u.app_metadata as Record<string, string> | undefined)?.role;
-    return { auth: true, staff: r === 'admin' || r === 'editor', editor: r === 'editor' };
+    return { auth: true, staff: r === 'admin' || r === 'editor', editor: r === 'editor', manager: r === 'manager' };
   } catch (_) { return none; }
 }
 
@@ -392,10 +392,13 @@ async function monthlyReport(key: Key) {
   const v = r.vis || {}, c = r.click || {}, people = v.people || 0, clicks = (c.wa || 0) + (c.maps || 0) + (c.ig || 0), install = r.app?.install || 0;
   const pct = v.people0 ? Math.round((people - v.people0) / v.people0 * 100) : null, nf = (n: number) => n.toLocaleString('id-ID');
   await db.from('monthly_push').update({ counts: { people, people0: v.people0 || 0, clicks, install } }).eq('month', f);
-  const body = `${nf(people)} pengunjung${pct == null ? '' : ` (${pct >= 0 ? '▲' : '▼'}${Math.abs(pct)}%)`} · ${nf(clicks)} klik ke partner · ${nf(install)} pasang di HP\nKetuk untuk lihat rapor lengkap. Jangan lupa isi angka Google Search di Rapor (mulai tgl 3).`;
-  const { data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth').eq('staff', true);
+  const base = `${nf(people)} pengunjung${pct == null ? '' : ` (${pct >= 0 ? '▲' : '▼'}${Math.abs(pct)}%)`} · ${nf(clicks)} klik ke partner · ${nf(install)} pasang di HP\nKetuk untuk lihat rapor lengkap.`;
+  // HP Editor (staff) + HP akun Ricky yang memilih 📊 Rapor Bulanan (kolom rapor)
+  let { data: subs, error: e3 } = await db.from(SUBS).select('endpoint, p256dh, auth, staff').or('staff.eq.true,rapor.eq.true');
+  if (e3) ({ data: subs } = await db.from(SUBS).select('endpoint, p256dh, auth, staff').eq('staff', true));   // kolom rapor belum ada
   let sent = 0;
   for (const s of subs || []) {
+    const body = s.staff ? base + ' Jangan lupa isi angka Google Search di Rapor (mulai tgl 3).' : base;
     const st = await send(s, { title: `📊 Rapor CAI Hub · ${RP_MONTHS[from.getUTCMonth()]} ${from.getUTCFullYear()}`, body, url: `/?rapor=${ym}`, tag: `rapor-${ym}` }, key).catch(() => 0);
     if (st > 0 && st < 300) sent++;
   }
@@ -491,6 +494,7 @@ Deno.serve(async (req) => {
       const want = body.flags || {};
       for (const k of FLAGS) if (k in want) f[k] = !!want[k];
       if (want.staff && !who.editor) f.staff = !!cur?.staff;  // pengingat 5 menit hanya untuk Editor
+      if (want.rapor && !(who.editor || who.manager)) f.rapor = !!cur?.rapor;   // Rapor Bulanan hanya Editor / Ricky
       if (want.cway && !who.auth) f.cway = !!cur?.cway;       // Concerto Way hanya untuk yang login (partner)
       if (want.guide && !who.auth) f.guide = !!cur?.guide;    // Panduan Partner hanya untuk yang login (partner)
       if (want.stock && !who.auth) f.stock = !!cur?.stock;    // Stok pantauan hanya untuk yang login (partner)
@@ -607,7 +611,7 @@ Deno.serve(async (req) => {
 
     if (a === 'notify') {
       const who = await caller(req);
-      if (!who.staff) return json({ error: 'khusus Admin/Editor' }, 403);
+      if (!who.staff && !(who.manager && body.type === 'news')) return json({ error: 'khusus Admin/Editor' }, 403);   // Ricky: hanya News
       const id = String(body.id || '');
       if (body.type === 'cway') {
         const { data: p } = await db.from('concerto_way').select('id, day, published, publish_at').eq('id', id).maybeSingle();

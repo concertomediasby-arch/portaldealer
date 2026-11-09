@@ -141,6 +141,8 @@ alter table public.academy_remind enable row level security;
 -- 🗓 Ringkasan mingguan (Tahap 6 C, 4 Nov 2026): Senin 08.00 WIB, satu notifikasi berisi semua yang baru 7 hari terakhir.
 -- Bawaan aktif — termasuk HP yang sudah berlangganan (pilihan pemilik "a"); bisa dimatikan di menu Setting.
 alter table public.cway_push_subs add column if not exists weekly boolean not null default true;
+-- 📊 Rapor Bulanan untuk akun Ricky (peran manager, 9 Nov 2026); Editor menerimanya lewat kolom staff
+alter table public.cway_push_subs add column if not exists rapor boolean not null default false;
 -- ⏰ Pengingat Editor: waktu dipilih per HP (4 Nov 2026) — { all: [60, 5], live: true, cway?: [...], gallery?: [...], acad?, guide?, product? }
 alter table public.cway_push_subs add column if not exists remind jsonb;
 create table if not exists public.staff_remind_log (kind text not null, ref text not null, lead int not null, at timestamptz not null default now(), primary key (kind, ref, lead));
@@ -181,7 +183,7 @@ let pushFlags = null;      // { staff, cway, news, acad, guide } milik HP ini (n
 let pushEp = null;         // endpoint langganan HP ini
 let pushRemind = null, pushRemindCol = true;   // ⏰ pilihan waktu pengingat Editor di HP ini (kolom remind) · false = SQL belum dijalankan
 let pnSel = null;          // pilihan centang sebelum diaktifkan
-const PN_KEYS = ['weekly', 'cway', 'guide', 'stock', 'news', 'event', 'acad', 'product', 'gallery'];   // weekly = 🗓 Ringkasan mingguan (Tahap 6 C)   // pilihan kotak 🔔 Notifikasi (selain staff)
+const PN_KEYS = ['weekly', 'cway', 'guide', 'stock', 'news', 'event', 'acad', 'product', 'gallery', 'rapor'];   // rapor = 📊 Rapor Bulanan tgl 1, khusus akun Ricky (Editor menerimanya lewat kolom staff)   // weekly = 🗓 Ringkasan mingguan (Tahap 6 C)   // pilihan kotak 🔔 Notifikasi (selain staff)
 const PN_DEF = () => Object.fromEntries(PN_KEYS.map(k => [k, true]));
 const pnActive = f => pushSt === 'ok' && PN_KEYS.some(k => f?.[k]);
 const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -264,7 +266,7 @@ async function pushTest() {
   } catch (e) { showToast('⚠ Tes gagal: ' + (e.message || e), 7000); }
 }
 // Editor/Admin: kirim "sudah tayang"/berita baru setelah menyimpan (sekali per item, dicek server)
-function pushNotify(type, id) { if (isEditor()) pushFn({ action: 'notify', type, id }).catch(() => {}); }   // id = array nomor materi untuk 'acad'
+function pushNotify(type, id) { if (isEditor() || (type === 'news' && isManager())) pushFn({ action: 'notify', type, id }).catch(() => {}); }   // id = array nomor materi untuk 'acad'
 function pushCopySql() {
   (navigator.clipboard?.writeText(CWAY_PUSH_SQL) || Promise.reject()).then(
     () => showToast('📋 SQL notifikasi disalin — tempel di Supabase → SQL Editor → Run', 7000),
@@ -399,7 +401,8 @@ function pnHtml(where) {
   const sel = active ? Object.fromEntries(PN_KEYS.map(k => [k, !!f[k]])) : pnSel;
   const chk = (k, ico, lbl, sub) => `<label class="pn-chk"><input type="checkbox" ${sel[k] ? 'checked' : ''} ${st === 'busy' ? 'disabled' : ''} onchange="pnToggle('${k}', this.checked)"><span>${ico} ${lbl}${sub ? ` <small>· ${sub}</small>` : ''}</span></label>`;
   const opts = chk('weekly', '🗓', 'Ringkasan mingguan', 'Senin 08.00 · semua yang baru dalam satu notifikasi') + (canCw ? chk('cway', '☕', 'Concerto Way baru tayang', 'khusus partner') : '') + (canGd ? chk('guide', '📘', 'Panduan Partner baru', 'khusus partner') + chk('stock', '📦', 'Stok produk pantauan', 'khusus partner') : '')
-    + chk('news', '📰', 'News CAI terbaru') + (typeof evOn !== 'function' || evOn() ? chk('event', '📅', 'Acara & kompetisi baru') : '') + chk('acad', '🎓', 'Materi Academy baru') + chk('product', '🆕', 'Produk baru') + chk('gallery', '🚗', 'Galeri Instalasi baru');
+    + chk('news', '📰', 'News CAI terbaru') + (typeof evOn !== 'function' || evOn() ? chk('event', '📅', 'Acara & kompetisi baru') : '') + chk('acad', '🎓', 'Materi Academy baru') + chk('product', '🆕', 'Produk baru') + chk('gallery', '🚗', 'Galeri Instalasi baru')
+    + (isManager() ? chk('rapor', '📊', 'Rapor Bulanan', 'tiap tanggal 1 pagi') : '');
   let title, text = '', btn = '';
   if (st === 'unsupported') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = pushUnsupportedMsg(); }
   else if (st === 'denied') { if (where === 'dash') return ''; title = '🔔 Notifikasi'; text = 'Izin notifikasi untuk CAI Hub <b>ditolak</b> di HP ini. Izinkan lewat pengaturan browser / HP, lalu muat ulang.'; }
@@ -427,7 +430,7 @@ function pnToggle(k, v) {
 function pnOn() {
   const s = pnSel || PN_DEF();
   const part = !!authUser && !isEditor();
-  const flags = { ...Object.fromEntries(PN_KEYS.map(k => [k, !!s[k]])), cway: part && s.cway, guide: !!authUser && s.guide, stock: !!authUser && s.stock };
+  const flags = { ...Object.fromEntries(PN_KEYS.map(k => [k, !!s[k]])), cway: part && s.cway, guide: !!authUser && s.guide, stock: !!authUser && s.stock, rapor: isManager() && s.rapor };
   if (!PN_KEYS.some(k => flags[k])) return showToast('Centang minimal satu jenis notifikasi.');
   pushSet(flags, true).then(r => { if (r && !r.deleted) showToast('✅ Notifikasi aktif di HP ini'); });
 }

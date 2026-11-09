@@ -839,6 +839,30 @@ body {
 .topbar-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse-dot 2.2s infinite; }
 @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.35} }
 @media (max-width: 560px){ .topbar-status { display:none; } }
+/* Status akun di header: login sebagai Partner / Admin / Editor / Ricky (9 Nov 2026, permintaan pemilik) */
+.topbar-role {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-family: var(--f-mono); font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; border: 1px solid; flex-shrink: 0;
+}
+.topbar-role[hidden] { display: none; }
+.topbar-role i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.topbar-role.r-dealer  { color: #2fa36b; background: rgba(47,163,107,.10); border-color: rgba(47,163,107,.35); }
+.topbar-role.r-admin   { color: #6b7cff; background: rgba(107,124,255,.10); border-color: rgba(107,124,255,.35); }
+.topbar-role.r-editor  { color: #111; background: linear-gradient(90deg, #d6b878, #f1d9a0); border-color: transparent; }
+.topbar-role.r-manager { color: #6fd3e6; background: rgba(111,211,230,.14); border-color: rgba(111,211,230,.5); }
+:root[data-theme="light"] .topbar-role.r-manager { color: #0b7f93; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .topbar-role.r-manager { color: #0b7f93; } }
+.tb-role { display: none; }
+/* HP: header sempit → status akun pindah ke bawah tulisan CAI HUB (menggantikan nama perusahaan yang disembunyikan) */
+@media (max-width: 720px) {
+  .topbar-role { display: none !important; }
+  .tb-role:not([hidden]) { display: inline-flex; align-items: center; gap: 5px; font-family: var(--f-mono); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+  .tb-role i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .tb-role.r-dealer { color: #2fa36b; } .tb-role.r-admin { color: #6b7cff; } .tb-role.r-editor { color: var(--accent); } .tb-role.r-manager { color: #6fd3e6; }
+  :root[data-theme="light"] .tb-role.r-manager { color: #0b7f93; }
+}
+@media (max-width: 720px) and (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .tb-role.r-manager { color: #0b7f93; } }
 
 /* Sidebar */
 .sidebar {
@@ -1575,7 +1599,8 @@ body {
     .rd-row { grid-template-columns: 28px 64px 1fr; } .rd-btns { grid-column: 3; }
   }
   /* ── Tanya Jawab Partner (admin) ── */
-  body:not(.is-staff) .staff-sec, body:not(.is-staff) .staff-nav { display: none !important; }
+  body:not(.is-staff):not(.is-mgr) .staff-sec, body:not(.is-staff) .staff-nav { display: none !important; }
+  body:not(.is-editor):not(.is-mgr) .rep-only { display: none !important; }   /* Editor + akun Ricky (manager): Pengunjung, Laporan Partner, Rapor */
   .rd-tabs { margin-top: 12px; }
   .rd-actions[hidden], #qa-pane[hidden], #rd-pane[hidden] { display: none !important; }
   .qa-live { margin-bottom: 16px; padding: 16px 18px; border-radius: 14px; border: 1px solid var(--border); background: linear-gradient(135deg, #0d1424, #151d33); color: #e8ecf5; }

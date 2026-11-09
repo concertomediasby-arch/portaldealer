@@ -198,7 +198,7 @@ function nwYtPlay(el, id) {
 }
 const nwSorted = () => (nwItems || []).slice().sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || String(b.created_at).localeCompare(String(a.created_at)));
 const nwLive = () => nwSorted().filter(x => x.published);
-const nwShown = () => isEditor() ? nwSorted() : nwLive();
+const nwShown = () => isReporter() ? nwSorted() : nwLive();
 const nwLink = id => liveLink('n', id) || `${PORTAL_URL}/news/?news=${encodeURIComponent(id)}`;   // /n/<id>/ = kartu WA berita itu (bila sudah dibuat jadwal GitHub)   // /news/ = kartu pratinjau WA News, lalu diteruskan ke /?news=
 const nwIsNew = it => it?.published && cwDaysAgo(it.post_date) < NEWS_NEW_DAYS && !cwLS(NEWS_SEEN_KEY)[it.id];
 const nwDate = d => cwDate(d);
@@ -418,9 +418,9 @@ function renderNews() {
   const body = document.getElementById('news-body'), tools = document.getElementById('news-tools'), hd = document.getElementById('news-head');
   if (!body) return;
   if (hd) hd.hidden = !!nwCur;
-  if (tools) tools.innerHTML = isEditor() ? `<button class="gt-btn" onclick="openNwForm()">＋ Tambah Berita</button>${nwMissing ? ' <button class="gt-btn ghost" onclick="nwCopySql()">📋 Salin SQL</button>' : ''}` : '';
+  if (tools) tools.innerHTML = isReporter() ? `<button class="gt-btn" onclick="openNwForm()">＋ Tambah Berita</button>${nwMissing ? ' <button class="gt-btn ghost" onclick="nwCopySql()">📋 Salin SQL</button>' : ''}` : '';
   if (!nwItems) { body.innerHTML = '<div class="stock-empty">Memuat…</div>'; return; }
-  if (nwMissing) { body.innerHTML = `<div class="stock-empty">${isEditor() ? 'Tabel <b>cai_news</b> belum dibuat. Klik <b>📋 Salin SQL</b>, jalankan sekali di Supabase → SQL Editor → Run, lalu muat ulang halaman.' : 'Belum ada berita.'}</div>`; return; }
+  if (nwMissing) { body.innerHTML = `<div class="stock-empty">${isReporter() ? 'Tabel <b>cai_news</b> belum dibuat. Klik <b>📋 Salin SQL</b>, jalankan sekali di Supabase → SQL Editor → Run, lalu muat ulang halaman.' : 'Belum ada berita.'}</div>`; return; }
   const it = nwCur && nwShown().find(x => x.id === nwCur);
   if (nwCur && !it) { nwCur = null; showToast('Berita tidak ditemukan.'); }
   if (it) return renderNwPost(body, it);
@@ -431,7 +431,7 @@ function renderNews() {
 }
 function nwListOnly() { const el = document.getElementById('nw-list'); if (el) el.innerHTML = nwListHtml(); }
 function nwListHtml() {
-  const all = nwShown(); if (!all.length) return `<div class="stock-empty">${isEditor() ? 'Belum ada berita. Klik <b>＋ Tambah Berita</b>.' : 'Belum ada berita.'}</div>`;
+  const all = nwShown(); if (!all.length) return `<div class="stock-empty">${isReporter() ? 'Belum ada berita. Klik <b>＋ Tambah Berita</b>.' : 'Belum ada berita.'}</div>`;
   const q = nwQ.trim().toLowerCase();
   const list = all.filter(x => (!nwCat || x.category === nwCat) && (!q || [x.title, x.summary, x.body, x.category].join(' ').toLowerCase().includes(q)));
   if (!list.length) return '<div class="stock-empty">Tidak ada berita yang cocok.</div>';
@@ -447,7 +447,7 @@ function renderNwPost(body, it) {
   const lbl = escHtml(it.link_label || (yt ? 'Tonton di YouTube' : 'Lihat selengkapnya'));
   const others = nwLive().filter(x => x.id !== it.id).slice(0, 5);
   const acts = `<button class="gt-btn ghost" onclick="nwShare('${it.id}')">${SHARE_ICON} Bagikan</button>
-        ${isEditor() ? `<button class="gt-btn ghost" onclick="openNwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteNw('${it.id}')">🗑 Hapus</button>` : ''}`;
+        ${isReporter() ? `<button class="gt-btn ghost" onclick="openNwForm('${it.id}')">✏️ Edit</button><button class="gt-btn ghost" onclick="deleteNw('${it.id}')">🗑 Hapus</button>` : ''}`;
   body.innerHTML = `<div class="cw-reader nw-reader">
     <button class="cw-back" onclick="nwBack()">← Semua berita</button>
     <div class="nw-layout">
@@ -509,7 +509,7 @@ function nwOpenLink(id) {
 
 /* ── Form Editor ── */
 function openNwForm(id) {
-  if (!isEditor()) return;
+  if (!isReporter()) return;
   if (nwMissing) { nwCopySql(); return; }
   const it = id && nwItems?.find(x => x.id === id);
   nwForm = it ? { id: it.id, title: it.title, summary: it.summary || '', body: it.body || '', category: it.category || '', image: nwImgPath(it.image), fr: nwImgFr(it.image), file: null, preview: '', link_url: it.link_url || '', link_label: it.link_label || '', post_date: it.post_date, published: it.published, projects: nwProj(it).map(p => ({ ...p })), hadProj: 'projects' in it, photos: nwPhotos(it).map(p => ({ ...p })), hadPh: 'photos' in it, sel: null, busy: false }
@@ -695,7 +695,7 @@ function nwCopyProjSql() {
     () => prompt('Jalankan SQL ini sekali di Supabase → SQL Editor → Run:', NEWS_PROJ_SQL));
 }
 async function saveNw() {
-  const f = nwForm; if (!f || f.busy || !isEditor()) return;
+  const f = nwForm; if (!f || f.busy || !isReporter()) return;
   if (!f.title.trim()) return showToast('Judul belum terisi.');
   f.busy = true; renderNwForm();
   const old = f.id && nwImgPath(nwItems?.find(x => x.id === f.id)?.image);
@@ -750,7 +750,7 @@ async function saveNw() {
   }
 }
 async function deleteNw(id) {
-  const it = nwItems?.find(x => x.id === id); if (!it || !isEditor()) return;
+  const it = nwItems?.find(x => x.id === id); if (!it || !isReporter()) return;
   if (!confirm(`Hapus berita "${it.title}"?`)) return;
   const { error } = await supabase.from(NEWS_TABLE).delete().eq('id', id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);

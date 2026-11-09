@@ -86,7 +86,7 @@
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-<link rel="stylesheet" href="style.css?b=2026-11-09T07:00:52Z">
+<link rel="stylesheet" href="style.css?b=2026-11-09T08:57:59Z">
 <!-- Layar pembuka bermerek (Tahap 3, 4 Nov 2026): hanya saat dibuka dari ikon Layar Utama, sekali per sesi -->
 <script>try{if((matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)&&!sessionStorage.getItem('cai-spl')){document.documentElement.classList.add('spl-on');sessionStorage.setItem('cai-spl','1');}}catch(e){}</script>
 </head>
@@ -157,11 +157,13 @@
       <div class="topbar-text-info" style="display:flex;flex-direction:column;gap:1px;line-height:1.2;border-left:1px solid var(--border);padding-left:12px">
         <span class="tb-kicker" style="font-size:9px;font-family:var(--f-mono);letter-spacing:.12em;color:var(--accent);font-weight:600;text-transform:uppercase">CAI Hub</span>
         <span class="tb-name" style="font-size:11px;font-family:var(--f-display);font-weight:600;color:var(--fg);letter-spacing:.01em">Concerto Audio Indonesia</span>
+        <span class="tb-role" id="tb-role" hidden></span>
       </div>
     </a>
     <div class="topbar-spacer"></div>
     <span class="topbar-status"><i></i>System Online</span>
     <span class="topbar-badge">CAI Hub</span>
+    <span class="topbar-role" id="topbar-role" hidden></span>
     <button class="ins-pill" id="ins-pill" hidden onclick="insOpen(true)" title="Pasang CAI Hub di layar HP">📲 Pasang</button>
     <button class="theme-btn auth-btn" id="auth-btn" onclick="authButton()" title="Login partner" aria-label="Akun partner">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -287,7 +289,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/><polyline points="8.5 14.5 10.5 16.5 15.5 12.5"/></svg>
         Run Down Gathering
       </button>
-      <button class="sidebar-item editor-only" id="nav-visitors" onclick="openVisitors()">
+      <button class="sidebar-item rep-only" id="nav-visitors" onclick="openVisitors()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
         Pengunjung Portal
       </button>
@@ -295,11 +297,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 14.5 15"/><line x1="5" y1="3.5" x2="2.5" y2="6"/><line x1="19" y1="3.5" x2="21.5" y2="6"/></svg>
         Jadwal Tayang
       </button>
-      <button class="sidebar-item editor-only" id="nav-prapor" onclick="openPartnerReport()">
+      <button class="sidebar-item rep-only" id="nav-prapor" onclick="openPartnerReport()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
         Laporan Partner
       </button>
-      <button class="sidebar-item editor-only" id="nav-rapor" onclick="openRapor()">
+      <button class="sidebar-item rep-only" id="nav-rapor" onclick="openRapor()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="5" y="11" width="3" height="7"/><rect x="10.5" y="6" width="3" height="12"/><rect x="16" y="13" width="3" height="5"/></svg>
         Rapor Bulanan
       </button>
@@ -496,7 +498,7 @@
         <div>
           <div class="page-title">Pengunjung Portal</div>
           <div class="page-subtitle" id="vs-subtitle">Jumlah orang yang membuka portal — khusus Admin &amp; Editor.</div>
-          <div class="gt-tabs vs-tabs editor-only">
+          <div class="gt-tabs vs-tabs rep-only">
             <button class="filter-chip active" data-vstab="visit" onclick="setVsTab('visit')">👥 Pengunjung</button>
             <button class="filter-chip editor-only" data-vstab="int" onclick="setVsTab('int')">📈 Minat Pengunjung</button>
           </div>
@@ -898,7 +900,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
       <span>Sheet</span><i class="mnav-badge" id="mnav-sheet-badge" hidden></i>
     </button>
-    <button class="mobile-nav-item editor-only" id="mnav-visitors" onclick="openVisitors()">
+    <button class="mobile-nav-item rep-only" id="mnav-visitors" onclick="openVisitors()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
       <span>Pengunjung</span>
     </button>
@@ -906,11 +908,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 14.5 15"/><line x1="5" y1="3.5" x2="2.5" y2="6"/><line x1="19" y1="3.5" x2="21.5" y2="6"/></svg>
       <span>Jadwal</span>
     </button>
-    <button class="mobile-nav-item editor-only" id="mnav-prapor" onclick="openPartnerReport()">
+    <button class="mobile-nav-item rep-only" id="mnav-prapor" onclick="openPartnerReport()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
       <span>Lap. Partner</span>
     </button>
-    <button class="mobile-nav-item editor-only" id="mnav-rapor" onclick="openRapor()">
+    <button class="mobile-nav-item rep-only" id="mnav-rapor" onclick="openRapor()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="5" y="11" width="3" height="7"/><rect x="10.5" y="6" width="3" height="12"/><rect x="16" y="13" width="3" height="5"/></svg>
       <span>Rapor</span>
     </button>
@@ -1109,31 +1111,31 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="katalog.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/core.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/stock.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/dealers.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/gathering.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/rundown.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/videotron.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/showcase.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/cway.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/news.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/push.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/install.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/settings.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/dash.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/fav.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/cars.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/finder.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/gsearch.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/events.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/interest.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/report.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/qr.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/channel.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/preport.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/schedule.js?b=2026-11-09T07:00:52Z"></script>
-<script src="js/main.js?b=2026-11-09T07:00:52Z"></script>
+<script src="katalog.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/core.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/stock.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/dealers.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/gathering.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/rundown.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/videotron.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/showcase.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/cway.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/news.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/push.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/install.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/settings.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/dash.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/fav.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/cars.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/finder.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/gsearch.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/events.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/interest.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/report.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/qr.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/channel.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/preport.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/schedule.js?b=2026-11-09T08:57:59Z"></script>
+<script src="js/main.js?b=2026-11-09T08:57:59Z"></script>
 </body>
 </html>

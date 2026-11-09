@@ -20,7 +20,7 @@ returns json language plpgsql security definer set search_path = public as $$
 declare a date := p_from; b date := least(p_to, p_from + 31);
   pa date := (p_from - interval '1 month')::date; pb date := least((b - interval '1 month')::date, p_from - 1);
 begin
-  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') <> 'editor' then raise exception 'not allowed'; end if;   -- khusus Editor
+  if coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') not in ('editor', 'manager') then raise exception 'not allowed'; end if;   -- khusus Editor
   return json_build_object(
     'from', a, 'to', b, 'pfrom', pa, 'pto', pb,
     'partners', (select coalesce(json_agg(t order by t.people desc, t.ref), '[]') from (
