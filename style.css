@@ -5136,3 +5136,14 @@ body[data-view="jadwal"] .wa-float { display: none !important; }   /* Jadwal Tay
 .mug-gift small { display: block; margin-top: 2px; color: var(--fg-muted); font-size: 11.5px; }
 @media (max-width: 1100px) { .mug-ban { grid-template-columns: 1fr; } .mug-art { order: -1; padding: 14px 14px 0; } .mug-art img { max-width: 420px; } }
 @media (max-width: 720px) { .mug-ban { margin: 14px 16px 0; } .mug-tx { padding: 18px; } .mug-ban h2 { font-size: 22px; } .mug-st { grid-template-columns: 1fr; } .mug-gift { grid-template-columns: 84px 1fr; } .mug-gift img { width: 84px; height: 60px; } }
+
+/* 🎁 Promo Mug sebagai slide headline + jendela promo (9 Nov 2026) */
+.mug-hl .nw-img { background: #15161a; }
+.mug-hl .nw-img img { object-fit: cover; object-position: 50% 68%; }
+.hl-dot.promo.on { background: #d8b26a; }
+.mug-ov { position: fixed; inset: 0; z-index: 1200; background: rgba(5,6,8,.78); display: none; align-items: center; justify-content: center; padding: 16px; }
+.mug-ov.open { display: flex; }
+.mug-box { position: relative; width: min(1000px, 100%); max-height: calc(100vh - 32px); overflow: auto; border-radius: 20px; }
+.mug-box .mug-ban { margin: 0; }
+.mug-x { position: absolute; top: 10px; right: 10px; z-index: 2; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.55); color: #fff; font-size: 16px; cursor: pointer; }
+@media (max-width: 720px) { .mug-box .mug-ban { margin: 0; } }

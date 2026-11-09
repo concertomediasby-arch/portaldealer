@@ -112,7 +112,6 @@ function dashNewRender() { if (authUser) dashSet('dash-new', dashNewHtml()); }
 function dashRender() {
   const keepQ = ['dash-q', 'dash-q2'].map(id => document.getElementById(id)?.value || '');
   dashSet('dash-hero', dashHeroHtml());
-  dashSet('dash-mug', mugBannerHtml());
   dashSet('dash-trust', trustHtml());
   dashSet('dash-cta', dashCtaHtml());
   dashSet('dash-check', cpHtml());
@@ -227,15 +226,34 @@ function pdAll() { const prov = pdProv(); openAuthDealers(); if (prov) setAdRegi
 // Matikan: on = false (banner Dashboard & kotak hadiah di halaman produk hilang).
 const MUG_PROMO = { on: true, img: 'assets/promo/mug-cai.webp', mugs: { steg: 'Mug STEG Italy', audiocircle: 'Mug Audiocircle' } };
 const mugOn = id => MUG_PROMO.on && !!MUG_PROMO.mugs[id];
+// Promo tampil sebagai slide 🎁 Promo di headline Dashboard (#cway-hl, bersama News — 9 Nov 2026, permintaan pemilik);
+// diklik → jendela promo lengkap (#mug-ov, isi = mugBannerHtml()).
+const mugHlOn = () => MUG_PROMO.on;
+function mugHlHtml() {
+  return `<div class="nw-hl ev-hl mug-hl" role="button" tabindex="0" onclick="mugOpen()" onkeydown="if(event.key==='Enter')mugOpen()">
+    <div class="nw-img"><img src="${MUG_PROMO.img}" alt="Mug STEG Italy & Audiocircle" decoding="async" draggable="false"></div>
+    <div class="nw-main"><div class="nw-top">🎁 Promo <span class="nw-cat">Limited</span></div>
+      <div class="nw-t">Beli lewat Enthusiast Partner, bawa pulang Mug eksklusif</div>
+      <div class="nw-s">Beli produk STEG atau Audiocircle di partner resmi lewat CAI Hub, dapatkan mug keramik sesuai brand dalam box premium CAI.</div>
+      <div class="nw-foot"><span class="nw-date">Selama persediaan masih ada · S&amp;K berlaku</span><span class="nw-btn">Lihat caranya ›</span></div></div></div>`;
+}
+function mugOpen() {
+  let ov = document.getElementById('mug-ov');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'mug-ov'; ov.className = 'mug-ov'; ov.onclick = e => { if (e.target === ov) mugClose(); }; document.body.appendChild(ov); }
+  ov.innerHTML = `<div class="mug-box"><button class="mug-x" onclick="mugClose()" aria-label="Tutup">✕</button>${mugBannerHtml()}</div>`;
+  ov.classList.add('open'); document.body.classList.add('modal-open');
+}
+function mugClose() { const ov = document.getElementById('mug-ov'); if (ov) { ov.classList.remove('open'); ov.innerHTML = ''; } document.body.classList.remove('modal-open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('mug-ov')?.classList.contains('open')) mugClose(); });
 function mugBannerHtml() {
   if (!MUG_PROMO.on) return '';
   const bs = Object.keys(MUG_PROMO.mugs).map(id => BRANDS.find(b => b.id === id)).filter(Boolean);
   return `<div class="mug-ban"><div class="mug-tx">
-    <span class="mug-k">🎁 Merchandise eksklusif · Limited</span>
+    <span class="mug-k">Merchandise eksklusif · Limited</span>
     <h2>Beli lewat Enthusiast Partner,<br><em>bawa pulang Mug eksklusif.</em></h2>
     <p>Beli produk <b>${bs.map(b => escHtml(b.name)).join('</b> atau <b>')}</b> di Enthusiast Partner lewat CAI Hub, dapatkan <b class="g">mug keramik ${bs.map(b => escHtml(b.id === 'steg' ? 'STEG Italy' : b.name)).join(' / ')}</b> dalam box premium CAI — sesuai brand yang Anda beli.</p>
     <div class="mug-st"><div><b>1</b>Pilih produk ${bs.map(b => escHtml(b.name)).join(' / ')} di CAI Hub</div><div><b>2</b>Tekan <i>💬 Tanya</i> ke Enthusiast Partner di halaman produk</div><div><b>3</b>Beli &amp; tunjukkan chat dari CAI Hub → mug untuk Anda</div></div>
-    <div class="mug-bt">${bs.map(b => `<button class="mug-b${b.id === bs[0].id ? ' g' : ''}" onclick="showBrand('${b.id}')">Lihat produk ${escHtml(b.name)} ›</button>`).join('')}<button class="mug-b" onclick="openAuthDealers()">Enthusiast Partner</button></div>
+    <div class="mug-bt">${bs.map(b => `<button class="mug-b${b.id === bs[0].id ? ' g' : ''}" onclick="mugClose();showBrand('${b.id}')">Lihat produk ${escHtml(b.name)} ›</button>`).join('')}<button class="mug-b" onclick="mugClose();openAuthDealers()">Enthusiast Partner</button></div>
     <small>Selama persediaan masih ada · S&amp;K berlaku</small>
   </div><div class="mug-art"><img src="${MUG_PROMO.img}" alt="Mug keramik STEG Italy dan Audiocircle dalam box premium CAI" loading="lazy"></div></div>`;
 }

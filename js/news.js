@@ -241,6 +241,7 @@ function hlSlides() {
   if (typeof cwHlHtml === 'function' && authUser && cwLive().length) s.push({ t: 'cw' });
   if (typeof evHlList === 'function') evHlList().forEach(e => s.push({ t: 'ev', e }));   // 📅 Acara terdekat (js/events.js)
   if (NEWS_ON_DASH) nwLive().slice(0, NEWS_HL_MAX).forEach(n => s.push({ t: 'news', n }));
+  if (typeof mugHlOn === 'function' && mugHlOn()) s.push({ t: 'promo' });   // 🎁 Promo Mug (js/dash.js)
   return s;
 }
 function nwHlHtml(n) {
@@ -265,10 +266,11 @@ function hlRender() {
   hlN = slides.length;
   const hasCw = slides.some(x => x.t === 'cw'), news = slides.filter(x => x.t === 'news'), evs = slides.filter(x => x.t === 'ev');
   const tabs = [news.length && `<button class="hl-tab" data-hlt="news" onclick="hlGo('news')">${news.some(x => nwIsNew(x.n)) ? '<i class="dot"></i>' : ''}📰 News</button>`,
+    slides.some(x => x.t === 'promo') && `<button class="hl-tab" data-hlt="promo" onclick="hlGo('promo')">🎁 Promo</button>`,
     evs.length && `<button class="hl-tab" data-hlt="ev" onclick="hlGo('ev')">📅 Acara</button>`,
     hasCw && `<button class="hl-tab" data-hlt="cw" onclick="hlGo('cw')">☕ Concerto Way <span class="lk">· khusus partner</span>${typeof cwIsNew === 'function' && cwLive().some(cwIsNew) ? '<i class="hl-star" title="Ada materi baru">★</i>' : ''}</button>`].filter(Boolean);
   const tabsHtml = tabs.length > 1 ? `<div class="hl-tabs" role="tablist">${tabs.join('')}</div>` : '';
-  const html = slides.map(x => x.t === 'cw' ? cwHlHtml() : x.t === 'ev' ? evHlHtml(x.e) : nwHlHtml(x.n));
+  const html = slides.map(x => x.t === 'cw' ? cwHlHtml() : x.t === 'promo' ? mugHlHtml() : x.t === 'ev' ? evHlHtml(x.e) : nwHlHtml(x.n));
   const items = hlN > 1 ? [html[hlN - 1], ...html, html[0]] : html;
   const dots = hlN > 1 ? `<div class="hl-dots">${slides.map((x, i) => `<button class="hl-dot${x.t === 'news' ? '' : ' ' + x.t}" aria-label="Slide ${i + 1}" onclick="hlGoIdx(${i})"></button>`).join('')}</div>` : '';
   el.hidden = false;
@@ -341,7 +343,7 @@ function hlStep(d, fromDx) { if (hlN < 2) return; if (hlBusy) { hlTarget = -1; h
 function hlGoIdx(i) { hlPause = Date.now() + 15000; if (i !== hlIdx) hlMoveTo(i + 1); }
 function hlGo(k) {
   const s = hlSlides(); let i = -1;
-  if (k === 'cw' || k === 'ev') i = s.findIndex(x => x.t === k);
+  if (k === 'cw' || k === 'ev' || k === 'promo') i = s.findIndex(x => x.t === k);
   else if (k === 'news') i = s.findIndex(x => x.t === 'news');
   else if (/^n\d+$/.test(k)) { const ns = s.map((x, j) => x.t === 'news' ? j : -1).filter(j => j >= 0); i = ns[+k.slice(1)] ?? -1; }
   if (i < 0) return;
