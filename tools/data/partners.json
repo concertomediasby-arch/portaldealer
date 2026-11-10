@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-09",
+ "updated": "2026-11-10",
  "partners": [
   {
    "r": "Bali",
@@ -170,7 +170,7 @@
    "n": "Blitz Cirebon",
    "c": "Cirebon",
    "a": "Sebelah SPBU STIKOM, Jl. Brigjen Dharsono Blok A-B",
-   "wa": "6282128472845",
+   "wa": "6282226095556",
    "ig": "concerto_cirebon"
   },
   {
