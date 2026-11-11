@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-09",
+ "updated": "2026-11-10",
  "partners": [
   {
    "r": "Bali",
@@ -69,6 +69,15 @@
    "wa": "6281287831181",
    "ig": "sun_jaya_motor",
    "map": "https://maps.app.goo.gl/yKTXNNwwSM8PYVd1A"
+  },
+  {
+   "r": "Banten",
+   "n": "Roda Mas Audio",
+   "c": "Kota tangerang",
+   "a": "Jalan Boulevard Graha Raya, Graha Autopart Station Blok KN 01-03, KN 11-12, 15, RT 002/ RW 010, Sudirmara Pinang",
+   "wa": "6282210827897",
+   "ig": "rdm.autosound",
+   "map": "https://maps.app.goo.gl/6pyw8P2PKH5RenpUA"
   },
   {
    "r": "DIY Yogyakarta",
@@ -161,7 +170,7 @@
    "n": "Blitz Cirebon",
    "c": "Cirebon",
    "a": "Sebelah SPBU STIKOM, Jl. Brigjen Dharsono Blok A-B",
-   "wa": "6282128472845",
+   "wa": "6282226095556",
    "ig": "concerto_cirebon"
   },
   {
