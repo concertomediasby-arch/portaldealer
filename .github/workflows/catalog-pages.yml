@@ -1,0 +1,43 @@
+# Kelola Katalog dari portal (11 Nov 2026): setiap Editor menyimpan produk (Edge Function catalog-edit meng-commit
+# katalog-edit.js + foto ke main), workflow ini membuat ulang kartu WA (/p/…, tools/gen-share-pages.js) dan
+# halaman Google (/produk/, /brand/, /kategori/, sitemap.xml — tools/gen-seo-pages.js), lalu commit.
+name: Kartu WA & halaman Google katalog
+on:
+  push:
+    branches: [main]
+    paths: ['katalog-edit.js']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: catalog-pages
+  cancel-in-progress: false
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Pasang browser & poppler
+        run: |
+          npm install --no-save --no-package-lock playwright@1.48.2
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends poppler-utils fonts-noto-color-emoji
+      - name: Kartu WA
+        run: node tools/gen-share-pages.js
+      - name: Halaman Google
+        run: node tools/gen-seo-pages.js
+      - name: Commit
+        run: |
+          git config user.name "CAI Hub Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for p in p h a k d s cway panduan news galeri bandingkan rakitan share produk brand kategori partner mobil academy hall-of-fame sitemap.xml; do
+            if [ -e "$p" ] || [ -n "$(git ls-files -- "$p")" ]; then git add -A -- "$p"; fi
+          done
+          if git diff --cached --quiet; then echo "Tidak ada perubahan"; exit 0; fi
+          git commit -m "Kartu WA & halaman Google katalog diperbarui otomatis (Kelola Katalog)"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep 5; done
+          exit 1

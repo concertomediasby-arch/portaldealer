@@ -9,8 +9,7 @@ const lit = (src, name) => { const m = src.match(new RegExp(`const ${name} = ([\
 const carsJs = read('js/cars.js'), scJs = read('js/showcase.js');
 const CAR_ALIAS = lit(carsJs, 'CAR_ALIAS') || {}, CAR_LABEL = lit(carsJs, 'CAR_LABEL') || {};
 const GL_MAKES = lit(scJs, 'GL_MAKES') || [], HOF_DEALER_ALIAS = lit(scJs, 'HOF_DEALER_ALIAS') || {};
-const ctx = {}; vm.createContext(ctx);
-vm.runInContext(read('katalog.js') + ';this.BRANDS=BRANDS;this.HALL_OF_FAME=typeof HALL_OF_FAME!=="undefined"?HALL_OF_FAME:[];', ctx);
+const ctx = require('./katalog.js')();   // katalog.js + katalog-edit.js (Kelola Katalog portal)
 const { BRANDS } = ctx;
 // HOF_ON / CARS_ON di js/core.js (5 Nov 2026: Hall of Fame & Cari per Mobil disembunyikan) — false = data Hall of Fame tidak dipakai di halaman Google/kartu WA
 const coreJs = read('js/core.js');

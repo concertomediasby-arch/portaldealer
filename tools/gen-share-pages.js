@@ -17,8 +17,7 @@ const SITE = 'https://hub.concerto.id';
 const ALL = process.argv.includes('--all');
 
 /* ── Data dari katalog.js & js/core.js (literal data murni) ── */
-const ctx = {}; vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(path.join(ROOT, 'katalog.js'), 'utf8') + ';this.BRANDS=BRANDS;this.HALL_OF_FAME=HALL_OF_FAME;', ctx);
+const ctx = require('./lib/katalog.js')();   // katalog.js + katalog-edit.js (Kelola Katalog portal)
 const core = fs.readFileSync(path.join(ROOT, 'js/core.js'), 'utf8');
 function literal(name) {
   const i = core.indexOf(`const ${name} = [`); if (i < 0) throw new Error('tidak ditemukan: ' + name);

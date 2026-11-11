@@ -2464,6 +2464,7 @@ function productCard(brand, p) {
         ${sb ? `<span class="product-stock-badge ${sb.cls}">${sb.label}</span>` : ''}
         ${typeof hofCardBadge === 'function' ? hofCardBadge(brand.id, p) : ''}
         ${typeof favHeartHtml === 'function' ? favHeartHtml(p.id) : ''}
+        ${typeof ceCardBtn === 'function' ? ceCardBtn(p) : ''}
       </div>
       <div class="product-info">
         <div class="product-name">${p.name}${eolTag(p)}</div>
@@ -2476,13 +2477,14 @@ function productCard(brand, p) {
 function renderProducts(brand, filter) {
   const grid = document.getElementById('products-grid');
   // Render grouped by line; hide empty lines when filtered
-  let html = '';
+  const ce = typeof ceBrandBar === 'function';   // ✏️ Kelola Katalog (Editor, js/catedit.js)
+  let html = ce ? ceBrandBar(brand) : '';
   brand.lines.forEach(line => {
     const items = filter === 'Semua' ? line.products : line.products.filter(p => p.category === filter);
     if (!items.length) return;
     html += `<div class="line-group">
-      <div class="line-header"><span class="line-name">${line.name}</span>${typeof hofLineBadge === 'function' ? hofLineBadge(brand.id, line.name) : ''}<span class="line-count">${items.length}</span></div>
-      <div class="line-grid">${items.map(p => productCard(brand, p)).join('')}</div>
+      <div class="line-header"><span class="line-name">${line.name}</span>${typeof hofLineBadge === 'function' ? hofLineBadge(brand.id, line.name) : ''}<span class="line-count">${items.length}</span>${ce ? ceLineBtn(brand, line) : ''}</div>
+      <div class="line-grid">${items.map(p => productCard(brand, p)).join('')}${ce ? ceNewCard(brand, line) : ''}</div>
     </div>`;
   });
   grid.innerHTML = html || `<div style="padding:20px;color:var(--fg-muted)">Tidak ada produk pada kategori ini.</div>`;

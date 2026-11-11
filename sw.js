@@ -7,7 +7,7 @@ self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
   const req = e.request, url = new URL(req.url);
-  if (req.method !== 'GET' || /supabase\.co$/.test(url.hostname) || /\.mp4$/i.test(url.pathname) || req.headers.has('range') || url.searchParams.has('build')) return;
+  if (req.method !== 'GET' || /supabase\.co$/.test(url.hostname) || /\.mp4$/i.test(url.pathname) || req.headers.has('range') || url.searchParams.has('build') || /katalog-edit\.js$/.test(url.pathname)) return;   // katalog-edit.js (Kelola Katalog) selalu dari jaringan
   if (req.mode === 'navigate') {
     // cache: 'no-cache' → selalu cek versi terbaru ke server (GitHub Pages memberi max-age 10 menit pada halaman)
     e.respondWith(fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put(url.pathname === '/' ? '/index.html' : req, c)); return r; })

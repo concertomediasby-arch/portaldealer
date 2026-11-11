@@ -117,6 +117,15 @@ Deno.serve(async (req) => {
     if (!html) throw new Error('Data katalog (BRANDS / STOCK_ALIASES) tidak ditemukan di ' + catUrls.join(' / '));
     const BRANDS = grabLiteral(html, 'const BRANDS = [', '\n];') as any[];
     const ALIASES = grabLiteral(html, 'const STOCK_ALIASES = {', '\n};') as Record<string, string>;
+    // Kelola Katalog (11 Nov 2026): produk yang ditambah/diubah Editor di portal ada di katalog-edit.js (JSON murni) —
+    // digabung dengan logika SAMA seperti js/katalog-apply.js (ubah di sana → ubah juga di sini).
+    try {
+      const keUrl = (Deno.env.get('CATALOG_URL') || 'https://hub.concerto.id/katalog.js').replace(/[^/]*$/, 'katalog-edit.js');
+      const kr = await fetch(keUrl + '?t=' + Date.now());
+      const kt = kr.ok ? await kr.text() : '';
+      const ki = kt.indexOf('const KATALOG_EDIT = ');
+      if (ki >= 0) katalogApply(BRANDS, ALIASES, JSON.parse(kt.slice(ki + 21).trim().replace(/;\s*$/, '')));
+    } catch (e) { console.warn('katalog-edit.js tidak terbaca:', e); }
     const index = BRANDS.flatMap(b => b.lines.flatMap((l: any) => l.products.map((p: any) => ({ b, p,
       keys: new Set([normKey(p.model), normKey(p.name), normKey(p.id), normKey(b.name + p.model)]) }))));
     const byId = Object.fromEntries(index.map(x => [x.p.id, x]));
@@ -212,3 +221,28 @@ Deno.serve(async (req) => {
     return json({ ok: false, error: msg }, 500);
   }
 });
+
+// Salinan katalogApply() dari js/katalog-apply.js (tanpa RECENT_UPDATES) — produk dari form Kelola Katalog portal
+function katalogApply(B: any[], A: Record<string, string>, E: any) {
+  if (!E || !Array.isArray(E.items)) return;
+  const nk = (s: unknown) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  for (const it of E.items) {
+    if (!it || !it.id || !it.data) continue;
+    let cur: any = null, curLine: any = null, curB: any = null;
+    for (const b of B) for (const l of b.lines) { const p = l.products.find((x: any) => x.id === it.id); if (p) { cur = p; curLine = l; curB = b; } }
+    const b = B.find(x => x.id === it.brand) || curB;
+    if (!b) continue;
+    const lineName = String(it.line || (curLine && curLine.name) || 'Lainnya').trim();
+    let l = b.lines.find((x: any) => x.name === lineName);
+    if (!l) { l = { name: lineName, products: [] }; b.lines.push(l); }
+    const p = cur || { id: it.id };
+    for (const [k, v] of Object.entries(it.data)) {
+      if (v === null || v === '' || v === false || (Array.isArray(v) && !v.length)) delete p[k]; else p[k] = v;
+    }
+    p.id = it.id;
+    if (!cur) l.products.push(p);
+    else if (curLine !== l) { curLine.products.splice(curLine.products.indexOf(p), 1); l.products.push(p); }
+    if (curLine && curLine !== l && !curLine.products.length) curB.lines.splice(curB.lines.indexOf(curLine), 1);
+    if (it.stock) for (const c of String(it.stock).split(',')) { const k = nk(c); if (k) A[k] = it.id; }
+  }
+}

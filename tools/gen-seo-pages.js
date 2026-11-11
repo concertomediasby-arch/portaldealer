@@ -24,8 +24,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.resolve(__dirname, '..');
 const SITE = 'https://hub.concerto.id';
-const ctx = {}; vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(path.join(ROOT, 'katalog.js'), 'utf8') + ';this.BRANDS=BRANDS;', ctx);
+const ctx = require('./lib/katalog.js')();   // katalog.js + katalog-edit.js (Kelola Katalog portal)
 const BRANDS = ctx.BRANDS;
 let PARTNERS;
 try { PARTNERS = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/data/partners.json'), 'utf8')).partners; }
