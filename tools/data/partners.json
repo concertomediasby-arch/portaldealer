@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-10",
+ "updated": "2026-11-11",
  "partners": [
   {
    "r": "Bali",
@@ -74,10 +74,10 @@
    "r": "Banten",
    "n": "Roda Mas Audio",
    "c": "Kota tangerang",
-   "a": "Jalan Boulevard Graha Raya, Graha Autopart Station Blok KN 01-03, KN 11-12, 15, RT 002/ RW 010, Sudirmara Pinang",
+   "a": "Pasar Modern Kawasan Niaga Bintaro - Bintaro Trade Centre Lantai 1 Blok H2 14-21, 15224,",
    "wa": "6282210827897",
    "ig": "rdm.autosound",
-   "map": "https://maps.app.goo.gl/6pyw8P2PKH5RenpUA"
+   "map": "https://maps.app.goo.gl/NrPBksT4ZGhN26A78?g_st=awb"
   },
   {
    "r": "DIY Yogyakarta",
