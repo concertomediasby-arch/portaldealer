@@ -123,14 +123,12 @@ function sharePrep(key, src, name) {
     shareFiles[key].file = new File([b], `${name || 'CAI-Hub'}.${ext}`, { type: b.type || 'image/jpeg' });
   }).catch(() => {});
 }
-async function shareWa(text, key) {
-  const file = key && shareFiles[key]?.file, url = `https://wa.me/?text=${waText(text)}`;
-  let ok = false; try { ok = !!(file && navigator.canShare && navigator.canShare({ files: [file] })); } catch (e) {}
-  if (ok) {
-    try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e?.name === 'AbortError') return; }
-    location.href = url; return;   // sudah di luar klik → window.open akan diblokir
-  }
-  window.open(url, '_blank', 'noopener');   // masih di dalam klik (tanpa await) → tidak diblokir
+// 11 Nov 2026 (laporan pemilik: tombol Bagikan produk hanya mengirim gambar, tanpa link): saat berbagi file + teks, WhatsApp
+// (Windows/Android) sering membuang teksnya. Kini SEMUA tombol Bagikan yang memakai shareWa() mengirim teks + link lewat wa.me,
+// sama seperti News/Concerto Way — WhatsApp menampilkan kartu pratinjau link (/p/, /a/, /h/, /k/ sudah bergambar).
+// `key` (gambar/PDF yang disiapkan sharePrep) tidak dipakai lagi; parameternya dibiarkan agar pemanggil lama tetap jalan.
+function shareWa(text, key) {
+  window.open(`https://wa.me/?text=${waText(text)}`, '_blank', 'noopener');   // langsung di dalam klik → tidak diblokir
 }
 
 /* ══════════════════════════════════════════
