@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-11",
+ "updated": "2026-11-12",
  "partners": [
   {
    "r": "Bali",
@@ -395,6 +395,15 @@
    "wa": "628117708277",
    "ig": "naiaudioworks_batam",
    "map": "https://maps.app.goo.gl/4AUZ5DcoivnWs2Nb7"
+  },
+  {
+   "r": "Lampung",
+   "n": "DW Car Audio Lampung",
+   "c": "Kota Bandar Lampung",
+   "a": "Jl. Urip Sumoharjo No.179, Gn. Sulah, Kec. Sukarame",
+   "wa": "628179075888",
+   "ig": "dw_caraudio",
+   "map": "https://maps.app.goo.gl/AR6XkBghtHuHKSsa9"
   },
   {
    "r": "Sulawesi Selatan",
