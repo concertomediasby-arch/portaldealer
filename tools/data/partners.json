@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-12",
+ "updated": "2026-11-14",
  "partners": [
   {
    "r": "Bali",
@@ -439,7 +439,7 @@
   },
   {
    "r": "Sumatra Utara",
-   "n": "Bengkel Pelita Harapan",
+   "n": "Bengkel Pelita",
    "c": "Kisaran",
    "a": "Jl. P. Polem No.109-111, Tebing Kisaran,",
    "wa": "6285322578888",
