@@ -5180,3 +5180,20 @@ html.embed .topbar, html.embed .sidebar, html.embed .mobile-nav, html.embed .wa-
 html.embed #app-splash, html.embed #cmp-tray, html.embed #ins-sheet, html.embed #ins-tip, html.embed #ins-pill, html.embed #idle-warn { display: none !important; }
 html.embed .app { grid-template-columns: 1fr; grid-template-rows: 1fr; }
 html.embed .app.app-hidden { display: grid !important; }
+/* ✏️ Mode Edit + pensil "Edit di Studio" (js/studio-link.js, 18 Nov 2026) */
+#ed-bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 14px;padding:7px 14px;border-radius:12px;background:#F5ECD9;color:#3b2c0e;font:600 12.5px var(--f-body);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+#ed-bar .ed-t{font-weight:800}
+#ed-bar .ed-sw{width:34px;height:19px;border-radius:99px;border:0;background:#b9ad93;position:relative;cursor:pointer;padding:0}
+#ed-bar .ed-sw i{position:absolute;left:2px;top:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:left .2s}
+#ed-bar .ed-sw.on{background:#14213D}#ed-bar .ed-sw.on i{left:17px;background:#F5ECD9}
+#ed-bar .ed-s{font-weight:500;opacity:.8}
+#ed-bar .ed-go{margin-left:auto;border:0;background:#14213D;color:#F5ECD9;border-radius:99px;padding:5px 12px;font:700 12px var(--f-body);cursor:pointer}
+.ed-pen{display:inline-flex;align-items:center;gap:4px;margin:6px 0;border:0;border-radius:99px;background:#D8B26A;color:#14110a;font:700 11.5px var(--f-body);padding:4px 10px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35);vertical-align:middle}
+.ed-pen:hover{background:#f0cf8a}
+.ed-pen.abs{position:absolute;right:10px;top:10px;margin:0;z-index:5}
+.ed-penrow{margin:0 0 12px}
+body.ed-off .ed-pen,body.ed-off .ed-penrow{display:none!important}
+body.ed-off .main .editor-only:not(#ed-bar):not(.sidebar *){display:none!important}
+html.embed #ed-bar,html.embed .ed-pen,html.embed .ed-penrow{display:none!important}
+@media(max-width:720px){#ed-bar{border-radius:0;margin:-4px -16px 12px;padding:7px 16px}#ed-bar .ed-s{display:none}}
+.media-gallery{position:relative}

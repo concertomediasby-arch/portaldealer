@@ -216,3 +216,23 @@ button{font:inherit;cursor:pointer}
 .st-gdic{width:42px;height:56px;border-radius:6px;background:var(--goldl);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 .st-aca button{white-space:nowrap}
 @media(max-width:860px){.st-gdsec .st-aca{flex-wrap:wrap}.st-gdsec .st-aca button{flex:1 0 40%}.st-gdsec .st-aca button:last-child{flex:1 0 40%}.st-glpr .st-acqt{width:auto;flex:1 1 100%}}
+/* Ringkasan + status simpan (gaya Black Amethyst, 18 Nov 2026) */
+.st-stat{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#3a3a42;white-space:nowrap}
+.st-stat i{width:9px;height:9px;border-radius:50%;background:var(--ok);flex-shrink:0}.st-stat i.a{background:var(--warn)}
+.st-stat.dirty{color:#7A4C0B;font-weight:600}.st-stat kbd{font:500 10.5px 'JetBrains Mono';background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:0 4px}
+.st-top .st-search{max-width:320px}
+.st-sech{display:flex;align-items:baseline;gap:12px;margin:26px 0 12px;flex-wrap:wrap}.st-sech h2{font:800 17px Sora}.st-sech span{color:var(--mu);font-size:12.5px}
+.st-pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.st-pc{padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.st-pc .t{display:flex;align-items:center;gap:9px}.st-pc .t b{font:700 14.5px Sora;flex:1;min-width:0}
+.st-pc .ic{width:34px;height:34px;border-radius:9px;background:var(--goldl);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.st-pc small{color:var(--mu);font-size:12.5px;min-height:18px}
+.st-pc .a{display:flex;gap:8px;margin-top:4px}.st-pc .a .st-btn{flex:1;justify-content:center;text-align:center}
+.st-bak{margin-bottom:16px;background:var(--goldl);border-color:#E3CC9C;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kc-flash{animation:kcFlash 2.6s ease}@keyframes kcFlash{0%,60%{background:#F5ECD9;box-shadow:0 0 0 6px #F5ECD9}100%{background:transparent;box-shadow:none}}
+@media(max-width:1100px){.st-pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.st-stat kbd{display:none}}
+@media(max-width:860px){.st-pgrid{grid-template-columns:1fr}.st-stat{display:none}.st-stat.dirty{display:flex;font-size:11.5px;white-space:normal}}
+.st-pvh{display:flex;align-items:center;gap:8px;margin-bottom:12px}.st-pvh b{font:700 13px Sora;flex:1}
+.st-seg.sm{padding:2px}.st-seg.sm button{padding:4px 10px;font-size:11.5px;flex:none}
+.st-phone.lap{width:100%;border-width:6px;border-radius:12px;display:grid;grid-template-columns:42% 1fr}
+.st-phone.lap .pi{aspect-ratio:auto;min-height:150px}

@@ -126,7 +126,44 @@ async function stLogin() {
 async function stLogout() { try { await supabase.auth.signOut({ scope: 'local' }); } catch (e) {} authUser = null; stGate(); }
 
 // ── Routing (#home, #jadwal, #produk, #news, #news/new, #news/<id>) ──
-addEventListener('hashchange', () => stRoute());
+// Status simpan + penjaga perubahan belum disimpan (gaya Black Amethyst, 18 Nov 2026)
+let stDirty = false, stLastHash = location.hash, stSavedAt = 0, stBakAt = 0;
+function stStat() {
+  const el = document.getElementById('st-stat'); if (!el) return;
+  const ed = !!document.querySelector('#st-page .st-ed');
+  const t = stDirty ? `<i class="a"></i>Belum disimpan${stBakAt ? ' · cadangan ' + wibDate(stBakAt, { hour: '2-digit', minute: '2-digit' }).replace(':', '.') : ''} · <kbd>Ctrl S</kbd> simpan`
+    : `<i></i>${stSavedAt && Date.now() - stSavedAt < 6e5 ? 'Tersimpan ' + wibDate(stSavedAt, { hour: '2-digit', minute: '2-digit' }).replace(':', '.') + ' · ' : ''}${ed ? 'Semua perubahan tersimpan' : 'Semua tersimpan · tayang di CAI Hub'}`;
+  el.innerHTML = t; el.classList.toggle('dirty', stDirty);
+}
+function stGo(h, saved) { stDirty = false; stBakAt = 0; if (saved) stSavedAt = Date.now(); stBakClear(); location.hash = h; stStat(); }
+['input', 'change'].forEach(ev => addEventListener(ev, e => { if (e.target.closest?.('#st-page .st-ed') && !e.target.closest('.st-search')) { if (!stDirty) { stDirty = true; stStat(); } } }, true));
+addEventListener('hashchange', () => {
+  if (stDirty && !confirm('Ada perubahan yang belum disimpan. Tinggalkan halaman ini?\n(Cadangan ketikan tetap tersimpan di browser ini.)')) { history.replaceState(null, '', stLastHash || '#home'); return; }
+  stDirty = false; stBakAt = 0; stLastHash = location.hash; stRoute(); stStat();
+});
+addEventListener('beforeunload', e => { if (stDirty) { e.preventDefault(); e.returnValue = ''; } });
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { const b = document.querySelector('#st-page .st-acts .st-btn.pri:not([disabled])') || document.querySelector('#ce-save:not([disabled])'); if (b) { e.preventDefault(); b.click(); } } });
+// Cadangan ketikan (News & Concerto Way) tiap 10 dtk di browser ini — dipulihkan saat form dibuka lagi; bukan menerbitkan.
+const stBakKey = () => { const [pg, id] = (location.hash || '').slice(1).split('/'); return ['news', 'cway'].includes(pg) && id ? `cai-st-bak:${pg}:${id}` : null; };
+function stBakClear(k) { try { localStorage.removeItem(k || stBakKey() || 'x'); } catch (e) {} }
+setInterval(() => {
+  if (!stDirty) return; const k = stBakKey(); if (!k) return;
+  const o = k.includes(':news:') ? (nf && { title: nf.title, summary: nf.summary, body: nf.body, category: nf.category, link_url: nf.link_url, link_label: nf.link_label })
+    : (cf && { body: cf.body, day: cf.day, series: cf.series, title: cf.title, subtitle: cf.subtitle });
+  if (!o) return; try { localStorage.setItem(k, JSON.stringify({ at: Date.now(), o })); stBakAt = Date.now(); stStat(); } catch (e) {}
+}, 10000);
+function stBakOffer(upd) {
+  const k = stBakKey(); if (!k) return; let b = null; try { b = JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) {}
+  if (!b?.o || (upd && Date.parse(upd) > b.at)) return;
+  const host = document.querySelector('#st-page .st-ph'); if (!host) return;
+  host.insertAdjacentHTML('afterend', `<div class="st-card st-pad st-bak">💾 Ada ketikan yang belum disimpan dari <b>${esc(wibDate(b.at, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</b>. <button class="st-btn sm pri" onclick="stBakRestore()">Pulihkan</button> <button class="st-btn sm" onclick="stBakClear();this.parentElement.remove()">Buang</button></div>`);
+}
+function stBakRestore() {
+  const k = stBakKey(); let b = null; try { b = JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) {} if (!b) return;
+  if (k.includes(':news:')) { const m = { title: 'nf-title', summary: 'nf-summary', body: 'nf-body', category: 'nf-cat', link_url: 'nf-link', link_label: 'nf-lab' }; Object.entries(m).forEach(([f, id]) => { const el = document.getElementById(id); if (el && b.o[f] != null) el.value = b.o[f]; }); stNf(); }
+  else { const el = document.getElementById('cf-body'); if (el) el.value = b.o.body || ''; Object.assign(cf, b.o, { touched: { day: 1, series: 1, title: 1, subtitle: 1 } }); ['day', 'series', 'title', 'subtitle'].forEach(f => { const x = document.getElementById('cf-' + f); if (x) x.value = cf[f] ?? ''; }); stCfPrev(); }
+  document.querySelector('.st-bak')?.remove(); stDirty = true; stStat(); showToast('↺ Ketikan dipulihkan — tekan Simpan untuk menyimpan.');
+}
 function stRoute() {
   if (!authUser || !isEditor()) return;
   const h = (location.hash || '#home').slice(1), [pg, arg] = h.split('/');
@@ -140,6 +177,7 @@ function stRoute() {
   if (cur === 'cway' && arg) return stCwEdit(arg === 'new' ? null : arg);
   if (cur === 'academy' && arg === 'new') return stAcadNew();
   if (cur === 'galeri' && arg) return stGlEdit(arg === 'new' ? null : arg);
+  if (cur === 'produk' && arg) { stProduk(); const sec = h.split('/')[2]; if (arg === 'new') ceOpen(null, sec || null); else { ceOpen(arg); stCeFocus(sec); } return; }
   if (cur === 'guides' && arg === 'new') return stGdNew(h.split('/')[2]);
   ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy, galeri: stGaleri, guides: stGuides })[cur]();
 }
@@ -183,28 +221,33 @@ function stSchedList(items, max) {
   return h;
 }
 
-// ── BERANDA ──
+// ── RINGKASAN (gaya Black Amethyst, 18 Nov 2026): kartu per halaman CAI Hub + perlu tindakan + jadwal ──
+const stAgo = iso => { if (!iso) return ''; const m = (Date.now() - Date.parse(iso)) / 6e4; return m < 60 ? Math.max(1, Math.round(m)) + ' menit lalu' : m < 1440 ? Math.round(m / 60) + ' jam lalu' : m < 2880 ? 'kemarin' : Math.round(m / 1440) + ' hari lalu'; };
+const stMaxAt = rows => rows.reduce((a, r) => { const t = r.updated_at || r.created_at; return t && (!a || t > a) ? t : a; }, null);
 async function stHome() {
   const jam = +wibDate(Date.now(), { hour: 'numeric', hour12: false });
   const sapa = jam < 11 ? 'pagi' : jam < 15 ? 'siang' : jam < 18 ? 'sore' : 'malam';
-  stPage(`<div class="st-ph"><div><p>${wibDate(Date.now(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p><h1>Selamat ${sapa}, Editor 👋</h1></div></div>
+  stPage(`<div class="st-ph"><div><p>${wibDate(Date.now(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p><h1>Selamat ${sapa}, Editor 👋</h1></div><a class="st-btn st-hm" style="margin-left:auto" href="/" target="_blank" rel="noopener">↗ Lihat CAI Hub</a></div>
     <div class="st-kpis" id="st-kpis">${[1, 2, 3, 4].map(() => '<div class="st-card st-kpi"><div class="l">⏳</div><div class="v">…</div></div>').join('')}</div>
-    <div class="st-g2"><div class="st-col"><div class="st-card"><div class="st-ch"><h3>📥 Perlu tindakan</h3></div><div id="st-todo"><p class="st-empty">⏳ Memeriksa…</p></div></div>
-      <div class="st-card"><div class="st-ch"><h3>⚡ Buat cepat</h3></div><div class="st-quick">
-        <a class="st-qb" href="#news/new"><b>📰</b>Berita</a><a class="st-qb" href="#" onclick="ceOpen(null);return false"><b>🔊</b>Produk</a>
-        <a class="st-qb" href="#cway/new"><b>☕</b>Concerto Way</a><a class="st-qb" href="#academy/new"><b>🎓</b>Academy</a>
-        <a class="st-qb" href="#galeri/new"><b>🚗</b>Galeri</a><a class="st-qb" href="#m/stock"><b>📊</b>Stok </a></div></div></div>
+    <div class="st-sech"><h2>Halaman CAI Hub</h2><span>Semua isi CAI Hub diubah dari sini · status &amp; terakhir diubah</span></div>
+    <div class="st-pgrid" id="st-pages">${Array(6).fill('<div class="st-card st-pc"><p class="st-empty">⏳</p></div>').join('')}</div>
+    <div class="st-g2"><div class="st-card"><div class="st-ch"><h3>📥 Perlu dikerjakan</h3></div><div id="st-todo"><p class="st-empty">⏳ Memeriksa…</p></div></div>
       <div class="st-card"><div class="st-ch"><h3>⏰ Jadwal tayang</h3><a href="#jadwal">Semua ›</a></div><div class="st-tl" id="st-hsched"><p class="st-empty">⏳ Memuat…</p></div></div></div>`);
-  const [vis, int, sched, stock, pend] = await Promise.all([
+  const q = (t, cols) => supabase.from(t).select(cols).then(r => r.error ? null : r.data || [], () => null);
+  const [vis, int, sched, stock, news, cw, gl, ad, ac] = await Promise.all([
     supabase.rpc('site_visit_stats', { p_days: 7 }).then(r => r.error ? null : (typeof r.data === 'string' ? JSON.parse(r.data) : r.data)).catch(() => null),
     supabase.rpc('interest_stats', { p_days: 7 }).then(r => r.error ? null : (typeof r.data === 'string' ? JSON.parse(r.data) : r.data)).catch(() => null),
     stLoadSched(true).catch(() => []),
-    supabase.from('stock').select('product_id, status, qty').then(r => r.data || []).catch(() => []),
-    supabase.from('showcase_installs').select('id', { count: 'exact', head: true }).eq('published', false).in('source', ['dealer', 'admin']).then(r => r.count || 0).catch(() => 0),
+    q('stock', 'product_id, status, qty'),
+    q('cai_news', 'id, published, created_at, updated_at'),
+    q('concerto_way', 'id, day, published, publish_at, created_at, updated_at'),
+    q('showcase_installs', 'id, published, publish_at, source, in_gallery, created_at, updated_at'),
+    q('auth_dealers', 'name, region, hidden'),
+    stLoadAcad().catch(() => null),
   ]);
   if (!document.getElementById('st-kpis')) return;
   const ids = new Set(PRODS().map(x => x.p.id));
-  const habis = stock.filter(s => ids.has(s.product_id) && s.status === 'habis').length;
+  const habis = (stock || []).filter(s => ids.has(s.product_id) && s.status === 'habis').length;
   const td = vis?.daily?.find(x => x.day === vis.today);
   const in7 = sched.filter(x => x.at < Date.now() + 7 * 864e5).length;
   const tr = (v, v0) => v0 ? (v >= v0 ? `<span class="up">▲ ${fmtNum(v - v0)}</span>` : `<span class="dn">▼ ${fmtNum(v0 - v)}</span>`) + ' vs periode lalu' : '&nbsp;';
@@ -214,14 +257,39 @@ async function stHome() {
     <div class="st-card st-kpi"><div class="l">Pengunjung hari ini</div><div class="v">${vis ? fmtNum(td?.visitors) : '—'}</div><div class="d">${vis ? `7 hari: ${fmtNum(vis.v7)} orang` : 'data belum tersedia'}</div>${spark(daily)}</div>
     <div class="st-card st-kpi"><div class="l">Klik ke partner (7 hari)</div><div class="v">${int ? fmtNum(int.tot?.click) : '—'}</div><div class="d">${int ? tr(+int.tot?.click || 0, +int.tot?.click0 || 0) : 'data belum tersedia'}</div></div>
     <div class="st-card st-kpi"><div class="l">Terjadwal 7 hari</div><div class="v">${in7}</div><div class="d">dari ${sched.length} konten terjadwal</div></div>
-    <div class="st-card st-kpi"><div class="l">Produk stok habis</div><div class="v">${fmtNum(habis)}</div><div class="d"><a href="#m/stock">Lihat di menu Stok </a></div></div>`;
+    <div class="st-card st-kpi"><div class="l">Produk stok habis</div><div class="v">${fmtNum(habis)}</div><div class="d"><a href="#m/stock">Lihat di menu Stok</a></div></div>`;
+  // Kartu per halaman
+  const now = Date.now(), fut = x => x.publish_at && Date.parse(x.publish_at) > now;
+  const cwSched = (cw || []).filter(x => x.published && fut(x)).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at));
+  const cwLast = cwSched[cwSched.length - 1], cwDays = cwLast ? Math.floor((Date.parse(cwLast.publish_at) - now) / 864e5) : -1;
+  const cwLive = (cw || []).filter(x => x.published && !fut(x)), cwMaxDay = Math.max(0, ...cwLive.map(x => +x.day || 0));
+  const glPendN = (gl || []).filter(x => (x.source === 'dealer' || x.source === 'admin') && !x.published).length;
+  const glLiveN = (gl || []).filter(x => x.published && !fut(x)).length, glSchedN = (gl || []).filter(x => x.published && fut(x)).length;
+  const acAll = stCache.acad || [], acSched = acAll.filter(a => !acadDueS(a)).length;
+  const gdSched = sched.filter(x => x.k === 'guide'), gdErr = gdSched.filter(x => x.err).length;
+  const adN = (ad || []).filter(d => !d.hidden), adProv = new Set(adN.map(d => d.region)).size;
+  const pill = (c, t) => `<span class="st-pill ${c}">${esc(t)}</span>`;
+  const card = (ic, t, st, sub, edit, view) => `<div class="st-card st-pc"><div class="t"><span class="ic">${ic}</span><b>${t}</b>${st}</div><small>${sub}</small>
+    <div class="a"><a class="st-btn sm pri" href="${edit}">Edit</a>${view ? `<a class="st-btn sm" href="${view}" target="_blank" rel="noopener">Lihat ↗</a>` : ''}</div></div>`;
+  const nd = (news || []).filter(n => !n.published).length;
+  document.getElementById('st-pages').innerHTML = [
+    card('🔊', 'Katalog Produk', CE_PENDING.size ? pill('gold', `⏳ ${CE_PENDING.size} menunggu`) : pill('ok', 'Tayang'), `${PRODS().length} produk · ${BRANDS.length} brand${habis ? ` · ${habis} stok habis` : ''}`, '#produk', '/?studio=katalog'),
+    card('📰', 'News', news ? (nd ? pill('mu', `${nd} draf`) : pill('ok', 'Tayang')) : pill('mu', '—'), news ? `${news.length - nd} berita tayang${stMaxAt(news) ? ' · diubah ' + stAgo(stMaxAt(news)) : ''}` : 'data belum tersedia', '#news', '/?studio=news'),
+    card('☕', 'Concerto Way', cw ? (cwDays < 5 ? pill('red', cwSched.length ? `Antrian ${Math.max(0, cwDays)} hari` : 'Antrian kosong') : pill('ok', `${cwSched.length} terjadwal`)) : pill('mu', '—'), cw ? `${cwMaxDay ? `Day 1–${cwMaxDay} tayang` : 'belum ada'}${cwSched.length ? ` · Day ${cwSched[0].day ?? '?'}–${cwLast.day ?? '?'} terjadwal` : ''}` : 'data belum tersedia', '#cway', '/?studio=cway'),
+    card('🎓', 'Academy', acSched ? pill('gold', `${acSched} terjadwal`) : pill('ok', 'Tayang'), `${acAll.length - acSched} materi tayang`, '#academy', '/?studio=academy'),
+    card('🚗', 'Galeri Instalasi', gl ? (glPendN ? pill('warn', `${glPendN} kiriman`) : glSchedN ? pill('gold', `${glSchedN} terjadwal`) : pill('ok', 'Tayang')) : pill('mu', '—'), gl ? `${glLiveN} mobil tayang${stMaxAt(gl) ? ' · diubah ' + stAgo(stMaxAt(gl)) : ''}` : 'data belum tersedia', '#galeri', '/?studio=galeri'),
+    card('📘', 'Panduan Partner', gdErr ? pill('red', `${gdErr} gagal`) : gdSched.length ? pill('gold', `${gdSched.length} terjadwal`) : pill('ok', 'Tayang'), 'PDF khusus partner (Kode Akses)', '#guides', null),
+    card('🏪', 'Enthusiast Partner', pill('ok', 'Tayang'), ad ? `${adN.length} partner · ${adProv} provinsi` : 'data belum tersedia', '#m/partner', '/?kota=semua'),
+    card('📦', 'Paket Audio', pill('mu', 'tampilan portal'), 'PDF paket siap pasang', '#m/paket', '/?studio=paket'),
+    card('📊', 'Stok', habis ? pill('red', `${habis} habis`) : pill('ok', 'Sinkron'), 'Sinkron Google Sheet tiap 15 menit', '#m/stock', null),
+  ].join('');
   document.getElementById('st-hsched').innerHTML = stSchedList(sched, 7);
-  // Perlu tindakan
+  // Perlu dikerjakan
   const todo = [];
-  const last = stCache.cwLast, days = last ? Math.floor((Date.parse(last.publish_at) - Date.now()) / 864e5) : -1;
-  if (days < 5) todo.push(['☕', 'red', last ? `Antrian Concerto Way habis ${days <= 0 ? 'hari ini' : days + ' hari lagi'}` : 'Antrian Concerto Way kosong',
-    last ? `Terjadwal terakhir: ${last.day != null ? 'Day ' + last.day : esc(last.title)} · ${wibDate(Date.parse(last.publish_at), { weekday: 'short', day: 'numeric', month: 'short' })}` : 'Belum ada Day yang dijadwalkan', '#cway/new', '＋ Tambah Day']);
-  if (pend) todo.push(['🚗', 'warn', `${pend} kiriman Galeri menunggu persetujuan`, 'Kiriman foto/video dari partner', '#galeri', 'Tinjau']);
+  if (cw && cwDays < 5) todo.push(['☕', 'red', cwLast ? `Antrian Concerto Way habis ${cwDays <= 0 ? 'hari ini' : cwDays + ' hari lagi'}` : 'Antrian Concerto Way kosong',
+    cwLast ? `Terjadwal terakhir: ${cwLast.day != null ? 'Day ' + cwLast.day : ''} · ${wibDate(Date.parse(cwLast.publish_at), { weekday: 'short', day: 'numeric', month: 'short' })}` : 'Belum ada Day yang dijadwalkan', '#cway/new', '＋ Tambah Day']);
+  if (glPendN) todo.push(['🚗', 'warn', `${glPendN} kiriman Galeri menunggu persetujuan`, 'Kiriman foto/video dari partner', '#galeri', 'Tinjau']);
+  if (nd) todo.push(['📰', 'gold', `${nd} berita masih draf`, 'Belum tampil untuk pengunjung', '#news', 'Buka']);
   sched.filter(x => x.err).forEach(x => todo.push(['📘', 'red', 'PDF Panduan gagal dipindah', esc(x.t), '#guides', 'Periksa']));
   const d = new Date(Date.now() + 7 * 36e5);
   if (d.getUTCDate() >= 3) {
@@ -230,7 +298,7 @@ async function stHome() {
     if (!g?.error && !g?.data) todo.push(['🔎', 'gold', `Isi angka Google Search ${new Date(pm + '-01').toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`, 'Rapor Bulanan · dari Search Console', '#m/rapor', 'Isi']);
   }
   const el = document.getElementById('st-todo'); if (!el) return;
-  el.innerHTML = todo.length ? todo.map(([ic, c, t, s, href, b]) => `<div class="st-row"><span class="st-ic ${c}">${ic}</span><div class="tx"><b>${t}</b><small>${s}</small></div><a class="st-btn" href="${href}">${b}</a></div>`).join('')
+  el.innerHTML = todo.length ? todo.map(([ic, c, t, s, href, b]) => `<div class="st-row"><span class="st-ic ${c}">${ic}</span><div class="tx"><b>${t}</b><small>${s}</small></div><a class="st-btn" href="${href}">${b} ›</a></div>`).join('')
     : '<p class="st-empty">✅ Semua beres — tidak ada yang perlu ditindaklanjuti.</p>';
   stRefreshNavBadge();
 }
@@ -284,6 +352,10 @@ function stProdukRows() {
   }).join('') || '<tr><td colspan="6" class="st-empty">Tidak ada produk yang cocok.</td></tr>';
   document.getElementById('st-pfoot').textContent = `${rows.length} produk · Simpan = tayang di situs ±2–3 menit (kartu WA & halaman Google ikut diperbarui). Hapus produk: minta lewat Claude.`;
 }
+function stCeFocus(sec) {   // pensil CAI Hub → langsung ke bagian form (#produk/<id>/foto|harga|spek|nama)
+  const no = { nama: '02', harga: '03', spek: '04', foto: '05', video: '06' }[sec]; if (!no) return;
+  setTimeout(() => { const el = [...document.querySelectorAll('#ce-form .kc-sec')].find(x => x.textContent.trim().startsWith(no)); if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); el.classList.add('kc-flash'); setTimeout(() => el.classList.remove('kc-flash'), 2600); }, 350);
+}
 function studioRefresh() { if ((location.hash || '').startsWith('#produk')) stProdukRows(); }   // dipanggil js/catedit.js setelah menyimpan
 
 // ── NEWS ──
@@ -309,7 +381,7 @@ function stNewsRows() {
 let nf = null;
 async function stNewsEdit(id) {
   let it = null;
-  if (id) { try { await stLoadNews(); it = stCache.news.find(n => n.id === id) || (await stLoadNews(true)).find(n => n.id === id); } catch (e) {} if (!it) { showToast('Berita tidak ditemukan.'); location.hash = '#news'; return; } }
+  if (id) { try { await stLoadNews(); it = stCache.news.find(n => n.id === id) || (await stLoadNews(true)).find(n => n.id === id); } catch (e) {} if (!it) { showToast('Berita tidak ditemukan.'); stGo('#news'); return; } }
   nf = { id: it?.id || null, title: it?.title || '', summary: it?.summary || '', body: it?.body || '', category: it?.category || 'Product', image: it?.image || '', file: null, preview: '',
     link_url: it?.link_url || '', link_label: it?.link_label || '', post_date: it?.post_date || todayWIB(), published: it ? !!it.published : false, wasPub: !!it?.published, notify: true, busy: false };
   const extra = it && ((it.projects || []).length || (it.photos || []).length);
@@ -333,14 +405,15 @@ async function stNewsEdit(id) {
       <label class="st-fl">Teks tombol<input class="st-in" id="nf-lab" placeholder="mis. Lihat Produk" value="${esc(nf.link_label)}" oninput="stNf()"></label>
       <label class="st-ck" id="nf-notif"><input type="checkbox" checked onchange="nf.notify=this.checked"> Kirim notifikasi 📰 ke HP pengunjung saat pertama tayang</label>
     </div>
-    <div class="st-card st-pad"><div class="st-fl" style="margin:0 0 12px">Pratinjau di Dashboard (HP)</div><div class="st-phone" id="nf-prev"></div></div></div></div>`);
-  stNfPaint();
+    <div class="st-card st-pad"><div class="st-pvh"><b>👁 Pratinjau CAI Hub</b><div class="st-seg sm" id="nf-pvs"><button onclick="stNfPv('lap')">Laptop</button><button class="on" onclick="stNfPv('hp')">HP</button></div></div><div class="st-phone" id="nf-prev"></div><p class="st-note">Kotak headline Dashboard — ikut berubah saat Anda mengetik.</p></div></div></div>`);
+  stNfPaint(); stBakOffer(it?.updated_at);
 }
 function stNf() {
   const v = id => document.getElementById(id)?.value ?? '';
   Object.assign(nf, { title: v('nf-title'), summary: v('nf-summary'), body: v('nf-body'), post_date: v('nf-date'), category: v('nf-cat'), link_url: v('nf-link'), link_label: v('nf-lab') });
   stNfPrev();
 }
+function stNfPv(m) { const el = document.getElementById('nf-prev'); if (!el) return; el.className = m === 'lap' ? 'st-phone lap' : 'st-phone'; document.querySelectorAll('#nf-pvs button').forEach((b, i) => b.classList.toggle('on', i === (m === 'lap' ? 0 : 1))); }
 function stNfPub(on) { nf.published = on; stNfPaint(); }
 function stNfPaint() {
   document.querySelectorAll('#nf-pub button').forEach((b, i) => b.classList.toggle('on', i === (nf.published ? 1 : 0)));
@@ -380,7 +453,7 @@ async function stNewsSave() {
     const oldPath = old && String(old).split('#')[0];
     if (oldPath && oldPath !== String(image || '').split('#')[0] && /^news\//.test(oldPath)) supabase.storage.from('showcase').remove([oldPath]).catch(() => {});
     showToast(data.published ? (nf.wasPub ? '✓ Berita diperbarui' : '🚀 Berita diterbitkan') : '✓ Draf disimpan');
-    await stLoadNews(true); nf = null; location.hash = '#news';
+    await stLoadNews(true); nf = null; stGo('#news', true);
   } catch (e) {
     if (uploaded) supabase.storage.from('showcase').remove([uploaded]).catch(() => {});
     nf.busy = false; btn.disabled = false; stNfPaint(); showToast('⚠ Gagal menyimpan: ' + (e.message || e), 8000);
@@ -395,7 +468,7 @@ async function stNewsDel() {
   if (p && /^news\//.test(p)) supabase.storage.from('showcase').remove([p]).catch(() => {});
   const ph = (it.photos || []).map(x => x.path).filter(x => /^news\//.test(x || ''));
   if (ph.length) supabase.storage.from('showcase').remove(ph).catch(() => {});
-  showToast('🗑 Berita dihapus'); await stLoadNews(true); location.hash = '#news';
+  showToast('🗑 Berita dihapus'); await stLoadNews(true); stGo('#news', true);
 }
 
 // ── CONCERTO WAY (tahap 2, 18 Nov 2026) — sama dengan form portal js/cway.js; pengenal teks WA = js/cw-parse.js ──
@@ -455,7 +528,7 @@ function cwDefSched() {   // bawaan jadwal: sehari setelah Day terjadwal terakhi
 async function stCwEdit(id) {
   try { await stLoadCw(); } catch (e) { return stPage(`<p class="st-empty">⚠ ${esc(e.message)}</p>`); }
   const it = id ? stCache.cw.find(x => x.id === id) : null;
-  if (id && !it) { showToast('Postingan tidak ditemukan.'); location.hash = '#cway'; return; }
+  if (id && !it) { showToast('Postingan tidak ditemukan.'); stGo('#cway'); return; }
   const d = cwDefSched();
   const mode = !it ? 'at' : !it.published ? 'draft' : cwDueS(it) ? 'now' : 'at';
   const w = it?.publish_at && !cwDueS(it) ? new Date(Date.parse(it.publish_at) + 7 * 36e5).toISOString() : null;
@@ -479,7 +552,7 @@ async function stCwEdit(id) {
       <div id="cf-sched"></div><p class="st-note" id="cf-snote"></p>
     </div>
     <div class="st-card st-pad"><div class="st-fl" style="margin:0 0 12px">Pratinjau untuk partner</div><div class="st-cwprev" id="cf-prev"></div></div></div></div>`);
-  stCfPaint();
+  stCfPaint(); stBakOffer(it?.updated_at);
   if (!it) setTimeout(() => document.getElementById('cf-body')?.focus(), 50);
 }
 function stCfBody(v) {
@@ -533,7 +606,7 @@ async function stCwSave() {
     const { data, error } = await q; if (error) throw error;
     if (data.published && cwDueS(data) && !cf.wasLive) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'cway', id: data.id } }).catch(() => {});
     showToast(future ? `⏰ Dijadwalkan — tayang ${cwWhenS(iso)}` : !row.published ? '✓ Draf disimpan' : cf.wasLive ? '✓ Concerto Way diperbarui' : '🚀 Concerto Way diterbitkan', 6000);
-    await stLoadCw(true); stCache.sched = null; cf = null; location.hash = '#cway';
+    await stLoadCw(true); stCache.sched = null; cf = null; stGo('#cway', true);
   } catch (e) { cf.busy = false; btn.disabled = false; stCfNote(); showToast('⚠ Gagal menyimpan: ' + (e.message || e), 8000); }
 }
 async function stCwDel() {
@@ -541,7 +614,7 @@ async function stCwDel() {
   if (!confirm(`Hapus Concerto Way ${it.day != null ? 'Day ' + it.day + ' — ' : ''}"${it.title}"?\n\nPostingan hilang dari portal untuk semua partner.`)) return;
   const { error } = await supabase.from('concerto_way').delete().eq('id', it.id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
-  showToast('🗑 Postingan dihapus'); await stLoadCw(true); stCache.sched = null; cf = null; location.hash = '#cway';
+  showToast('🗑 Postingan dihapus'); await stLoadCw(true); stCache.sched = null; cf = null; stGo('#cway', true);
 }
 function stCwShare() {
   const it = (stCache.cw || []).find(x => x.id === cf?.id); if (!it) return;
@@ -735,7 +808,7 @@ async function stAcadSaveNew() {
     const sch = added.filter(a => a.at);
     if (!sch.length) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'acad', id: added.map(a => a.no) } }).catch(() => {});
     showToast(sch.length ? `⏰ ${added.length} materi dijadwalkan — mulai ${cwWhenS(sch[0].at)}` : `🚀 ${added.length} materi diterbitkan`, 6000);
-    af.items.forEach(x => URL.revokeObjectURL(x.url)); af = null; location.hash = '#academy';
+    af.items.forEach(x => URL.revokeObjectURL(x.url)); af = null; stGo('#academy', true);
   } catch (e) {
     if (up.length) store.remove(up).catch(() => {});
     af.busy = false; stAfSched(); showToast('⚠ Gagal menyimpan: ' + (e.message || e), 8000);
@@ -822,7 +895,7 @@ let gf = null;
 async function stGlEdit(id) {
   try { await stLoadGl(); } catch (e) { return stPage(`<p class="st-empty">⚠ ${esc(e.message)}</p>`); }
   const it = id ? stCache.gl.find(x => x.id === id) : null;
-  if (id && !it) { showToast('Instalasi tidak ditemukan.'); location.hash = '#galeri'; return; }
+  if (id && !it) { showToast('Instalasi tidak ditemukan.'); stGo('#galeri'); return; }
   const tom = new Date(Date.parse(todayWIB() + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
   const w = it && glSch(it) ? new Date(Date.parse(it.publish_at) + 7 * 36e5).toISOString() : null;
   gf = { id: it?.id || null, car_make: it?.car_make || '', car_model: it?.car_model || '', car_year: it?.car_year || '', body: it?.body || '', dealer: it?.dealer || '', city: it?.city || '', note: it?.note || '',
@@ -970,7 +1043,7 @@ async function stGlSave() {
     if (goLive && row.notify) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'gallery', id } }).catch(() => {});
     showToast(gf.mode === 'sched' ? `⏰ Dijadwalkan tayang ${cwWhenS(iso)}` : goLive ? (gf.pend ? '✓ Kiriman disetujui & tayang' : '🚀 Instalasi tayang') + (row.notify ? ' — notifikasi 🚗 dikirim' : '') : '✓ Instalasi disimpan', 6000);
     gf.photos.forEach(p => p.blob && URL.revokeObjectURL(p.url)); gf = null; stCache.sched = null;
-    await stLoadGl(true); location.hash = '#galeri';
+    await stLoadGl(true); stGo('#galeri', true);
   } catch (e) {
     const m = String(e.message || e);
     if (up.length) store.remove(up).catch(() => {});
@@ -993,7 +1066,7 @@ async function stGlDelete(id, reject) {
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 6000);
   const paths = (it.photos || []).map(p => p.path).filter(Boolean); if (paths.length) supabase.storage.from('showcase').remove(paths).catch(() => {});
   showToast(reject ? '✓ Kiriman ditolak & dihapus' : '🗑 Instalasi dihapus'); gf = null; stCache.sched = null;
-  await stLoadGl(true); if (location.hash === '#galeri') stGlPaint(); else location.hash = '#galeri';
+  await stLoadGl(true); if (location.hash === '#galeri') stGlPaint(); else stGo('#galeri', true);
 }
 async function stGlCm(id) {
   const el = document.getElementById('gf-cm'); if (!el) return;
@@ -1194,7 +1267,7 @@ async function stGuSave() {
   if (live.length) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'guide', id: live } }).catch(() => {});
   if (failed.length) { gu.busy = false; gu.items = gu.items.filter(x => failed.some(f => f.startsWith(x.title + ':'))); stGuList(); stGuSched(); return showToast(`${ok ? `✓ ${ok} PDF tersimpan. ` : ''}Gagal: ${failed.join(' | ')}`, 12000); }
   showToast(sched ? `⏰ ${ok} PDF dijadwalkan — mulai ${cwWhenS(guAt(0))}` : `🚀 ${ok} PDF tayang di "${g.title}"`, 6000);
-  gu = null; stCache.sched = null; location.hash = '#guides';
+  gu = null; stCache.sched = null; stGo('#guides', true);
 }
 
 // ── Menu portal yang disematkan di Studio (tahap 2b, 18 Nov 2026 — cara A): /?studio=<menu>&embed=1 dalam iframe ──
@@ -1213,7 +1286,7 @@ function stEmbed(k) {
 function stSearch(v) {
   const q = v.trim(); if (!q) return;
   if (location.hash.startsWith('#news')) { const i = document.getElementById('st-nq'); if (i) { i.value = q; stNewsRows(); } return; }
-  stPQ = q; if (!location.hash.startsWith('#produk')) location.hash = '#produk'; else stProdukPaint();
+  stPQ = q; if (!location.hash.startsWith('#produk')) stGo('#produk'); else stProdukPaint();
 }
 
 stInit();
