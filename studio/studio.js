@@ -1301,3 +1301,17 @@ function stSearch(v) {
 }
 
 addEventListener('DOMContentLoaded', stInit);   // setelah studio-admin.js & catedit.js termuat
+// Versi baru Studio (19 Nov 2026 — laporan pemilik: browser masih memakai Studio lama yang tersimpan): bandingkan ?b= halaman
+// di server dengan yang sedang dipakai; berbeda → muat ulang (ditunda selama ada ketikan belum disimpan).
+const ST_BUILD = (document.querySelector('script[src*="studio/studio.js?b="]')?.getAttribute('src') || '').split('?b=')[1] || '';
+async function stCheckBuild() {
+  if (!ST_BUILD) return;
+  try {
+    const t = await (await fetch(location.pathname + '?build=' + Date.now(), { cache: 'no-store' })).text();
+    const b = (t.match(/studio\/studio\.js\?b=([^"']+)/) || [])[1];
+    if (b && b !== ST_BUILD) { if (stDirty) { showToast?.('Versi baru Studio tersedia — simpan dulu, lalu halaman dimuat ulang.'); return; } location.reload(); }
+  } catch (e) {}
+}
+addEventListener('load', () => setTimeout(stCheckBuild, 1500));
+setInterval(stCheckBuild, 3 * 60e3);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) stCheckBuild(); });
