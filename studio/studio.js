@@ -49,7 +49,7 @@ function stTouch() {}
 const ST_NAV = [
   { id: 'home', i: '◧', t: 'Beranda' }, { id: 'jadwal', i: '⏰', t: 'Jadwal tayang' },
   { g: 'Konten' }, { id: 'news', i: '📰', t: 'News' },
-  { href: '/?studio=cway', i: '☕', t: 'Concerto Way' }, { href: '/?studio=academy', i: '🎓', t: 'Academy' },
+  { id: 'cway', i: '☕', t: 'Concerto Way' }, { href: '/?studio=academy', i: '🎓', t: 'Academy' },
   { href: '/?studio=galeri', i: '🚗', t: 'Galeri Instalasi' }, { href: '/?studio=guides', i: '📘', t: 'Panduan Partner' },
   { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { href: '/?studio=paket', i: '📦', t: 'Paket Audio' }, { href: '/?studio=stock', i: '📊', t: 'Stok' },
   { g: 'Partner' }, { href: '/?studio=partner', i: '🏪', t: 'Enthusiast Partner' }, { href: '/?studio=dealers', i: '🔑', t: 'Akun & Kode Akses' },
@@ -65,7 +65,7 @@ function stNewMenu(e) {
   e.stopPropagation();
   const m = document.getElementById('st-newmenu');
   m.innerHTML = `<a href="#news/new">📰 Berita</a><a href="#" onclick="ceOpen(null);return false">🔊 Produk</a>
-    <a href="/?studio=cway" target="_blank">☕ Concerto Way ↗</a><a href="/?studio=academy" target="_blank">🎓 Materi Academy ↗</a><a href="/?studio=galeri" target="_blank">🚗 Instalasi Galeri ↗</a>`;
+    <a href="#cway/new">☕ Concerto Way</a><a href="/?studio=academy" target="_blank">🎓 Materi Academy ↗</a><a href="/?studio=galeri" target="_blank">🚗 Instalasi Galeri ↗</a>`;
   m.classList.toggle('on');
 }
 addEventListener('click', () => document.getElementById('st-newmenu')?.classList.remove('on'));
@@ -130,14 +130,16 @@ addEventListener('hashchange', () => stRoute());
 function stRoute() {
   if (!authUser || !isEditor()) return;
   const h = (location.hash || '#home').slice(1), [pg, arg] = h.split('/');
-  const cur = ['home', 'jadwal', 'produk', 'news'].includes(pg) ? pg : 'home';
+  const cur = ST_PAGES.includes(pg) ? pg : 'home';
   document.getElementById('st-nav').innerHTML = stNavHtml(cur);
-  document.getElementById('st-bnav').innerHTML = [['home', '◧', 'Beranda'], ['jadwal', '⏰', 'Jadwal'], ['produk', '🔊', 'Produk'], ['news', '📰', 'News']]
+  document.getElementById('st-bnav').innerHTML = [['home', '◧', 'Beranda'], ['jadwal', '⏰', 'Jadwal'], ['cway', '☕', 'C. Way'], ['news', '📰', 'News']]
     .map(([id, i, t]) => `<a href="#${id}" class="${cur === id ? 'on' : ''}"><b>${i}</b>${t}</a>`).join('') + `<a href="#" onclick="stMenu(true);return false"><b>☰</b>Menu</a>`;
   document.querySelector('.st-main').scrollTo?.(0, 0); scrollTo(0, 0);
   if (cur === 'news' && arg) return stNewsEdit(arg === 'new' ? null : arg);
-  ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews })[cur]();
+  if (cur === 'cway' && arg) return stCwEdit(arg === 'new' ? null : arg);
+  ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway })[cur]();
 }
+const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway'];
 const stPage = html => { document.getElementById('st-page').innerHTML = html; };
 const stCache = {};
 
@@ -153,7 +155,7 @@ async function stLoadSched(force) {
     supabase.from('product_push').select('id, product_id, title, publish_at').is('sent_at', null).order('publish_at'),
     fetch(pubUrl('academy/items.json') + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] })),
   ]);
-  (cw.data || []).forEach(x => out.push({ k: 'cway', at: Date.parse(x.publish_at), t: (x.day != null ? `Day ${x.day} · ` : '') + x.title, s: x.series || '' }));
+  (cw.data || []).forEach(x => out.push({ k: 'cway', at: Date.parse(x.publish_at), t: (x.day != null ? `Day ${x.day} · ` : '') + x.title, s: x.series || '', href: '#cway/' + x.id }));
   (gl.data || []).forEach(x => out.push({ k: 'gl', at: Date.parse(x.publish_at), t: `${x.car_make || ''} ${x.car_model || ''}`.trim(), s: x.dealer || '' }));
   (gd.data || []).forEach(x => out.push({ k: 'guide', at: Date.parse(x.publish_at), t: x.title, s: x.error ? '⚠ ' + x.error : '', err: !!x.error }));
   (pp.data || []).forEach(x => out.push({ k: 'prod', at: Date.parse(x.publish_at || now), t: x.title || x.product_id, s: x.product_id }));
@@ -171,8 +173,8 @@ function stSchedList(items, max) {
     const d = dkey(x.at);
     if (d !== day) { day = d; h += `<div class="st-day">${d === today ? 'Hari ini' : d === tom ? 'Besok' : d}</div>`; }
     const [ic, nm, col] = SK[x.k];
-    h += `<div class="st-ev"><span class="h">${wibDate(x.at, { hour: '2-digit', minute: '2-digit' }).replace(':', '.')}</span><span class="bar" style="background:${col}"></span>
-      <div class="tx"><b>${ic} ${esc(x.t)}</b><small>${nm}${x.s ? ' · ' + esc(x.s) : ''}</small></div>${x.err ? '<span class="st-pill red">Gagal</span>' : '<span class="st-pill ok">Siap</span>'}</div>`;
+    h += `<${x.href ? `a href="${x.href}"` : 'div'} class="st-ev"><span class="h">${wibDate(x.at, { hour: '2-digit', minute: '2-digit' }).replace(':', '.')}</span><span class="bar" style="background:${col}"></span>
+      <div class="tx"><b>${ic} ${esc(x.t)}</b><small>${nm}${x.s ? ' · ' + esc(x.s) : ''}</small></div>${x.err ? '<span class="st-pill red">Gagal</span>' : '<span class="st-pill ok">Siap</span>'}</${x.href ? 'a' : 'div'}>`;
   }
   return h;
 }
@@ -186,7 +188,7 @@ async function stHome() {
     <div class="st-g2"><div class="st-col"><div class="st-card"><div class="st-ch"><h3>📥 Perlu tindakan</h3></div><div id="st-todo"><p class="st-empty">⏳ Memeriksa…</p></div></div>
       <div class="st-card"><div class="st-ch"><h3>⚡ Buat cepat</h3></div><div class="st-quick">
         <a class="st-qb" href="#news/new"><b>📰</b>Berita</a><a class="st-qb" href="#" onclick="ceOpen(null);return false"><b>🔊</b>Produk</a>
-        <a class="st-qb" href="/?studio=cway" target="_blank"><b>☕</b>Concerto Way ↗</a><a class="st-qb" href="/?studio=academy" target="_blank"><b>🎓</b>Academy ↗</a>
+        <a class="st-qb" href="#cway/new"><b>☕</b>Concerto Way</a><a class="st-qb" href="/?studio=academy" target="_blank"><b>🎓</b>Academy ↗</a>
         <a class="st-qb" href="/?studio=galeri" target="_blank"><b>🚗</b>Galeri ↗</a><a class="st-qb" href="/?studio=stock" target="_blank"><b>📊</b>Stok ↗</a></div></div></div>
       <div class="st-card"><div class="st-ch"><h3>⏰ Jadwal tayang</h3><a href="#jadwal">Semua ›</a></div><div class="st-tl" id="st-hsched"><p class="st-empty">⏳ Memuat…</p></div></div></div>`);
   const [vis, int, sched, stock, pend] = await Promise.all([
@@ -214,7 +216,7 @@ async function stHome() {
   const todo = [];
   const last = stCache.cwLast, days = last ? Math.floor((Date.parse(last.publish_at) - Date.now()) / 864e5) : -1;
   if (days < 5) todo.push(['☕', 'red', last ? `Antrian Concerto Way habis ${days <= 0 ? 'hari ini' : days + ' hari lagi'}` : 'Antrian Concerto Way kosong',
-    last ? `Terjadwal terakhir: ${last.day != null ? 'Day ' + last.day : esc(last.title)} · ${wibDate(Date.parse(last.publish_at), { weekday: 'short', day: 'numeric', month: 'short' })}` : 'Belum ada Day yang dijadwalkan', '/?studio=cway', 'Tambah Day ↗']);
+    last ? `Terjadwal terakhir: ${last.day != null ? 'Day ' + last.day : esc(last.title)} · ${wibDate(Date.parse(last.publish_at), { weekday: 'short', day: 'numeric', month: 'short' })}` : 'Belum ada Day yang dijadwalkan', '#cway/new', '＋ Tambah Day']);
   if (pend) todo.push(['🚗', 'warn', `${pend} kiriman Galeri menunggu persetujuan`, 'Kiriman foto/video dari partner', '/?studio=galeri', 'Tinjau ↗']);
   sched.filter(x => x.err).forEach(x => todo.push(['📘', 'red', 'PDF Panduan gagal dipindah', esc(x.t), '/?studio=guides', 'Periksa ↗']));
   const d = new Date(Date.now() + 7 * 36e5);
@@ -228,7 +230,7 @@ async function stHome() {
     : '<p class="st-empty">✅ Semua beres — tidak ada yang perlu ditindaklanjuti.</p>';
   stRefreshNavBadge();
 }
-function stRefreshNavBadge() { const h = (location.hash || '#home').slice(1).split('/')[0]; document.getElementById('st-nav').innerHTML = stNavHtml(['home', 'jadwal', 'produk', 'news'].includes(h) ? h : 'home'); }
+function stRefreshNavBadge() { const h = (location.hash || '#home').slice(1).split('/')[0]; document.getElementById('st-nav').innerHTML = stNavHtml(ST_PAGES.includes(h) ? h : 'home'); }
 
 // ── JADWAL ──
 let stSchedK = 'all';
@@ -390,6 +392,157 @@ async function stNewsDel() {
   const ph = (it.photos || []).map(x => x.path).filter(x => /^news\//.test(x || ''));
   if (ph.length) supabase.storage.from('showcase').remove(ph).catch(() => {});
   showToast('🗑 Berita dihapus'); await stLoadNews(true); location.hash = '#news';
+}
+
+// ── CONCERTO WAY (tahap 2, 18 Nov 2026) — sama dengan form portal js/cway.js; pengenal teks WA = js/cw-parse.js ──
+const CW_LINK_DAYS = 60;   // samakan dengan CWAY_SHARE_DAYS di js/cway.js
+const cwWaHtml = s => esc(s).replace(/\*([^*\n]+)\*/g, '<b>$1</b>').replace(/(^|[\s(])_([^_\n]+)_(?=$|[\s).,!?])/g, '$1<i>$2</i>').replace(/~([^~\n]+)~/g, '<s>$1</s>');
+const cwDueS = x => !x.publish_at || Date.parse(x.publish_at) <= Date.now();
+const cwWhenS = iso => wibDate(Date.parse(iso), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':').replace(/(\d{2}):(\d{2})$/, '$1.$2') + ' WIB';
+const waEnc = t => encodeURIComponent(String(t).replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}][️‍\p{Extended_Pictographic}\p{Emoji_Modifier}]*[ \t]?/gu, ''));
+async function stLoadCw(force) {
+  if (stCache.cw && !force) return stCache.cw;
+  const { data, error } = await supabase.from('concerto_way').select('*');
+  if (error) throw error;
+  stCache.cw = (data || []).sort((a, b) => String(b.post_date).localeCompare(String(a.post_date)) || (b.day || 0) - (a.day || 0) || String(b.created_at).localeCompare(String(a.created_at)));
+  return stCache.cw;
+}
+const cwNextDay = () => Math.max(0, ...(stCache.cw || []).map(x => +x.day || 0)) + 1;
+let stCwF = 'all', stCwQ = '';
+async function stCway() {
+  stPage(`<div class="st-ph"><div><p>Konten · khusus partner</p><h1>Concerto Way</h1></div><div class="st-acts"><button class="st-btn" onclick="stLoadCw(true).then(stCwPaint)">↻</button><a class="st-btn gold" href="#cway/new" id="cw-addbtn">＋ Tambah Day</a></div></div>
+    <div id="cw-queue"></div>
+    <div class="st-card"><div class="st-filters" id="cw-f"></div><div id="cw-list"><p class="st-empty">⏳ Memuat…</p></div></div>`);
+  try { await stLoadCw(true); stCwPaint(); } catch (e) { document.getElementById('cw-list').innerHTML = `<p class="st-empty">⚠ ${esc(e.message)}</p>`; }
+}
+function stCwStatus(x) {
+  if (!x.published) return '<span class="st-pill mu">Draf</span>';
+  if (!cwDueS(x)) return `<span class="st-pill gold">⏰ ${esc(cwWhenS(x.publish_at))}</span>`;
+  return '<span class="st-pill ok">Tayang</span>';
+}
+function stCwPaint() {
+  const all = stCache.cw || [], el = document.getElementById('cw-list'); if (!el) return;
+  const add = document.getElementById('cw-addbtn'); if (add) add.textContent = `＋ Tambah Day ${cwNextDay()}`;
+  const sched = all.filter(x => x.published && !cwDueS(x)).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at));
+  const last = sched[sched.length - 1], days = last ? Math.floor((Date.parse(last.publish_at) - Date.now()) / 864e5) : -1;
+  document.getElementById('cw-queue').innerHTML = `<div class="st-card st-cwq${days < 5 ? ' warn' : ''}"><div><b>⏰ Antrian tayang: ${sched.length} Day</b><small>${last ? `Terjadwal sampai ${esc(cwWhenS(last.publish_at))}${days < 5 ? ' — tambah Day agar partner tidak kosong' : ''}` : 'Belum ada Day yang dijadwalkan'}</small></div>
+    <div class="st-cwq-days">${sched.slice(0, 8).map(x => `<a href="#cway/${x.id}" class="st-cwq-d"><b>${x.day ?? '—'}</b><small>${wibDate(Date.parse(x.publish_at), { weekday: 'short', day: 'numeric' })}</small></a>`).join('')}</div></div>`;
+  const cnt = { all: all.length, live: all.filter(x => x.published && cwDueS(x)).length, sched: sched.length, draft: all.filter(x => !x.published).length };
+  document.getElementById('cw-f').innerHTML = [['all', 'Semua'], ['live', 'Tayang'], ['sched', '⏰ Terjadwal'], ['draft', 'Draf']]
+    .map(([k, t]) => `<button class="st-chip${stCwF === k ? ' on' : ''}" onclick="stCwF='${k}';stCwPaint()">${t} ${cnt[k]}</button>`).join('') +
+    `<label class="st-search sm"><span>🔍</span><input placeholder="Cari judul / seri / Day…" value="${esc(stCwQ)}" oninput="stCwQ=this.value;stCwRows()"></label>`;
+  stCwRows();
+}
+function stCwRows() {
+  const el = document.getElementById('cw-list'); if (!el) return;
+  const q = stCwQ.trim().toLowerCase();
+  const rows = (stCache.cw || []).filter(x => (stCwF === 'all' || (stCwF === 'live' ? x.published && cwDueS(x) : stCwF === 'sched' ? x.published && !cwDueS(x) : !x.published))
+    && (!q || `${x.title} ${x.series || ''} day ${x.day ?? ''}`.toLowerCase().includes(q)));
+  el.innerHTML = rows.map(x => `<a class="st-nrow" href="#cway/${x.id}"><span class="st-cwday"><small>DAY</small>${x.day ?? '—'}</span>
+    <div class="tx"><b>${esc(x.title)}</b><small>${esc(x.series || '—')} · ${new Date(x.post_date + 'T12:00:00+07:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div>
+    ${stCwStatus(x)}<span class="st-chev">›</span></a>`).join('') || '<p class="st-empty">Tidak ada postingan.</p>';
+}
+let cf = null;
+function cwDefSched() {   // bawaan jadwal: sehari setelah Day terjadwal terakhir (atau besok) pukul 09.00 WIB
+  const sched = (stCache.cw || []).filter(x => x.published && !cwDueS(x)).map(x => Date.parse(x.publish_at));
+  const base = sched.length ? Math.max(...sched) + 864e5 : Date.now() + 864e5;
+  return { sd: new Date(base + 7 * 36e5).toISOString().slice(0, 10), st: '09:00' };
+}
+async function stCwEdit(id) {
+  try { await stLoadCw(); } catch (e) { return stPage(`<p class="st-empty">⚠ ${esc(e.message)}</p>`); }
+  const it = id ? stCache.cw.find(x => x.id === id) : null;
+  if (id && !it) { showToast('Postingan tidak ditemukan.'); location.hash = '#cway'; return; }
+  const d = cwDefSched();
+  const mode = !it ? 'at' : !it.published ? 'draft' : cwDueS(it) ? 'now' : 'at';
+  const w = it?.publish_at && !cwDueS(it) ? new Date(Date.parse(it.publish_at) + 7 * 36e5).toISOString() : null;
+  cf = { id: it?.id || null, body: it?.body || '', day: it?.day ?? (it ? '' : cwNextDay()), series: it?.series || '', title: it?.title || '', subtitle: it?.subtitle || '',
+    post_date: it?.post_date || todayWIB(), mode, sd: w ? w.slice(0, 10) : d.sd, st: w ? w.slice(11, 16) : d.st,
+    wasLive: !!(it && it.published && cwDueS(it)), touched: it ? { day: 1, series: 1, title: 1, subtitle: 1 } : {}, busy: false };
+  stPage(`<div class="st-ph"><div><p><a href="#cway">Concerto Way</a> › ${it ? 'Edit' : 'Baru'}</p><h1>${it ? `Edit Day ${esc(it.day ?? '')}` : 'Tambah Concerto Way'}</h1></div>
+      <div class="st-acts">${it ? `<button class="st-btn red" onclick="stCwDel()">🗑</button><button class="st-btn" onclick="stCwShare()">💬 Bagikan ke WA</button><a class="st-btn" href="/?cw=${it.id}" target="_blank" rel="noopener">↗ Lihat</a>` : ''}<button class="st-btn pri" id="cf-save" onclick="stCwSave()">💾 Simpan</button></div></div>
+    <div class="st-ed"><div class="st-card st-pad">
+      <label class="st-fl" style="margin-top:0">1 · Tempel teks persis seperti yang dikirim ke grup WA
+        <textarea class="st-in st-body st-cwbody" id="cf-body" placeholder="CONCERTO WAY&#10;DAY 19&#10;&#10;JUAL: …&#10;&#10;Judul…" oninput="stCfBody(this.value)">${esc(cf.body)}</textarea></label>
+      <p class="st-note" style="margin-top:8px">Day, seri, judul, <b>Resume hari ini</b> &amp; <b>Tugas Hari Ini</b> dikenali otomatis. Format WA *tebal* dan _miring_ ikut terbaca.</p>
+      <div class="st-g2b">
+        <label class="st-fl">Day<input class="st-in" type="number" min="0" id="cf-day" value="${esc(cf.day)}" oninput="stCfSet('day',this.value)"></label>
+        <label class="st-fl">Seri<input class="st-in" id="cf-series" value="${esc(cf.series)}" placeholder="mis. BASIC: Kalau Saya Jadi Customer" oninput="stCfSet('series',this.value)"></label></div>
+      <label class="st-fl">Judul<input class="st-in" id="cf-title" value="${esc(cf.title)}" oninput="stCfSet('title',this.value)"></label>
+      <label class="st-fl">Subjudul<input class="st-in" id="cf-subtitle" value="${esc(cf.subtitle)}" oninput="stCfSet('subtitle',this.value)"></label>
+    </div>
+    <div class="st-col"><div class="st-card st-pad">
+      <div class="st-fl" style="margin-top:0">Tayang<div class="st-seg" id="cf-mode"><button onclick="stCfMode('draft')">Draf</button><button onclick="stCfMode('now')">Sekarang</button><button onclick="stCfMode('at')">⏰ Jadwalkan</button></div></div>
+      <div id="cf-sched"></div><p class="st-note" id="cf-snote"></p>
+    </div>
+    <div class="st-card st-pad"><div class="st-fl" style="margin:0 0 12px">Pratinjau untuk partner</div><div class="st-cwprev" id="cf-prev"></div></div></div></div>`);
+  stCfPaint();
+  if (!it) setTimeout(() => document.getElementById('cf-body')?.focus(), 50);
+}
+function stCfBody(v) {
+  cf.body = v; const p = cwParse(v);
+  for (const k of ['day', 'series', 'title', 'subtitle']) if (!cf.touched[k]) { cf[k] = p[k] ?? (k === 'day' ? cf.day : ''); const el = document.getElementById('cf-' + k); if (el) el.value = cf[k] ?? ''; }
+  stCfPrev();
+}
+function stCfSet(k, v) { cf[k] = v; cf.touched[k] = 1; stCfPrev(); }
+function stCfMode(m) { cf.mode = m; stCfPaint(); }
+const cfIso = () => cf.mode === 'at' && cf.sd && cf.st ? new Date(`${cf.sd}T${cf.st}:00+07:00`).toISOString() : null;
+function stCfPaint() {
+  document.querySelectorAll('#cf-mode button').forEach((b, i) => b.classList.toggle('on', ['draft', 'now', 'at'][i] === cf.mode));
+  document.getElementById('cf-sched').innerHTML = cf.mode === 'at'
+    ? `<div class="st-g2b"><label class="st-fl">Tanggal<input class="st-in" type="date" value="${esc(cf.sd)}" min="${todayWIB()}" oninput="cf.sd=this.value;stCfNote()"></label><label class="st-fl">Jam (WIB)<input class="st-in" type="time" step="300" value="${esc(cf.st)}" oninput="cf.st=this.value;stCfNote()"></label></div>`
+    : cf.mode === 'now' ? `<label class="st-fl">Tanggal postingan<input class="st-in" type="date" value="${esc(cf.post_date)}" oninput="cf.post_date=this.value"></label>` : '';
+  stCfNote(); stCfPrev();
+}
+function stCfNote() {
+  const el = document.getElementById('cf-snote'), btn = document.getElementById('cf-save'), iso = cfIso(), past = iso && Date.parse(iso) <= Date.now();
+  if (el) el.innerHTML = cf.mode === 'draft' ? 'Draf hanya terlihat oleh Editor.'
+    : cf.mode === 'now' ? (cf.wasLive ? 'Sudah tayang — perubahan langsung terlihat partner.' : 'Tayang untuk partner begitu disimpan + notifikasi ☕ ke HP partner.')
+    : past ? '⚠ Waktu ini sudah lewat — postingan langsung tayang saat disimpan.'
+    : `Otomatis tayang <b>${esc(cwWhenS(iso))}</b> + notifikasi ☕ ke HP partner. Sebelum itu terkunci untuk partner.`;
+  if (btn && !cf.busy) btn.textContent = cf.mode === 'draft' ? '💾 Simpan draf' : cf.mode === 'at' && !past ? '⏰ Simpan jadwal' : cf.wasLive ? '💾 Simpan' : '🚀 Terbitkan';
+}
+function stCfPrev() {
+  const el = document.getElementById('cf-prev'); if (!el) return;
+  const blocks = cwParse(cf.body).blocks.map(b => {
+    if (b.t === 'p') return `<p>${b.v.map(cwWaHtml).join('<br>')}</p>`;
+    if (b.t === 'close') return `<p class="close">${b.v.map(cwWaHtml).join('<br>')}</p>`;
+    if (b.t === 'src') return `<p class="src">${cwWaHtml(b.v)}</p>`;
+    if (b.t === 'stats') return `<div class="stats">${b.v.map(x => `<div><b>${esc(x.n)}</b>${cwWaHtml(x.v)}</div>`).join('')}</div>`;
+    if (b.t === 'resume') return `<div class="res"><small>📌 Resume hari ini</small>${cwWaHtml(b.v)}</div>`;
+    if (b.t === 'task') return `<div class="task"><small>✅ Tugas hari ini</small>${b.v.map(x => `<label><span></span>${cwWaHtml(x)}</label>`).join('')}</div>`;
+    return '';
+  }).join('');
+  el.innerHTML = `<div class="hd"><span class="b">☕ CONCERTO WAY</span>${cf.day !== '' && cf.day != null ? `<span class="d">DAY ${esc(cf.day)}</span>` : ''}</div>
+    ${cf.series ? `<div class="ser">${esc(cf.series)}</div>` : ''}<h4>${esc(cf.title || '(judul)')}</h4>${cf.subtitle ? `<p class="sub">${esc(cf.subtitle)}</p>` : ''}
+    <div class="bd">${blocks || '<p class="src">Isi postingan tampil di sini.</p>'}</div>`;
+}
+async function stCwSave() {
+  if (!cf || cf.busy) return;
+  if (!cf.body.trim()) return showToast('Tempel teks Concerto Way dulu.');
+  if (!String(cf.title).trim()) return showToast('Judul belum terisi.');
+  const iso = cfIso(), future = iso && Date.parse(iso) > Date.now();
+  const row = { body: cf.body.trim(), day: cf.day === '' || cf.day == null ? null : parseInt(cf.day, 10), series: String(cf.series).trim() || null, title: String(cf.title).trim(),
+    subtitle: String(cf.subtitle).trim() || null, post_date: future ? cf.sd : (cf.post_date || todayWIB()), published: cf.mode !== 'draft', publish_at: future ? iso : null, updated_at: new Date().toISOString() };
+  cf.busy = true; const btn = document.getElementById('cf-save'); btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
+  try {
+    const q = cf.id ? supabase.from('concerto_way').update(row).eq('id', cf.id).select().single() : supabase.from('concerto_way').insert(row).select().single();
+    const { data, error } = await q; if (error) throw error;
+    if (data.published && cwDueS(data) && !cf.wasLive) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'cway', id: data.id } }).catch(() => {});
+    showToast(future ? `⏰ Dijadwalkan — tayang ${cwWhenS(iso)}` : !row.published ? '✓ Draf disimpan' : cf.wasLive ? '✓ Concerto Way diperbarui' : '🚀 Concerto Way diterbitkan', 6000);
+    await stLoadCw(true); stCache.sched = null; cf = null; location.hash = '#cway';
+  } catch (e) { cf.busy = false; btn.disabled = false; stCfNote(); showToast('⚠ Gagal menyimpan: ' + (e.message || e), 8000); }
+}
+async function stCwDel() {
+  const it = (stCache.cw || []).find(x => x.id === cf?.id); if (!it) return;
+  if (!confirm(`Hapus Concerto Way ${it.day != null ? 'Day ' + it.day + ' — ' : ''}"${it.title}"?\n\nPostingan hilang dari portal untuk semua partner.`)) return;
+  const { error } = await supabase.from('concerto_way').delete().eq('id', it.id);
+  if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
+  showToast('🗑 Postingan dihapus'); await stLoadCw(true); stCache.sched = null; cf = null; location.hash = '#cway';
+}
+function stCwShare() {
+  const it = (stCache.cw || []).find(x => x.id === cf?.id); if (!it) return;
+  const d = +it.day, link = `https://hub.concerto.id/cway/${d >= 1 && d <= CW_LINK_DAYS && Number.isInteger(d) ? d + '/' : ''}?cw=${encodeURIComponent(it.id)}`;
+  window.open(`https://wa.me/?text=${waEnc(`Concerto Way${it.day != null ? ' — Day ' + it.day : ''}: ${it.title}\nKhusus partner CAI — buka di CAI Hub dengan Kode Akses:\n${link}`)}`, '_blank', 'noopener');
 }
 
 // ── Pencarian cepat (produk & berita) ──
