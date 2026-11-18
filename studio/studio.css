@@ -186,3 +186,33 @@ button{font:inherit;cursor:pointer}
 .st-afit .tx{flex:1;min-width:0}.st-afit small{display:block;font-size:12px;color:var(--mu);margin-bottom:4px}
 .st-num{display:inline-block;width:70px;padding:4px 8px;margin:0 4px}
 @media(max-width:860px){.st-acgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px}.st-acqt{width:110px}}
+/* Galeri Instalasi (tahap 4) */
+.st-glgrid .st-acc{color:inherit}.st-glgrid .st-acc:hover{border-color:var(--gold)}
+.st-glth{aspect-ratio:4/3}.st-glth img,.st-glth video{width:100%;height:100%;object-fit:cover;display:block}.st-glth>i{display:flex;height:100%;align-items:center;justify-content:center;font-size:34px;font-style:normal;opacity:.4}
+.st-glhof{position:absolute;right:8px;top:6px;font-size:18px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.st-glpend{margin-bottom:16px;background:var(--warnl);border-color:rgba(194,122,18,.35);color:#7A4C0B}
+.st-glchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.st-glchip{display:inline-flex;align-items:center;gap:6px;background:var(--goldl);color:#6E5221;border-radius:99px;padding:4px 6px 4px 11px;font-size:12.5px;font-weight:600}
+.st-glchip button{border:0;background:rgba(0,0,0,.08);border-radius:50%;width:18px;height:18px;font-size:10px;line-height:1}
+.st-drop.sm{padding:12px;margin-top:12px;flex:1}.st-drop.sm b{font-size:14px}.st-drop.sm small{font-size:11.5px}
+.st-glmed{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-top:14px}
+.st-glm{border:1px solid var(--bd);border-radius:11px;overflow:hidden;background:#fff;display:flex;flex-direction:column}.st-glm.wa{border-color:var(--ok);box-shadow:0 0 0 2px var(--okl)}
+.st-glmv{position:relative;aspect-ratio:4/3;background:var(--side)}.st-glmv img,.st-glmv video{width:100%;height:100%;object-fit:cover;display:block}.st-glmv video{object-fit:contain}
+.st-glmv .st-pill{position:absolute;left:6px;top:6px}.st-glmv .st-pill.r{left:auto;right:6px}
+.st-in.sm{padding:6px 8px;font-size:12.5px;border-radius:0;border-width:1px 0}
+.st-glma{display:flex;gap:4px;padding:6px}.st-glma button{flex:1;border:1px solid var(--bd);background:#fff;border-radius:7px;padding:5px 0;font-size:12px;font-weight:600;white-space:nowrap}
+.st-glma button.on{background:var(--okl);border-color:var(--ok);color:var(--ok)}.st-glma button:disabled{opacity:.35;cursor:default}
+@media(max-width:860px){.st-glmed{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.st-in.sm{font-size:16px}}
+.st-gle{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+.st-ckt{flex:1;min-width:0}.st-ck .st-ckt small{display:inline}#gf-notw{flex-wrap:nowrap}.st-glma button{overflow:hidden;text-overflow:ellipsis}
+.st-glmed>.st-empty{grid-column:1/-1}
+@media(max-width:860px){.st-glpr{flex-wrap:wrap}.st-glpr .tx{flex:1 1 calc(100% - 60px)}.st-glpr .st-btn{flex:1}.st-glpr .st-btn.red{flex:0 0 44px}}
+@media(max-width:860px){.st-glma{flex-wrap:wrap}.st-glma button{flex:1 0 30%}}
+/* Panduan Partner (tahap 5) */
+.st-gdsec{margin-bottom:16px}.st-gdsec .st-ch{flex-wrap:wrap}
+.st-gdth{aspect-ratio:4/3;background:linear-gradient(135deg,#1B2438,#3A4766)}.st-gdth>i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-style:normal;opacity:.5}
+.st-gdth img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0;transition:opacity .3s}.st-gdth img.on{opacity:1}
+.st-gdth .st-pill.r{left:auto;right:8px;top:auto;bottom:8px}
+.st-gdic{width:42px;height:56px;border-radius:6px;background:var(--goldl);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.st-aca button{white-space:nowrap}
+@media(max-width:860px){.st-gdsec .st-aca{flex-wrap:wrap}.st-gdsec .st-aca button{flex:1 0 40%}.st-gdsec .st-aca button:last-child{flex:1 0 40%}.st-glpr .st-acqt{width:auto;flex:1 1 100%}}

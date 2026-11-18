@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════
    CAI HUB STUDIO — panel kerja khusus Editor di /studio/ (18 Nov 2026, permintaan pemilik — pratinjau .mockup/studio/ disetujui).
-   Tahap 1: Beranda · Jadwal tayang · Katalog Produk (form js/catedit.js) · News. Tahap 2: Concerto Way. Menu lain = portal disematkan (stEmbed, #m/<menu>).
+   Tahap 1: Beranda · Jadwal tayang · Katalog Produk (form js/catedit.js) · News. Tahap 2: Concerto Way. Tahap 3: Academy. Tahap 4: Galeri Instalasi. Tahap 5: Panduan Partner. Menu lain = portal disematkan (stEmbed, #m/<menu>).
    Sesi login sama dengan portal (supabase-js menyimpan sesi per domain), jadi Editor yang sudah login di portal langsung masuk.
    Hanya role `editor`; akun lain melihat layar "Khusus Editor". Data & aturan sama dengan portal — hanya SRP.
 ══════════════════════════════════════════ */
@@ -50,7 +50,7 @@ const ST_NAV = [
   { id: 'home', i: '◧', t: 'Beranda' }, { id: 'jadwal', i: '⏰', t: 'Jadwal tayang' },
   { g: 'Konten' }, { id: 'news', i: '📰', t: 'News' },
   { id: 'cway', i: '☕', t: 'Concerto Way' }, { id: 'academy', i: '🎓', t: 'Academy' },
-  { m: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { m: 'guides', i: '📘', t: 'Panduan Partner' },
+  { id: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { id: 'guides', i: '📘', t: 'Panduan Partner' },
   { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { m: 'paket', i: '📦', t: 'Paket Audio' }, { m: 'stock', i: '📊', t: 'Stok' },
   { g: 'Partner' }, { m: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { m: 'dealers', i: '🔑', t: 'Akun & Kode Akses' },
   { g: 'Laporan' }, { m: 'visitors', i: '📈', t: 'Pengunjung & Minat' }, { m: 'rapor', i: '📊', t: 'Rapor Bulanan' }, { m: 'prapor', i: '📨', t: 'Laporan Partner' },
@@ -65,7 +65,7 @@ function stNewMenu(e) {
   e.stopPropagation();
   const m = document.getElementById('st-newmenu');
   m.innerHTML = `<a href="#news/new">📰 Berita</a><a href="#" onclick="ceOpen(null);return false">🔊 Produk</a>
-    <a href="#cway/new">☕ Concerto Way</a><a href="#academy/new">🎓 Materi Academy</a><a href="#m/galeri">🚗 Instalasi Galeri </a>`;
+    <a href="#cway/new">☕ Concerto Way</a><a href="#academy/new">🎓 Materi Academy</a><a href="#guides/new">📘 PDF Panduan</a><a href="#galeri/new">🚗 Instalasi Galeri</a>`;
   m.classList.toggle('on');
 }
 addEventListener('click', () => document.getElementById('st-newmenu')?.classList.remove('on'));
@@ -139,9 +139,11 @@ function stRoute() {
   if (cur === 'news' && arg) return stNewsEdit(arg === 'new' ? null : arg);
   if (cur === 'cway' && arg) return stCwEdit(arg === 'new' ? null : arg);
   if (cur === 'academy' && arg === 'new') return stAcadNew();
-  ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy })[cur]();
+  if (cur === 'galeri' && arg) return stGlEdit(arg === 'new' ? null : arg);
+  if (cur === 'guides' && arg === 'new') return stGdNew(h.split('/')[2]);
+  ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy, galeri: stGaleri, guides: stGuides })[cur]();
 }
-const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy'];
+const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides'];
 const stPage = html => { const p = document.getElementById('st-page'); p.classList.remove('emb'); p.innerHTML = html; };
 const stCache = {};
 
@@ -158,8 +160,8 @@ async function stLoadSched(force) {
     fetch(pubUrl('academy/items.json') + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] })),
   ]);
   (cw.data || []).forEach(x => out.push({ k: 'cway', at: Date.parse(x.publish_at), t: (x.day != null ? `Day ${x.day} · ` : '') + x.title, s: x.series || '', href: '#cway/' + x.id }));
-  (gl.data || []).forEach(x => out.push({ k: 'gl', at: Date.parse(x.publish_at), t: `${x.car_make || ''} ${x.car_model || ''}`.trim(), s: x.dealer || '' }));
-  (gd.data || []).forEach(x => out.push({ k: 'guide', at: Date.parse(x.publish_at), t: x.title, s: x.error ? '⚠ ' + x.error : '', err: !!x.error }));
+  (gl.data || []).forEach(x => out.push({ k: 'gl', at: Date.parse(x.publish_at), t: `${x.car_make || ''} ${x.car_model || ''}`.trim(), s: x.dealer || '', href: '#galeri/' + x.id }));
+  (gd.data || []).forEach(x => out.push({ k: 'guide', at: Date.parse(x.publish_at), t: x.title, s: x.error ? '⚠ ' + x.error : '', err: !!x.error, href: '#guides' }));
   (pp.data || []).forEach(x => out.push({ k: 'prod', at: Date.parse(x.publish_at || now), t: x.title || x.product_id, s: x.product_id }));
   (ac.items || []).filter(a => a.at && Date.parse(a.at) > Date.now()).forEach(a => out.push({ k: 'acad', at: Date.parse(a.at), t: `#${a.no} · ${a.title}`, s: a.series || '', href: '#academy' }));
   out.sort((a, b) => a.at - b.at);
@@ -191,14 +193,14 @@ async function stHome() {
       <div class="st-card"><div class="st-ch"><h3>⚡ Buat cepat</h3></div><div class="st-quick">
         <a class="st-qb" href="#news/new"><b>📰</b>Berita</a><a class="st-qb" href="#" onclick="ceOpen(null);return false"><b>🔊</b>Produk</a>
         <a class="st-qb" href="#cway/new"><b>☕</b>Concerto Way</a><a class="st-qb" href="#academy/new"><b>🎓</b>Academy</a>
-        <a class="st-qb" href="#m/galeri"><b>🚗</b>Galeri </a><a class="st-qb" href="#m/stock"><b>📊</b>Stok </a></div></div></div>
+        <a class="st-qb" href="#galeri/new"><b>🚗</b>Galeri</a><a class="st-qb" href="#m/stock"><b>📊</b>Stok </a></div></div></div>
       <div class="st-card"><div class="st-ch"><h3>⏰ Jadwal tayang</h3><a href="#jadwal">Semua ›</a></div><div class="st-tl" id="st-hsched"><p class="st-empty">⏳ Memuat…</p></div></div></div>`);
   const [vis, int, sched, stock, pend] = await Promise.all([
     supabase.rpc('site_visit_stats', { p_days: 7 }).then(r => r.error ? null : (typeof r.data === 'string' ? JSON.parse(r.data) : r.data)).catch(() => null),
     supabase.rpc('interest_stats', { p_days: 7 }).then(r => r.error ? null : (typeof r.data === 'string' ? JSON.parse(r.data) : r.data)).catch(() => null),
     stLoadSched(true).catch(() => []),
     supabase.from('stock').select('product_id, status, qty').then(r => r.data || []).catch(() => []),
-    supabase.from('showcase_installs').select('id', { count: 'exact', head: true }).eq('published', false).eq('source', 'dealer').then(r => r.count || 0).catch(() => 0),
+    supabase.from('showcase_installs').select('id', { count: 'exact', head: true }).eq('published', false).in('source', ['dealer', 'admin']).then(r => r.count || 0).catch(() => 0),
   ]);
   if (!document.getElementById('st-kpis')) return;
   const ids = new Set(PRODS().map(x => x.p.id));
@@ -219,8 +221,8 @@ async function stHome() {
   const last = stCache.cwLast, days = last ? Math.floor((Date.parse(last.publish_at) - Date.now()) / 864e5) : -1;
   if (days < 5) todo.push(['☕', 'red', last ? `Antrian Concerto Way habis ${days <= 0 ? 'hari ini' : days + ' hari lagi'}` : 'Antrian Concerto Way kosong',
     last ? `Terjadwal terakhir: ${last.day != null ? 'Day ' + last.day : esc(last.title)} · ${wibDate(Date.parse(last.publish_at), { weekday: 'short', day: 'numeric', month: 'short' })}` : 'Belum ada Day yang dijadwalkan', '#cway/new', '＋ Tambah Day']);
-  if (pend) todo.push(['🚗', 'warn', `${pend} kiriman Galeri menunggu persetujuan`, 'Kiriman foto/video dari partner', '#m/galeri', 'Tinjau']);
-  sched.filter(x => x.err).forEach(x => todo.push(['📘', 'red', 'PDF Panduan gagal dipindah', esc(x.t), '#m/guides', 'Periksa']));
+  if (pend) todo.push(['🚗', 'warn', `${pend} kiriman Galeri menunggu persetujuan`, 'Kiriman foto/video dari partner', '#galeri', 'Tinjau']);
+  sched.filter(x => x.err).forEach(x => todo.push(['📘', 'red', 'PDF Panduan gagal dipindah', esc(x.t), '#guides', 'Periksa']));
   const d = new Date(Date.now() + 7 * 36e5);
   if (d.getUTCDate() >= 3) {
     const pm = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1)).toISOString().slice(0, 7);
@@ -740,9 +742,464 @@ async function stAcadSaveNew() {
   }
 }
 
+// ── GALERI INSTALASI (tahap 4, 18 Nov 2026) — sama dengan portal js/showcase.js (saveGlItem/approveGlItem/deleteGlItem/glCmDel) ──
+// Tabel showcase_installs + Storage publik showcase/<id>/… (kiriman partner: pending/<id>/…). Posisi/zoom/putar foto & sampul loop tetap diatur di portal
+// (field pos/zoom/cover di item photos dipertahankan apa adanya). Logika ada di dua tempat — ubah keduanya bila aturan berubah.
+const GL_T = 'showcase_installs', GL_VMAX = 15;
+const GL_MAKES_S = ['Toyota', 'Honda', 'Mitsubishi', 'Suzuki', 'Daihatsu', 'Nissan', 'Mazda', 'Hyundai', 'Kia', 'Wuling', 'Chery', 'BYD', 'Isuzu', 'Subaru', 'Lexus', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Porsche', 'Mini', 'Volvo', 'Ford',
+  'Aion', 'Denza', 'Geely', 'GWM', 'Jaecoo', 'MG', 'Neta', 'Omoda', 'Polytron', 'Seres', 'Tesla', 'VinFast', 'Xpeng', 'Zeekr', 'Lainnya'];
+const GL_BODY_S = [['Bensin / Diesel', ['SUV', 'MPV', 'Sedan', 'Hatchback', 'Double Cabin', 'Coupe']],
+  ['Mobil Listrik & Hybrid', ['SUV Listrik (EV)', 'MPV Listrik (EV)', 'Sedan Listrik (EV)', 'Hatchback Listrik (EV)', 'Hybrid (HEV)', 'Plug-in Hybrid (PHEV)']], ['', ['Lainnya']]];
+const GL_AREA_S = [['Mobil', ['Tampak Luar', 'Interior', 'Dasbor', 'Pintu', 'Bagasi / Sub']], ['Speaker', ['Tweeter', 'Midrange', 'Midbass', 'Coaxial', 'Subwoofer', 'Box Subwoofer']],
+  ['Perangkat', ['Head Unit', 'DSP', 'Amplifier', 'Remote / Controller']], ['Kabel & Instalasi', ['Kabel RCA', 'Kabel Power', 'Kabel Speaker', 'Fuse / Distribution Block', 'Aki / Kapasitor', 'Peredam', 'Rak / Panel Custom', 'Wiring / Kerapian']], ['', ['Lainnya']]];
+const glVid = p => p?.type === 'video' || /\.(mp4|m4v|mov|webm)$/i.test(p?.path || '');
+const glPend = it => (it?.source === 'dealer' || it?.source === 'admin') && !it.published;
+const glSch = it => !!(it?.published && it.publish_at && Date.parse(it.publish_at) > Date.now());
+const glTit = it => [it.car_make, it.car_model].filter(Boolean).join(' ');
+const glMediaUrl = path => { const m = stCache.media?.[String(path || '').split('#')[0]]; return m?.f ? m.f.split('/').map(encodeURIComponent).join('/') : pubUrl(path); };   // salinan repo (hemat kuota) bila ada
+const glPos = p => { const m = String(p?.pos || '').match(/^(\d{1,3}) (\d{1,3})$/); return m ? `${m[1]}% ${m[2]}%` : '50% 50%'; };
+const glHof = id => (typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME : []).find(h => h.id === id);
+const glHofLabel = h => `${h.place >= 1 && h.place <= 3 ? ['🥇', '🥈', '🥉'][h.place - 1] + ' Juara ' + h.place : '🏆 ' + (h.award || 'Penghargaan')} · ${h.cls || ''} — ${h.car || '?'}${h.name ? ' (' + h.name + ')' : ''} · ${h.event} ${h.year}`;
+function glStatus(it) {
+  if (glPend(it)) return ['warn', '📥 Menunggu'];
+  if (!it.published) return ['mu', 'Draf'];
+  if (glSch(it)) return ['gold', '⏰ ' + cwWhenS(it.publish_at)];
+  return it.in_gallery === false ? ['blue', '🏪 Profil saja'] : ['ok', 'Tayang'];
+}
+async function stLoadGl(force) {
+  if (stCache.gl && !force) return stCache.gl;
+  const [r, mm, ad] = await Promise.all([
+    supabase.from(GL_T).select('*').order('sort', { ascending: true }).order('created_at', { ascending: false }),
+    stCache.media ? null : fetch('media/map.json?build=' + Date.now(), { cache: 'no-store' }).then(x => x.ok ? x.json() : null).catch(() => null),
+    stCache.partners ? null : supabase.from('auth_dealers').select('name, city, region, hidden').order('name').then(x => x.data || []).catch(() => []),
+  ]);
+  if (r.error) throw r.error;
+  if (mm) stCache.media = mm.files || {}; else stCache.media = stCache.media || {};
+  if (ad) stCache.partners = ad.filter(d => !d.hidden);
+  stCache.gl = r.data || [];
+  stCache.glIng = stCache.gl.some(x => 'in_gallery' in x);
+  supabase.rpc('gl_social', { p_ids: stCache.gl.map(x => x.id), p_vid: '' }).then(s => { if (s.error) return; stCache.glSoc = new Map((s.data || []).map(x => [x.id, x])); if (document.getElementById('gl-grid')) stGlGrid(); }, () => {});
+  return stCache.gl;
+}
+let stGlF = 'all', stGlQ = '';
+async function stGaleri() {
+  stPage(`<div class="st-ph"><div><p>Konten · publik</p><h1>Galeri Instalasi</h1></div><div class="st-acts"><button class="st-btn" onclick="stLoadGl(true).then(stGlPaint)">↻</button><a class="st-btn gold" href="#galeri/new">＋ Tambah instalasi</a></div></div>
+    <div id="gl-top"></div><div class="st-card"><div class="st-filters" id="gl-f"></div><div class="st-acgrid st-glgrid" id="gl-grid"><p class="st-empty">⏳ Memuat…</p></div></div>`);
+  try { await stLoadGl(true); stGlPaint(); } catch (e) { document.getElementById('gl-grid').innerHTML = `<p class="st-empty">⚠ ${esc(e.message)}</p>`; }
+}
+function stGlPaint() {
+  const all = stCache.gl || [], top = document.getElementById('gl-top'); if (!top) return;
+  const pend = all.filter(glPend), sched = all.filter(glSch).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at));
+  top.innerHTML = (pend.length ? `<div class="st-card st-acq"><div class="st-ch"><h3>📥 Kiriman menunggu persetujuan · ${pend.length}</h3></div>
+    ${pend.map(it => `<div class="st-row st-glpr"><span class="st-ic warn">🚗</span><div class="tx"><b>${esc(glTit(it))}${it.car_year ? ' ' + it.car_year : ''}</b><small>dari ${esc(it.submitter || it.dealer || 'partner')} · ${(it.photos || []).length} file${it.submitted_at ? ' · ' + wibDate(Date.parse(it.submitted_at), { day: 'numeric', month: 'short' }) : ''}</small></div>
+      <a class="st-btn sm" href="#galeri/${it.id}">✏️ Tinjau</a><button class="st-btn sm" onclick="stGlApprove('${it.id}')">✓ Setujui</button><button class="st-btn sm red" onclick="stGlDelete('${it.id}',true)">✕</button></div>`).join('')}</div>` : '') +
+    (sched.length ? `<div class="st-card st-acq"><div class="st-ch"><h3>⏰ Antrian tayang · ${sched.length} mobil</h3><span class="st-note" style="margin:0 0 0 auto">otomatis tayang pada jamnya + notifikasi 🚗</span></div>
+    ${sched.map(it => `<a class="st-row" href="#galeri/${it.id}"><span class="st-acqt">${esc(cwWhenS(it.publish_at))}</span><div class="tx"><b>${esc(glTit(it))}</b><small>${esc(it.dealer || '—')}</small></div><span class="st-chev">›</span></a>`).join('')}</div>` : '');
+  const live = all.filter(it => it.published && !glSch(it));
+  const cnt = { all: all.length, live: live.filter(it => it.in_gallery !== false).length, prof: live.filter(it => it.in_gallery === false).length, sched: sched.length, draft: all.filter(it => !it.published && !glPend(it)).length, hof: all.filter(it => it.hof_id).length };
+  document.getElementById('gl-f').innerHTML = [['all', 'Semua'], ['live', 'Tayang'], ['prof', '🏪 Profil saja'], ['sched', '⏰ Terjadwal'], ['draft', 'Draf'], ['hof', '🏆 Juara']].filter(([k]) => k === 'all' || cnt[k] || stGlF === k)
+    .map(([k, t]) => `<button class="st-chip${stGlF === k ? ' on' : ''}" onclick="stGlF='${k}';stGlPaint()">${t} ${cnt[k]}</button>`).join('') +
+    `<label class="st-search sm"><span>🔍</span><input placeholder="Cari mobil / partner / kota…" value="${esc(stGlQ)}" oninput="stGlQ=this.value;stGlGrid()"></label>`;
+  stGlGrid();
+}
+function stGlGrid() {
+  const el = document.getElementById('gl-grid'); if (!el) return;
+  const q = stGlQ.trim().toLowerCase(), S = stCache.glSoc;
+  const ok = it => stGlF === 'all' || (stGlF === 'live' ? it.published && !glSch(it) && it.in_gallery !== false : stGlF === 'prof' ? it.published && !glSch(it) && it.in_gallery === false
+    : stGlF === 'sched' ? glSch(it) : stGlF === 'draft' ? !it.published && !glPend(it) : !!it.hof_id);
+  const rows = (stCache.gl || []).filter(it => ok(it) && (!q || `${glTit(it)} ${it.car_year || ''} ${it.dealer || ''} ${it.city || ''}`.toLowerCase().includes(q)));
+  el.innerHTML = rows.map(it => {
+    const ph = (it.photos || []).find(p => !glVid(p)) || it.photos?.[0], nV = (it.photos || []).filter(glVid).length, nI = (it.photos || []).length - nV, [c, t] = glStatus(it), s = S?.get(it.id);
+    return `<a class="st-acc${glSch(it) || glPend(it) ? ' sched' : ''}" href="#galeri/${it.id}"><span class="st-acth st-glth">${ph ? (glVid(ph) ? `<video src="${esc(glMediaUrl(ph.path))}#t=0.5" muted playsinline preload="metadata" style="object-position:${glPos(ph)}"></video>` : `<img src="${esc(glMediaUrl(ph.path))}" alt="" loading="lazy" style="object-position:${glPos(ph)}">`) : '<i>🚗</i>'}
+      <span class="st-pill ${c}">${esc(t)}</span>${it.hof_id ? '<span class="st-glhof">🏆</span>' : ''}</span>
+      <div class="st-acb"><small>${esc(it.car_make || '')}${it.body ? ' · ' + esc(it.body) : ''}</small><b>${esc(it.car_model || '')}${it.car_year ? ' ' + it.car_year : ''}</b>
+      <div class="st-acm"><span>${esc(it.dealer || '—')}${it.city ? ' · ' + esc(it.city) : ''}</span></div>
+      <div class="st-acm"><span>${[nI ? '📷 ' + nI : '', nV ? '🎬 ' + nV : ''].filter(Boolean).join(' · ') || 'tanpa media'}</span>${s ? `<span>❤ ${s.likes} · 💬 ${s.comments}</span>` : ''}</div></div></a>`;
+  }).join('') || '<p class="st-empty">Tidak ada instalasi.</p>';
+}
+// ── Form tambah / edit ──
+let gf = null;
+async function stGlEdit(id) {
+  try { await stLoadGl(); } catch (e) { return stPage(`<p class="st-empty">⚠ ${esc(e.message)}</p>`); }
+  const it = id ? stCache.gl.find(x => x.id === id) : null;
+  if (id && !it) { showToast('Instalasi tidak ditemukan.'); location.hash = '#galeri'; return; }
+  const tom = new Date(Date.parse(todayWIB() + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
+  const w = it && glSch(it) ? new Date(Date.parse(it.publish_at) + 7 * 36e5).toISOString() : null;
+  gf = { id: it?.id || null, car_make: it?.car_make || '', car_model: it?.car_model || '', car_year: it?.car_year || '', body: it?.body || '', dealer: it?.dealer || '', city: it?.city || '', note: it?.note || '',
+    products: [...(it?.products || [])], photos: (it?.photos || []).map(p => ({ ...p, url: glMediaUrl(p.path) })), removed: [], hof_id: it?.hof_id || '', sort: it?.sort || 0,
+    in_gallery: it ? it.in_gallery !== false : true, notify: it ? it.notify !== false : true, pend: it ? glPend(it) : false,
+    mode: !it ? 'now' : w ? 'sched' : it.published ? 'now' : 'draft', sd: w ? w.slice(0, 10) : tom, st: w ? w.slice(11, 16) : '19:00',
+    wasLive: !!(it && it.published && !glPend(it) && !glSch(it)), busy: false };
+  const prodOpts = PRODS().map(x => `<option value="${esc(x.b.name + ' · ' + x.p.name)}"></option>`).join('');
+  const hofOpts = (typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME : []).map(h => `<option value="${esc(h.id)}"${gf.hof_id === h.id ? ' selected' : ''}>${esc(glHofLabel(h))}</option>`).join('');
+  stPage(`<div class="st-ph"><div><p><a href="#galeri">Galeri Instalasi</a> › ${it ? 'Edit' : 'Baru'}</p><h1>${it ? esc(glTit(it)) + (it.car_year ? ' ' + it.car_year : '') : 'Tambah instalasi'}</h1></div>
+      <div class="st-acts">${it ? `<button class="st-btn red" onclick="stGlDelete('${it.id}',${gf.pend})">${gf.pend ? '✕ Tolak' : '🗑'}</button>${!gf.pend && it.published && !glSch(it) ? `<a class="st-btn" href="/?gl=${it.id}" target="_blank" rel="noopener">↗ Lihat · atur posisi foto</a>` : ''}` : ''}<button class="st-btn pri" id="gf-save" onclick="stGlSave()">💾 Simpan</button></div></div>
+    ${gf.pend ? `<div class="st-card st-pad st-glpend">📥 <b>Kiriman dari ${esc(it.submitter || it.dealer || 'partner')}</b> — belum tampil. Periksa foto/video (plat nomor harus diburamkan), lalu pilih <b>Sekarang</b> atau <b>Jadwalkan</b> dan simpan untuk menyetujui.</div>` : ''}
+    <div class="st-ed"><div class="st-col"><div class="st-card st-pad">
+      <div class="st-g2b st-gle"><label class="st-fl" style="margin-top:0">Merek<select class="st-in" onchange="gf.car_make=this.value"><option value="">— Pilih merek —</option>${GL_MAKES_S.map(m => `<option${gf.car_make === m ? ' selected' : ''}>${m}</option>`).join('')}${gf.car_make && !GL_MAKES_S.includes(gf.car_make) ? `<option selected>${esc(gf.car_make)}</option>` : ''}</select></label>
+        <label class="st-fl" style="margin-top:0">Model<input class="st-in" value="${esc(gf.car_model)}" placeholder="mis. Fortuner GR" oninput="gf.car_model=this.value"></label></div>
+      <div class="st-g2b"><label class="st-fl">Tahun<input class="st-in" type="number" min="1980" max="2100" value="${esc(gf.car_year)}" oninput="gf.car_year=this.value"></label>
+        <label class="st-fl">Tipe<select class="st-in" onchange="gf.body=this.value"><option value="">—</option>${GL_BODY_S.map(([g, a]) => (g ? `<optgroup label="${g}">` : '') + a.map(b => `<option${gf.body === b ? ' selected' : ''}>${b}</option>`).join('') + (g ? '</optgroup>' : '')).join('')}${gf.body && !GL_BODY_S.some(g => g[1].includes(gf.body)) ? `<option selected>${esc(gf.body)}</option>` : ''}</select></label></div>
+      <div class="st-g2b st-gle"><label class="st-fl">Partner pemasang<input class="st-in" list="gf-dl" value="${esc(gf.dealer)}" placeholder="Nama partner resmi" oninput="stGfDealer(this.value)"><datalist id="gf-dl">${(stCache.partners || []).map(d => `<option value="${esc(d.name)}">${esc(d.city || '')}</option>`).join('')}</datalist></label>
+        <label class="st-fl">Kota<input class="st-in" id="gf-city" value="${esc(gf.city)}" oninput="gf.city=this.value"></label></div>
+      <label class="st-fl">Catatan <small>(opsional, tampil di detail)</small><textarea class="st-in" rows="2" oninput="gf.note=this.value">${esc(gf.note)}</textarea></label>
+      <label class="st-fl">Perangkat CAI yang dipasang<input class="st-in" list="gf-pl" placeholder="Ketik produk lalu Enter…" onchange="stGfProd(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();stGfProd(this)}"><datalist id="gf-pl">${prodOpts}</datalist></label>
+      <div class="st-glchips" id="gf-prods"></div>
+      <label class="st-fl">🏆 Prestasi Hall of Fame <small>(bila mobil ini juara)</small><select class="st-in" onchange="gf.hof_id=this.value"><option value="">— Bukan mobil juara —</option>${hofOpts}</select></label>
+    </div>
+    <div class="st-card st-pad"><div class="st-ch" style="padding:0;border:0"><h3>📷 Foto &amp; video</h3><span class="st-note" style="margin:0 0 0 auto" id="gf-cnt"></span></div>
+      <div class="st-row2"><label class="st-drop sm"><input type="file" accept="image/*" multiple hidden onchange="stGfPhotos(this)"><b>＋ Foto</b><small>diperkecil otomatis ≤1600 px</small></label>
+        <label class="st-drop sm"><input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple hidden onchange="stGfVideos(this)"><b>＋ Video</b><small>MP4 maks. ${GL_VMAX} MB · kompres dulu</small></label></div>
+      <div class="st-glmed" id="gf-media"></div>
+      <p class="st-note">Foto pertama = sampul kartu. <b>📲 WA</b> = sampul kartu pratinjau WhatsApp — pilih foto/detik video <b>tanpa plat nomor</b>. Geser posisi, zoom, putar foto &amp; sampul loop: buka di portal (↗ Lihat).</p></div></div>
+    <div class="st-col"><div class="st-card st-pad">
+      <div class="st-fl" style="margin-top:0">Tayang<div class="st-seg" id="gf-mode"><button onclick="stGfMode('draft')">Draf</button><button onclick="stGfMode('now')">Sekarang</button><button onclick="stGfMode('sched')">⏰ Jadwalkan</button></div></div>
+      <div id="gf-sched"></div><p class="st-note" id="gf-snote"></p>
+      <div class="st-fl">📍 Tampil di</div>
+      <label class="st-ck" style="margin-top:8px"><input type="checkbox" checked disabled><span class="st-ckt">🏪 Profil partner &amp; Contoh pemasangan di halaman produk</span></label>
+      <label class="st-ck" style="margin-top:8px"><input type="checkbox"${gf.in_gallery ? ' checked' : ''} onchange="gf.in_gallery=this.checked;stGfNote()"><span class="st-ckt">🚗 Galeri Instalasi <small class="st-mu" style="font-weight:400">— menu Galeri, Dashboard, Baru minggu ini</small></span></label>
+      <label class="st-ck" id="gf-notw"><input type="checkbox"${gf.notify ? ' checked' : ''} onchange="gf.notify=this.checked;stGfNote()"><span class="st-ckt">🔔 Kirim notifikasi “Instalasi baru”</span></label>
+      <label class="st-fl">Urutan <small>(kecil = lebih depan)</small><input class="st-in st-num" style="width:90px" type="number" value="${esc(gf.sort)}" oninput="gf.sort=this.value"></label>
+    </div>
+    ${it ? `<div class="st-card"><div class="st-ch"><h3>💬 Komentar</h3><span class="st-note" style="margin:0 0 0 auto" id="gf-likes"></span></div><div id="gf-cm"><p class="st-empty">⏳ Memuat…</p></div></div>` : ''}</div></div>`);
+  stGfProds(); stGfMedia(); stGfPaint();
+  if (it) stGlCm(it.id);
+}
+function stGfDealer(v) { gf.dealer = v; const d = (stCache.partners || []).find(x => x.name.toLowerCase() === v.trim().toLowerCase()); if (d && !gf.city) { gf.city = d.city || ''; const c = document.getElementById('gf-city'); if (c) c.value = gf.city; } }
+function stGfProd(inp) {
+  const v = inp.value.trim(); if (!v) return;
+  const x = PRODS().find(r => r.b.name + ' · ' + r.p.name === v || r.p.name.toLowerCase() === v.toLowerCase() || String(r.p.model || '').toLowerCase() === v.toLowerCase());
+  if (!x) return showToast('Produk tidak ditemukan — pilih dari daftar.');
+  if (!gf.products.includes(x.p.id)) gf.products.push(x.p.id); inp.value = ''; stGfProds();
+}
+function stGfProds() {
+  const el = document.getElementById('gf-prods'); if (!el) return;
+  el.innerHTML = gf.products.map((id, i) => { const x = PRODS().find(r => r.p.id === id); return `<span class="st-glchip">${esc(x ? x.b.name + ' · ' + x.p.name : id)}<button onclick="gf.products.splice(${i},1);stGfProds()" aria-label="Hapus">✕</button></span>`; }).join('') || '<span class="st-mu" style="font-size:12.5px">Belum ada produk.</span>';
+}
+async function stGfPhotos(input) {
+  const files = [...input.files]; input.value = '';
+  for (const f of files) { try { const blob = await glResize(f); gf.photos.push({ blob, url: URL.createObjectURL(blob), area: '' }); } catch (e) { showToast('⚠ ' + e.message); } }
+  stGfMedia();
+}
+function stGfVideos(input) {
+  const files = [...input.files]; input.value = '';
+  for (const f of files) {
+    if (!/^video\//.test(f.type) && !/\.(mp4|m4v|mov|webm)$/i.test(f.name)) { showToast('⚠ Bukan file video: ' + f.name); continue; }
+    const mb = f.size / 1048576;
+    if (mb > GL_VMAX) { showToast(`⚠ ${f.name} ${mb.toFixed(1)} MB — maksimal ${GL_VMAX} MB per video. Kompres dulu lalu unggah lagi.`, 7000); continue; }
+    gf.photos.push({ blob: f, video: true, url: URL.createObjectURL(f), area: '' });
+  }
+  stGfMedia();
+}
+function stGfMedia() {
+  const el = document.getElementById('gf-media'); if (!el) return;
+  const nV = gf.photos.filter(p => p.video || glVid(p)).length; document.getElementById('gf-cnt').textContent = `📷 ${gf.photos.length - nV} · 🎬 ${nV}`;
+  el.innerHTML = gf.photos.map((p, i) => {
+    const v = !!(p.video || glVid(p)), area = p.area || '';
+    const opts = GL_AREA_S.map(([g, a]) => (g ? `<optgroup label="${g}">` : '') + a.map(x => `<option${area === x ? ' selected' : ''}>${x}</option>`).join('') + (g ? '</optgroup>' : '')).join('') + (area && !GL_AREA_S.some(g => g[1].includes(area)) ? `<option selected>${esc(area)}</option>` : '');
+    return `<div class="st-glm${p.wa ? ' wa' : ''}"><div class="st-glmv">${v ? `<video src="${esc(p.url)}${p.blob ? '' : '#t=' + (p.waT ?? 0.5)}" muted playsinline controls preload="metadata" id="gfv-${i}"></video>` : `<img src="${esc(p.url)}" alt="" style="object-position:${glPos(p)}">`}
+      ${i === 0 ? '<span class="st-pill gold">Sampul</span>' : ''}${p.blob ? '<span class="st-pill blue r">Baru</span>' : ''}${p.cover ? '<span class="st-pill mu r">🎞 loop</span>' : ''}</div>
+      <select class="st-in sm" onchange="gf.photos[${i}].area=this.value"><option value="">— Keterangan —</option>${opts}</select>
+      <div class="st-glma"><button onclick="stGfMove(${i},-1)" title="Geser ke kiri"${i ? '' : ' disabled'}>◀</button><button onclick="stGfMove(${i},1)" title="Geser ke kanan"${i < gf.photos.length - 1 ? '' : ' disabled'}>▶</button>
+        <button class="${p.wa ? 'on' : ''}" onclick="stGfWa(${i})" title="${v ? 'Jeda video di detik yang aman lalu tekan' : 'Jadikan sampul kartu WA'}">📲 WA${p.wa && v && p.waT != null ? ' ' + (+p.waT).toFixed(1) + 's' : ''}</button>
+        ${v ? `<button class="${p.mute ? 'on' : ''}" onclick="gf.photos[${i}].mute=!gf.photos[${i}].mute;stGfMedia()" title="Tayang tanpa suara untuk semua penonton">${p.mute ? '🔇' : '🔊'}</button>` : ''}<button onclick="stGfDel(${i})" title="Hapus">🗑</button></div></div>`;
+  }).join('') || '<p class="st-empty">Belum ada foto / video.</p>';
+}
+function stGfMove(i, d) { const a = gf.photos, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; stGfMedia(); }
+function stGfDel(i) { const [p] = gf.photos.splice(i, 1); if (p.path) gf.removed.push(p.path); if (p.blob) URL.revokeObjectURL(p.url); stGfMedia(); }
+function stGfWa(i) {
+  const p = gf.photos[i], v = !!(p.video || glVid(p));
+  if (p.wa && !v) { delete p.wa; delete p.waT; return stGfMedia(); }
+  let t = null;
+  if (v) { const el = document.getElementById('gfv-' + i); if (!el || (!el.currentTime && !p.wa)) return showToast('▶ Putar videonya, jeda di detik yang aman (tanpa plat nomor), lalu tekan 📲 WA.', 6000); t = Math.round(el.currentTime * 10) / 10; }
+  gf.photos.forEach(q => { delete q.wa; delete q.waT; });
+  p.wa = true; if (v) p.waT = t; stGfMedia();
+}
+function stGfMode(m) { gf.mode = m; stGfPaint(); }
+const gfIso = () => gf.mode === 'sched' && gf.sd && gf.st ? new Date(`${gf.sd}T${gf.st}:00+07:00`).toISOString() : null;
+function stGfPaint() {
+  document.querySelectorAll('#gf-mode button').forEach((b, i) => b.classList.toggle('on', ['draft', 'now', 'sched'][i] === gf.mode));
+  document.getElementById('gf-sched').innerHTML = gf.mode === 'sched' ? `<div class="st-g2b"><label class="st-fl">Tanggal<input class="st-in" type="date" value="${esc(gf.sd)}" min="${todayWIB()}" oninput="gf.sd=this.value;stGfNote()"></label><label class="st-fl">Jam (WIB)<input class="st-in" type="time" step="300" value="${esc(gf.st)}" oninput="gf.st=this.value;stGfNote()"></label></div>` : '';
+  stGfNote();
+}
+function stGfNote() {
+  const iso = gfIso(), past = iso && Date.parse(iso) <= Date.now(), el = document.getElementById('gf-snote'), btn = document.getElementById('gf-save');
+  const nw = document.getElementById('gf-notw'); if (nw) nw.style.display = gf.wasLive || gf.mode === 'draft' || !gf.in_gallery ? 'none' : '';
+  if (el) el.innerHTML = gf.mode === 'draft' ? (gf.pend ? 'Tetap menunggu — belum tampil untuk pengunjung.' : 'Draf hanya terlihat oleh Editor.')
+    : gf.mode === 'now' ? (gf.wasLive ? 'Sudah tayang — perubahan langsung terlihat.' : `Tayang begitu disimpan${gf.in_gallery && gf.notify ? ' + notifikasi 🚗 ke HP pengunjung' : ''}.`)
+    : past ? '⚠ Waktu ini sudah lewat — pilih waktu yang akan datang.' : `Otomatis tayang <b>${esc(cwWhenS(iso))}</b>${gf.in_gallery && gf.notify ? ' + notifikasi 🚗' : ''}. Sebelum itu hanya Editor yang melihat.`;
+  if (btn && !gf.busy) btn.textContent = gf.mode === 'draft' ? '💾 Simpan draf' : gf.mode === 'sched' ? '⏰ Simpan jadwal' : gf.wasLive ? '💾 Simpan' : gf.pend ? '✓ Setujui & tayangkan' : '🚀 Tayangkan';
+}
+async function stGlSave() {
+  if (!gf || gf.busy) return;
+  if (!gf.car_make || !String(gf.car_model).trim()) return showToast('⚠ Isi merek & model mobil dulu.');
+  const iso = gfIso();
+  if (gf.mode === 'sched' && !(Date.parse(iso) > Date.now())) return showToast('⚠ Jam tayang sudah lewat — ubah tanggal/jam.');
+  if (gf.mode !== 'draft' && !gf.photos.length && !confirm('Instalasi ini belum punya foto/video. Tetap tayangkan?')) return;
+  gf.busy = true; const btn = document.getElementById('gf-save'); btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
+  const store = supabase.storage.from('showcase'), up = [];
+  try {
+    const old = gf.id ? stCache.gl.find(x => x.id === gf.id) : null;
+    const row = { car_make: gf.car_make, car_model: String(gf.car_model).trim(), car_year: gf.car_year ? +gf.car_year : null, body: gf.body || null,
+      dealer: gf.dealer.trim() || null, city: gf.city.trim() || null, note: gf.note.trim() || null, products: gf.products, hof_id: gf.hof_id || null,
+      published: gf.mode !== 'draft', sort: +gf.sort || 0, updated_at: new Date().toISOString(),
+      publish_at: gf.mode === 'sched' ? iso : gf.mode === 'now' && old?.publish_at && Date.parse(old.publish_at) <= Date.now() ? old.publish_at : null,
+      notify: !!gf.notify && gf.in_gallery };
+    if (iso && iso !== old?.publish_at) row.remind_at = null;
+    if (stCache.glIng || !gf.in_gallery) row.in_gallery = !!gf.in_gallery;
+    let id = gf.id;
+    if (!id) { const { data, error } = await supabase.from(GL_T).insert({ ...row, photos: [] }).select('id').single(); if (error) throw error; id = gf.id = data.id; }
+    const photos = [];
+    for (const [i, p] of gf.photos.entries()) {
+      let path = p.path;
+      if (p.blob) {
+        const ext = p.video ? ((p.blob.name?.match(/\.(mp4|m4v|mov|webm)$/i)?.[1] || 'mp4').toLowerCase()) : p.blob.type === 'image/webp' ? 'webp' : 'jpg';
+        path = `${id}/${Date.now()}-${i}.${ext}`; btn.textContent = `⏳ Mengunggah ${i + 1}/${gf.photos.length}…`;
+        const { error } = await store.upload(path, p.blob, { contentType: p.blob.type || (ext === 'webm' ? 'video/webm' : ext === 'mov' ? 'video/quicktime' : 'video/mp4'), cacheControl: '31536000', upsert: false });
+        if (error) throw new Error(/exceeded|too large|413|maximum/i.test(error.message || '') ? `${p.video ? 'Video' : 'Foto'} terlalu besar untuk batas unggah Supabase (${error.message})` : error.message);
+        up.push(path);
+      }
+      const v = !!(p.video || glVid(p)), r = { path, area: p.area || '' };   // field sama dengan glPhotoRow() portal
+      if (v) r.type = 'video'; if (/^\d{1,3} \d{1,3}$/.test(p.pos || '')) r.pos = p.pos; if (+p.zoom > 1) r.zoom = +p.zoom;
+      if (v && p.mute) r.mute = true; if (v && p.cover) r.cover = true; if (p.wa) { r.wa = true; if (v && p.waT != null) r.waT = +p.waT; }
+      photos.push(r);
+    }
+    const { error } = await supabase.from(GL_T).update({ ...row, photos }).eq('id', id); if (error) throw error;
+    if (gf.removed.length) store.remove(gf.removed).catch(() => {});
+    const goLive = gf.mode === 'now' && !gf.wasLive;
+    if (goLive && row.notify) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'gallery', id } }).catch(() => {});
+    showToast(gf.mode === 'sched' ? `⏰ Dijadwalkan tayang ${cwWhenS(iso)}` : goLive ? (gf.pend ? '✓ Kiriman disetujui & tayang' : '🚀 Instalasi tayang') + (row.notify ? ' — notifikasi 🚗 dikirim' : '') : '✓ Instalasi disimpan', 6000);
+    gf.photos.forEach(p => p.blob && URL.revokeObjectURL(p.url)); gf = null; stCache.sched = null;
+    await stLoadGl(true); location.hash = '#galeri';
+  } catch (e) {
+    const m = String(e.message || e);
+    if (up.length) store.remove(up).catch(() => {});
+    gf.busy = false; btn.disabled = false; stGfNote();
+    showToast(/in_gallery|publish_at|remind_at|notify|schema cache/i.test(m) ? '⚠ Kolom database belum lengkap — jalankan SQL Galeri dari menu portal (📋 Salin SQL). ' + m : '⚠ Gagal menyimpan: ' + m, 9000);
+  }
+}
+async function stGlApprove(id) {
+  const it = stCache.gl?.find(x => x.id === id); if (!it) return;
+  if (!confirm(`Setujui & tayangkan ${glTit(it)} sekarang?\n\nPastikan plat nomor sudah diburamkan.`)) return;
+  const { error } = await supabase.from(GL_T).update({ published: true, updated_at: new Date().toISOString() }).eq('id', id);
+  if (error) return showToast('⚠ Gagal menyetujui: ' + error.message, 6000);
+  if (it.in_gallery !== false) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'gallery', id } }).catch(() => {});
+  showToast(`✓ ${glTit(it)} disetujui — kini tayang`); await stLoadGl(true); stGlPaint();
+}
+async function stGlDelete(id, reject) {
+  const it = stCache.gl?.find(x => x.id === id); if (!it) return;
+  if (!confirm(reject ? `Tolak kiriman ${glTit(it)} dari ${it.submitter || 'partner'}?\n\nKiriman & semua foto/videonya dihapus permanen.` : `Hapus instalasi ${glTit(it)}${it.car_year ? ' ' + it.car_year : ''} beserta semua foto/videonya?`)) return;
+  const { error } = await supabase.from(GL_T).delete().eq('id', id);
+  if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 6000);
+  const paths = (it.photos || []).map(p => p.path).filter(Boolean); if (paths.length) supabase.storage.from('showcase').remove(paths).catch(() => {});
+  showToast(reject ? '✓ Kiriman ditolak & dihapus' : '🗑 Instalasi dihapus'); gf = null; stCache.sched = null;
+  await stLoadGl(true); if (location.hash === '#galeri') stGlPaint(); else location.hash = '#galeri';
+}
+async function stGlCm(id) {
+  const el = document.getElementById('gf-cm'); if (!el) return;
+  const s = stCache.glSoc?.get(id), lk = document.getElementById('gf-likes'); if (lk && s) lk.textContent = `❤ ${s.likes} suka`;
+  const { data, error } = await supabase.rpc('gl_comment_list', { p_id: id });
+  if (!document.getElementById('gf-cm')) return;
+  if (error) { el.innerHTML = `<p class="st-empty">${/function|schema cache|PGRST202/i.test(error.message) ? 'Fitur suka & komentar belum aktif.' : '⚠ ' + esc(error.message)}</p>`; return; }
+  el.innerHTML = (data || []).map(c => `<div class="st-row"><div class="tx"><b>${esc(c.name)}${c.badge === 'partner' ? ' <span class="st-pill ok">✓ Partner</span>' : c.badge === 'cai' ? ' <span class="st-pill gold">✓ Tim CAI</span>' : ''}</b>
+    <small style="color:var(--tx);font-size:13px">${esc(c.body)}</small><small>${wibDate(Date.parse(c.created_at), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></div>
+    <button class="st-btn sm" onclick="stGlCmDel('${id}','${c.id}')" title="Hapus komentar">🗑</button></div>`).join('') || '<p class="st-empty">Belum ada komentar.</p>';
+}
+async function stGlCmDel(id, cid) {
+  if (!confirm('Hapus komentar ini? Tidak bisa dikembalikan.')) return;
+  const { error } = await supabase.rpc('gl_comment_del', { p_cid: cid });
+  if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 6000);
+  showToast('✓ Komentar dihapus'); stGlCm(id);
+}
+
+// ── PANDUAN PARTNER (tahap 5, 18 Nov 2026) — sama dengan portal js/core.js (loadGuideFiles/saveGuideUpload/guideReschedule/deleteGuideFile) ──
+// PDF privat di Storage `guides/<folder>/…`; terjadwal = `guides/pending/<folder>/…` + tabel guide_schedule (dipindah cway-push pada jamnya).
+// Kartu panduan = DEALER_GUIDES di js/core.js (dibaca dari teks file, data murni). Sampul = thumbs/<path pdf>.jpg (dibuat pdf.js bila belum ada).
+const GD_BUCKET = 'guides', GD_TTL = 600, GD_NEW_DAYS = 5;
+const gdTitle = n => n.replace(/\.pdf$/i, '').replace(/_+/g, ' ').replace(/\s+/g, ' ').trim() || n;
+function gdSafe(n) {
+  const base = String(n).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\.pdf$/i, '').replace(/[^\w.\- ]+/g, ' ').trim().replace(/\s+/g, '_').slice(0, 120);
+  return (base || 'panduan-' + Date.now()) + '.pdf';
+}
+const gdSize = b => b ? (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB') : '';
+const gdThumbPath = key => `thumbs/${key}.jpg`;
+async function stLoadGd(force) {
+  if (stCache.gd && !force) return stCache.gd;
+  if (!stCache.gdCards) {
+    try { const t = await (await fetch('js/core.js?t=' + Date.now(), { cache: 'no-store' })).text(); const m = t.match(/const DEALER_GUIDES = (\[[\s\S]*?\n\]);/); stCache.gdCards = m ? Function('return ' + m[1])() : []; }
+    catch (e) { stCache.gdCards = []; }
+  }
+  const cards = stCache.gdCards.filter(g => !g.hidden && g.folder), store = supabase.storage.from(GD_BUCKET);
+  const list = async dir => { const { data, error } = await store.list(dir, { limit: 1000, sortBy: { column: 'created_at', order: 'desc' } }); if (error) throw error; return (data || []).filter(f => f.id); };
+  const [root, sch, ...folders] = await Promise.all([list(''), supabase.from('guide_schedule').select('id, folder, src, dest, title, publish_at, error').is('done_at', null).order('publish_at'), ...cards.map(g => list(g.folder))]);
+  const rootMap = new Map(root.map(f => [f.name, f])), row = (key, title, f) => ({ key, title, date: f.updated_at || f.created_at, size: f.metadata?.size || 0 });
+  stCache.gd = cards.map((g, i) => {
+    const files = folders[i].filter(f => /\.pdf$/i.test(f.name)).map(f => row(`${g.folder}/${f.name}`, gdTitle(f.name), f));
+    const legacy = g.path && rootMap.get(g.path); if (legacy) files.push(row(g.path, g.pathTitle || gdTitle(g.path), legacy));
+    files.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return { ...g, files };
+  });
+  stCache.gdSchedMissing = !!sch.error; stCache.gdSched = sch.error ? [] : (sch.data || []);
+  return stCache.gd;
+}
+async function stGuides() {
+  stPage(`<div class="st-ph"><div><p>Konten · khusus partner (Kode Akses)</p><h1>Panduan Partner</h1></div><div class="st-acts"><button class="st-btn" onclick="stLoadGd(true).then(stGdPaint)">↻</button><a class="st-btn gold" href="#guides/new">＋ Tambah PDF</a></div></div>
+    <div id="gd-body"><div class="st-card"><p class="st-empty">⏳ Memuat…</p></div></div>`);
+  try { await stLoadGd(true); stGdPaint(); } catch (e) { document.getElementById('gd-body').innerHTML = `<div class="st-card"><p class="st-empty">⚠ ${esc(e.message)}</p></div>`; }
+}
+function stGdPaint() {
+  const el = document.getElementById('gd-body'); if (!el) return;
+  const q = stCache.gdSched || [];
+  const fileCard = (f, g) => {
+    const d = Date.now() - new Date(f.date) < GD_NEW_DAYS * 864e5;
+    return `<div class="st-acc"><button class="st-acth st-gdth" data-gd="${esc(f.key)}" onclick="stGdOpen('${esc(f.key)}')"><i>📄</i><img alt="">${d ? '<span class="st-pill gold">BARU</span>' : ''}<span class="st-pill mu r">PDF${f.size ? ' · ' + gdSize(f.size) : ''}</span></button>
+      <div class="st-acb"><b>${esc(f.title)}</b><div class="st-acm"><span>${new Date(f.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' })}</span></div>
+      <div class="st-aca"><button onclick="stGdOpen('${esc(f.key)}')">Buka</button><button onclick="stGdOpen('${esc(f.key)}',true)">⬇ Unduh</button><button onclick="stGdShare('${esc(f.key)}')" title="Bagikan link ke WA (penerima perlu Kode Akses)">💬 WA</button><button onclick="stGdDel('${esc(f.key)}')" title="Hapus">🗑</button></div></div></div>`;
+  };
+  el.innerHTML = (stCache.gdSchedMissing ? '<div class="st-card st-pad st-glpend" style="margin-bottom:16px">Jadwal tayang Panduan butuh SQL sekali — salin lewat menu Panduan Partner di portal (📋 Salin SQL Notifikasi &amp; Jadwal).</div>' : '') +
+    (q.length ? `<div class="st-card st-acq"><div class="st-ch"><h3>⏰ Antrian tayang · ${q.length} PDF</h3><span class="st-note" style="margin:0 0 0 auto">otomatis tampil untuk partner pada jamnya + notifikasi 📘</span></div>
+    ${q.map(r => `<div class="st-row st-glpr"><span class="st-acqt">${esc(cwWhenS(r.publish_at))}</span><div class="tx"><b>${esc(r.title || gdTitle(r.dest.split('/').pop()))}</b><small>${esc((stCache.gd.find(g => g.folder === r.folder) || {}).title || r.folder)}${r.error ? ` · <span style="color:var(--red)">⚠ ${esc(r.error)}</span>` : ''}</small></div>
+      <button class="st-btn sm" onclick="stGdOpen('${esc(r.src)}')">Buka</button><button class="st-btn sm" onclick="stGdResched('${r.id}')">✏️ Jadwal</button><button class="st-btn sm red" onclick="stGdSchedDel('${r.id}')">🗑</button></div>`).join('')}</div>` : '') +
+    stCache.gd.map(g => `<div class="st-card st-gdsec"><div class="st-ch"><h3>${g.icon || '📘'} ${esc(g.title)}</h3><span class="st-pill gold">${esc(g.category || '')}</span><span class="st-note" style="margin:0 0 0 auto">${g.files.length} file</span><a class="st-btn sm" href="#guides/new/${esc(g.id)}">＋ PDF</a></div>
+      <div class="st-acgrid">${g.files.map(f => fileCard(f, g)).join('') || '<p class="st-empty" style="grid-column:1/-1">Belum ada PDF.</p>'}</div></div>`).join('');
+  stGdThumbs();
+}
+let stGdRun = 0;
+async function stGdThumbs() {
+  const run = ++stGdRun, store = supabase.storage.from(GD_BUCKET), T = stCache.gdThumbs = stCache.gdThumbs || new Map();
+  const all = (stCache.gd || []).flatMap(g => g.files), apply = () => document.querySelectorAll('[data-gd]').forEach(b => { const u = T.get(b.dataset.gd); const img = b.querySelector('img'); if (u && img.getAttribute('src') !== u) { img.onload = () => img.classList.add('on'); img.src = u; } });
+  const need = all.filter(f => !T.has(f.key)); if (!need.length) return apply();
+  const meta = new Map();
+  await Promise.all(['', ...new Set(stCache.gd.map(g => g.folder))].map(async f => { const dir = f ? `thumbs/${f}` : 'thumbs'; const { data } = await store.list(dir, { limit: 1000 }).catch(() => ({})); (data || []).filter(x => x.id).forEach(x => meta.set(`${dir}/${x.name}`, x.updated_at || x.created_at)); }));
+  const fresh = need.filter(f => { const t = meta.get(gdThumbPath(f.key)); return t && new Date(t) >= new Date(f.date); });
+  if (fresh.length) { const { data } = await store.createSignedUrls(fresh.map(f => gdThumbPath(f.key)), 3600).catch(() => ({})); (data || []).forEach((d, i) => d?.signedUrl && T.set(fresh[i].key, d.signedUrl)); apply(); }
+  for (const f of need.filter(x => !T.has(x.key))) {   // sampul belum ada → halaman 1 PDF digambar pdf.js lalu disimpan untuk semua partner
+    if (run !== stGdRun) return;
+    try {
+      const lib = await loadPdfJs(), { data, error } = await store.createSignedUrl(f.key, 600); if (error) throw error;
+      const doc = await lib.getDocument({ url: data.signedUrl, disableAutoFetch: true, disableStream: true, rangeChunkSize: 262144 }).promise;
+      try {
+        const page = await doc.getPage(1), v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: 640 / Math.max(v1.width, v1.height) }), cv = document.createElement('canvas');
+        cv.width = Math.round(vp.width); cv.height = Math.round(vp.height); await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+        const blob = await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('kosong')), 'image/jpeg', .82));
+        T.set(f.key, URL.createObjectURL(blob)); apply();
+        store.upload(gdThumbPath(f.key), blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '3600' }).catch(() => {});
+      } finally { doc.destroy(); }
+    } catch (e) { console.warn('cover', f.key, e); }
+  }
+}
+async function stGdOpen(key, dl) {
+  const win = dl ? null : window.open('', '_blank');   // dibuka di dalam klik agar tidak diblokir browser HP
+  const { data, error } = await supabase.storage.from(GD_BUCKET).createSignedUrl(key, GD_TTL, dl ? { download: key.split('/').pop() } : undefined);
+  if (error) { win?.close(); return showToast('⚠ PDF tidak bisa dibuka: ' + error.message, 6000); }
+  if (win) win.location.href = data.signedUrl; else location.href = data.signedUrl;
+}
+function stGdShare(key) {
+  const f = (stCache.gd || []).flatMap(g => g.files).find(x => x.key === key); if (!f) return;
+  window.open(`https://wa.me/?text=${waEnc(`Panduan Partner: ${f.title}\nKhusus partner CAI — buka di CAI Hub dengan Kode Akses:\nhttps://hub.concerto.id/panduan/?guide=${encodeURIComponent(key)}`)}`, '_blank', 'noopener');
+}
+async function stGdDel(key) {
+  const f = (stCache.gd || []).flatMap(g => g.files).find(x => x.key === key); if (!f) return;
+  if (!confirm(`Hapus "${f.title}" dari Panduan Partner?\n\nFile akan hilang untuk semua partner.`)) return;
+  const { data, error } = await supabase.storage.from(GD_BUCKET).remove([key]);
+  if (error || !data?.length) return showToast('⚠ Gagal menghapus: ' + (error?.message || 'izin hapus bucket "guides" belum ada untuk akun ini'), 8000);
+  supabase.storage.from(GD_BUCKET).remove([gdThumbPath(key)]).catch(() => {}); stCache.gdThumbs?.delete(key);
+  showToast(`🗑 "${f.title}" dihapus`); await stLoadGd(true); stGdPaint();
+}
+async function stGdResched(id) {
+  const r = (stCache.gdSched || []).find(x => x.id === id); if (!r) return;
+  const cur = new Date(r.publish_at).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16);
+  const v = prompt('Jadwal tayang PDF ini (WIB), format YYYY-MM-DD HH:MM.\nKetik "sekarang" untuk langsung tayang (± 1 menit).', cur); if (v == null) return;
+  let at;
+  if (/^\s*sekarang\s*$/i.test(v)) at = new Date().toISOString();
+  else {
+    const m = v.trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})$/);
+    if (!m) return showToast('⚠ Format salah. Contoh: 2026-11-20 08:00', 5000);
+    at = new Date(Date.parse(`${m[1]}T${m[2].padStart(2, '0')}:${m[3]}:00+07:00`)).toISOString();
+    if (!(Date.parse(at) > Date.now())) return showToast('⚠ Waktu sudah lewat — pilih waktu yang akan datang, atau ketik "sekarang".', 5000);
+  }
+  const { error } = await supabase.from('guide_schedule').update({ publish_at: at, error: null }).eq('id', id);
+  if (error) return showToast('⚠ Gagal menyimpan jadwal: ' + error.message, 7000);
+  showToast(Date.parse(at) <= Date.now() + 5000 ? '✓ PDF akan tayang dalam ± 1 menit' : `⏰ Dijadwalkan ${cwWhenS(at)}`); stCache.sched = null;
+  await stLoadGd(true); stGdPaint();
+}
+async function stGdSchedDel(id) {
+  const r = (stCache.gdSched || []).find(x => x.id === id); if (!r) return;
+  if (!confirm(`Hapus PDF terjadwal "${r.title || r.dest}"?\n\nPDF batal tayang dan dihapus.`)) return;
+  await supabase.storage.from(GD_BUCKET).remove([r.src]);
+  const { error } = await supabase.from('guide_schedule').delete().eq('id', id);
+  if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
+  showToast('🗑 PDF terjadwal dihapus'); stCache.sched = null; await stLoadGd(true); stGdPaint();
+}
+// Tambah PDF: tayang sekarang (langsung ke folder + notifikasi 📘) atau ⏰ jadwalkan (pending/ + guide_schedule), rilis bertahap n PDF per hari
+let gu = null;
+async function stGdNew(cardId) {
+  try { await stLoadGd(); } catch (e) { return stPage(`<p class="st-empty">⚠ ${esc(e.message)}</p>`); }
+  const cards = stCache.gd; if (!cards.length) return stPage('<p class="st-empty">Belum ada kartu panduan.</p>');
+  const tm = new Date(Date.now() + 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+  gu = { card: (cards.find(g => g.id === cardId) || cards[0]).id, items: [], mode: 'now', sd: tm, st: '08:00', stag: false, per: 1, busy: false };
+  stPage(`<div class="st-ph"><div><p><a href="#guides">Panduan Partner</a> › Tambah</p><h1>Tambah PDF panduan</h1></div><div class="st-acts"><button class="st-btn pri" id="gu-save" onclick="stGuSave()" disabled>💾 Simpan</button></div></div>
+    <div class="st-ed"><div class="st-card st-pad">
+      <label class="st-fl" style="margin-top:0">Kartu panduan<select class="st-in" onchange="gu.card=this.value;stGuList()">${cards.map(g => `<option value="${esc(g.id)}"${g.id === gu.card ? ' selected' : ''}>${g.icon || ''} ${esc(g.title)}</option>`).join('')}</select></label>
+      <label class="st-drop"><input type="file" accept="application/pdf,.pdf" multiple hidden onchange="stGuFiles(this)"><b>📄 Pilih PDF</b><small>Bisa beberapa sekaligus · judul = nama file di portal · judul sama dengan PDF yang ada = menggantikan</small></label>
+      <div id="gu-list"></div></div>
+    <div class="st-col"><div class="st-card st-pad">
+      <div class="st-fl" style="margin-top:0">Tayang<div class="st-seg" id="gu-mode"><button onclick="gu.mode='now';stGuSched()">Sekarang</button><button onclick="gu.mode='sched';stGuSched()">⏰ Jadwalkan</button></div></div>
+      <div id="gu-sched"></div><p class="st-note" id="gu-note"></p></div>
+      <div class="st-card st-pad"><p class="st-note" style="margin:0">🔒 PDF hanya bisa dibuka partner yang masuk dengan Kode Akses. Notifikasi 📘 ke HP partner <b>tanpa judul</b>. Jangan unggah panduan partner di tempat publik (katalog, Academy, repo).</p></div></div></div>`);
+  stGuSched(); stGuList();
+}
+const guAt = i => new Date(Date.parse(`${gu.sd}T${gu.st || '08:00'}:00+07:00`) + (gu.stag ? Math.floor(i / Math.max(1, +gu.per || 1)) : 0) * 864e5).toISOString();
+function stGuSched() {
+  document.querySelectorAll('#gu-mode button').forEach((b, i) => b.classList.toggle('on', ['now', 'sched'][i] === gu.mode));
+  document.getElementById('gu-sched').innerHTML = gu.mode === 'sched' ? `<div class="st-g2b"><label class="st-fl">Tanggal<input class="st-in" type="date" value="${gu.sd}" min="${todayWIB()}" onchange="gu.sd=this.value;stGuSched();stGuList()"></label><label class="st-fl">Jam (WIB)<input class="st-in" type="time" step="300" value="${gu.st}" onchange="gu.st=this.value;stGuSched();stGuList()"></label></div>
+    <label class="st-ck"><input type="checkbox"${gu.stag ? ' checked' : ''} onchange="gu.stag=this.checked;stGuSched();stGuList()"> Rilis bertahap: <input class="st-in st-num" type="number" min="1" max="50" value="${gu.per}" onchange="gu.per=Math.max(1,Math.min(50,parseInt(this.value)||1));stGuSched();stGuList()"> PDF per hari</label>` : '';
+  const n = gu.items.length, past = gu.mode === 'sched' && !(Date.parse(guAt(0)) > Date.now());
+  document.getElementById('gu-note').innerHTML = gu.mode === 'now' ? 'PDF langsung tampil untuk partner + notifikasi 📘 ke HP partner.' : past ? '⚠ Jam tayang sudah lewat — pilih waktu yang akan datang.'
+    : `⏰ ${n > 1 && gu.stag ? `Mulai ${esc(cwWhenS(guAt(0)))} sampai ${esc(cwWhenS(guAt(n - 1)))}` : `Tayang ${esc(cwWhenS(guAt(0)))}`}. Sampai jamnya PDF terkunci — hanya Editor yang bisa membuka.`;
+  const b = document.getElementById('gu-save'); if (b && !gu.busy) { b.disabled = !n || past; b.textContent = gu.mode === 'sched' ? `⏰ Simpan jadwal (${n})` : `🚀 Unggah & tayangkan (${n})`; }
+}
+function stGuList() {
+  const el = document.getElementById('gu-list'); if (!el) return;
+  const g = stCache.gd.find(x => x.id === gu.card), have = new Set((g?.files || []).map(f => f.key));
+  el.innerHTML = gu.items.length ? gu.items.map((x, i) => { const rep = have.has(`${g.folder}/${gdSafe(x.title.trim())}`);
+    return `<div class="st-afit"><span class="st-gdic">📄</span><div class="tx"><small>${esc(x.file.name)} · ${gdSize(x.file.size)}${gu.mode === 'sched' ? ` · ⏰ ${esc(cwWhenS(guAt(i)))}` : ''}${rep ? ' · <b style="color:var(--warn)">menggantikan PDF lama</b>' : ''}</small>
+    <input class="st-in" value="${esc(x.title)}" placeholder="Judul panduan" oninput="gu.items[${i}].title=this.value"></div><button class="st-btn sm" onclick="gu.items.splice(${i},1);stGuList();stGuSched()">🗑</button></div>`; }).join('') : '<p class="st-empty">Belum ada PDF dipilih.</p>';
+}
+function stGuFiles(input) {
+  const files = [...(input.files || [])]; input.value = '';
+  files.forEach(f => { if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') return showToast('Hanya PDF: ' + f.name, 5000); gu.items.push({ file: f, title: gdTitle(f.name) }); });
+  stGuList(); stGuSched();
+}
+async function stGuSave() {
+  if (!gu || gu.busy || !gu.items.length) return;
+  if (gu.items.some(x => !x.title.trim())) return showToast('⚠ Isi judul untuk setiap PDF.');
+  const sched = gu.mode === 'sched'; if (sched && !(Date.parse(guAt(0)) > Date.now())) return showToast('⚠ Jam tayang sudah lewat — ubah tanggal/jam.');
+  const g = stCache.gd.find(x => x.id === gu.card); if (!g) return;
+  gu.busy = true; const btn = document.getElementById('gu-save'); btn.disabled = true;
+  const store = supabase.storage.from(GD_BUCKET), live = [], failed = []; let ok = 0;
+  for (const [i, x] of gu.items.entries()) {
+    const dest = `${g.folder}/${gdSafe(x.title.trim())}`, path = sched ? `pending/${dest}` : dest;
+    btn.textContent = `⏳ Mengunggah ${i + 1}/${gu.items.length}…`;
+    try {
+      const { error } = await store.upload(path, x.file, { upsert: true, contentType: 'application/pdf', cacheControl: '60' }); if (error) throw error;
+      if (sched) {
+        await supabase.from('guide_schedule').delete().eq('src', path).is('done_at', null);
+        const { error: e2 } = await supabase.from('guide_schedule').insert({ folder: g.folder, src: path, dest, title: x.title.trim(), publish_at: guAt(i) });
+        if (e2) { store.remove([path]); throw e2; }
+      } else { stCache.gdThumbs?.delete(dest); live.push(dest); }
+      ok++;
+    } catch (e) { failed.push(x.title + ': ' + (e.message || e)); }
+  }
+  if (live.length) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'guide', id: live } }).catch(() => {});
+  if (failed.length) { gu.busy = false; gu.items = gu.items.filter(x => failed.some(f => f.startsWith(x.title + ':'))); stGuList(); stGuSched(); return showToast(`${ok ? `✓ ${ok} PDF tersimpan. ` : ''}Gagal: ${failed.join(' | ')}`, 12000); }
+  showToast(sched ? `⏰ ${ok} PDF dijadwalkan — mulai ${cwWhenS(guAt(0))}` : `🚀 ${ok} PDF tayang di "${g.title}"`, 6000);
+  gu = null; stCache.sched = null; location.hash = '#guides';
+}
+
 // ── Menu portal yang disematkan di Studio (tahap 2b, 18 Nov 2026 — cara A): /?studio=<menu>&embed=1 dalam iframe ──
 // Portal dalam mode sematan menyembunyikan header, sidebar & menu bawahnya (html.embed di index.html/style.css). Sesi login sama.
-const STUDIO_EMBED = { galeri: 'Galeri Instalasi', guides: 'Panduan Partner', paket: 'Paket Audio', stock: 'Stok', partner: 'Enthusiast Partner',
+const STUDIO_EMBED = { paket: 'Paket Audio', stock: 'Stok', partner: 'Enthusiast Partner',
   dealers: 'Akun & Kode Akses', visitors: 'Pengunjung & Minat', rapor: 'Rapor Bulanan', prapor: 'Laporan Partner', cway: 'Concerto Way (portal)' };
 function stEmbed(k) {
   document.getElementById('st-page').innerHTML = `<div class="st-emb"><div class="st-embh"><b>${esc(STUDIO_EMBED[k])}</b><span class="st-pill mu">tampilan portal</span>
