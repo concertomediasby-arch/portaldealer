@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<base href="/">
+<title>CAI Hub Studio</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#101522">
+<link rel="icon" href="/assets/icons/favicon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="catedit.css?b=2026-11-18T02:12:14Z">
+<link rel="stylesheet" href="studio/studio.css?b=2026-11-18T02:12:14Z">
+</head>
+<body>
+<!-- CAI Hub Studio — panel kerja khusus Editor (18 Nov 2026). Lihat bagian "CAI HUB STUDIO" di CLAUDE.md. -->
+<div id="st-gate" class="st-gate"><div class="st-gcard"><div class="st-logo dark"><svg viewBox="0 0 100 100"><path d="M50 6 88 28v44L50 94 12 72V28z" fill="none" stroke="#14213D" stroke-width="8"/><path d="M50 28 69 39v22L50 72 31 61V39z" fill="#B8893A"/></svg><div>CAI Hub<small>STUDIO</small></div></div><div id="st-gate-body"><p class="st-mu">⏳ Memeriksa sesi…</p></div></div></div>
+
+<div class="st-app" id="st-app" hidden>
+  <aside class="st-side" id="st-side">
+    <div class="st-logo"><svg viewBox="0 0 100 100"><path d="M50 6 88 28v44L50 94 12 72V28z" fill="none" stroke="#fff" stroke-width="8"/><path d="M50 28 69 39v22L50 72 31 61V39z" fill="#B8893A"/></svg><div>CAI Hub<small>STUDIO</small></div></div>
+    <nav id="st-nav"></nav>
+    <div class="st-sfoot">Masuk sebagai <b>Editor</b><br><span id="st-email"></span><br><a href="#" onclick="stLogout();return false">Keluar</a></div>
+  </aside>
+  <div class="st-scrim" onclick="stMenu(false)"></div>
+  <main class="st-main">
+    <header class="st-top">
+      <button class="st-burger" onclick="stMenu(true)" aria-label="Menu">☰</button>
+      <div class="st-mlogo">Studio</div>
+      <label class="st-search"><span>🔍</span><input id="st-q" placeholder="Cari produk atau berita…" oninput="stSearch(this.value)" autocomplete="off"><kbd>Ctrl K</kbd></label>
+      <div class="st-tb">
+        <a class="st-btn st-hm" href="/" target="_blank" rel="noopener">↗ Lihat situs</a>
+        <div class="st-new"><button class="st-btn gold" onclick="stNewMenu(event)">＋ Buat</button><div class="st-newmenu" id="st-newmenu"></div></div>
+        <div class="st-av" title="Editor">ED</div>
+      </div>
+    </header>
+    <div id="st-page" class="st-page"></div>
+  </main>
+  <nav class="st-bnav" id="st-bnav"></nav>
+</div>
+<div class="st-toast" id="st-toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="katalog.js?b=2026-11-18T02:12:14Z"></script>
+<script>document.write('<script src="katalog-edit.js?m=' + Math.floor(Date.now() / 6e4) + '"><\/script>');</script>
+<script src="js/katalog-apply.js?b=2026-11-18T02:12:14Z"></script>
+<script src="studio/studio.js?b=2026-11-18T02:12:14Z"></script>
+<script src="js/catedit.js?b=2026-11-18T02:12:14Z"></script>
+</body>
+</html>

@@ -262,6 +262,7 @@ function ceRefreshViews(brandId, id) {
   if (v === 'view-brand') showBrand(fp.b.id);
   else if (v === 'view-catalog') renderCatalog();
   else if (v === 'view-product' && currentProductId === id) showProduct(fp.b.id, id);
+  if (typeof studioRefresh === 'function') studioRefresh();   // CAI Hub Studio (/studio/)
   ceFixImgs();
 }
 // Ganti src gambar yang filenya belum ada di situs dengan blob lokal (hanya browser Editor yang baru menyimpan)

@@ -59,7 +59,8 @@ function openDeepLink() {
   const q = new URLSearchParams(location.search);
   if (q.get('cw')) { enterPortal(); cwPending = q.get('cw'); return; }   // link Concerto Way → dibuka setelah status login diketahui (cwayAuthChanged)
   if (q.get('news')) { enterPortal(); nwPending = q.get('news'); return; }   // link berita → dibuka setelah loadNews()
-  if (q.get('gl')) { enterPortal(); glLinkPending = q.get('gl'); return; }   // link project Galeri → dibuka setelah initSupabase()
+  if (q.get('gl')) { enterPortal(); glLinkPending = q.get('gl'); return; }
+  if (q.get('studio')) { enterPortal(); studioOpenLinked(q.get('studio')); return; }   // tautan ↗ dari CAI Hub Studio (/studio/) → menu Editor di portal   // link project Galeri → dibuka setelah initSupabase()
   if (q.has('acad') && !q.get('acad')) { enterPortal(); openAcademy(); return; }   // /?acad= (dari halaman Google /academy/) = daftar Academy
   if (q.get('acad')) { enterPortal(); acadPending = +q.get('acad'); return; }   // link materi Academy → setelah loadAcadExtra()
   if (q.get('dealer')) { enterPortal(); adOpenLinked(q.get('dealer')); return; }   // link Authorized Dealer
@@ -89,6 +90,16 @@ function openDeepLink() {
   showProduct(brand.id, product.id);
   if (q.get('v') === '1' && product.video)
     [...document.querySelectorAll('#media-thumbs .media-thumb')].find(el => /'video'/.test(el.getAttribute('onclick')))?.click();
+}
+
+// CAI Hub Studio (/studio/, 18 Nov 2026): menu yang belum pindah ke Studio dibuka di portal lewat /?studio=<menu>
+const STUDIO_MENUS = { cway: () => openCway(), academy: () => openAcademy(), galeri: () => openGaleri(), guides: () => openGuides(), paket: () => openPaketAudio(),
+  stock: () => openAdmin(), partner: () => openAuthDealers(), dealers: () => openDealers(), visitors: () => openVisitors(), rapor: () => openRapor(), prapor: () => openPartnerReport() };
+function studioOpenLinked(k, n = 0) {
+  const fn = STUDIO_MENUS[k]; if (!fn) return;
+  if (!(typeof isEditor === 'function' && isEditor())) { if (n < 40) return setTimeout(() => studioOpenLinked(k, n + 1), 250); return showToast('Login sebagai Editor untuk membuka menu ini.'); }
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  fn();
 }
 
 function contactGeneral() {
