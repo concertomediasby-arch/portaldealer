@@ -138,7 +138,7 @@ function stStat() {
 function stGo(h, saved) { stDirty = false; stBakAt = 0; if (saved) stSavedAt = Date.now(); stBakClear(); location.hash = h; stStat(); }
 ['input', 'change'].forEach(ev => addEventListener(ev, e => { if (e.target.closest?.('#st-page .st-ed') && !e.target.closest('.st-search')) { if (!stDirty) { stDirty = true; stStat(); } } }, true));
 addEventListener('hashchange', () => {
-  if (stDirty && !confirm('Ada perubahan yang belum disimpan. Tinggalkan halaman ini?\n(Cadangan ketikan tetap tersimpan di browser ini.)')) { history.replaceState(null, '', stLastHash || '#home'); return; }
+  if (stDirty && !confirm('Ada perubahan yang belum disimpan. Tinggalkan halaman ini?\n(Cadangan ketikan tetap tersimpan di browser ini.)')) { history.replaceState(null, '', location.pathname + location.search + (stLastHash || '#home')); return; }
   stDirty = false; stBakAt = 0; stLastHash = location.hash; stRoute(); stStat();
 });
 addEventListener('beforeunload', e => { if (stDirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -1301,6 +1301,13 @@ function stSearch(v) {
 }
 
 addEventListener('DOMContentLoaded', stInit);   // setelah studio-admin.js & catedit.js termuat
+// <base href="/"> membuat tautan href="#stok" menuju hub.concerto.id/#stok (CAI Hub) — 19 Nov 2026, laporan pemilik.
+// Semua tautan hash di Studio ditangani di sini agar tetap di /studio/.
+document.addEventListener('click', e => {
+  const a = e.target.closest?.('a[href^="#"]'); if (!a || e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  const h = a.getAttribute('href'); if (h === '#') return;   // tautan "#" dengan onclick sendiri
+  e.preventDefault(); if (location.hash !== h) location.hash = h; else stRoute();
+});
 // Versi baru Studio (19 Nov 2026 — laporan pemilik: browser masih memakai Studio lama yang tersimpan): bandingkan ?b= halaman
 // di server dengan yang sedang dipakai; berbeda → muat ulang (ditunda selama ada ketikan belum disimpan).
 const ST_BUILD = (document.querySelector('script[src*="studio/studio.js?b="]')?.getAttribute('src') || '').split('?b=')[1] || '';
