@@ -5,7 +5,7 @@
    • Pensil "✏️ Edit di Studio" di tiap bagian halaman untuk Editor; klik = Studio terbuka tepat di kolom itu.
    • Bilah "Mode Edit" di atas konten: sakelar pensil + tampilan pengunjung (semua tombol Editor di konten disembunyikan).
    Hanya role editor; Ricky (manager) & Admin tetap memakai CAI Hub seperti biasa. Tidak aktif di mode sematan (?embed=1).
-   News: form lengkap (project, perangkat, foto tambahan) masih di CAI Hub, jadi openNwForm tidak dialihkan.
+   News: sejak 19 Nov 2026 form lengkap (posisi sampul, foto tambahan, project & perangkat) ada di Studio — openNwForm juga dialihkan.
 ══════════════════════════════════════════ */
 const STUDIO_PATH = '/studio/';
 const ED_EMBED = document.documentElement.classList.contains('embed');
@@ -27,6 +27,16 @@ function studioGo(hash) {
   wrap('openAcadForm', () => studioGo('#academy/new'));
   wrap('openGlForm', id => studioGo(id ? '#galeri/' + id : '#galeri/new'));
   wrap('openGlForHof', () => studioGo('#galeri/new'));
+  wrap('openNwForm', id => studioGo(id ? '#news/' + id : '#news/new'));   // 19 Nov 2026: project, perangkat & foto tambahan kini ada di Studio
+  // Tahap 6 (18 Nov 2026): menu laporan & kelola pindah ke Studio — tidak dialihkan di dalam sematan (#m/<menu> = cadangan, mis. Import Excel stok)
+  const wrapTop = (name, fn) => { const orig = window[name]; if (typeof orig !== 'function') return; window[name] = function (...a) { return edOn() && !ED_EMBED ? fn(...a) : orig.apply(this, a); }; };
+  wrapTop('openDealers', () => studioGo('#akun'));
+  wrapTop('openAdForm', id => studioGo(id ? '#partner/' + id : '#partner/new'));
+  wrapTop('openVisitors', () => studioGo('#pengunjung'));
+  wrapTop('openRapor', m => studioGo('#rapor' + (m && /^\d{4}-\d{2}$/.test(m) ? '/' + m : '')));
+  wrapTop('openPartnerReport', m => studioGo('#lappartner' + (m && /^\d{4}-\d{2}$/.test(m) ? '/' + m : '')));
+  wrapTop('openAdmin', () => studioGo('#stok'));
+  wrapTop('staffSyncSheet', () => studioGo('#stok'));
 })();
 // ＋ Tambah PDF Panduan = label berisi input file → cegah jendela pilih file, buka Studio
 document.addEventListener('click', e => {

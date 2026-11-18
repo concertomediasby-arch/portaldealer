@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════
    CAI HUB STUDIO — panel kerja khusus Editor di /studio/ (18 Nov 2026, permintaan pemilik — pratinjau .mockup/studio/ disetujui).
-   Tahap 1: Beranda · Jadwal tayang · Katalog Produk (form js/catedit.js) · News. Tahap 2: Concerto Way. Tahap 3: Academy. Tahap 4: Galeri Instalasi. Tahap 5: Panduan Partner. Menu lain = portal disematkan (stEmbed, #m/<menu>).
+   Tahap 1: Beranda · Jadwal tayang · Katalog Produk (form js/catedit.js) · News. Tahap 2: Concerto Way. Tahap 3: Academy. Tahap 4: Galeri Instalasi. Tahap 5: Panduan Partner. Tahap 6: Paket, Stok, Partner, Akun, Pengunjung & Minat, Rapor, Laporan Partner (studio/studio-admin.js). Portal disematkan (stEmbed, #m/<menu>) = cadangan.
    Sesi login sama dengan portal (supabase-js menyimpan sesi per domain), jadi Editor yang sudah login di portal langsung masuk.
    Hanya role `editor`; akun lain melihat layar "Khusus Editor". Data & aturan sama dengan portal — hanya SRP.
 ══════════════════════════════════════════ */
@@ -51,9 +51,9 @@ const ST_NAV = [
   { g: 'Konten' }, { id: 'news', i: '📰', t: 'News' },
   { id: 'cway', i: '☕', t: 'Concerto Way' }, { id: 'academy', i: '🎓', t: 'Academy' },
   { id: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { id: 'guides', i: '📘', t: 'Panduan Partner' },
-  { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { m: 'paket', i: '📦', t: 'Paket Audio' }, { m: 'stock', i: '📊', t: 'Stok' },
-  { g: 'Partner' }, { m: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { m: 'dealers', i: '🔑', t: 'Akun & Kode Akses' },
-  { g: 'Laporan' }, { m: 'visitors', i: '📈', t: 'Pengunjung & Minat' }, { m: 'rapor', i: '📊', t: 'Rapor Bulanan' }, { m: 'prapor', i: '📨', t: 'Laporan Partner' },
+  { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { id: 'paket', i: '📦', t: 'Paket Audio' }, { id: 'stok', i: '📊', t: 'Stok' },
+  { g: 'Partner' }, { id: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { id: 'akun', i: '🔑', t: 'Akun & Kode Akses' },
+  { g: 'Laporan' }, { id: 'pengunjung', i: '📈', t: 'Pengunjung & Minat' }, { id: 'rapor', i: '🗓', t: 'Rapor Bulanan' }, { id: 'lappartner', i: '📨', t: 'Laporan Partner' },
 ];
 function stNavHtml(cur) {
   return ST_NAV.map(n => n.g ? `<div class="st-grp">${n.g}</div>`
@@ -179,9 +179,14 @@ function stRoute() {
   if (cur === 'galeri' && arg) return stGlEdit(arg === 'new' ? null : arg);
   if (cur === 'produk' && arg) { stProduk(); const sec = h.split('/')[2]; if (arg === 'new') ceOpen(null, sec || null); else { ceOpen(arg); stCeFocus(sec); } return; }
   if (cur === 'guides' && arg === 'new') return stGdNew(h.split('/')[2]);
-  ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy, galeri: stGaleri, guides: stGuides })[cur]();
+  if (cur === 'partner' && arg) return stPartnerEdit(arg === 'new' ? null : arg);
+  if (cur === 'pengunjung') return stPengunjung(arg === 'minat' ? 'int' : 'visit');
+  if (cur === 'rapor') return stRapor(arg);
+  if (cur === 'lappartner') return stLapPartner(arg);
+  ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy, galeri: stGaleri, guides: stGuides,
+    paket: stPaket, stok: stStok, partner: stPartner, akun: stAkun })[cur]();
 }
-const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides'];
+const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner'];
 const stPage = html => { const p = document.getElementById('st-page'); p.classList.remove('emb'); p.innerHTML = html; };
 const stCache = {};
 
@@ -257,7 +262,7 @@ async function stHome() {
     <div class="st-card st-kpi"><div class="l">Pengunjung hari ini</div><div class="v">${vis ? fmtNum(td?.visitors) : '—'}</div><div class="d">${vis ? `7 hari: ${fmtNum(vis.v7)} orang` : 'data belum tersedia'}</div>${spark(daily)}</div>
     <div class="st-card st-kpi"><div class="l">Klik ke partner (7 hari)</div><div class="v">${int ? fmtNum(int.tot?.click) : '—'}</div><div class="d">${int ? tr(+int.tot?.click || 0, +int.tot?.click0 || 0) : 'data belum tersedia'}</div></div>
     <div class="st-card st-kpi"><div class="l">Terjadwal 7 hari</div><div class="v">${in7}</div><div class="d">dari ${sched.length} konten terjadwal</div></div>
-    <div class="st-card st-kpi"><div class="l">Produk stok habis</div><div class="v">${fmtNum(habis)}</div><div class="d"><a href="#m/stock">Lihat di menu Stok</a></div></div>`;
+    <div class="st-card st-kpi"><div class="l">Produk stok habis</div><div class="v">${fmtNum(habis)}</div><div class="d"><a href="#stok">Lihat di menu Stok</a></div></div>`;
   // Kartu per halaman
   const now = Date.now(), fut = x => x.publish_at && Date.parse(x.publish_at) > now;
   const cwSched = (cw || []).filter(x => x.published && fut(x)).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at));
@@ -279,9 +284,9 @@ async function stHome() {
     card('🎓', 'Academy', acSched ? pill('gold', `${acSched} terjadwal`) : pill('ok', 'Tayang'), `${acAll.length - acSched} materi tayang`, '#academy', '/?studio=academy'),
     card('🚗', 'Galeri Instalasi', gl ? (glPendN ? pill('warn', `${glPendN} kiriman`) : glSchedN ? pill('gold', `${glSchedN} terjadwal`) : pill('ok', 'Tayang')) : pill('mu', '—'), gl ? `${glLiveN} mobil tayang${stMaxAt(gl) ? ' · diubah ' + stAgo(stMaxAt(gl)) : ''}` : 'data belum tersedia', '#galeri', '/?studio=galeri'),
     card('📘', 'Panduan Partner', gdErr ? pill('red', `${gdErr} gagal`) : gdSched.length ? pill('gold', `${gdSched.length} terjadwal`) : pill('ok', 'Tayang'), 'PDF khusus partner (Kode Akses)', '#guides', null),
-    card('🏪', 'Enthusiast Partner', pill('ok', 'Tayang'), ad ? `${adN.length} partner · ${adProv} provinsi` : 'data belum tersedia', '#m/partner', '/?kota=semua'),
-    card('📦', 'Paket Audio', pill('mu', 'tampilan portal'), 'PDF paket siap pasang', '#m/paket', '/?studio=paket'),
-    card('📊', 'Stok', habis ? pill('red', `${habis} habis`) : pill('ok', 'Sinkron'), 'Sinkron Google Sheet tiap 15 menit', '#m/stock', null),
+    card('🏪', 'Enthusiast Partner', pill('ok', 'Tayang'), ad ? `${adN.length} partner · ${adProv} provinsi` : 'data belum tersedia', '#partner', '/?kota=semua'),
+    card('📦', 'Paket Audio', pill('ok', 'Tayang'), 'PDF paket siap pasang', '#paket', '/?studio=paket'),
+    card('📊', 'Stok', habis ? pill('red', `${habis} habis`) : pill('ok', 'Sinkron'), 'Sinkron Google Sheet tiap 15 menit', '#stok', null),
   ].join('');
   document.getElementById('st-hsched').innerHTML = stSchedList(sched, 7);
   // Perlu dikerjakan
@@ -295,7 +300,7 @@ async function stHome() {
   if (d.getUTCDate() >= 3) {
     const pm = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1)).toISOString().slice(0, 7);
     const g = await supabase.from('gsc_monthly').select('month').eq('month', pm).maybeSingle().then(r => r, () => ({ error: true }));
-    if (!g?.error && !g?.data) todo.push(['🔎', 'gold', `Isi angka Google Search ${new Date(pm + '-01').toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`, 'Rapor Bulanan · dari Search Console', '#m/rapor', 'Isi']);
+    if (!g?.error && !g?.data) todo.push(['🔎', 'gold', `Isi angka Google Search ${new Date(pm + '-01').toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`, 'Rapor Bulanan · dari Search Console', '#rapor', 'Isi']);
   }
   const el = document.getElementById('st-todo'); if (!el) return;
   el.innerHTML = todo.length ? todo.map(([ic, c, t, s, href, b]) => `<div class="st-row"><span class="st-ic ${c}">${ic}</span><div class="tx"><b>${t}</b><small>${s}</small></div><a class="st-btn" href="${href}">${b} ›</a></div>`).join('')
@@ -384,17 +389,14 @@ async function stNewsEdit(id) {
   if (id) { try { await stLoadNews(); it = stCache.news.find(n => n.id === id) || (await stLoadNews(true)).find(n => n.id === id); } catch (e) {} if (!it) { showToast('Berita tidak ditemukan.'); stGo('#news'); return; } }
   nf = { id: it?.id || null, title: it?.title || '', summary: it?.summary || '', body: it?.body || '', category: it?.category || 'Product', image: it?.image || '', file: null, preview: '',
     link_url: it?.link_url || '', link_label: it?.link_label || '', post_date: it?.post_date || todayWIB(), published: it ? !!it.published : false, wasPub: !!it?.published, notify: true, busy: false };
-  const extra = it && ((it.projects || []).length || (it.photos || []).length);
   stPage(`<div class="st-ph"><div><p><a href="#news">News</a> › ${it ? 'Edit' : 'Baru'}</p><h1>${it ? 'Edit berita' : 'Tulis berita'}</h1></div>
       <div class="st-acts">${it ? `<button class="st-btn red" onclick="stNewsDel()">🗑</button><a class="st-btn" href="/?news=${it.id}" target="_blank" rel="noopener">↗ Lihat</a>` : ''}<button class="st-btn pri" id="nf-save" onclick="stNewsSave()">💾 Simpan</button></div></div>
     <div class="st-ed"><div class="st-card st-pad">
       <input class="st-in st-title" id="nf-title" placeholder="Judul berita" value="${esc(nf.title)}" oninput="stNf()">
       <label class="st-fl">Ringkasan <small>(tampil di headline Dashboard)</small><input class="st-in" id="nf-summary" value="${esc(nf.summary)}" oninput="stNf()"></label>
-      <div class="st-fl">Gambar sampul <small>(16:9 disarankan)</small>
-        <label class="st-img16" id="nf-img">${nf.image ? `<img src="${esc(pubUrl(nf.image))}" alt="">` : '<span>🖼 Pilih gambar sampul</span>'}<input type="file" accept="image/*" hidden onchange="stNfImg(this)"></label>
-        ${nf.image ? '<button class="st-link" onclick="stNfImgDel()">Hapus gambar</button>' : ''}</div>
-      <label class="st-fl">Isi berita <small>(paragraf dipisah baris kosong · *tebal* _miring_)</small><textarea class="st-in st-body" id="nf-body" oninput="stNf()">${esc(nf.body)}</textarea></label>
-      ${extra ? `<p class="st-note">🔧 Berita ini punya project/foto tambahan — tetap tersimpan. Ubah bagian itu lewat <a href="/?news=${it.id}" target="_blank" rel="noopener">editor lengkap di portal ↗</a> (buka berita → ✏️ Edit).</p>` : '<p class="st-note">Project &amp; partner pemasang, perangkat terpasang, dan foto tambahan di antara paragraf: pakai editor lengkap di portal (setelah disimpan).</p>'}
+      <div class="st-fl">Gambar sampul <small>(16:9 disarankan · geser &amp; zoom untuk memilih bagian yang tampil)</small><div id="nf-img"></div></div>
+      <label class="st-fl">Isi berita <small>(paragraf dipisah baris kosong · *tebal* _miring_ · [foto 1] = foto tambahan)</small><textarea class="st-in st-body" id="nf-body" oninput="stNf()" onblur="nf.sel=this.selectionStart">${esc(nf.body)}</textarea></label>
+      <div id="nf-ph" class="sa-sec"></div><div id="nf-pj" class="sa-sec"></div>
       <div class="st-warn">⚠️ News publik — jangan memuat harga dealer, diskon, atau info internal.</div>
     </div>
     <div class="st-col"><div class="st-card st-pad">
@@ -406,6 +408,7 @@ async function stNewsEdit(id) {
       <label class="st-ck" id="nf-notif"><input type="checkbox" checked onchange="nf.notify=this.checked"> Kirim notifikasi 📰 ke HP pengunjung saat pertama tayang</label>
     </div>
     <div class="st-card st-pad"><div class="st-pvh"><b>👁 Pratinjau CAI Hub</b><div class="st-seg sm" id="nf-pvs"><button onclick="stNfPv('lap')">Laptop</button><button class="on" onclick="stNfPv('hp')">HP</button></div></div><div class="st-phone" id="nf-prev"></div><p class="st-note">Kotak headline Dashboard — ikut berubah saat Anda mengetik.</p></div></div></div>`);
+  stNwExtraInit(it); stNfCover(); stNfPh(); stNfPj();
   stNfPaint(); stBakOffer(it?.updated_at);
 }
 function stNf() {
@@ -424,19 +427,20 @@ function stNfPaint() {
 function stNfPrev() {
   const el = document.getElementById('nf-prev'); if (!el) return;
   const img = nf.preview || (nf.image ? pubUrl(nf.image) : '');
-  el.innerHTML = `<div class="pi">${img ? `<img src="${esc(img)}" alt="">` : '📰'}</div><div class="pb"><div class="k">NEWS${nf.category ? ' · ' + esc(nf.category.toUpperCase()) : ''}</div><h4>${esc(nf.title || 'Judul berita')}</h4><p>${esc(nf.summary || 'Ringkasan berita.')}</p><span class="more">Baca selengkapnya ›</span></div>`;
+  el.innerHTML = `<div class="pi">${img ? `<img src="${esc(img)}" alt="" style="${nf.fr ? nwFrCss(nf.fr) : ''}">` : '📰'}</div><div class="pb"><div class="k">NEWS${nf.category ? ' · ' + esc(nf.category.toUpperCase()) : ''}</div><h4>${esc(nf.title || 'Judul berita')}</h4><p>${esc(nf.summary || 'Ringkasan berita.')}</p><span class="more">Baca selengkapnya ›</span></div>`;
 }
 function stNfImg(input) {
-  const f = input.files[0]; if (!f) return; nf.file = f; nf.preview = URL.createObjectURL(f);
-  document.getElementById('nf-img').innerHTML = `<img src="${nf.preview}" alt=""><input type="file" accept="image/*" hidden onchange="stNfImg(this)">`; stNfPrev();
+  const f = input.files[0]; input.value = ''; if (!f) return; nf.file = f; nf.preview = URL.createObjectURL(f); nf.fr = { x: 50, y: 50, z: 1 };
+  stNfCover(); stNfPrev(); stNfDirty();
 }
-function stNfImgDel() { nf.image = ''; nf.file = null; nf.preview = ''; document.getElementById('nf-img').innerHTML = '<span>🖼 Pilih gambar sampul</span><input type="file" accept="image/*" hidden onchange="stNfImg(this)">'; stNfPrev(); }
+function stNfImgDel() { nf.image = ''; nf.file = null; nf.preview = ''; nf.fr = { x: 50, y: 50, z: 1 }; stNfCover(); stNfPrev(); stNfDirty(); }
 async function stNewsSave() {
   if (!nf || nf.busy) return; stNf();
   if (!nf.title.trim()) return showToast('Judul belum terisi.');
   nf.busy = true; const btn = document.getElementById('nf-save'); btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
-  const old = nf.id ? (stCache.news || []).find(n => n.id === nf.id)?.image : null;
-  let uploaded = null;
+  const oldIt = nf.id ? (stCache.news || []).find(n => n.id === nf.id) : null, old = oldIt?.image || null;
+  const oldPh = (oldIt?.photos || []).map(p => p.path);
+  let uploaded = null; const upPh = [];
   try {
     let image = nf.image || null;
     if (nf.file) {
@@ -445,18 +449,25 @@ async function stNewsSave() {
       const { error } = await supabase.storage.from('showcase').upload(uploaded, blob, { contentType: blob.type, cacheControl: '3600' });
       if (error) throw error; image = uploaded;
     }
+    const imgPath = image; if (image) image += nwFrSfx(nf.fr);
     const row = { title: nf.title.trim(), summary: nf.summary.trim() || null, body: nf.body.trim() || null, category: nf.category.trim() || null, image,
       link_url: nf.link_url.trim() || null, link_label: nf.link_label.trim() || null, post_date: nf.post_date || todayWIB(), published: !!nf.published, updated_at: new Date().toISOString() };
+    const ph = await stNfExtraRow(row, upPh);
     const q = nf.id ? supabase.from('cai_news').update(row).eq('id', nf.id).select().single() : supabase.from('cai_news').insert(row).select().single();
     const { data, error } = await q; if (error) throw error;
     if (data.published && !nf.wasPub && nf.notify) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'news', id: data.id } }).catch(() => {});
     const oldPath = old && String(old).split('#')[0];
-    if (oldPath && oldPath !== String(image || '').split('#')[0] && /^news\//.test(oldPath)) supabase.storage.from('showcase').remove([oldPath]).catch(() => {});
+    if (oldPath && oldPath !== String(imgPath || '') && /^news\//.test(oldPath)) supabase.storage.from('showcase').remove([oldPath]).catch(() => {});
+    const gone = oldPh.filter(x => /^news\//.test(x || '') && !ph.some(p => p.path === x));   // foto dari Galeri tidak ikut dihapus
+    if (gone.length) supabase.storage.from('showcase').remove(gone).catch(() => {});
     showToast(data.published ? (nf.wasPub ? '✓ Berita diperbarui' : '🚀 Berita diterbitkan') : '✓ Draf disimpan');
     await stLoadNews(true); nf = null; stGo('#news', true);
   } catch (e) {
     if (uploaded) supabase.storage.from('showcase').remove([uploaded]).catch(() => {});
-    nf.busy = false; btn.disabled = false; stNfPaint(); showToast('⚠ Gagal menyimpan: ' + (e.message || e), 8000);
+    if (upPh.length) { supabase.storage.from('showcase').remove(upPh).catch(() => {}); nf.photos.forEach(p => { if (upPh.includes(p.path)) delete p.path; }); }
+    nf.busy = false; btn.disabled = false; stNfPaint();
+    const m = String(e.message || e);
+    showToast(/(projects|photos)/i.test(m) && /column|schema cache/i.test(m) ? '⚠ Kolom project/foto berita belum ada di database (SQL supabase/news-projects.sql / news-photos.sql). ' + m : '⚠ Gagal menyimpan: ' + m, 9000);
   }
 }
 async function stNewsDel() {
@@ -816,7 +827,7 @@ async function stAcadSaveNew() {
 }
 
 // ── GALERI INSTALASI (tahap 4, 18 Nov 2026) — sama dengan portal js/showcase.js (saveGlItem/approveGlItem/deleteGlItem/glCmDel) ──
-// Tabel showcase_installs + Storage publik showcase/<id>/… (kiriman partner: pending/<id>/…). Posisi/zoom/putar foto & sampul loop tetap diatur di portal
+// Tabel showcase_installs + Storage publik showcase/<id>/… (kiriman partner: pending/<id>/…). Posisi/zoom/putar foto & sampul loop diatur di Studio (🎯, studio-admin.js)
 // (field pos/zoom/cover di item photos dipertahankan apa adanya). Logika ada di dua tempat — ubah keduanya bila aturan berubah.
 const GL_T = 'showcase_installs', GL_VMAX = 15;
 const GL_MAKES_S = ['Toyota', 'Honda', 'Mitsubishi', 'Suzuki', 'Daihatsu', 'Nissan', 'Mazda', 'Hyundai', 'Kia', 'Wuling', 'Chery', 'BYD', 'Isuzu', 'Subaru', 'Lexus', 'BMW', 'Mercedes-Benz', 'Audi', 'Volkswagen', 'Porsche', 'Mini', 'Volvo', 'Ford',
@@ -906,7 +917,7 @@ async function stGlEdit(id) {
   const prodOpts = PRODS().map(x => `<option value="${esc(x.b.name + ' · ' + x.p.name)}"></option>`).join('');
   const hofOpts = (typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME : []).map(h => `<option value="${esc(h.id)}"${gf.hof_id === h.id ? ' selected' : ''}>${esc(glHofLabel(h))}</option>`).join('');
   stPage(`<div class="st-ph"><div><p><a href="#galeri">Galeri Instalasi</a> › ${it ? 'Edit' : 'Baru'}</p><h1>${it ? esc(glTit(it)) + (it.car_year ? ' ' + it.car_year : '') : 'Tambah instalasi'}</h1></div>
-      <div class="st-acts">${it ? `<button class="st-btn red" onclick="stGlDelete('${it.id}',${gf.pend})">${gf.pend ? '✕ Tolak' : '🗑'}</button>${!gf.pend && it.published && !glSch(it) ? `<a class="st-btn" href="/?gl=${it.id}" target="_blank" rel="noopener">↗ Lihat · atur posisi foto</a>` : ''}` : ''}<button class="st-btn pri" id="gf-save" onclick="stGlSave()">💾 Simpan</button></div></div>
+      <div class="st-acts">${it ? `<button class="st-btn red" onclick="stGlDelete('${it.id}',${gf.pend})">${gf.pend ? '✕ Tolak' : '🗑'}</button>${!gf.pend && it.published && !glSch(it) ? `<a class="st-btn" href="/?gl=${it.id}" target="_blank" rel="noopener">↗ Lihat</a>` : ''}` : ''}<button class="st-btn pri" id="gf-save" onclick="stGlSave()">💾 Simpan</button></div></div>
     ${gf.pend ? `<div class="st-card st-pad st-glpend">📥 <b>Kiriman dari ${esc(it.submitter || it.dealer || 'partner')}</b> — belum tampil. Periksa foto/video (plat nomor harus diburamkan), lalu pilih <b>Sekarang</b> atau <b>Jadwalkan</b> dan simpan untuk menyetujui.</div>` : ''}
     <div class="st-ed"><div class="st-col"><div class="st-card st-pad">
       <div class="st-g2b st-gle"><label class="st-fl" style="margin-top:0">Merek<select class="st-in" onchange="gf.car_make=this.value"><option value="">— Pilih merek —</option>${GL_MAKES_S.map(m => `<option${gf.car_make === m ? ' selected' : ''}>${m}</option>`).join('')}${gf.car_make && !GL_MAKES_S.includes(gf.car_make) ? `<option selected>${esc(gf.car_make)}</option>` : ''}</select></label>
@@ -970,10 +981,10 @@ function stGfMedia() {
   el.innerHTML = gf.photos.map((p, i) => {
     const v = !!(p.video || glVid(p)), area = p.area || '';
     const opts = GL_AREA_S.map(([g, a]) => (g ? `<optgroup label="${g}">` : '') + a.map(x => `<option${area === x ? ' selected' : ''}>${x}</option>`).join('') + (g ? '</optgroup>' : '')).join('') + (area && !GL_AREA_S.some(g => g[1].includes(area)) ? `<option selected>${esc(area)}</option>` : '');
-    return `<div class="st-glm${p.wa ? ' wa' : ''}"><div class="st-glmv">${v ? `<video src="${esc(p.url)}${p.blob ? '' : '#t=' + (p.waT ?? 0.5)}" muted playsinline controls preload="metadata" id="gfv-${i}"></video>` : `<img src="${esc(p.url)}" alt="" style="object-position:${glPos(p)}">`}
+    return `<div class="st-glm${p.wa ? ' wa' : ''}"><div class="st-glmv">${v ? `<video src="${esc(p.url)}${p.blob ? '' : '#t=' + (p.waT ?? 0.5)}" muted playsinline controls preload="metadata" id="gfv-${i}"></video>` : `<img src="${esc(p.url)}" alt="" style="${glFrCssS(glFrS(p))}">`}
       ${i === 0 ? '<span class="st-pill gold">Sampul</span>' : ''}${p.blob ? '<span class="st-pill blue r">Baru</span>' : ''}${p.cover ? '<span class="st-pill mu r">🎞 loop</span>' : ''}</div>
       <select class="st-in sm" onchange="gf.photos[${i}].area=this.value"><option value="">— Keterangan —</option>${opts}</select>
-      <div class="st-glma"><button onclick="stGfMove(${i},-1)" title="Geser ke kiri"${i ? '' : ' disabled'}>◀</button><button onclick="stGfMove(${i},1)" title="Geser ke kanan"${i < gf.photos.length - 1 ? '' : ' disabled'}>▶</button>
+      <div class="st-glma"><button onclick="stGfAdj(${i})" title="Atur posisi, zoom${v ? ' & sampul loop' : ' & putar foto'}">🎯</button><button onclick="stGfMove(${i},-1)" title="Geser ke kiri"${i ? '' : ' disabled'}>◀</button><button onclick="stGfMove(${i},1)" title="Geser ke kanan"${i < gf.photos.length - 1 ? '' : ' disabled'}>▶</button>
         <button class="${p.wa ? 'on' : ''}" onclick="stGfWa(${i})" title="${v ? 'Jeda video di detik yang aman lalu tekan' : 'Jadikan sampul kartu WA'}">📲 WA${p.wa && v && p.waT != null ? ' ' + (+p.waT).toFixed(1) + 's' : ''}</button>
         ${v ? `<button class="${p.mute ? 'on' : ''}" onclick="gf.photos[${i}].mute=!gf.photos[${i}].mute;stGfMedia()" title="Tayang tanpa suara untuk semua penonton">${p.mute ? '🔇' : '🔊'}</button>` : ''}<button onclick="stGfDel(${i})" title="Hapus">🗑</button></div></div>`;
   }).join('') || '<p class="st-empty">Belum ada foto / video.</p>';
@@ -1289,4 +1300,4 @@ function stSearch(v) {
   stPQ = q; if (!location.hash.startsWith('#produk')) stGo('#produk'); else stProdukPaint();
 }
 
-stInit();
+addEventListener('DOMContentLoaded', stInit);   // setelah studio-admin.js & catedit.js termuat
