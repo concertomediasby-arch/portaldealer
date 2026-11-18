@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-10",
+ "updated": "2026-11-18",
  "partners": [
   {
    "r": "Bali",
@@ -37,6 +37,15 @@
   },
   {
    "r": "Banten",
+   "n": "Anugerah Audio",
+   "c": "Kota Tangerang Selatan",
+   "a": "Anugerahaudio Jl. Jombang Raya No.77, Pd. Aren, Kec. Pd. Aren,",
+   "wa": "6281218802821",
+   "ig": "ag.audiobintaro",
+   "map": "https://maps.app.goo.gl/UjcVLha9xfgUA1r56"
+  },
+  {
+   "r": "Banten",
    "n": "Kiki Rotary",
    "c": "Tangerang Selatan",
    "a": "Ruko Bavaria Gading Serpong No. 63",
@@ -67,17 +76,17 @@
    "c": "Kelapa Dua",
    "a": "Jl. Kelapa Dua Raya No. 30",
    "wa": "6281287831181",
-   "ig": "sun_jaya_motor",
+   "ig": "sun_jaya_motor_",
    "map": "https://maps.app.goo.gl/yKTXNNwwSM8PYVd1A"
   },
   {
    "r": "Banten",
    "n": "Roda Mas Audio",
-   "c": "Kota tangerang",
-   "a": "Jalan Boulevard Graha Raya, Graha Autopart Station Blok KN 01-03, KN 11-12, 15, RT 002/ RW 010, Sudirmara Pinang",
+   "c": "Kota Tangerang Selatan",
+   "a": "Pasar Modern Kawasan Niaga Bintaro - Bintaro Trade Centre Lantai 1 Blok H2 14-21, 15224,",
    "wa": "6282210827897",
    "ig": "rdm.autosound",
-   "map": "https://maps.app.goo.gl/6pyw8P2PKH5RenpUA"
+   "map": "https://maps.app.goo.gl/NrPBksT4ZGhN26A78?g_st=awb"
   },
   {
    "r": "DIY Yogyakarta",
@@ -86,15 +95,6 @@
    "a": "Jl. Magelang No.125",
    "wa": "6281578871888",
    "ig": "creativ_variasi"
-  },
-  {
-   "r": "DKI Jakarta",
-   "n": "Anugrah Audio",
-   "c": "Jakarta",
-   "a": "Jl. Jomban Raya No. 77, PD Aren",
-   "wa": "6281218802821",
-   "ig": "anugerah_audio",
-   "map": "https://share.google/rBLkRjtXM4PCFQkwK"
   },
   {
    "r": "DKI Jakarta",
@@ -266,12 +266,22 @@
    "map": "https://maps.app.goo.gl/iAP53EUvy7zJAEp56"
   },
   {
+   "r": "Jawa Tengah",
+   "n": "AJV Autoworks",
+   "c": "Boyolali",
+   "a": "Jl. Pandanaran No.46, Ngrancah, Siswodipuran",
+   "wa": "628179903003",
+   "ig": "ajv_autoworks",
+   "map": "https://maps.app.goo.gl/WP1E2MzefJTPkJJh8?g_st=ic"
+  },
+  {
    "r": "Jawa Timur",
    "n": "Autoschoon",
    "c": "Surabaya",
    "a": "Jln. Meyjen Sungkono No. 89 Gn. Sari",
-   "wa": "6282230303038",
-   "ig": "autoschoon"
+   "wa": "6289608057171",
+   "ig": "autoschoon",
+   "map": "https://maps.app.goo.gl/aWuNmpGyxhkQ4SnJ9"
   },
   {
    "r": "Jawa Timur",
@@ -354,6 +364,15 @@
    "map": "https://maps.app.goo.gl/7HgU7xQWfuhohWMS7"
   },
   {
+   "r": "Jawa Timur",
+   "n": "Concerto Tulungagung",
+   "c": "Tulungagung",
+   "a": "Jl merdeka 116, Ngunut, Tulungagung, Jawa Timur, Indonesia 66292",
+   "wa": "6281221221880",
+   "ig": "concerto.tulungagung",
+   "map": "https://maps.app.goo.gl/sgpFhzjGA9PW8thL8"
+  },
+  {
    "r": "Kalimantan Selatan",
    "n": "Oscar Variasi",
    "c": "Banjarbaru",
@@ -396,6 +415,15 @@
    "map": "https://maps.app.goo.gl/4AUZ5DcoivnWs2Nb7"
   },
   {
+   "r": "Lampung",
+   "n": "DW Car Audio Lampung",
+   "c": "Kota Bandar Lampung",
+   "a": "Jl. Urip Sumoharjo No.179, Gn. Sulah, Kec. Sukarame",
+   "wa": "628179075888",
+   "ig": "dw_caraudio",
+   "map": "https://maps.app.goo.gl/AR6XkBghtHuHKSsa9"
+  },
+  {
    "r": "Sulawesi Selatan",
    "n": "Auto Sound Gallery",
    "c": "Makassar",
@@ -426,6 +454,15 @@
    "a": "Jln. Kapten Muslim, Helvetia Tengah",
    "wa": "628116103838",
    "ig": "zonaaudio_medan"
+  },
+  {
+   "r": "Sumatra Utara",
+   "n": "Bengkel Pelita",
+   "c": "Kisaran",
+   "a": "Jl. P. Polem No.109-111, Tebing Kisaran,",
+   "wa": "6285322578888",
+   "ig": "bengkelpelitaofficial",
+   "map": "https://maps.app.goo.gl/QrXoy5WS3Qweq8BPA"
   }
  ]
 }
