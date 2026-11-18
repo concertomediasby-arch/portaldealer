@@ -51,7 +51,7 @@ const ST_NAV = [
   { g: 'Konten' }, { id: 'news', i: '📰', t: 'News' },
   { id: 'cway', i: '☕', t: 'Concerto Way' }, { id: 'academy', i: '🎓', t: 'Academy' },
   { id: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { id: 'guides', i: '📘', t: 'Panduan Partner' }, { id: 'sorotan', i: '🎬', t: 'Sorotan Brand' },
-  { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { id: 'paket', i: '📦', t: 'Paket Audio' }, { id: 'stok', i: '📊', t: 'Stok' },
+  { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { id: 'umumkan', i: '📣', t: 'Umumkan produk' }, { id: 'paket', i: '📦', t: 'Paket Audio' }, { id: 'stok', i: '📊', t: 'Stok' },
   { g: 'Partner' }, { id: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { id: 'akun', i: '🔑', t: 'Akun & Kode Akses' },
   { g: 'Laporan' }, { id: 'pengunjung', i: '📈', t: 'Pengunjung & Minat' }, { id: 'rapor', i: '🗓', t: 'Rapor Bulanan' }, { id: 'lappartner', i: '📨', t: 'Laporan Partner' },
   { g: 'Pengaturan' }, { id: 'notif', i: '🔔', t: 'Notifikasi HP' },
@@ -181,6 +181,7 @@ function stRoute() {
   if (cur === 'produk' && arg) { stProduk(); const sec = h.split('/')[2]; if (arg === 'new') ceOpen(null, sec || null); else { ceOpen(arg); stCeFocus(sec); } return; }
   if (cur === 'guides' && arg === 'new') return stGdNew(h.split('/')[2]);
   if (cur === 'stok' && arg === 'import') return stStokImport();
+  if (cur === 'umumkan') return stUmumkan(arg || '');
   if (cur === 'partner' && arg) return stPartnerEdit(arg === 'new' ? null : arg);
   if (cur === 'pengunjung') return stPengunjung(arg === 'minat' ? 'int' : 'visit');
   if (cur === 'rapor') return stRapor(arg);
@@ -188,7 +189,7 @@ function stRoute() {
   ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy, galeri: stGaleri, guides: stGuides,
     paket: stPaket, stok: stStok, partner: stPartner, akun: stAkun, sorotan: stSorotan, notif: stNotif })[cur]();
 }
-const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'sorotan', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner', 'notif'];
+const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'sorotan', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner', 'notif', 'umumkan'];
 const stPage = html => { const p = document.getElementById('st-page'); p.classList.remove('emb'); p.innerHTML = html; };
 const stCache = {};
 
@@ -207,7 +208,7 @@ async function stLoadSched(force) {
   (cw.data || []).forEach(x => out.push({ k: 'cway', at: Date.parse(x.publish_at), t: (x.day != null ? `Day ${x.day} · ` : '') + x.title, s: x.series || '', href: '#cway/' + x.id }));
   (gl.data || []).forEach(x => out.push({ k: 'gl', at: Date.parse(x.publish_at), t: `${x.car_make || ''} ${x.car_model || ''}`.trim(), s: x.dealer || '', href: '#galeri/' + x.id }));
   (gd.data || []).forEach(x => out.push({ k: 'guide', at: Date.parse(x.publish_at), t: x.title, s: x.error ? '⚠ ' + x.error : '', err: !!x.error, href: '#guides' }));
-  (pp.data || []).forEach(x => out.push({ k: 'prod', at: Date.parse(x.publish_at || now), t: x.title || x.product_id, s: x.product_id }));
+  (pp.data || []).forEach(x => out.push({ k: 'prod', at: Date.parse(x.publish_at || now), t: x.title || x.product_id, s: x.product_id, href: '#umumkan/' + encodeURIComponent(x.product_id) }));
   (ac.items || []).filter(a => a.at && Date.parse(a.at) > Date.now()).forEach(a => out.push({ k: 'acad', at: Date.parse(a.at), t: `#${a.no} · ${a.title}`, s: a.series || '', href: '#academy' }));
   out.sort((a, b) => a.at - b.at);
   stCache.sched = out; stCache.schedAt = Date.now(); stCache.cwLast = (cw.data || []).slice(-1)[0] || null;
@@ -356,7 +357,7 @@ function stProdukRows() {
     return `<tr><td><div class="st-pr"><span class="st-th">${ph ? `<img src="${esc(ph)}" alt="" loading="lazy">` : esc(p.emoji || '🔊')}</span><div><b>${esc(p.name)}</b><small>${esc(p.id)}</small></div></div></td>
       <td class="st-hm">${esc(b.name)}<small>${esc(l.name)}</small></td><td class="st-hm">${esc(p.category)}</td><td class="st-price">${price}</td>
       <td class="st-hm">${CE_PENDING.has(p.id) ? '<span class="st-pill gold">⏳ Menunggu tayang</span> ' : ''}${p.soon ? '<span class="st-pill blue">COMING SOON</span> ' : ''}${stTag(p.id)}</td>
-      <td class="st-tact"><a class="st-btn sm st-hm" href="/?p=${encodeURIComponent(p.id)}" target="_blank" rel="noopener" title="Lihat di situs">↗</a><button class="st-btn sm" onclick="ceOpen('${p.id}')">✏️ Edit</button></td></tr>`;
+      <td class="st-tact"><a class="st-btn sm st-hm" href="/?p=${encodeURIComponent(p.id)}" target="_blank" rel="noopener" title="Lihat di situs">↗</a><a class="st-btn sm" href="#umumkan/${encodeURIComponent(p.id)}" title="Umumkan produk">📣</a><button class="st-btn sm" onclick="ceOpen('${p.id}')">✏️ Edit</button></td></tr>`;
   }).join('') || '<tr><td colspan="6" class="st-empty">Tidak ada produk yang cocok.</td></tr>';
   document.getElementById('st-pfoot').textContent = `${rows.length} produk · Simpan = tayang di situs ±2–3 menit (kartu WA & halaman Google ikut diperbarui). Hapus produk: minta lewat Claude.`;
 }

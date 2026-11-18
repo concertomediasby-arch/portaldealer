@@ -31,6 +31,7 @@ function studioGo(hash) {
   // Tahap 6 (18 Nov 2026): menu laporan & kelola pindah ke Studio — tidak dialihkan di dalam sematan (#m/<menu> = cadangan, mis. Import Excel stok)
   const wrapTop = (name, fn) => { const orig = window[name]; if (typeof orig !== 'function') return; window[name] = function (...a) { return edOn() && !ED_EMBED ? fn(...a) : orig.apply(this, a); }; };
   wrapTop('openDealers', () => studioGo('#akun'));
+  wrapTop('openProdAnn', () => studioGo('#umumkan' + (typeof currentProductId !== 'undefined' && currentProductId ? '/' + currentProductId : '')));
   wrapTop('openAdForm', id => studioGo(id ? '#partner/' + id : '#partner/new'));
   wrapTop('openVisitors', () => studioGo('#pengunjung'));
   wrapTop('openRapor', m => studioGo('#rapor' + (m && /^\d{4}-\d{2}$/.test(m) ? '/' + m : '')));

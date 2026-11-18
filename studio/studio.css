@@ -381,3 +381,7 @@ button{font:inherit;cursor:pointer}
 .pn-chk input{width:16px;height:16px;accent-color:var(--gold);margin:0}.pn-chk small{color:var(--mu)}
 .pn-b{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 @media(max-width:720px){.rm-row{grid-template-columns:1fr}}
+
+/* 📣 Umumkan produk */
+.ua-prev{display:grid;grid-template-columns:34px 1fr;gap:10px;background:var(--bg);border-radius:14px;padding:10px 12px;font-size:12.5px;margin-top:6px}
+.ua-prev img{width:34px;height:34px;border-radius:8px}.ua-prev b{display:block;font-size:13px}

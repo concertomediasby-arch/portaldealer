@@ -1458,3 +1458,88 @@ function stNotif() {
     <div class="st-card st-pad sa-notif">${cwPushHtml()}</div>
     <div class="st-card st-pad sa-notif" style="margin-top:14px"><h3 style="font:700 15px Sora,sans-serif;margin-bottom:10px">Notifikasi lain di perangkat ini</h3>${pnHtml('settings')}</div>`);
 }
+
+/* ── 📣 UMUMKAN PRODUK (19 Nov 2026, permintaan pemilik — dulu jendela #pa-form di halaman produk CAI Hub).
+   Tabel product_push; teks otomatis paText() dari js/push.js (SRP saja); kirim sekarang = cway-push notify type product,
+   terjadwal = jadwal server tiap menit. Sama dengan saveProdAnn()/paDelete() portal — ubah keduanya bila aturan berubah. ── */
+const srpText = p => hasPrice(p) ? (srpFrom(p) ? 'mulai ' : '') + fmtRp(srpAmount(p)) + (p.priceUnit ? ' / ' + p.priceUnit : '') : '';
+let uaF = null, uaList = null;
+const uaLabel = f => `${f.b.name} ${f.p.name}${f.p.model && f.p.model !== f.p.name ? ' (' + f.p.model + ')' : ''}`;
+async function stUmumkan(pid) {
+  const f0 = pid ? saFind(pid) : null;
+  uaF = f0 ? uaInit(f0) : null;
+  stPage(`<div class="st-ph"><div><p>Katalog</p><h1>📣 Umumkan produk</h1></div></div>
+    <p class="st-note" style="margin-top:-6px">Kirim notifikasi HP <b>🆕 Produk baru</b> / <b>✅ Kini tersedia</b> ke semua HP yang mencentang “Produk baru”. Hanya SRP &amp; status — jangan menulis harga dealer / diskon.</p>
+    <div class="st-g2"><div class="st-card st-pad" id="ua-form"></div><div class="st-card st-pad" id="ua-list"><p class="st-empty">⏳ Memuat…</p></div></div>`);
+  uaPaint(); uaLoad();
+}
+function uaInit(f) { const r = { product: f.p, brand: f.b, line: f.l.name }, t = paText('new', r), tom = new Date(Date.parse(todayWIB() + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
+  return { pid: f.p.id, r, kind: 'new', ...t, mode: 'now', sd: tom, st: '10:00', busy: false }; }
+async function uaLoad() {
+  const { data, error } = await supabase.from('product_push').select('id, product_id, kind, title, publish_at, sent_at').order('publish_at', { ascending: false }).limit(200);
+  uaList = error ? null : data || []; uaList && (uaList.err = ''); if (error) uaList = { err: saSetup(error) ? 'setup' : error.message };
+  uaListPaint(); uaPaint();
+}
+function uaListPaint() {
+  const el = document.getElementById('ua-list'); if (!el) return;
+  if (!uaList || uaList.err) { el.innerHTML = uaList?.err === 'setup' ? `<p class="st-empty">Tabel pengumuman produk belum ada.<br><button class="st-btn sm" onclick="pushCopySql()">📋 Salin SQL Notifikasi</button></p>` : `<p class="st-empty">${uaList?.err ? '⚠ ' + esc(uaList.err) : '⏳ Memuat…'}</p>`; return; }
+  const wait = uaList.filter(x => !x.sent_at).sort((a, b) => Date.parse(a.publish_at) - Date.parse(b.publish_at)), sent = uaList.filter(x => x.sent_at);
+  const row = (x, w) => `<div class="st-row sa-sl"><div class="tx"><b>${esc(x.title)}</b><small>${esc(saPName(x.product_id))} · ${esc(paWhen(w ? x.publish_at : x.sent_at))}</small></div>${w ? `<button class="st-btn sm red" onclick="uaDel('${x.id}')">🗑</button>` : '<em class="up">✓ terkirim</em>'}</div>`;
+  el.innerHTML = `<div class="st-ch"><h3>⏰ Terjadwal</h3><span class="st-mu" style="margin-left:auto;font-size:12px">${wait.length}</span></div>${wait.map(x => row(x, 1)).join('') || '<p class="st-empty">Tidak ada pengumuman terjadwal.</p>'}
+    <div class="st-ch" style="margin-top:14px"><h3>✓ Sudah dikirim</h3><span class="st-mu" style="margin-left:auto;font-size:12px">${sent.length}</span></div>${sent.slice(0, 15).map(x => row(x, 0)).join('') || '<p class="st-empty">Belum ada.</p>'}`;
+}
+function uaPaint() {
+  const el = document.getElementById('ua-form'); if (!el) return;
+  const f = uaF, seg = (k, v, t) => `<button type="button" class="${f?.[k] === v ? 'on' : ''}" onclick="uaSet('${k}','${v}')">${t}</button>`;
+  const opts = PRODS().map(x => `<option value="${esc(uaLabel(x))}">`).join('');
+  const done = f && Array.isArray(uaList) ? uaList.filter(x => x.product_id === f.pid && x.sent_at) : [];
+  el.innerHTML = `<label class="st-fl" style="margin-top:0">Produk<input class="st-in" list="ua-dl" placeholder="Ketik nama / model produk…" value="${f ? esc(uaLabel(saFind(f.pid))) : ''}" onchange="uaPick(this.value)"><datalist id="ua-dl">${opts}</datalist></label>
+    ${!f ? '<p class="st-empty">Pilih produk dulu.</p>' : `
+    ${done.length ? `<p class="st-note" style="background:var(--warnl);padding:8px 10px;border-radius:8px">⚠ Sudah pernah diumumkan: ${done.map(x => `<b>${esc(x.title)}</b> (${esc(paWhen(x.sent_at))})`).join(', ')}.</p>` : ''}
+    <div class="st-fl">Jenis<div class="st-seg">${seg('kind', 'new', '🆕 Produk baru')}${seg('kind', 'avail', '✅ Kini tersedia')}</div></div>
+    <label class="st-fl">Judul notifikasi<input class="st-in" maxlength="80" value="${esc(f.title)}" oninput="uaF.title=this.value;uaPrev()"></label>
+    <label class="st-fl">Isi<textarea class="st-in" rows="2" maxlength="160" oninput="uaF.body=this.value;uaPrev()">${esc(f.body)}</textarea></label>
+    <div class="st-fl">Kirim<div class="st-seg">${seg('mode', 'now', 'Sekarang')}${seg('mode', 'sched', '⏰ Jadwalkan')}</div></div>
+    ${f.mode === 'sched' ? `<div style="display:flex;gap:10px"><label class="st-fl" style="flex:1">Tanggal<input class="st-in" type="date" value="${esc(f.sd)}" min="${todayWIB()}" oninput="uaF.sd=this.value;uaPrev()"></label><label class="st-fl" style="flex:1">Jam (WIB)<input class="st-in" type="time" step="300" value="${esc(f.st)}" oninput="uaF.st=this.value;uaPrev()"></label></div>` : ''}
+    <p class="st-note" id="ua-note"></p>
+    <div class="st-fl">Pratinjau notifikasi</div><div class="ua-prev" id="ua-prev"></div>
+    <div class="st-acts" style="margin-top:14px"><button class="st-btn pri" id="ua-save" onclick="uaSave()">📣 Kirim sekarang</button></div>`}`;
+  uaPrev();
+}
+function uaPick(v) { const f = PRODS().find(x => uaLabel(x) === v.trim()) || PRODS().find(x => normKey(x.p.model) === normKey(v) || normKey(x.p.name) === normKey(v));
+  if (!f) return showToast('Produk tidak ditemukan — pilih dari daftar.'); uaF = uaInit(f); uaPaint(); }
+function uaSet(k, v) { if (!uaF) return; uaF[k] = v; if (k === 'kind') Object.assign(uaF, paText(v, uaF.r)); uaPaint(); }
+function uaPrev() {
+  const f = uaF; if (!f) return;
+  const pv = document.getElementById('ua-prev'); if (pv) pv.innerHTML = `<img src="assets/icons/icon-192.png" alt=""><div><b>${esc(f.title)}</b>${esc(f.body)}</div>`;
+  const iso = paIso(f), past = iso && Date.parse(iso) <= Date.now(), n = document.getElementById('ua-note'), b = document.getElementById('ua-save');
+  if (n) n.innerHTML = f.mode === 'now' || past ? `${past ? '⚠ Waktu ini sudah lewat — ' : ''}Dikirim ke semua HP yang mencentang <b>🆕 Produk baru</b> begitu Anda menekan Kirim.` : `Dikirim otomatis <b>${esc(paWhen(iso))}</b>. Android ikut menampilkan foto produk.`;
+  if (b && !f.busy) b.textContent = f.mode === 'sched' && !past ? '⏰ Jadwalkan' : '📣 Kirim sekarang';
+}
+async function uaSave() {
+  const f = uaF; if (!f || f.busy) return;
+  if (!f.title.trim()) return showToast('Isi judul notifikasi dulu.');
+  if (/dealer|modal|diskon|discount/i.test(f.title + ' ' + f.body) && !confirm('Teks memuat kata dealer/modal/diskon. Notifikasi ini publik — tetap kirim?')) return;
+  const iso = paIso(f), later = iso && Date.parse(iso) > Date.now() + 30e3;
+  if (Array.isArray(uaList) && uaList.some(x => x.product_id === f.pid && x.sent_at) && !confirm('Produk ini sudah pernah diumumkan. Kirim pengumuman lagi?')) return;
+  const p = f.r.product, ph = p.photo || p.photos?.[0];
+  const row = { product_id: f.pid, kind: f.kind, title: f.title.trim(), body: f.body.trim(), image: ph ? new URL(ph, HUB + '/').href : null,
+    publish_at: later ? iso : new Date().toISOString(), remind_at: later ? null : new Date().toISOString() };
+  f.busy = true; const b = document.getElementById('ua-save'); if (b) { b.disabled = true; b.textContent = '⏳ Menyimpan…'; }
+  try {
+    const { data, error } = await supabase.from('product_push').insert(row).select('id').single(); if (error) throw error;
+    if (later) showToast(`⏰ Pengumuman dijadwalkan ${paWhen(iso)}`, 6000);
+    else { const r = await pushFn({ action: 'notify', type: 'product', id: data.id }); showToast(`📣 Pengumuman terkirim ke ${r?.sent ?? 0} HP`, 6000); }
+    uaF = null; uaLoad();
+  } catch (e) {
+    f.busy = false; if (b) b.disabled = false; uaPrev();
+    if (saSetup(e)) { pushCopySql(); showToast('⚠ Tabel pengumuman produk belum ada — SQL notifikasi disalin, jalankan di Supabase → SQL Editor.', 9000); }
+    else showToast('⚠ Gagal: ' + (e.message || e), 7000);
+  }
+}
+async function uaDel(id) {
+  if (!confirm('Batalkan pengumuman terjadwal ini?')) return;
+  const { error } = await supabase.from('product_push').delete().eq('id', id).is('sent_at', null);
+  if (error) return showToast('⚠ ' + error.message, 6000);
+  showToast('Pengumuman terjadwal dibatalkan'); uaLoad();
+}
