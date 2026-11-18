@@ -50,7 +50,7 @@ const ST_NAV = [
   { id: 'home', i: '◧', t: 'Beranda' }, { id: 'jadwal', i: '⏰', t: 'Jadwal tayang' },
   { g: 'Konten' }, { id: 'news', i: '📰', t: 'News' },
   { id: 'cway', i: '☕', t: 'Concerto Way' }, { id: 'academy', i: '🎓', t: 'Academy' },
-  { id: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { id: 'guides', i: '📘', t: 'Panduan Partner' },
+  { id: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { id: 'guides', i: '📘', t: 'Panduan Partner' }, { id: 'sorotan', i: '🎬', t: 'Sorotan Brand' },
   { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { id: 'paket', i: '📦', t: 'Paket Audio' }, { id: 'stok', i: '📊', t: 'Stok' },
   { g: 'Partner' }, { id: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { id: 'akun', i: '🔑', t: 'Akun & Kode Akses' },
   { g: 'Laporan' }, { id: 'pengunjung', i: '📈', t: 'Pengunjung & Minat' }, { id: 'rapor', i: '🗓', t: 'Rapor Bulanan' }, { id: 'lappartner', i: '📨', t: 'Laporan Partner' },
@@ -185,9 +185,9 @@ function stRoute() {
   if (cur === 'rapor') return stRapor(arg);
   if (cur === 'lappartner') return stLapPartner(arg);
   ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy, galeri: stGaleri, guides: stGuides,
-    paket: stPaket, stok: stStok, partner: stPartner, akun: stAkun })[cur]();
+    paket: stPaket, stok: stStok, partner: stPartner, akun: stAkun, sorotan: stSorotan })[cur]();
 }
-const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner'];
+const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'sorotan', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner'];
 const stPage = html => { const p = document.getElementById('st-page'); p.classList.remove('emb'); p.innerHTML = html; };
 const stCache = {};
 
@@ -286,6 +286,7 @@ async function stHome() {
     card('🚗', 'Galeri Instalasi', gl ? (glPendN ? pill('warn', `${glPendN} kiriman`) : glSchedN ? pill('gold', `${glSchedN} terjadwal`) : pill('ok', 'Tayang')) : pill('mu', '—'), gl ? `${glLiveN} mobil tayang${stMaxAt(gl) ? ' · diubah ' + stAgo(stMaxAt(gl)) : ''}` : 'data belum tersedia', '#galeri', '/?studio=galeri'),
     card('📘', 'Panduan Partner', gdErr ? pill('red', `${gdErr} gagal`) : gdSched.length ? pill('gold', `${gdSched.length} terjadwal`) : pill('ok', 'Tayang'), 'PDF khusus partner (Kode Akses)', '#guides', null),
     card('🏪', 'Enthusiast Partner', pill('ok', 'Tayang'), ad ? `${adN.length} partner · ${adProv} provinsi` : 'data belum tersedia', '#partner', '/?kota=semua'),
+    card('🎬', 'Sorotan Brand', pill('ok', 'Tayang'), '4 kotak video paling atas Dashboard', '#sorotan', '/'),
     card('📦', 'Paket Audio', pill('ok', 'Tayang'), 'PDF paket siap pasang', '#paket', '/?studio=paket'),
     card('📊', 'Stok', habis ? pill('red', `${habis} habis`) : pill('ok', 'Sinkron'), 'Sinkron Google Sheet tiap 15 menit', '#stok', null),
   ].join('');

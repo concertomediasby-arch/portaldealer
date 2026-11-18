@@ -38,6 +38,11 @@ function studioGo(hash) {
   wrapTop('openAdmin', () => studioGo('#stok'));
   wrapTop('staffSyncSheet', () => studioGo('#stok'));
 })();
+// 🎬 Sorotan Brand (19 Nov 2026): tombol Ganti video / ✏️ / ↺ di kotak Dashboard → halaman Sorotan Brand di Studio
+document.addEventListener('click', e => {
+  const b = e.target.closest?.('.dt-edit .dt-btn'); if (!b || !edOn() || ED_EMBED) return;
+  e.preventDefault(); e.stopPropagation(); studioGo('#sorotan');
+}, true);
 // ＋ Tambah PDF Panduan = label berisi input file → cegah jendela pilih file, buka Studio
 document.addEventListener('click', e => {
   const l = e.target.closest?.('.guide-upload'); if (!l || !edOn()) return;

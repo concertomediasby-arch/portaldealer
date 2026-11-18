@@ -1291,3 +1291,150 @@ async function stGfRotate(i) {
   } catch (e) { showToast('⚠ Foto tidak bisa diputar: ' + (e.message || e), 5000); }
   delete p._rot; stGfMedia(); stGfAdj(i);
 }
+
+/* ── 🎬 SOROTAN BRAND (19 Nov 2026, permintaan pemilik — dulu tombol 🎬/✏️/↺ di kotak Dashboard CAI Hub).
+   4 kotak video Dashboard: DASH_TILES (data murni di js/core.js) + catatan Editor showcase/dashboard/tiles.json
+   ({ <brand>: { path?, mb?, label?, tag? }, _share: { <brand>: hash } }). Salinan aturan uploadDashVideo()/editDashLabel()/
+   resetDashVideo()/dashShareImage()/dashShareSync() di js/core.js — ubah aturan di portal → ubah juga di sini. ── */
+const SR_TAGS = ['Featured', 'New Arrival', 'Coming Soon', 'Best Seller', 'Juara EMMA'];
+const SR_MAX_MB = 5, SR_MANIFEST = 'dashboard/tiles.json', SR_SHARE_VER = 1;
+const SR_REPO_COPIES = new Set(['dashboard/zelos-1794119157102.mp4']);   // sama dengan DASH_REPO_COPIES
+const srOvVid = o => (o?.path && o.mb && o.mb <= SR_MAX_MB && !SR_REPO_COPIES.has(o.path)) ? o.path : '';
+let srTiles = [], srOv = {}, srEdit = {};
+async function srLoad() {
+  if (!srTiles.length) srTiles = await saCoreArr('DASH_TILES');
+  try { const r = await fetch(pubUrl(SR_MANIFEST) + '?t=' + Date.now(), { cache: 'no-store' }); srOv = r.ok ? (await r.json()) || {} : {}; } catch (e) { srOv = {}; }
+}
+function srTile(id, ov = srOv) {
+  const t = srTiles.find(x => x.id === id), b = BRANDS.find(x => x.id === id); if (!t || !b) return null;
+  const o = ov[id] || {}, v = srOvVid(o);
+  return { t, b, o, label: o.label || t.label || '', tag: 'tag' in o ? o.tag : (t.tag || ''), video: v ? pubUrl(v) : t.video, poster: v ? '' : (t.poster || ''), photos: t.photos || [], custom: !!v };
+}
+const srTagCls = tg => /new|baru/i.test(tg) ? 'new' : /soon/i.test(tg) ? 'soon' : /juara|emma/i.test(tg) ? 'win' : '';
+async function stSorotan() {
+  stPage(`<div class="st-ph"><div><p>Konten</p><h1>🎬 Sorotan Brand</h1></div><div class="st-acts"><a class="st-btn" href="/" target="_blank" rel="noopener">↗ Lihat di Dashboard</a><button class="st-btn" onclick="stSorotan()">↻</button></div></div>
+    <p class="st-note" style="margin-top:-6px">Empat kotak video paling atas Dashboard CAI Hub. Perubahan langsung tampil untuk semua pengunjung. Video maks. ${SR_MAX_MB} MB (sebaiknya 854×480, tanpa suara, 10–15 detik) agar Dashboard ringan &amp; kuota Supabase aman.</p>
+    <div class="sr-grid" id="sr-grid"><p class="st-empty">⏳ Memuat…</p></div>`);
+  await srLoad(); srPaint();
+}
+function srPaint() {
+  const g = document.getElementById('sr-grid'); if (!g) return;
+  g.innerHTML = srTiles.map(t => {
+    const d = srTile(t.id); if (!d) return '';
+    const e = srEdit[t.id] || (srEdit[t.id] = { label: d.o.label ?? '', tag: 'tag' in d.o ? (d.o.tag || '-') : '' });
+    const tagNow = e.tag === '-' ? '' : (e.tag || d.t.tag || ''), labNow = e.label || d.t.label || '';
+    const media = d.video ? `<video src="${esc(d.video)}"${d.poster ? ` poster="${esc(d.poster)}"` : ''} muted loop playsinline autoplay preload="metadata"></video>` : `<img src="${esc(d.photos[0] || '')}" alt="">`;
+    return `<div class="st-card sr-card" style="--bc:${esc(d.b.color || '#d8b26a')}">
+      <div class="sr-vid">${media}${tagNow ? `<span class="sr-tag ${srTagCls(tagNow)}">${esc(tagNow)}</span>` : ''}</div>
+      <div class="sr-bar">${d.b.logo ? `<img src="${esc(d.b.logo)}" alt="${esc(d.b.name)}">` : `<b>${esc(d.b.name)}</b>`}<span>${esc(labNow)}</span></div>
+      <div class="st-pad">
+        <div class="sr-src">${d.custom ? `🎬 Video unggahan Editor · ${esc(String(d.o.mb))} MB` : `📦 Video bawaan${d.video ? '' : ' (foto bergantian)'}`}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          <label class="st-btn sm pri">🎬 Ganti video<input type="file" accept="video/mp4,video/webm,video/quicktime" hidden onchange="srUpload('${d.b.id}',this)"></label>
+          ${d.o.path ? `<button class="st-btn sm" onclick="srReset('${d.b.id}')">↺ Kembali ke video bawaan</button>` : ''}
+        </div>
+        <label class="st-fl">Nama produk / seri <small>— kosong = “${esc(d.t.label || '')}”</small><input class="st-in" maxlength="40" placeholder="${esc(d.t.label || '')}" value="${esc(e.label)}" oninput="srEdit['${d.b.id}'].label=this.value"></label>
+        <label class="st-fl">Tag pojok kiri atas
+          <select class="st-in" onchange="srEdit['${d.b.id}'].tag=this.value==='__c'?(prompt('Tulis tag:',srEdit['${d.b.id}'].tag||'')||'').trim():this.value;srPaint()">
+            <option value=""${!e.tag ? ' selected' : ''}>Bawaan (${esc(d.t.tag || 'tanpa tag')})</option>
+            ${SR_TAGS.map(x => `<option${e.tag === x ? ' selected' : ''}>${x}</option>`).join('')}
+            ${e.tag && e.tag !== '-' && !SR_TAGS.includes(e.tag) ? `<option selected value="${esc(e.tag)}">${esc(e.tag)}</option>` : ''}
+            <option value="-"${e.tag === '-' ? ' selected' : ''}>— Tanpa tag</option><option value="__c">✏️ Tulis sendiri…</option></select></label>
+        <div class="st-acts" style="margin-top:12px"><button class="st-btn pri" onclick="srSave('${d.b.id}',this)">💾 Simpan</button></div>
+      </div></div>`;
+  }).join('') || '<p class="st-empty">Data kotak tidak terbaca.</p>';
+  g.querySelectorAll('video').forEach(v => v.play?.().catch(() => {}));
+}
+async function srManifest(next) {
+  const blob = new Blob([JSON.stringify(next)], { type: 'application/json' });
+  const { error } = await supabase.storage.from('showcase').upload(SR_MANIFEST, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
+  if (error) throw error;
+}
+function srErr(e, what) {
+  const m = e?.message || String(e);
+  if (/row-level security|policy|403|unauthori/i.test(m)) saCopy(`drop policy if exists "showcase staff read" on storage.objects;\ncreate policy "showcase staff read" on storage.objects for select to authenticated\n  using (bucket_id = 'showcase' and (auth.jwt() -> 'app_metadata' ->> 'role') in ('admin','editor'));`, '⚠ Izin Storage belum lengkap — SQL perbaikan disalin, tempel di Supabase → SQL Editor → Run.');
+  else showToast(`⚠ Gagal ${what}: ` + m, 7000);
+}
+async function srSave(id, btn) {
+  const t = srTiles.find(x => x.id === id), e = srEdit[id] || {}, n = { ...(srOv[id] || {}) };
+  const lab = (e.label || '').trim(), tg = (e.tag || '').trim();
+  if (lab) n.label = lab; else delete n.label;
+  if (tg === '-') n.tag = ''; else if (tg && tg !== (t?.tag || '')) n.tag = tg; else delete n.tag;
+  const next = { ...srOv }; if (Object.keys(n).length) next[id] = n; else delete next[id];
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan…'; }
+  try { await srManifest(next); srOv = next; showToast('✓ Disimpan — langsung tampil di Dashboard'); srShare(id); }
+  catch (er) { srErr(er, 'menyimpan'); }
+  srPaint();
+}
+async function srUpload(id, input) {
+  const f = input.files?.[0]; input.value = ''; if (!f) return;
+  if (f.size > SR_MAX_MB * 1048576) return showToast(`⚠ Video terlalu besar (${(f.size / 1048576).toFixed(1)} MB). Maksimal ${SR_MAX_MB} MB — kompres dulu (854×480, tanpa suara, 10–15 detik).`, 7000);
+  const ext = (f.name.match(/\.(mp4|m4v|mov|webm)$/i)?.[1] || 'mp4').toLowerCase(), path = `dashboard/${id}-${Date.now()}.${ext}`;
+  showToast('⏳ Mengunggah video…', 60000);
+  try {
+    const { error } = await supabase.storage.from('showcase').upload(path, f, { contentType: f.type || 'video/mp4', cacheControl: '31536000', upsert: false });
+    if (error) throw error;
+    const old = srOv[id]?.path, next = { ...srOv, [id]: { ...(srOv[id] || {}), path, mb: +(f.size / 1048576).toFixed(2) } };
+    try { await srManifest(next); } catch (er) { supabase.storage.from('showcase').remove([path]).catch(() => {}); throw er; }
+    srOv = next; if (old) supabase.storage.from('showcase').remove([old]).catch(() => {});
+    showToast('✓ Video kotak diganti — langsung tampil untuk semua pengunjung'); srPaint(); srShare(id);
+  } catch (er) { srErr(er, 'mengunggah'); }
+}
+async function srReset(id) {
+  if (!confirm('Kembalikan kotak ini ke video/foto bawaan?')) return;
+  const old = srOv[id]?.path, next = { ...srOv };
+  if (next[id]) { next[id] = { ...next[id] }; delete next[id].path; delete next[id].mb; if (!Object.keys(next[id]).length) delete next[id]; }
+  try { await srManifest(next); srOv = next; if (old) await supabase.storage.from('showcase').remove([old]); showToast('✓ Kembali ke tampilan bawaan'); srPaint(); srShare(id); }
+  catch (er) { srErr(er, 'menyimpan'); }
+}
+// Sampul pratinjau WA /s/<brand>/ (showcase/dashboard/share-<brand>.jpg) — sama dengan dashShareImage() portal
+function srHash(id) { const d = srTile(id); if (!d) return ''; const s = [SR_SHARE_VER, d.label, d.tag, srOvVid(d.o) || 'bawaan'].join('|'); let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0; return (h >>> 0).toString(36); }
+const srImg = src => new Promise((ok, no) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => ok(i); i.onerror = () => no(new Error('gambar gagal dimuat')); i.src = src; });
+const srFrame = src => new Promise((ok, no) => { const v = document.createElement('video'); v.crossOrigin = 'anonymous'; v.muted = true; v.playsInline = true; v.preload = 'auto';
+  const t = setTimeout(() => no(new Error('video terlalu lama dimuat')), 25000);
+  v.onloadeddata = () => { v.currentTime = Math.min(1.5, (v.duration || 3) / 3); }; v.onseeked = () => { clearTimeout(t); ok(v); }; v.onerror = () => { clearTimeout(t); no(new Error('video gagal dimuat')); }; v.src = src; });
+async function srShareImage(id) {
+  const d = srTile(id); if (!d) return null;
+  try { await Promise.all(['800 64px Sora', '700 16px Sora', '800 14px Sora', '400 21px Inter', '700 19px Sora'].map(f => document.fonts.load(f))); } catch (e) {}
+  let bg = null; try { bg = srOvVid(d.o) ? await srFrame(pubUrl(srOvVid(d.o))) : await srImg(d.t.poster || d.photos[0]); } catch (e) {}
+  const lw = await saLogo();
+  const [logo, cai] = await Promise.all([d.b.logo ? srImg(d.b.logo).catch(() => null) : null, lw ? srImg(lw).catch(() => null) : null]);
+  const W = 1200, H = 630, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d');
+  x.fillStyle = '#07080a'; x.fillRect(0, 0, W, H);
+  if (bg) { const bw = bg.videoWidth || bg.naturalWidth, bh = bg.videoHeight || bg.naturalHeight, sc = Math.max(W / bw, H / bh); x.drawImage(bg, (W - bw * sc) / 2, (H - bh * sc) / 2, bw * sc, bh * sc); }
+  const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(7,8,10,.95)'); g.addColorStop(.42, 'rgba(7,8,10,.82)'); g.addColorStop(.75, 'rgba(7,8,10,.15)'); g.addColorStop(1, 'rgba(7,8,10,0)');
+  x.fillStyle = g; x.fillRect(0, 0, W, H); x.fillStyle = d.b.color || '#d8b26a'; x.fillRect(0, 0, W, 8);
+  x.beginPath(); x.arc(W - 126, H / 2, 56, 0, Math.PI * 2); x.fillStyle = 'rgba(0,0,0,.45)'; x.fill(); x.lineWidth = 3; x.strokeStyle = 'rgba(255,255,255,.85)'; x.stroke();
+  x.beginPath(); x.moveTo(W - 134, H / 2 - 21); x.lineTo(W - 100, H / 2); x.lineTo(W - 134, H / 2 + 21); x.closePath(); x.fillStyle = '#fff'; x.fill();
+  const L = 64, ls = v => { if ('letterSpacing' in x) x.letterSpacing = v; };
+  if (logo) { const h = 54, w = Math.min(280, logo.naturalWidth * h / logo.naturalHeight); x.drawImage(logo, L, 52, w, w * logo.naturalHeight / logo.naturalWidth); }
+  else { x.font = '800 38px Sora'; x.fillStyle = '#fff'; x.textBaseline = 'top'; x.fillText(d.b.name, L, 52); }
+  x.textBaseline = 'alphabetic'; x.font = '400 21px Inter'; const lines = [''];
+  for (const w of (d.b.tagline || '').split(' ')) { const t = (lines[lines.length - 1] + ' ' + w).trim(); if (x.measureText(t).width > 600 && lines[lines.length - 1]) lines.push(w); else lines[lines.length - 1] = t; }
+  const tl = lines.slice(0, 2), y = 506 - (tl.length - 1) * 28, subTop = y - 21;
+  x.fillStyle = '#c9cdd5'; tl.forEach((t, i) => x.fillText(t, L, y + i * 28));
+  const label = d.label || d.b.name; let fs = 64; x.font = `800 ${fs}px Sora`;
+  while (x.measureText(label).width > 640 && fs > 36) { fs -= 2; x.font = `800 ${fs}px Sora`; }
+  const ly = subTop - 16; x.fillStyle = '#fff'; x.fillText(label, L, ly);
+  const ky = ly - fs - 14; x.font = '700 16px Sora'; ls('4px'); x.fillStyle = '#d8b26a'; x.fillText('SOROTAN BRAND', L, ky); const kw = x.measureText('SOROTAN BRAND').width; ls('0px');
+  if (d.tag) { x.font = '800 14px Sora'; ls('1.7px'); const tt = d.tag.toUpperCase(), tw = x.measureText(tt).width + 20, tx = L + kw + 12, ty = ky - 17;
+    x.fillStyle = /new|baru/i.test(d.tag) ? '#e5484d' : /soon/i.test(d.tag) ? '#2f6bff' : '#d8b26a';
+    x.beginPath(); x.roundRect ? x.roundRect(tx, ty, tw, 26, 6) : x.rect(tx, ty, tw, 26); x.fill();
+    x.fillStyle = /new|baru|soon/i.test(d.tag) ? '#fff' : '#111'; x.fillText(tt, tx + 10, ty + 19); ls('0px'); }
+  x.fillStyle = 'rgba(255,255,255,.12)'; x.fillRect(L, 537, 592, 1);
+  if (cai) { const h = 30; x.drawImage(cai, L, 556, cai.naturalWidth * h / cai.naturalHeight, h); }
+  x.font = '700 19px Sora'; x.fillStyle = '#d8b26a'; x.textAlign = 'right'; x.fillText('hub.concerto.id', L + 592, 578); x.textAlign = 'left';
+  return new Promise(ok => cv.toBlob(ok, 'image/jpeg', .86));
+}
+let srShareBusy = Promise.resolve();
+function srShare(id) {
+  srShareBusy = srShareBusy.then(async () => {
+    if ((srOv._share || {})[id] === srHash(id)) return;
+    try {
+      const blob = await srShareImage(id); if (!blob) return;
+      const { error } = await supabase.storage.from('showcase').upload(`dashboard/share-${id}.jpg`, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '60' }); if (error) throw error;
+      const next = { ...srOv, _share: { ...(srOv._share || {}), [id]: srHash(id) } }; await srManifest(next); srOv = next;
+    } catch (e) { console.warn('Sampul Sorotan gagal dibuat:', id, e); }
+  });
+  return srShareBusy;
+}
