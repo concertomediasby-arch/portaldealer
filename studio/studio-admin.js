@@ -1438,3 +1438,23 @@ function srShare(id) {
   });
   return srShareBusy;
 }
+
+/* ── 🔔 NOTIFIKASI HP & PENGINGAT TAYANG (19 Nov 2026, permintaan pemilik — dulu hanya di menu Setting CAI Hub).
+   Halaman #notif memakai kode yang SAMA dengan portal: js/push.js (dimuat studio/index.html setelah file ini) —
+   cwPushHtml() (⏰ Pengingat tayang + waktu pengingat + 📱 Perangkat Editor) dan pnHtml('settings') (pilihan notifikasi lain).
+   Pengaturan berlaku per perangkat/browser; Studio & CAI Hub di browser yang sama memakai langganan yang sama (service worker /sw.js).
+   Fungsi bantu di bawah = pengganti fungsi portal yang dipakai js/push.js. ── */
+const isAdmin = () => ['admin', 'editor'].includes(userRole());
+const isManager = () => userRole() === 'manager';
+const escHtml = s => esc(s);
+const EXTRA_PREFIX = 'x:';
+const findProductAny = id => { const f = saFind(id); return f ? { brand: f.b, product: f.p } : {}; };
+const stockShown = id => stCache.stockFull?.[id] || stCache.stock?.[id] || null;
+const requireLogin = fn => fn?.();
+const openSettings = () => stGo('#notif');
+function stNotif() {
+  stPage(`<div class="st-ph"><div><p>Pengaturan</p><h1>🔔 Notifikasi HP</h1></div><div class="st-acts"><button class="st-btn" onclick="pushSt='…';pdList=null;pushRefresh()">↻</button></div></div>
+    <p class="st-note" style="margin-top:-6px">Berlaku untuk <b>perangkat / browser ini</b>. Buka halaman ini di setiap HP / laptop yang ingin menerima notifikasi (di iPhone: pasang CAI Hub di Layar Utama dulu, lalu buka dari ikonnya). Pengaturan sama dengan menu Setting di CAI Hub.</p>
+    <div class="st-card st-pad sa-notif">${cwPushHtml()}</div>
+    <div class="st-card st-pad sa-notif" style="margin-top:14px"><h3 style="font:700 15px Sora,sans-serif;margin-bottom:10px">Notifikasi lain di perangkat ini</h3>${pnHtml('settings')}</div>`);
+}

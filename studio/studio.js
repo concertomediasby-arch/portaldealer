@@ -54,6 +54,7 @@ const ST_NAV = [
   { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { id: 'paket', i: '📦', t: 'Paket Audio' }, { id: 'stok', i: '📊', t: 'Stok' },
   { g: 'Partner' }, { id: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { id: 'akun', i: '🔑', t: 'Akun & Kode Akses' },
   { g: 'Laporan' }, { id: 'pengunjung', i: '📈', t: 'Pengunjung & Minat' }, { id: 'rapor', i: '🗓', t: 'Rapor Bulanan' }, { id: 'lappartner', i: '📨', t: 'Laporan Partner' },
+  { g: 'Pengaturan' }, { id: 'notif', i: '🔔', t: 'Notifikasi HP' },
 ];
 function stNavHtml(cur) {
   return ST_NAV.map(n => n.g ? `<div class="st-grp">${n.g}</div>`
@@ -185,9 +186,9 @@ function stRoute() {
   if (cur === 'rapor') return stRapor(arg);
   if (cur === 'lappartner') return stLapPartner(arg);
   ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy, galeri: stGaleri, guides: stGuides,
-    paket: stPaket, stok: stStok, partner: stPartner, akun: stAkun, sorotan: stSorotan })[cur]();
+    paket: stPaket, stok: stStok, partner: stPartner, akun: stAkun, sorotan: stSorotan, notif: stNotif })[cur]();
 }
-const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'sorotan', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner'];
+const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'sorotan', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner', 'notif'];
 const stPage = html => { const p = document.getElementById('st-page'); p.classList.remove('emb'); p.innerHTML = html; };
 const stCache = {};
 
