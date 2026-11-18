@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-14",
+ "updated": "2026-11-18",
  "partners": [
   {
    "r": "Bali",
@@ -264,6 +264,15 @@
    "wa": "62816797215",
    "ig": "thepeakgarage",
    "map": "https://maps.app.goo.gl/iAP53EUvy7zJAEp56"
+  },
+  {
+   "r": "Jawa Tengah",
+   "n": "AJV Autoworks",
+   "c": "Boyolali",
+   "a": "Jl. Pandanaran No.46, Ngrancah, Siswodipuran",
+   "wa": "628179903003",
+   "ig": "ajv_autoworks",
+   "map": "https://maps.app.goo.gl/WP1E2MzefJTPkJJh8?g_st=ic"
   },
   {
    "r": "Jawa Timur",
