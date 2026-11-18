@@ -49,7 +49,7 @@ function stTouch() {}
 const ST_NAV = [
   { id: 'home', i: '◧', t: 'Beranda' }, { id: 'jadwal', i: '⏰', t: 'Jadwal tayang' },
   { g: 'Konten' }, { id: 'news', i: '📰', t: 'News' },
-  { id: 'cway', i: '☕', t: 'Concerto Way' }, { m: 'academy', i: '🎓', t: 'Academy' },
+  { id: 'cway', i: '☕', t: 'Concerto Way' }, { id: 'academy', i: '🎓', t: 'Academy' },
   { m: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { m: 'guides', i: '📘', t: 'Panduan Partner' },
   { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { m: 'paket', i: '📦', t: 'Paket Audio' }, { m: 'stock', i: '📊', t: 'Stok' },
   { g: 'Partner' }, { m: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { m: 'dealers', i: '🔑', t: 'Akun & Kode Akses' },
@@ -65,7 +65,7 @@ function stNewMenu(e) {
   e.stopPropagation();
   const m = document.getElementById('st-newmenu');
   m.innerHTML = `<a href="#news/new">📰 Berita</a><a href="#" onclick="ceOpen(null);return false">🔊 Produk</a>
-    <a href="#cway/new">☕ Concerto Way</a><a href="#m/academy">🎓 Materi Academy </a><a href="#m/galeri">🚗 Instalasi Galeri </a>`;
+    <a href="#cway/new">☕ Concerto Way</a><a href="#academy/new">🎓 Materi Academy</a><a href="#m/galeri">🚗 Instalasi Galeri </a>`;
   m.classList.toggle('on');
 }
 addEventListener('click', () => document.getElementById('st-newmenu')?.classList.remove('on'));
@@ -138,9 +138,10 @@ function stRoute() {
   if (pg === 'm' && STUDIO_EMBED[arg]) return stEmbed(arg);
   if (cur === 'news' && arg) return stNewsEdit(arg === 'new' ? null : arg);
   if (cur === 'cway' && arg) return stCwEdit(arg === 'new' ? null : arg);
-  ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway })[cur]();
+  if (cur === 'academy' && arg === 'new') return stAcadNew();
+  ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy })[cur]();
 }
-const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway'];
+const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy'];
 const stPage = html => { const p = document.getElementById('st-page'); p.classList.remove('emb'); p.innerHTML = html; };
 const stCache = {};
 
@@ -160,7 +161,7 @@ async function stLoadSched(force) {
   (gl.data || []).forEach(x => out.push({ k: 'gl', at: Date.parse(x.publish_at), t: `${x.car_make || ''} ${x.car_model || ''}`.trim(), s: x.dealer || '' }));
   (gd.data || []).forEach(x => out.push({ k: 'guide', at: Date.parse(x.publish_at), t: x.title, s: x.error ? '⚠ ' + x.error : '', err: !!x.error }));
   (pp.data || []).forEach(x => out.push({ k: 'prod', at: Date.parse(x.publish_at || now), t: x.title || x.product_id, s: x.product_id }));
-  (ac.items || []).filter(a => a.at && Date.parse(a.at) > Date.now()).forEach(a => out.push({ k: 'acad', at: Date.parse(a.at), t: `#${a.no} · ${a.title}`, s: a.series || '' }));
+  (ac.items || []).filter(a => a.at && Date.parse(a.at) > Date.now()).forEach(a => out.push({ k: 'acad', at: Date.parse(a.at), t: `#${a.no} · ${a.title}`, s: a.series || '', href: '#academy' }));
   out.sort((a, b) => a.at - b.at);
   stCache.sched = out; stCache.schedAt = Date.now(); stCache.cwLast = (cw.data || []).slice(-1)[0] || null;
   return out;
@@ -189,7 +190,7 @@ async function stHome() {
     <div class="st-g2"><div class="st-col"><div class="st-card"><div class="st-ch"><h3>📥 Perlu tindakan</h3></div><div id="st-todo"><p class="st-empty">⏳ Memeriksa…</p></div></div>
       <div class="st-card"><div class="st-ch"><h3>⚡ Buat cepat</h3></div><div class="st-quick">
         <a class="st-qb" href="#news/new"><b>📰</b>Berita</a><a class="st-qb" href="#" onclick="ceOpen(null);return false"><b>🔊</b>Produk</a>
-        <a class="st-qb" href="#cway/new"><b>☕</b>Concerto Way</a><a class="st-qb" href="#m/academy"><b>🎓</b>Academy </a>
+        <a class="st-qb" href="#cway/new"><b>☕</b>Concerto Way</a><a class="st-qb" href="#academy/new"><b>🎓</b>Academy</a>
         <a class="st-qb" href="#m/galeri"><b>🚗</b>Galeri </a><a class="st-qb" href="#m/stock"><b>📊</b>Stok </a></div></div></div>
       <div class="st-card"><div class="st-ch"><h3>⏰ Jadwal tayang</h3><a href="#jadwal">Semua ›</a></div><div class="st-tl" id="st-hsched"><p class="st-empty">⏳ Memuat…</p></div></div></div>`);
   const [vis, int, sched, stock, pend] = await Promise.all([
@@ -546,9 +547,202 @@ function stCwShare() {
   window.open(`https://wa.me/?text=${waEnc(`Concerto Way${it.day != null ? ' — Day ' + it.day : ''}: ${it.title}\nKhusus partner CAI — buka di CAI Hub dengan Kode Akses:\n${link}`)}`, '_blank', 'noopener');
 }
 
+// ── ACADEMY (tahap 3, 18 Nov 2026) — sama dengan portal js/core.js (loadAcadExtra/saveAcadItems/acadReschedule/acadDelete) ──
+// Materi bawaan = ACADEMY di js/core.js (dibaca dari teks file, data murni); materi portal = Storage publik showcase/academy/items.json.
+const ACAD_MANIFEST = 'academy/items.json', ACAD_NEW_DAYS = 5;
+const acadPad2 = n => String(n).padStart(2, '0');
+const acadImgS = (a, thumb) => a.img ? pubUrl(thumb ? (a.thumb || a.img) : a.img) : `assets/academy/fundamental-${acadPad2(a.no)}${thumb ? '-thumb' : ''}.webp`;
+const acadDueS = a => a.at ? Date.parse(a.at) <= Date.now() : a.date <= todayWIB();
+const wibYmd = iso => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+async function stLoadAcad(force) {
+  if (stCache.acad && !force) return stCache.acad;
+  if (!stCache.acadBase) {
+    try { const t = await (await fetch('js/core.js?t=' + Date.now(), { cache: 'no-store' })).text(); const m = t.match(/const ACADEMY = (\[[\s\S]*?\n\]);/); stCache.acadBase = m ? Function('return ' + m[1])() : []; }
+    catch (e) { stCache.acadBase = []; }
+  }
+  const r = await fetch(pubUrl(ACAD_MANIFEST) + '?t=' + Date.now(), { cache: 'no-store' });
+  const j = r.ok ? await r.json() : { items: [] };
+  stCache.acadExtra = (j.items || []).filter(a => a && a.no && a.img && a.date);
+  stCache.acad = [...stCache.acadBase, ...stCache.acadExtra];
+  supabase.rpc('academy_view_counts').then(({ data, error }) => { if (error) return; stCache.acadViews = new Map((data || []).map(x => [+x.no, x])); if ((location.hash || '').startsWith('#academy')) stAcadGrid(); }).catch(() => {});
+  return stCache.acad;
+}
+async function stAcadSave(items) {
+  const { error } = await supabase.storage.from('showcase').upload(ACAD_MANIFEST, new Blob([JSON.stringify({ items })], { type: 'application/json' }), { upsert: true, contentType: 'application/json', cacheControl: '0' });
+  if (error) throw error; stCache.acadExtra = items; stCache.acad = [...(stCache.acadBase || []), ...items]; stCache.sched = null;
+}
+let stAcF = 'all', stAcQ = '';
+async function stAcademy() {
+  stPage(`<div class="st-ph"><div><p>Konten · publik</p><h1>Concerto Academy</h1></div><div class="st-acts"><button class="st-btn" onclick="stLoadAcad(true).then(stAcadPaint)">↻</button><a class="st-btn gold" href="#academy/new">＋ Tambah materi</a></div></div>
+    <div id="ac-queue"></div><div class="st-card"><div class="st-filters" id="ac-f"></div><div class="st-acgrid" id="ac-grid"><p class="st-empty">⏳ Memuat…</p></div></div>`);
+  try { await stLoadAcad(true); stAcadPaint(); } catch (e) { document.getElementById('ac-grid').innerHTML = `<p class="st-empty">⚠ ${esc(e.message)}</p>`; }
+}
+function stAcadPaint() {
+  const all = stCache.acad || [], q = document.getElementById('ac-queue'); if (!q) return;
+  const sched = all.filter(a => !acadDueS(a)).sort((x, y) => Date.parse(x.at || x.date) - Date.parse(y.at || y.date) || x.no - y.no);
+  q.innerHTML = sched.length ? `<div class="st-card st-acq"><div class="st-ch"><h3>⏰ Antrian tayang · ${sched.length} materi</h3><span class="st-note" style="margin:0 0 0 auto">otomatis muncul pada jamnya + notifikasi 🎓</span></div>
+    ${sched.map(a => `<div class="st-row"><span class="st-acqt">${esc(cwWhenS(a.at || a.date + 'T00:00:00+07:00'))}</span><div class="tx"><b>#${a.no} · ${esc(a.title)}</b><small>${esc(a.series || 'Fundamental')}</small></div>${a.img ? `<button class="st-btn sm" onclick="stAcadResched(${a.no})">✏️ Jadwal</button>` : ''}</div>`).join('')}</div>` : '';
+  const live = all.filter(acadDueS).length;
+  document.getElementById('ac-f').innerHTML = [['all', 'Semua', all.length], ['live', 'Tayang', live], ['sched', '⏰ Terjadwal', sched.length]]
+    .map(([k, t, n]) => `<button class="st-chip${stAcF === k ? ' on' : ''}" onclick="stAcF='${k}';stAcadPaint()">${t} ${n}</button>`).join('') +
+    `<label class="st-search sm"><span>🔍</span><input placeholder="Cari judul / nomor…" value="${esc(stAcQ)}" oninput="stAcQ=this.value;stAcadGrid()"></label>`;
+  stAcadGrid();
+}
+function stAcadGrid() {
+  const el = document.getElementById('ac-grid'); if (!el) return;
+  const q = stAcQ.trim().toLowerCase(), V = stCache.acadViews;
+  const rows = (stCache.acad || []).filter(a => (stAcF === 'all' || (stAcF === 'live') === acadDueS(a)) && (!q || `#${a.no} ${a.title} ${a.series || ''}`.toLowerCase().includes(q))).sort((x, y) => y.no - x.no);
+  el.innerHTML = rows.map(a => {
+    const due = acadDueS(a), d = Math.round((Date.parse(todayWIB()) - Date.parse(a.date)) / 864e5), v = V?.get(a.no);
+    return `<div class="st-acc${due ? '' : ' sched'}"><button class="st-acth" onclick="stAcadView(${a.no})"><img src="${esc(acadImgS(a, true))}" alt="" loading="lazy">
+      ${!due ? '<span class="st-pill gold">⏰ Terjadwal</span>' : d >= 0 && d < ACAD_NEW_DAYS ? '<span class="st-pill gold">★ Baru</span>' : ''}</button>
+      <div class="st-acb"><small>${esc(a.series || 'Fundamental')} #${a.no}</small><b>${esc(a.title)}</b>
+      <div class="st-acm"><span>${due ? new Date(a.date + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : esc(cwWhenS(a.at || a.date + 'T00:00:00+07:00'))}</span>${v ? `<span>👁 ${fmtNum(v.views)}</span>` : ''}</div>
+      ${a.img ? `<div class="st-aca"><button onclick="stAcadTitle(${a.no})" title="Ubah judul">✏️ Judul</button><button onclick="stAcadResched(${a.no})" title="Ubah jadwal">⏰ Jadwal</button><button onclick="stAcadDel(${a.no})" title="Hapus">🗑</button></div>` : '<div class="st-aca st-mu"><span>materi bawaan</span></div>'}</div></div>`;
+  }).join('') || '<p class="st-empty">Tidak ada materi.</p>';
+}
+function stAcadView(no) {
+  const a = (stCache.acad || []).find(x => x.no === no); if (!a) return;
+  let ov = document.getElementById('st-lb'); if (!ov) { ov = document.createElement('div'); ov.id = 'st-lb'; ov.className = 'st-lb'; ov.onclick = e => { if (e.target === ov || e.target.dataset.x) ov.classList.remove('on'); }; document.body.appendChild(ov); }
+  ov.innerHTML = `<div class="st-lbb"><div class="st-lbh"><b>#${a.no} · ${esc(a.title)}</b><a class="st-btn sm" href="/?acad=${a.no}" target="_blank" rel="noopener">↗ Lihat di situs</a><button class="st-btn sm" data-x="1">✕</button></div><img src="${esc(acadImgS(a))}" alt=""></div>`;
+  ov.classList.add('on');
+}
+async function stAcadTitle(no) {
+  const a = (stCache.acadExtra || []).find(x => x.no === no); if (!a) return;
+  const t = prompt('Judul materi:', a.title); if (t == null || !t.trim() || t.trim() === a.title) return;
+  try { await stAcadSave(stCache.acadExtra.map(x => x.no === no ? { ...x, title: t.trim() } : x)); stAcadPaint(); showToast('✓ Judul diperbarui'); } catch (e) { showToast('⚠ Gagal menyimpan: ' + e.message, 7000); }
+}
+async function stAcadResched(no) {
+  const a = (stCache.acadExtra || []).find(x => x.no === no); if (!a) return;
+  const cur = a.at ? new Date(a.at).toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).slice(0, 16) : '';
+  const v = prompt(`Jadwal tayang materi #${no} (WIB), format YYYY-MM-DD HH:MM.\nKetik "sekarang" untuk langsung tayang.`, cur); if (v == null) return;
+  let at = null;
+  if (!/^\s*(sekarang)?\s*$/i.test(v)) {
+    const m = v.trim().match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}):(\d{2})$/);
+    if (!m) return showToast('⚠ Format salah. Contoh: 2026-11-20 09:00', 5000);
+    at = new Date(Date.parse(`${m[1]}T${m[2].padStart(2, '0')}:${m[3]}:00+07:00`)).toISOString();
+    if (!(Date.parse(at) > Date.now())) return showToast('⚠ Waktu sudah lewat — pilih waktu yang akan datang.', 5000);
+  }
+  const items = stCache.acadExtra.map(x => { if (x.no !== no) return x; const y = { ...x }; delete y.at; return at ? { ...y, at, date: wibYmd(at) } : { ...y, date: todayWIB() }; });
+  try {
+    await stAcadSave(items); stAcadPaint();
+    if (!at) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'acad', id: [no] } }).catch(() => {});
+    showToast(at ? `⏰ Dijadwalkan ${cwWhenS(at)}` : '✓ Materi tayang sekarang');
+  } catch (e) { showToast('⚠ Gagal menyimpan: ' + e.message, 7000); }
+}
+async function stAcadDel(no) {
+  const a = (stCache.acadExtra || []).find(x => x.no === no); if (!a) return;
+  if (!confirm(`Hapus materi #${no} "${a.title}"?`)) return;
+  try { await stAcadSave(stCache.acadExtra.filter(x => x.no !== no)); supabase.storage.from('showcase').remove([a.img, a.thumb].filter(Boolean)).catch(() => {}); stAcadPaint(); showToast('🗑 Materi dihapus'); }
+  catch (e) { showToast('⚠ Gagal menghapus: ' + e.message, 7000); }
+}
+// Tambah materi: gambar (1 gambar = 1 materi) atau PDF (tiap halaman = 1 materi)
+let af = null, pdfLibP = null;
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return pdfLibP || (pdfLibP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; res(pdfjsLib); };
+    s.onerror = () => { pdfLibP = null; rej(new Error('Gagal memuat pembaca PDF. Periksa koneksi internet.')); }; document.head.appendChild(s); }));
+}
+async function acadPdfPagesS(f) {
+  const lib = await loadPdfJs(), doc = await lib.getDocument({ data: await f.arrayBuffer() }).promise, out = [];
+  try {
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i), v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: 1080 / v1.width });
+      const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      out.push({ blob: await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('halaman kosong')), 'image/png')), name: f.name.replace(/\.pdf$/i, '') + (doc.numPages > 1 ? ' ' + i : '') });
+    }
+  } finally { doc.destroy(); }
+  return out;
+}
+async function acadImgBlobsS(src) {   // sama dengan acadImgBlobs() portal: lebar maks 1080 + thumbnail 540×360 bagian atas
+  const bmp = await createImageBitmap(src);
+  const toBlob = c => new Promise((res, rej) => c.toBlob(b => b && b.type === 'image/webp' ? res(b) : c.toBlob(j => j ? res(j) : rej(new Error('Gagal memproses gambar')), 'image/jpeg', .88), 'image/webp', .85));
+  const s = Math.min(1, 1080 / bmp.width), c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+  const t = document.createElement('canvas'); t.width = 540; t.height = 360; const ts = 540 / bmp.width, tg = t.getContext('2d');
+  tg.fillStyle = '#fff'; tg.fillRect(0, 0, 540, 360); tg.drawImage(bmp, 0, 0, bmp.width, Math.min(bmp.height, 360 / ts), 0, 0, 540, Math.min(360, bmp.height * ts));
+  return { img: await toBlob(c), thumb: await toBlob(t) };
+}
+const acTitle = n => n.replace(/\.(pdf|jpe?g|png|webp)$/i, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+async function stAcadNew() {
+  try { await stLoadAcad(); } catch (e) {}
+  const all = stCache.acad || [], last = all.filter(a => a.series).slice(-1)[0];
+  const sched = all.filter(a => !acadDueS(a) && a.at).map(a => Date.parse(a.at));
+  const base = sched.length ? Math.max(...sched) + 864e5 : Date.now() + 864e5;
+  af = { series: last?.series || 'Fundamental', items: [], mode: 'now', sd: new Date(base + 7 * 36e5).toISOString().slice(0, 10), st: '19:00', stag: false, per: 1, busy: false };
+  stPage(`<div class="st-ph"><div><p><a href="#academy">Academy</a> › Tambah</p><h1>Tambah materi Academy</h1></div><div class="st-acts"><button class="st-btn pri" id="af-save" onclick="stAcadSaveNew()" disabled>💾 Simpan</button></div></div>
+    <div class="st-ed"><div class="st-card st-pad">
+      <label class="st-fl" style="margin-top:0">Nama seri<input class="st-in" value="${esc(af.series)}" oninput="af.series=this.value;stAfList()"></label>
+      <label class="st-drop"><input type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf" multiple hidden onchange="stAfFiles(this)"><b>📄 Pilih gambar / PDF</b><small>1 gambar = 1 materi (tegak seperti materi yang ada) · PDF: setiap halaman jadi 1 materi</small></label>
+      <div id="af-list"></div></div>
+    <div class="st-col"><div class="st-card st-pad">
+      <div class="st-fl" style="margin-top:0">Tayang<div class="st-seg" id="af-mode"><button onclick="af.mode='now';stAfSched()">Sekarang</button><button onclick="af.mode='sched';stAfSched()">⏰ Jadwalkan</button></div></div>
+      <div id="af-sched"></div><p class="st-note" id="af-note"></p></div>
+      <div class="st-card st-pad"><p class="st-note" style="margin:0">Materi baru bertanda <b>★ Baru</b> ${ACAD_NEW_DAYS} hari. Saat tayang, HP yang mengaktifkan notifikasi 🎓 Academy dikabari. Nomor materi melanjutkan nomor terakhir (#${Math.max(0, ...all.map(a => a.no)) + 1}).</p></div></div></div>`);
+  stAfSched(); stAfList();
+}
+const afAt = i => new Date(Date.parse(`${af.sd}T${af.st || '09:00'}:00+07:00`) + (af.stag ? Math.floor(i / Math.max(1, +af.per || 1)) : 0) * 864e5).toISOString();
+function stAfSched() {
+  document.querySelectorAll('#af-mode button').forEach((b, i) => b.classList.toggle('on', ['now', 'sched'][i] === af.mode));
+  document.getElementById('af-sched').innerHTML = af.mode === 'sched' ? `<div class="st-g2b"><label class="st-fl">Tanggal<input class="st-in" type="date" value="${af.sd}" min="${todayWIB()}" onchange="af.sd=this.value;stAfSched();stAfList()"></label><label class="st-fl">Jam (WIB)<input class="st-in" type="time" step="300" value="${af.st}" onchange="af.st=this.value;stAfSched();stAfList()"></label></div>
+    <label class="st-ck"><input type="checkbox"${af.stag ? ' checked' : ''} onchange="af.stag=this.checked;stAfSched();stAfList()"> Rilis bertahap: <input class="st-in st-num" type="number" min="1" max="50" value="${af.per}" onchange="af.per=Math.max(1,Math.min(50,parseInt(this.value)||1));stAfSched();stAfList()"> materi per hari</label>` : '';
+  const n = af.items.length, past = af.mode === 'sched' && !(Date.parse(afAt(0)) > Date.now());
+  document.getElementById('af-note').innerHTML = af.mode === 'now' ? 'Langsung tayang untuk publik saat disimpan.' : past ? '⚠ Jam tayang sudah lewat — pilih waktu yang akan datang.'
+    : `⏰ ${n > 1 && af.stag ? `Mulai ${esc(cwWhenS(afAt(0)))} sampai ${esc(cwWhenS(afAt(n - 1)))}` : `Tayang ${esc(cwWhenS(afAt(0)))}`}. Sebelum itu hanya Editor yang melihat.`;
+  const b = document.getElementById('af-save'); if (b && !af.busy) { b.disabled = !n; b.textContent = af.mode === 'sched' ? `⏰ Simpan jadwal (${n})` : `🚀 Terbitkan (${n})`; }
+}
+function stAfList() {
+  const el = document.getElementById('af-list'); if (!el) return;
+  const next = Math.max(0, ...(stCache.acad || []).map(a => a.no)) + 1;
+  el.innerHTML = af.items.length ? af.items.map((x, i) => `<div class="st-afit"><img src="${x.url}" alt=""><div class="tx"><small>${esc(af.series || 'Fundamental')} #${next + i}${af.mode === 'sched' ? ` · ⏰ ${esc(cwWhenS(afAt(i)))}` : ''}</small>
+    <input class="st-in" value="${esc(x.title)}" placeholder="Judul materi" oninput="af.items[${i}].title=this.value"></div><button class="st-btn sm" onclick="stAfDrop(${i})">🗑</button></div>`).join('') : '<p class="st-empty">Belum ada file dipilih.</p>';
+}
+async function stAfFiles(input) {
+  const files = [...(input.files || [])]; input.value = '';
+  for (const f of files) {
+    try {
+      const parts = /\.pdf$/i.test(f.name) || /pdf$/i.test(f.type) ? (showToast(`Mengubah ${f.name} jadi gambar…`, 20000), await acadPdfPagesS(f)) : /^image\//.test(f.type) ? [{ blob: f, name: f.name }] : null;
+      if (!parts) { showToast(`${f.name}: pilih gambar JPG/PNG/WebP atau PDF.`, 5000); continue; }
+      parts.forEach(p => af.items.push({ blob: p.blob, url: URL.createObjectURL(p.blob), title: acTitle(p.name) }));
+    } catch (e) { showToast(`⚠ ${f.name}: ${e.message || e}`, 6000); }
+  }
+  showToast(`${af.items.length} materi siap — periksa judulnya lalu simpan.`); stAfList(); stAfSched();
+}
+function stAfDrop(i) { const [x] = af.items.splice(i, 1); if (x) URL.revokeObjectURL(x.url); stAfList(); stAfSched(); }
+async function stAcadSaveNew() {
+  if (!af || af.busy || !af.items.length) return;
+  if (af.items.some(x => !x.title.trim())) return showToast('⚠ Isi judul untuk setiap materi.');
+  if (af.mode === 'sched' && !(Date.parse(afAt(0)) > Date.now())) return showToast('⚠ Jam tayang sudah lewat — ubah tanggal/jam.');
+  af.busy = true; const btn = document.getElementById('af-save'); btn.disabled = true; btn.textContent = '⏳ Mengunggah…';
+  const store = supabase.storage.from('showcase'), up = [], added = [];
+  try {
+    await stLoadAcad(true);   // nomor terbaru (cegah bentrok bila materi baru ditambah dari tempat lain)
+    let no = Math.max(0, ...stCache.acad.map(a => a.no)) + 1;
+    for (const [i, x] of af.items.entries()) {
+      btn.textContent = `⏳ Mengunggah ${i + 1}/${af.items.length}…`;
+      const b = await acadImgBlobsS(x.blob), ext = b.img.type === 'image/webp' ? 'webp' : 'jpg', ts = Date.now();
+      const img = `academy/${acadPad2(no)}-${ts}.${ext}`, thumb = `academy/${acadPad2(no)}-${ts}-thumb.${ext}`;
+      for (const [path, blob] of [[img, b.img], [thumb, b.thumb]]) { const { error } = await store.upload(path, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false }); if (error) throw error; up.push(path); }
+      const at = af.mode === 'sched' ? afAt(i) : null;
+      added.push({ no, date: at ? wibYmd(at) : todayWIB(), ...(at ? { at } : {}), title: x.title.trim(), series: (af.series || '').trim() || 'Fundamental', img, thumb }); no++;
+    }
+    await stAcadSave([...stCache.acadExtra, ...added]);
+    const sch = added.filter(a => a.at);
+    if (!sch.length) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'acad', id: added.map(a => a.no) } }).catch(() => {});
+    showToast(sch.length ? `⏰ ${added.length} materi dijadwalkan — mulai ${cwWhenS(sch[0].at)}` : `🚀 ${added.length} materi diterbitkan`, 6000);
+    af.items.forEach(x => URL.revokeObjectURL(x.url)); af = null; location.hash = '#academy';
+  } catch (e) {
+    if (up.length) store.remove(up).catch(() => {});
+    af.busy = false; stAfSched(); showToast('⚠ Gagal menyimpan: ' + (e.message || e), 8000);
+  }
+}
+
 // ── Menu portal yang disematkan di Studio (tahap 2b, 18 Nov 2026 — cara A): /?studio=<menu>&embed=1 dalam iframe ──
 // Portal dalam mode sematan menyembunyikan header, sidebar & menu bawahnya (html.embed di index.html/style.css). Sesi login sama.
-const STUDIO_EMBED = { academy: 'Academy', galeri: 'Galeri Instalasi', guides: 'Panduan Partner', paket: 'Paket Audio', stock: 'Stok', partner: 'Enthusiast Partner',
+const STUDIO_EMBED = { galeri: 'Galeri Instalasi', guides: 'Panduan Partner', paket: 'Paket Audio', stock: 'Stok', partner: 'Enthusiast Partner',
   dealers: 'Akun & Kode Akses', visitors: 'Pengunjung & Minat', rapor: 'Rapor Bulanan', prapor: 'Laporan Partner', cway: 'Concerto Way (portal)' };
 function stEmbed(k) {
   document.getElementById('st-page').innerHTML = `<div class="st-emb"><div class="st-embh"><b>${esc(STUDIO_EMBED[k])}</b><span class="st-pill mu">tampilan portal</span>
