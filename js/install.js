@@ -71,6 +71,7 @@ function insLog(kind) {
 
 // ── Mulai: catat kunjungan & pemakaian dari ikon ──
 function insInit() {
+  if (document.documentElement.classList.contains('embed')) return;   // disematkan di CAI Hub Studio: tanpa ajakan pasang
   if (QA_SCREEN_MODE) return;
   const s = insState();
   if (s.v !== 2) { delete s.snooze; s.v = 2; }   // sekali: hapus penundaan dari versi awal (tutup kartu yang dibuka lewat pil ikut menunda)

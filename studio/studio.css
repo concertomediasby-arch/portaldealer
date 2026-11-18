@@ -156,3 +156,10 @@ button{font:inherit;cursor:pointer}
 .st-cwprev .res small,.st-cwprev .task small{display:block;font:700 11px Inter;color:#D8B26A;margin-bottom:6px}
 .st-cwprev .task label{display:flex;gap:8px;margin:5px 0}.st-cwprev .task label span{width:15px;height:15px;border:1.5px solid #D8B26A;border-radius:4px;flex-shrink:0;margin-top:3px}
 @media(max-width:860px){.st-g2b{grid-template-columns:110px minmax(0,1fr)}.st-cwq-days{margin-left:0}.st-cwbody{min-height:260px}}
+/* menu portal disematkan (#m/<menu>) */
+.st-page.emb{padding:0;max-width:none}
+.st-emb{display:flex;flex-direction:column;height:calc(100vh - 59px);height:calc(100dvh - 59px)}
+.st-embh{display:flex;align-items:center;gap:10px;padding:10px 20px;background:#fff;border-bottom:1px solid var(--bd);flex-wrap:wrap}.st-embh b{font:700 15px Sora;margin-right:4px}
+.st-embh .st-pill{margin-right:auto}
+.st-ifr{flex:1;width:100%;border:0;background:#0E0F12}
+@media(max-width:860px){.st-emb{height:calc(100dvh - 55px - 62px - env(safe-area-inset-bottom))}.st-embh{padding:8px 12px}.st-embh .st-pill{display:none}.st-embh b{margin-right:auto}}

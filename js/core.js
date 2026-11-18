@@ -768,7 +768,7 @@ function pmSync() {
     } else pm.el.pause();
   }
 }
-function portalMusicStart() { pmWant = true; pmSync(); }
+function portalMusicStart() { if (document.documentElement.classList.contains('embed')) return; pmWant = true; pmSync(); }   // tidak berbunyi saat disematkan di CAI Hub Studio
 function toggleMusic() {
   const on = !pmPref();
   try { localStorage.setItem(PORTAL_MUSIC_KEY, on ? 'on' : 'off'); } catch (e) {}

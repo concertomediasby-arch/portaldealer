@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════
    CAI HUB STUDIO — panel kerja khusus Editor di /studio/ (18 Nov 2026, permintaan pemilik — pratinjau .mockup/studio/ disetujui).
-   Tahap 1: Beranda · Jadwal tayang · Katalog Produk (form js/catedit.js) · News. Menu lain masih di portal (tautan ↗).
+   Tahap 1: Beranda · Jadwal tayang · Katalog Produk (form js/catedit.js) · News. Tahap 2: Concerto Way. Menu lain = portal disematkan (stEmbed, #m/<menu>).
    Sesi login sama dengan portal (supabase-js menyimpan sesi per domain), jadi Editor yang sudah login di portal langsung masuk.
    Hanya role `editor`; akun lain melihat layar "Khusus Editor". Data & aturan sama dengan portal — hanya SRP.
 ══════════════════════════════════════════ */
@@ -49,15 +49,15 @@ function stTouch() {}
 const ST_NAV = [
   { id: 'home', i: '◧', t: 'Beranda' }, { id: 'jadwal', i: '⏰', t: 'Jadwal tayang' },
   { g: 'Konten' }, { id: 'news', i: '📰', t: 'News' },
-  { id: 'cway', i: '☕', t: 'Concerto Way' }, { href: '/?studio=academy', i: '🎓', t: 'Academy' },
-  { href: '/?studio=galeri', i: '🚗', t: 'Galeri Instalasi' }, { href: '/?studio=guides', i: '📘', t: 'Panduan Partner' },
-  { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { href: '/?studio=paket', i: '📦', t: 'Paket Audio' }, { href: '/?studio=stock', i: '📊', t: 'Stok' },
-  { g: 'Partner' }, { href: '/?studio=partner', i: '🏪', t: 'Enthusiast Partner' }, { href: '/?studio=dealers', i: '🔑', t: 'Akun & Kode Akses' },
-  { g: 'Laporan' }, { href: '/?studio=visitors', i: '📈', t: 'Pengunjung & Minat' }, { href: '/?studio=rapor', i: '📊', t: 'Rapor Bulanan' }, { href: '/?studio=prapor', i: '📨', t: 'Laporan Partner' },
+  { id: 'cway', i: '☕', t: 'Concerto Way' }, { m: 'academy', i: '🎓', t: 'Academy' },
+  { m: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { m: 'guides', i: '📘', t: 'Panduan Partner' },
+  { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { m: 'paket', i: '📦', t: 'Paket Audio' }, { m: 'stock', i: '📊', t: 'Stok' },
+  { g: 'Partner' }, { m: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { m: 'dealers', i: '🔑', t: 'Akun & Kode Akses' },
+  { g: 'Laporan' }, { m: 'visitors', i: '📈', t: 'Pengunjung & Minat' }, { m: 'rapor', i: '📊', t: 'Rapor Bulanan' }, { m: 'prapor', i: '📨', t: 'Laporan Partner' },
 ];
 function stNavHtml(cur) {
   return ST_NAV.map(n => n.g ? `<div class="st-grp">${n.g}</div>`
-    : n.href ? `<a class="st-nav" href="${n.href}" target="_blank" rel="noopener"><span class="i">${n.i}</span>${n.t}<span class="ext">↗</span></a>`
+    : n.m ? `<a class="st-nav${cur === 'm/' + n.m ? ' on' : ''}" href="#m/${n.m}" onclick="stMenu(false)"><span class="i">${n.i}</span>${n.t}</a>`
     : `<a class="st-nav${cur === n.id ? ' on' : ''}" href="#${n.id}" onclick="stMenu(false)"><span class="i">${n.i}</span>${n.t}${n.id === 'jadwal' && stCache.sched ? `<span class="n">${stCache.sched.length}</span>` : ''}</a>`).join('');
 }
 function stMenu(on) { document.getElementById('st-app').classList.toggle('menu', !!on); }
@@ -65,7 +65,7 @@ function stNewMenu(e) {
   e.stopPropagation();
   const m = document.getElementById('st-newmenu');
   m.innerHTML = `<a href="#news/new">📰 Berita</a><a href="#" onclick="ceOpen(null);return false">🔊 Produk</a>
-    <a href="#cway/new">☕ Concerto Way</a><a href="/?studio=academy" target="_blank">🎓 Materi Academy ↗</a><a href="/?studio=galeri" target="_blank">🚗 Instalasi Galeri ↗</a>`;
+    <a href="#cway/new">☕ Concerto Way</a><a href="#m/academy">🎓 Materi Academy </a><a href="#m/galeri">🚗 Instalasi Galeri </a>`;
   m.classList.toggle('on');
 }
 addEventListener('click', () => document.getElementById('st-newmenu')?.classList.remove('on'));
@@ -130,17 +130,18 @@ addEventListener('hashchange', () => stRoute());
 function stRoute() {
   if (!authUser || !isEditor()) return;
   const h = (location.hash || '#home').slice(1), [pg, arg] = h.split('/');
-  const cur = ST_PAGES.includes(pg) ? pg : 'home';
+  const cur = pg === 'm' && STUDIO_EMBED[arg] ? 'm/' + arg : ST_PAGES.includes(pg) ? pg : 'home';
   document.getElementById('st-nav').innerHTML = stNavHtml(cur);
   document.getElementById('st-bnav').innerHTML = [['home', '◧', 'Beranda'], ['jadwal', '⏰', 'Jadwal'], ['cway', '☕', 'C. Way'], ['news', '📰', 'News']]
     .map(([id, i, t]) => `<a href="#${id}" class="${cur === id ? 'on' : ''}"><b>${i}</b>${t}</a>`).join('') + `<a href="#" onclick="stMenu(true);return false"><b>☰</b>Menu</a>`;
   document.querySelector('.st-main').scrollTo?.(0, 0); scrollTo(0, 0);
+  if (pg === 'm' && STUDIO_EMBED[arg]) return stEmbed(arg);
   if (cur === 'news' && arg) return stNewsEdit(arg === 'new' ? null : arg);
   if (cur === 'cway' && arg) return stCwEdit(arg === 'new' ? null : arg);
   ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway })[cur]();
 }
 const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway'];
-const stPage = html => { document.getElementById('st-page').innerHTML = html; };
+const stPage = html => { const p = document.getElementById('st-page'); p.classList.remove('emb'); p.innerHTML = html; };
 const stCache = {};
 
 // ── Data jadwal (dipakai Beranda & Jadwal) ──
@@ -188,8 +189,8 @@ async function stHome() {
     <div class="st-g2"><div class="st-col"><div class="st-card"><div class="st-ch"><h3>📥 Perlu tindakan</h3></div><div id="st-todo"><p class="st-empty">⏳ Memeriksa…</p></div></div>
       <div class="st-card"><div class="st-ch"><h3>⚡ Buat cepat</h3></div><div class="st-quick">
         <a class="st-qb" href="#news/new"><b>📰</b>Berita</a><a class="st-qb" href="#" onclick="ceOpen(null);return false"><b>🔊</b>Produk</a>
-        <a class="st-qb" href="#cway/new"><b>☕</b>Concerto Way</a><a class="st-qb" href="/?studio=academy" target="_blank"><b>🎓</b>Academy ↗</a>
-        <a class="st-qb" href="/?studio=galeri" target="_blank"><b>🚗</b>Galeri ↗</a><a class="st-qb" href="/?studio=stock" target="_blank"><b>📊</b>Stok ↗</a></div></div></div>
+        <a class="st-qb" href="#cway/new"><b>☕</b>Concerto Way</a><a class="st-qb" href="#m/academy"><b>🎓</b>Academy </a>
+        <a class="st-qb" href="#m/galeri"><b>🚗</b>Galeri </a><a class="st-qb" href="#m/stock"><b>📊</b>Stok </a></div></div></div>
       <div class="st-card"><div class="st-ch"><h3>⏰ Jadwal tayang</h3><a href="#jadwal">Semua ›</a></div><div class="st-tl" id="st-hsched"><p class="st-empty">⏳ Memuat…</p></div></div></div>`);
   const [vis, int, sched, stock, pend] = await Promise.all([
     supabase.rpc('site_visit_stats', { p_days: 7 }).then(r => r.error ? null : (typeof r.data === 'string' ? JSON.parse(r.data) : r.data)).catch(() => null),
@@ -210,34 +211,34 @@ async function stHome() {
     <div class="st-card st-kpi"><div class="l">Pengunjung hari ini</div><div class="v">${vis ? fmtNum(td?.visitors) : '—'}</div><div class="d">${vis ? `7 hari: ${fmtNum(vis.v7)} orang` : 'data belum tersedia'}</div>${spark(daily)}</div>
     <div class="st-card st-kpi"><div class="l">Klik ke partner (7 hari)</div><div class="v">${int ? fmtNum(int.tot?.click) : '—'}</div><div class="d">${int ? tr(+int.tot?.click || 0, +int.tot?.click0 || 0) : 'data belum tersedia'}</div></div>
     <div class="st-card st-kpi"><div class="l">Terjadwal 7 hari</div><div class="v">${in7}</div><div class="d">dari ${sched.length} konten terjadwal</div></div>
-    <div class="st-card st-kpi"><div class="l">Produk stok habis</div><div class="v">${fmtNum(habis)}</div><div class="d"><a href="/?studio=stock" target="_blank">Lihat di menu Stok ↗</a></div></div>`;
+    <div class="st-card st-kpi"><div class="l">Produk stok habis</div><div class="v">${fmtNum(habis)}</div><div class="d"><a href="#m/stock">Lihat di menu Stok </a></div></div>`;
   document.getElementById('st-hsched').innerHTML = stSchedList(sched, 7);
   // Perlu tindakan
   const todo = [];
   const last = stCache.cwLast, days = last ? Math.floor((Date.parse(last.publish_at) - Date.now()) / 864e5) : -1;
   if (days < 5) todo.push(['☕', 'red', last ? `Antrian Concerto Way habis ${days <= 0 ? 'hari ini' : days + ' hari lagi'}` : 'Antrian Concerto Way kosong',
     last ? `Terjadwal terakhir: ${last.day != null ? 'Day ' + last.day : esc(last.title)} · ${wibDate(Date.parse(last.publish_at), { weekday: 'short', day: 'numeric', month: 'short' })}` : 'Belum ada Day yang dijadwalkan', '#cway/new', '＋ Tambah Day']);
-  if (pend) todo.push(['🚗', 'warn', `${pend} kiriman Galeri menunggu persetujuan`, 'Kiriman foto/video dari partner', '/?studio=galeri', 'Tinjau ↗']);
-  sched.filter(x => x.err).forEach(x => todo.push(['📘', 'red', 'PDF Panduan gagal dipindah', esc(x.t), '/?studio=guides', 'Periksa ↗']));
+  if (pend) todo.push(['🚗', 'warn', `${pend} kiriman Galeri menunggu persetujuan`, 'Kiriman foto/video dari partner', '#m/galeri', 'Tinjau']);
+  sched.filter(x => x.err).forEach(x => todo.push(['📘', 'red', 'PDF Panduan gagal dipindah', esc(x.t), '#m/guides', 'Periksa']));
   const d = new Date(Date.now() + 7 * 36e5);
   if (d.getUTCDate() >= 3) {
     const pm = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1)).toISOString().slice(0, 7);
     const g = await supabase.from('gsc_monthly').select('month').eq('month', pm).maybeSingle().then(r => r, () => ({ error: true }));
-    if (!g?.error && !g?.data) todo.push(['🔎', 'gold', `Isi angka Google Search ${new Date(pm + '-01').toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`, 'Rapor Bulanan · dari Search Console', '/?rapor=' + pm, 'Isi ↗']);
+    if (!g?.error && !g?.data) todo.push(['🔎', 'gold', `Isi angka Google Search ${new Date(pm + '-01').toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`, 'Rapor Bulanan · dari Search Console', '#m/rapor', 'Isi']);
   }
   const el = document.getElementById('st-todo'); if (!el) return;
-  el.innerHTML = todo.length ? todo.map(([ic, c, t, s, href, b]) => `<div class="st-row"><span class="st-ic ${c}">${ic}</span><div class="tx"><b>${t}</b><small>${s}</small></div><a class="st-btn" href="${href}" target="_blank" rel="noopener">${b}</a></div>`).join('')
+  el.innerHTML = todo.length ? todo.map(([ic, c, t, s, href, b]) => `<div class="st-row"><span class="st-ic ${c}">${ic}</span><div class="tx"><b>${t}</b><small>${s}</small></div><a class="st-btn" href="${href}">${b}</a></div>`).join('')
     : '<p class="st-empty">✅ Semua beres — tidak ada yang perlu ditindaklanjuti.</p>';
   stRefreshNavBadge();
 }
-function stRefreshNavBadge() { const h = (location.hash || '#home').slice(1).split('/')[0]; document.getElementById('st-nav').innerHTML = stNavHtml(ST_PAGES.includes(h) ? h : 'home'); }
+function stRefreshNavBadge() { const h = (location.hash || '#home').slice(1).split('/')[0]; const a = (location.hash || '').slice(1).split('/')[1]; document.getElementById('st-nav').innerHTML = stNavHtml(h === 'm' && STUDIO_EMBED[a] ? 'm/' + a : ST_PAGES.includes(h) ? h : 'home'); }
 
 // ── JADWAL ──
 let stSchedK = 'all';
 async function stJadwal() {
   stPage(`<div class="st-ph"><div><p>Semua menu</p><h1>Jadwal tayang</h1></div><button class="st-btn" style="margin-left:auto" onclick="stLoadSched(true).then(stJadwalPaint)">↻ Muat ulang</button></div>
     <div class="st-card"><div class="st-filters" id="st-jf"></div><div class="st-tl" id="st-jl"><p class="st-empty">⏳ Memuat…</p></div></div>
-    <p class="st-note">Ubah jadwal tiap konten lewat menunya di portal (↗). Waktu dalam WIB.</p>`);
+    <p class="st-note">Ubah jadwal tiap konten lewat menunya di Studio. Waktu dalam WIB.</p>`);
   await stLoadSched(); stJadwalPaint(); stRefreshNavBadge();
 }
 function stJadwalPaint() {
@@ -318,7 +319,7 @@ async function stNewsEdit(id) {
         <label class="st-img16" id="nf-img">${nf.image ? `<img src="${esc(pubUrl(nf.image))}" alt="">` : '<span>🖼 Pilih gambar sampul</span>'}<input type="file" accept="image/*" hidden onchange="stNfImg(this)"></label>
         ${nf.image ? '<button class="st-link" onclick="stNfImgDel()">Hapus gambar</button>' : ''}</div>
       <label class="st-fl">Isi berita <small>(paragraf dipisah baris kosong · *tebal* _miring_)</small><textarea class="st-in st-body" id="nf-body" oninput="stNf()">${esc(nf.body)}</textarea></label>
-      ${extra ? `<p class="st-note">🔧 Berita ini punya project/foto tambahan — tetap tersimpan. Ubah bagian itu lewat <a href="/?studio=news&news=${it.id}" target="_blank" rel="noopener">editor lengkap di portal ↗</a>.</p>` : '<p class="st-note">Project &amp; partner pemasang, perangkat terpasang, dan foto tambahan di antara paragraf: pakai editor lengkap di portal (setelah disimpan).</p>'}
+      ${extra ? `<p class="st-note">🔧 Berita ini punya project/foto tambahan — tetap tersimpan. Ubah bagian itu lewat <a href="/?news=${it.id}" target="_blank" rel="noopener">editor lengkap di portal ↗</a> (buka berita → ✏️ Edit).</p>` : '<p class="st-note">Project &amp; partner pemasang, perangkat terpasang, dan foto tambahan di antara paragraf: pakai editor lengkap di portal (setelah disimpan).</p>'}
       <div class="st-warn">⚠️ News publik — jangan memuat harga dealer, diskon, atau info internal.</div>
     </div>
     <div class="st-col"><div class="st-card st-pad">
@@ -543,6 +544,18 @@ function stCwShare() {
   const it = (stCache.cw || []).find(x => x.id === cf?.id); if (!it) return;
   const d = +it.day, link = `https://hub.concerto.id/cway/${d >= 1 && d <= CW_LINK_DAYS && Number.isInteger(d) ? d + '/' : ''}?cw=${encodeURIComponent(it.id)}`;
   window.open(`https://wa.me/?text=${waEnc(`Concerto Way${it.day != null ? ' — Day ' + it.day : ''}: ${it.title}\nKhusus partner CAI — buka di CAI Hub dengan Kode Akses:\n${link}`)}`, '_blank', 'noopener');
+}
+
+// ── Menu portal yang disematkan di Studio (tahap 2b, 18 Nov 2026 — cara A): /?studio=<menu>&embed=1 dalam iframe ──
+// Portal dalam mode sematan menyembunyikan header, sidebar & menu bawahnya (html.embed di index.html/style.css). Sesi login sama.
+const STUDIO_EMBED = { academy: 'Academy', galeri: 'Galeri Instalasi', guides: 'Panduan Partner', paket: 'Paket Audio', stock: 'Stok', partner: 'Enthusiast Partner',
+  dealers: 'Akun & Kode Akses', visitors: 'Pengunjung & Minat', rapor: 'Rapor Bulanan', prapor: 'Laporan Partner', cway: 'Concerto Way (portal)' };
+function stEmbed(k) {
+  document.getElementById('st-page').innerHTML = `<div class="st-emb"><div class="st-embh"><b>${esc(STUDIO_EMBED[k])}</b><span class="st-pill mu">tampilan portal</span>
+    <button class="st-btn sm" onclick="document.getElementById('st-ifr').contentWindow.location.reload()">↻ Muat ulang</button>
+    <a class="st-btn sm" href="/?studio=${k}" target="_blank" rel="noopener">Buka di tab baru</a></div>
+    <iframe id="st-ifr" class="st-ifr" src="/?studio=${k}&embed=1" title="${esc(STUDIO_EMBED[k])}"></iframe></div>`;
+  document.getElementById('st-page').classList.add('emb');
 }
 
 // ── Pencarian cepat (produk & berita) ──
