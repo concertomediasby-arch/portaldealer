@@ -278,7 +278,7 @@ async function saLoadStock() {
 }
 const saSkTime = iso => iso ? wibDate(Date.parse(iso), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 async function stStok() {
-  stPage(`<div class="st-ph"><div><p>Katalog</p><h1>Stok</h1></div><div class="st-acts"><button class="st-btn" onclick="saSkTemplate()">⬇ Template Excel</button><a class="st-btn" href="#m/stock" title="Alat import lama (Excel / tempel / sinkron dari browser)">📥 Import Excel</a><button class="st-btn" onclick="stStok()">↻</button></div></div>
+  stPage(`<div class="st-ph"><div><p>Katalog</p><h1>Stok</h1></div><div class="st-acts"><button class="st-btn" onclick="saSkTemplate()">⬇ Template Excel</button><a class="st-btn" href="#stok/import">📥 Import Excel</a><button class="st-btn" onclick="stStok()">↻</button></div></div>
     <div class="st-card st-cwq" id="sk-sync"><div><b>⏳ Memeriksa sinkron otomatis…</b></div></div>
     <div class="st-kpis sa-k5" id="sk-kpi"></div>
     <div class="st-g2"><div class="st-card"><div class="st-filters" id="sk-f"></div><div class="st-tw"><table class="st-tbl sa-sk"><thead><tr><th>Produk</th><th>Status</th><th>Qty</th><th>🚚 OTW</th><th class="st-hm">Diperbarui</th></tr></thead><tbody id="sk-tb"><tr><td colspan="5" class="st-empty">⏳ Memuat…</td></tr></tbody></table></div>
@@ -384,6 +384,198 @@ async function saSkTemplate() {
     const ws = XLSX.utils.aoa_to_sheet(rows); ws['!cols'] = [{ wch: 16 }, { wch: 22 }, { wch: 28 }, { wch: 7 }, { wch: 9 }, { wch: 32 }];
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Stok'); XLSX.writeFile(wb, `stok-concerto-${todayWIB()}.xlsx`);
   } catch (e) { showToast('⚠ ' + (e.message || e), 6000); }
+}
+/* ── 📥 IMPORT EXCEL STOK (19 Nov 2026, permintaan pemilik — dulu alat lama CAI Hub lewat sematan #m/stock).
+   Salinan aturan importFile()/detectLayout()/renderImport()/saveImport() di js/stock.js (juga dipakai Edge Function sync-stock-sheet):
+   ubah aturan import → ubah ketiganya. File .xlsx/.xls/.csv, tempel dari Excel, atau Google Sheet (link disimpan di browser ini). ── */
+const SI_WORDS = { ready: 'ready', ada: 'ready', tersedia: 'ready', indent: 'indent', inden: 'indent', po: 'indent', habis: 'habis', kosong: 'habis', soldout: 'habis' };
+const SI_ALIAS_KEY = 'cai-stock-alias', SI_SHEET_KEY = 'cai-stock-sheet';
+const siAliases = () => { try { return JSON.parse(localStorage.getItem(SI_ALIAS_KEY) || '{}'); } catch (e) { return {}; } };
+const siExtraId = raw => 'x:' + String(raw).toUpperCase().replace(/[^A-Z0-9 .\-\/+]/g, '').replace(/\s+/g, ' ').trim();
+const siVariantOf = (code, p) => p?.priceList ? Object.keys(p.priceList).find(v => normKey(code).endsWith(normKey(v))) || null : null;
+const siSheetLink = () => { try { return localStorage.getItem(SI_SHEET_KEY) || ''; } catch (e) { return ''; } };
+let si = null, siRows = [];
+async function stStokImport() {
+  si = null; siRows = [];
+  stPage(`<div class="st-ph"><div><p><a href="#stok">Stok</a> › Import</p><h1>📥 Import Excel stok</h1></div></div>
+    <div class="st-card st-pad">
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <label class="st-btn pri">📄 Pilih file Excel / CSV<input type="file" accept=".xlsx,.xls,.csv,.txt" hidden onchange="siFile(this)"></label>
+        <button class="st-btn" onclick="siSheet()">🔄 Ambil dari Google Sheet</button>
+        ${siSheetLink() ? '<button class="st-btn sm" onclick="siSheet(true)">ganti link sheet</button>' : ''}
+      </div>
+      <p class="st-note">Format yang dikenali: template Excel CAI Hub (Brand · Model · Qty · Status · Catatan), stok gudang (<b>Kode Barang · … · Baru</b> — kolom <b>Baru</b> jadi Qty), STOCK DISTRIBUTOR (<b>Merk · Unit · Stok Tersedia</b>), dan daftar barang OTW (sheet/judul berisi “OTW” / “belum datang”).</p>
+      <details style="margin-top:8px"><summary class="st-mu" style="cursor:pointer">…atau tempel dari Excel</summary>
+        <textarea class="st-in" id="si-text" rows="6" placeholder="Salin baris dari Excel (dengan judul kolom) lalu tempel di sini" style="width:100%;margin-top:8px;font-family:var(--mono,monospace)"></textarea>
+        <button class="st-btn" style="margin-top:6px" onclick="siPaste()">Baca data tempel</button></details>
+    </div>
+    <div id="si-prev"></div>`);
+}
+function siMsg(t, bad) { const el = document.getElementById('si-prev'); if (el) el.innerHTML = `<div class="st-card st-pad"><p class="st-empty"${bad ? ' style="color:#C8463B"' : ''}>${t}</p></div>`; }
+async function siFile(input) {
+  const file = input.files?.[0]; input.value = ''; if (!file) return;
+  siMsg('⏳ Membaca file…');
+  try {
+    let sheets;
+    if (/\.(xlsx|xls)$/i.test(file.name)) {
+      await saScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js', () => window.XLSX);
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      sheets = wb.SheetNames.map(name => ({ name, rows: XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '', raw: false }) }));
+    } else sheets = [{ name: file.name, rows: siSplit(await file.text()) }];
+    await siStart(sheets, file.name);
+  } catch (e) { siMsg('⚠ Gagal membaca file: ' + esc(e.message || e), 1); }
+}
+function siSplit(text) {
+  const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim()), first = lines[0] || '';
+  const d = first.includes('\t') ? '\t' : first.includes(';') ? ';' : first.includes(',') ? ',' : '\t';
+  return lines.map(l => l.split(d).map(c => c.trim().replace(/^"(.*)"$/, '$1')));
+}
+function siPaste() { const t = document.getElementById('si-text')?.value || ''; if (!t.trim()) return siMsg('Tempel data dari Excel dulu, atau pilih file.', 1); siStart([{ name: 'data tempel', rows: siSplit(t) }], 'data tempel'); }
+function siCsv(text) {
+  const rows = []; let row = [], cell = '', q = false; text = text.replace(/^﻿/, '');
+  for (let i = 0; i < text.length; i++) { const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true; else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c; }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+function siCsvUrl(link) {
+  const id = (String(link).match(/\/d\/([\w-]{20,})/) || [])[1] || (/^[\w-]{20,}$/.test(link) ? link : ''); if (!id) return '';
+  const gid = (String(link).match(/[#&?]gid=(\d+)/) || [])[1];
+  return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv${gid ? '&gid=' + gid : ''}&t=${Date.now()}`;
+}
+async function siSheet(change) {
+  let link = siSheetLink();
+  if (change || !link) {
+    const v = prompt('Tempel link Google Sheet stok (Bagikan → "Siapa saja yang memiliki link"):', link); if (v === null) return;
+    if (!siCsvUrl(v.trim())) return showToast('⚠ Link Google Sheet tidak valid.');
+    link = v.trim(); try { localStorage.setItem(SI_SHEET_KEY, link); } catch (e) {}
+    if (change) return stStokImport();
+  }
+  siMsg('⏳ Mengambil data dari Google Sheet…');
+  try {
+    const r = await fetch(siCsvUrl(link), { cache: 'no-store' }), t = await r.text();
+    if (!r.ok || /^\s*<(!doctype|html)/i.test(t)) throw new Error('akses ditolak');
+    siStart([{ name: 'Google Sheet', rows: siCsv(t) }], 'Google Sheet');
+  } catch (e) { siMsg('⚠ Gagal membaca Google Sheet — pastikan dibagikan “Siapa saja yang memiliki link” (Pelihat). (' + esc(e.message || e) + ')', 1); }
+}
+async function siStart(sheets, source) {
+  sheets = sheets.map(s => ({ name: s.name, rows: s.rows.map(r => r.map(c => String(c ?? '').trim())).filter(r => r.some(Boolean)) })).filter(s => s.rows.length);
+  if (!sheets.length) return siMsg('Tidak ada data yang terbaca.', 1);
+  if (!stCache.stockFull) { try { await saLoadStock(); } catch (e) { return siMsg('⚠ Stok saat ini tidak bisa dimuat: ' + esc(e.message || e), 1); } }
+  si = { sheets, source }; siPick(0);
+}
+function siLayout(rows) {
+  const isHead = r => r.some(c => /kode|model|nama|produk|barang|no\s*inv|tipe|^\s*unit\s*$/i.test(c)) && r.some(c => /qty|jumlah|stok|stock|baru|sisa/i.test(c));
+  const h = rows.slice(0, 8).findIndex(isHead);
+  if (h < 0) return { h: 0, head: null, body: rows, col: { model: 0, name: -1, qty: 1, note: 2, status: -1, brand: -1 } };
+  const head = rows[h].map(c => String(c).trim().toLowerCase()), find = re => head.findIndex(x => re.test(x));
+  let model = find(/kode|model|tipe|type|no\s*inv/); const name = find(/nama|produk|product/);
+  if (model < 0) model = name; if (model < 0) model = find(/^unit$/);
+  let qty = find(/^baru$/); if (qty < 0) qty = find(/qty|jumlah|stok|stock|sisa/);
+  return { h, head: rows[h], body: rows.slice(h + 1), col: { model, name, qty, status: find(/status/), note: find(/catatan|note/), brand: find(/brand|merek|merk/) } };
+}
+const SI_OTW = /\botw\b|blm\s*datang|belum\s*datang|perjalanan/i;
+const siLooksOtw = sh => SI_OTW.test(sh.name) || SI_OTW.test(sh.rows.slice(0, siLayout(sh.rows).h).flat().join(' '));
+function siPick(i) { si.idx = +i; si.mode = siLooksOtw(si.sheets[si.idx]) ? 'otw' : 'gudang'; si.qtyCol = null; siRender(); }
+function siSetAlias(key, pid) { const a = siAliases(); if (pid) a[key] = pid; else delete a[key]; try { localStorage.setItem(SI_ALIAS_KEY, JSON.stringify(a)); } catch (e) {} siRender(); }
+function siRender() {
+  if (!si) return;
+  const S = stCache.stockFull || {}, sheet = si.sheets[si.idx], lay = siLayout(sheet.rows), col = { ...lay.col };
+  if (si.qtyCol !== null) col.qty = si.qtyCol;
+  const otw = si.mode === 'otw', aliases = siAliases();
+  const index = PRODS().map(({ b, p }) => ({ b, p, keys: new Set([normKey(p.model), normKey(p.name), normKey(p.id), normKey(b.name + p.model)]) }));
+  const byId = Object.fromEntries(index.map(x => [x.p.id, x]));
+  const matched = new Map(); let skipped = 0, ignored = 0;
+  lay.body.forEach(r => {
+    const cell = k => col[k] >= 0 ? String(r[col[k]] ?? '').trim() : '';
+    const raw = cell('model') || cell('name'); if (!raw || /^total/i.test(raw)) return;
+    const qtyRaw = cell('qty').replace(/(\d)[.,](?=\d{3}(?!\d))/g, '$1'), stRaw = cell('status'), note = cell('note');
+    const num = qtyRaw.match(/^\s*(\d+)/); let qty = num ? parseInt(num[1], 10) : null, status = '', incoming = '';
+    if (otw) {
+      if (qty === null) { skipped++; return; }
+      const unit = (qtyRaw.match(/^\s*\d+\s*(set|pcs|pc|unit|pair|psg)\b/i) || [])[1];
+      incoming = { n: qty, unit: unit ? unit.toLowerCase().replace(/^pc$/, 'pcs') : 'unit' };
+    } else {
+      if (qty === null && SI_WORDS[normKey(qtyRaw)]) status = SI_WORDS[normKey(qtyRaw)];
+      if (SI_WORDS[normKey(stRaw)]) status = status || SI_WORDS[normKey(stRaw)];
+      if (qty === null && !status) { skipped++; return; }
+      if (qty !== null && status !== 'indent') status = qty === 0 ? 'habis' : 'ready';
+      if (status === 'habis' && otwFromNote(note)) status = 'indent';
+    }
+    const k = normKey(raw); let bk = normKey(cell('brand'));
+    const brandMatch = b => [b.name, b.id, b.abbr].some(v => normKey(v || '') === bk);
+    if (bk && !BRANDS.some(brandMatch)) bk = '';
+    const alias = aliases[k] || STOCK_ALIASES[k];
+    if (alias === '-') { ignored++; return; }
+    let hit = byId[alias];
+    if (!hit && aliases[k] !== '+') { const hits = [...new Map(index.filter(x => x.keys.has(k) && (!bk || brandMatch(x.b))).map(h => [h.p.id, h])).values()]; if (hits.length === 1) hit = hits[0]; }
+    const pid = hit ? hit.p.id : siExtraId(raw); if (!hit && pid === 'x:') return;
+    const prev = matched.get(pid), variant = !otw && qty !== null && hit ? siVariantOf(k, hit.p) : null;
+    if (prev && !prev.codes.has(k)) {
+      prev.codes.add(k); prev.raw += ' + ' + raw;
+      if (variant) prev.variants[variant] = (prev.variants[variant] || 0) + qty;
+      if (otw) prev.incoming.n += incoming.n;
+      else if (qty !== null) { prev.qty = (prev.qty || 0) + qty; prev.status = prev.qty === 0 ? 'habis' : (prev.status === 'indent' ? 'indent' : 'ready'); }
+      return;
+    }
+    matched.set(pid, { pid, hit, key: k, raw, codes: new Set([k]), qty, status, note, incoming, otwNote: otw ? '' : otwFromNote(note), variants: variant ? { ...(prev?.variants || {}), [variant]: qty } : {} });
+  });
+  siRows = [...matched.values()]; si.hasNoteCol = !!lay.head && col.note >= 0;
+  const bad = siRows.filter(r => !r.hit), good = siRows.filter(r => r.hit);
+  const cleared = otw ? Object.entries(S).filter(([pid, s]) => s.incoming && !matched.has(pid)).length : 0;
+  si.cleared = cleared;
+  const opts = `<option value="+" selected>＋ Produk lain (di luar katalog)</option><option value="-">Abaikan — jangan disimpan</option>`
+    + BRANDS.map(b => `<optgroup label="Sama dengan produk ${esc(b.name)}:">${b.lines.flatMap(l => l.products).map(p => `<option value="${esc(p.id)}">${esc(p.model)}</option>`).join('')}</optgroup>`).join('');
+  const headOpts = lay.head ? lay.head.map((h, i) => h ? `<option value="${i}"${i === col.qty ? ' selected' : ''}>${esc(h)}</option>` : '').join('') : '';
+  const stOf = r => { const c = S[r.pid] || {}; return otw ? (c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent') : r.status; };
+  const amount = r => { const c = S[r.pid] || {};
+    return (otw ? `${r.incoming.n} ${r.incoming.unit}` : (r.qty ?? '—')) + (!otw && c.qty != null && c.qty !== r.qty ? `<small>sebelumnya ${c.qty}</small>` : '')
+      + (r.otwNote ? `<small style="color:#2F6BCB">🚚 OTW ${esc(r.otwNote)}</small>` : '')
+      + (!otw && Object.keys(r.variants).length ? `<small>${Object.entries(r.variants).map(([v, n]) => `${esc(v)}: ${n}`).join(' · ')}</small>` : ''); };
+  const stPill = st => st ? `<span class="st-pill ${{ ready: 'ok', indent: 'gold', habis: 'red' }[st]}">${STOCK_LABEL[st]}</span>` : '—';
+  document.getElementById('si-prev').innerHTML = `<div class="st-card st-pad">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+      ${si.sheets.length > 1 ? `<label class="st-fl" style="margin:0">Sheet<select class="st-in" onchange="siPick(this.value)">${si.sheets.map((x, i) => `<option value="${i}"${i === si.idx ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>` : ''}
+      <label class="st-fl" style="margin:0">Jenis data<select class="st-in" onchange="si.mode=this.value;siRender()"><option value="gudang"${!otw ? ' selected' : ''}>Stok gudang</option><option value="otw"${otw ? ' selected' : ''}>Barang OTW (belum datang)</option></select></label>
+      ${headOpts ? `<label class="st-fl" style="margin:0">Kolom jumlah<select class="st-in" onchange="si.qtyCol=+this.value;siRender()">${headOpts}</select></label>` : ''}
+    </div>
+    <p class="st-note">${esc(si.source)}: <b style="color:#1F9D6B">${good.length} cocok katalog</b>${bad.length ? ` · <b style="color:#B8893A">${bad.length} produk lain</b> (di luar katalog, ikut disimpan)` : ''}${ignored ? ` · ${ignored} diabaikan` : ''}${skipped ? ` · ${skipped} baris tanpa jumlah dilewati` : ''}</p>
+    ${otw ? `<p class="st-note" style="background:#FFF6E0;padding:8px 10px;border-radius:8px">⚠ Mode <b>Barang OTW</b>: jumlah dicatat sebagai barang dalam perjalanan, <b>stok gudang tidak berubah</b>.${cleared ? ` ${cleared} produk yang sebelumnya OTW tapi tidak ada di daftar ini akan dihapus tanda OTW-nya (dianggap sudah datang).` : ''}</p>` : ''}
+    ${bad.length ? `<p class="st-note">Baris ＋ tidak ada di katalog dan masuk <b>Produk lain</b>. Bila sebenarnya produk katalog dengan kode berbeda, pilih produknya — pilihan diingat di browser ini.</p>` : ''}
+    <div class="st-tw"><table class="st-tbl"><thead><tr><th></th><th>Kode / Produk</th><th>${otw ? 'OTW' : 'Qty'}</th><th>Status</th></tr></thead><tbody>
+      ${bad.map(r => `<tr><td>＋</td><td><b>${esc(r.raw)}</b><select class="st-in" style="margin-top:4px;max-width:280px" onchange="siSetAlias('${esc(r.key)}', this.value === '+' ? '' : this.value)">${opts}</select></td><td>${amount(r)}</td><td>${stPill(stOf(r))}</td></tr>`).join('')}
+      ${good.map(r => `<tr><td>✓</td><td><b>${esc(r.hit.p.name)}</b><small>${esc(r.hit.b.name)} · ${esc(r.hit.p.model)}${normKey(r.raw) !== normKey(r.hit.p.model) ? ` · dari “${esc(r.raw)}”` : ''}</small></td><td>${amount(r)}</td><td>${stPill(stOf(r))}</td></tr>`).join('')}
+    </tbody></table></div>
+    ${siRows.length || cleared ? `<div class="st-acts" style="margin-top:12px"><button class="st-btn" onclick="stStokImport()">Batal</button><button class="st-btn pri" id="si-save" onclick="siSave()">💾 Simpan ${siRows.length} produk${otw ? ' sebagai OTW' : ''}</button></div>` : ''}
+  </div>`;
+}
+async function siSave() {
+  if (!si) return;
+  const S = stCache.stockFull || {}, otw = si.mode === 'otw', btn = document.getElementById('si-save');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
+  let payload;
+  if (otw) {
+    const listed = new Set(siRows.map(r => r.pid));
+    payload = siRows.map(r => { const c = S[r.pid] || {}; return { product_id: r.pid, incoming: `${r.incoming.n} ${r.incoming.unit}`, status: c.status && c.status !== 'habis' && c.qty !== 0 ? c.status : 'indent', qty: c.qty ?? null, note: c.note || '' }; });
+    Object.entries(S).forEach(([pid, c]) => { if (c.incoming && !listed.has(pid)) payload.push({ product_id: pid, incoming: null, status: c.status, qty: c.qty ?? null, note: c.note || '' }); });
+  } else {
+    const fileHasOtw = siRows.some(r => r.otwNote);
+    payload = siRows.map(r => { const row = { product_id: r.pid, status: r.status, qty: r.qty, note: si.hasNoteCol ? r.note : (r.note || S[r.pid]?.note || '') }; if (fileHasOtw) row.incoming = r.otwNote || null; return row; });
+    siRows.forEach(r => Object.entries(r.variants).forEach(([v, n]) => payload.push({ product_id: 'v:' + r.pid + ':' + v, status: n === 0 ? 'habis' : 'ready', qty: n, note: '' })));
+  }
+  try {
+    const { error } = await supabase.from('stock').upsert(payload, { onConflict: 'product_id' }); if (error) throw error;
+    showToast(`✓ ${otw ? 'Data OTW' : 'Stok'} ${siRows.length} produk berhasil diperbarui.`, 5000);
+    si = null; stCache.stockFull = null; stGo('#stok', true);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = `💾 Simpan ${siRows.length} produk`;
+    const m = String(e.message || e);
+    if (/incoming/.test(m)) saCopy('alter table stock add column if not exists incoming text;', 'Kolom OTW belum ada — SQL disalin, tempel di Supabase → SQL Editor → Run.');
+    else showToast('⚠ Gagal menyimpan: ' + m, 7000);
+  }
 }
 // 🔔 Update terbaru (tabel stock_log, 7 hari) — sama dengan slogItems() portal
 const saSlStatus = s => ({ ready: 'Ready', indent: 'Indent', habis: 'Habis' })[s] || '—';

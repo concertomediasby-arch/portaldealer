@@ -179,6 +179,7 @@ function stRoute() {
   if (cur === 'galeri' && arg) return stGlEdit(arg === 'new' ? null : arg);
   if (cur === 'produk' && arg) { stProduk(); const sec = h.split('/')[2]; if (arg === 'new') ceOpen(null, sec || null); else { ceOpen(arg); stCeFocus(sec); } return; }
   if (cur === 'guides' && arg === 'new') return stGdNew(h.split('/')[2]);
+  if (cur === 'stok' && arg === 'import') return stStokImport();
   if (cur === 'partner' && arg) return stPartnerEdit(arg === 'new' ? null : arg);
   if (cur === 'pengunjung') return stPengunjung(arg === 'minat' ? 'int' : 'visit');
   if (cur === 'rapor') return stRapor(arg);
