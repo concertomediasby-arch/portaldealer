@@ -1,6 +1,6 @@
 {
  "_note": "Salinan daftar Authorized Partner dari tabel Supabase auth_dealers (tidak disembunyikan) — diperbarui otomatis oleh tools/gen-live-cards.js (GitHub Actions); dipakai tools/gen-seo-pages.js.",
- "updated": "2026-11-18",
+ "updated": "2026-11-19",
  "partners": [
   {
    "r": "Bali",
@@ -297,7 +297,9 @@
    "c": "Malang",
    "a": "Jl. Ciliwung No. 57 Malang",
    "wa": "6281217398558",
-   "ig": "concerto_malang"
+   "ig": "concerto_malang",
+   "map": "https://maps.app.goo.gl/cjWRJd9Qrbg73R85A",
+   "logo": "partners/1795054734530-m7l8sk.webp#dark"
   },
   {
    "r": "Jawa Timur",
