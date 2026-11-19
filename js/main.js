@@ -93,7 +93,7 @@ function openDeepLink() {
 }
 
 // CAI Hub Studio (/studio/, 18 Nov 2026): menu yang belum pindah ke Studio dibuka di portal lewat /?studio=<menu>
-const STUDIO_MENUS = { katalog: () => openCatalog(), news: () => openNews(), cway: () => openCway(), academy: () => openAcademy(), galeri: () => openGaleri(), guides: () => openGuides(), paket: () => openPaketAudio(),
+const STUDIO_MENUS = { katalog: () => openCatalog(), news: () => openNews(), cway: () => openCway(), academy: () => openAcademy(), galeri: () => openGaleri(), guides: () => openGuides(), paket: () => openPaketAudio(), dsp: () => openDspSoftware(),
   stock: () => openAdmin(), partner: () => openAuthDealers(), dealers: () => openDealers(), visitors: () => openVisitors(), rapor: () => openRapor(), prapor: () => openPartnerReport() };
 function studioOpenLinked(k, n = 0) {
   const fn = STUDIO_MENUS[k]; if (!fn) return;

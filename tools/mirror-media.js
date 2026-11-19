@@ -3,7 +3,7 @@
 // Menyalin media PUBLIK yang sudah tayang dari Supabase Storage (bucket "showcase") ke folder media/ di repo,
 // supaya pengunjung mengambilnya dari situs sendiri (GitHub Pages) — bukan dari Supabase (kuota egress).
 //   Galeri Instalasi (foto & video mobil yang tayang) · gambar & foto berita News · poster Kalender Acara (publik)
-//   · gambar materi Concerto Academy dari portal.
+//   · gambar materi Concerto Academy dari portal · installer DSP Software dari CAI Hub Studio.
 // Hasil: media/<path storage> (+ video dikompres ke .mp4 720p) dan media/map.json { files: { <path storage>: { f, mb } } }.
 // Portal (js/core.js mediaLocal()) memakai salinan bila ada di map.json; selain itu tetap Supabase.
 // Dijalankan GitHub Actions (.github/workflows/live-cards.yml). --check = hanya cek ada yang perlu disalin/dihapus.
@@ -43,6 +43,12 @@ async function wanted() {
   }
   for (const e of await rest('cai_events?select=*', true)) add(e.poster, e.created_at, e.push_at);
   for (const d of await rest('auth_dealers?select=logo,hidden,updated_at&hidden=eq.false', true)) add(d.logo, d.updated_at);   // 🏪 logo toko partner
+  // 💻 DSP Software dari Studio (software/items.json): installer disalin langsung tanpa jeda 24 jam (nama path tanpa angka waktu,
+  // isinya bukan foto) agar unduhan pengunjung secepatnya pindah ke situs sendiri; video-aturan tidak berlaku (bukan video)
+  try {
+    const r = await fetch(pub('software/items.json') + '?t=' + Date.now());
+    if (r.ok) for (const x of (await r.json()).items || []) if (x && !x.hidden && x.path) add(x.path);
+  } catch (e) { console.warn('software dilewati:', e.message); }
   try {
     const r = await fetch(pub('academy/items.json') + '?t=' + Date.now());
     if (r.ok) { const now = Date.now(), today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);

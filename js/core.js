@@ -222,6 +222,9 @@ const DSP_SOFTWARE = [
   { id:'dsp-audiosystem-pc', title:'Audio System DSP — PC Tool', brand:'Audio System', platform:['Windows'],
     icon:'💻', version:'1.0.0.b5', desc:'Software tuning untuk DSP Audio System Italy (DSP-AS6). Koneksi via USB Control. Untuk mengatur EQ 31-band per channel, crossover, dan time alignment.',
     file:'assets/software/audiosystem-dsp-pc-tool-setup-v1.0.0.b5.exe', available:true },
+  { id:'dsp-steg-dsps6-fwu', title:'STEG DSP-S6 — Firmware Updater', brand:'STEG', platform:['Windows'],
+    icon:'💻', version:'1.3.6', desc:'Program pembaruan firmware untuk DSP STEG DSP-S6. Jalankan di PC Windows, hubungkan DSP-S6, lalu tekan Start untuk memperbarui firmware.',
+    file:'assets/software/steg-dsp-s6-fwu-v1.3.6.exe', available:true },
 ];
 
 
@@ -1238,22 +1241,45 @@ async function guideSchedDelete(id) {
   showToast('PDF terjadwal dihapus.'); await loadGuideFiles();
 }
 
+/* 💻 DSP Software dari CAI Hub Studio (19 Nov 2026, permintaan pemilik): Editor menambah / memperbarui installer di Studio →
+   file di Storage publik showcase/software/<id>/<versi>-<acak>/<nama file>, daftar di showcase/software/items.json
+   { items: [{ id, title, brand, platform, version, desc, path, name, mb, at, hidden? }], hide: [<id bawaan>] }.
+   Item ber-id sama dengan DSP_SOFTWARE bawaan = versi baru yang menggantikannya. Bot GitHub (tools/mirror-media.js) menyalin
+   installer ke media/ agar unduhan tidak memakai kuota Supabase (dashPublicUrl memakai salinan bila ada). */
+let dspExtra = null;
+async function loadDspExtra() {
+  try {
+    await mediaP;
+    const r = await fetch(`${SUPA_URL}/storage/v1/object/public/showcase/software/items.json?t=${Date.now()}`, { cache: 'no-store' });
+    dspExtra = r.ok ? await r.json() : { items: [] };
+  } catch (e) { dspExtra = dspExtra || { items: [] }; }
+  return dspExtra;
+}
+function dspAll() {
+  const ex = (dspExtra?.items || []).filter(x => x && x.id && !x.hidden), hide = new Set(dspExtra?.hide || []);
+  const ids = new Set(ex.map(x => x.id));
+  return [...DSP_SOFTWARE.filter(s => !ids.has(s.id) && !hide.has(s.id)),
+    ...ex.map(x => ({ ...x, platform: x.platform?.length ? x.platform : ['Windows'], icon: '💻', file: x.path ? dashPublicUrl(x.path) : '', available: !!x.path }))];
+}
 function openDspSoftware() {
   showView('dsp');
-  const el = document.getElementById('dsp-list');
-  if (el.children.length) return;
+  renderDspSoftware();
+  loadDspExtra().then(renderDspSoftware);
+}
+function renderDspSoftware() {
+  const el = document.getElementById('dsp-list'); if (!el) return;
   const platColor = { 'Windows':'#6fd3e6', 'Mac':'#d8b26a', 'Android':'#52c38a', 'iOS':'#a78bfa' };
-  el.innerHTML = DSP_SOFTWARE.map(s => {
-    const b = BRANDS.find(x => x.name.toLowerCase() === s.brand.toLowerCase());   // ikon = logo brand
-    const plats = s.platform.map(p =>
-      `<span class="res-cat" style="color:${platColor[p]||'var(--accent)'};border-color:${platColor[p]||'var(--accent)'}22;background:${platColor[p]||'var(--accent)'}11">${p}</span>`
+  el.innerHTML = dspAll().map(s => {
+    const b = BRANDS.find(x => x.name.toLowerCase() === String(s.brand || '').toLowerCase());   // ikon = logo brand
+    const plats = (s.platform || []).map(p =>
+      `<span class="res-cat" style="color:${platColor[p]||'var(--accent)'};border-color:${platColor[p]||'var(--accent)'}22;background:${platColor[p]||'var(--accent)'}11">${escHtml(p)}</span>`
     ).join('');
     let btn;
     if (!s.available) {
       btn = `<span class="res-btn res-btn-soon">Segera Hadir</span>`;
     } else if (s.file) {
-      btn = `<a class="res-btn res-btn-dl" href="${s.file}" target="_blank" download>
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh</a>`;
+      btn = `<a class="res-btn res-btn-dl" href="${escHtml(s.file)}" target="_blank" download${s.name ? `="${escHtml(s.name)}"` : ''}>
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Unduh${s.mb ? ` <small style="opacity:.7">${String(s.mb).replace('.', ',')} MB</small>` : ''}</a>`;
     } else {
       btn = [
         s.linkAndroid ? `<a class="res-btn res-btn-view" href="${s.linkAndroid}" target="_blank">Google Play</a>` : '',
@@ -1261,14 +1287,14 @@ function openDspSoftware() {
       ].join('');
     }
     return `<div class="res-card">
-      ${b?.logo ? `<div class="res-icon res-logo" style="background:${b.bg}"><img src="${b.logo}" alt="${s.brand}"></div>` : `<div class="res-icon">${s.icon}</div>`}
+      ${b?.logo ? `<div class="res-icon res-logo" style="background:${b.bg}"><img src="${b.logo}" alt="${escHtml(s.brand)}"></div>` : `<div class="res-icon">${s.icon || '💻'}</div>`}
       <div class="res-body">
-        <div class="res-meta">${plats}<span class="res-year">${s.brand}${s.version ? ' · v'+s.version : ''}</span></div>
-        <div class="res-title">${s.title}</div>
-        <div class="res-desc">${s.desc}</div>
+        <div class="res-meta">${plats}<span class="res-year">${escHtml(s.brand || '')}${s.version ? ' · v'+escHtml(s.version) : ''}</span></div>
+        <div class="res-title">${escHtml(s.title)}</div>
+        <div class="res-desc">${escHtml(s.desc || '')}</div>
         <div class="res-actions">${btn}</div>
       </div></div>`;
-  }).join('');
+  }).join('') || '<div class="stock-empty">Belum ada software.</div>';
 }
 
 /* ── Rakitan Audio (30 Okt 2026, permintaan pemilik — publik, tanpa login) ──

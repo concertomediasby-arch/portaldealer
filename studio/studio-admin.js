@@ -1776,3 +1776,140 @@ async function seDel() {
   const p = sePath(e.poster); if (/^events\//.test(p)) supabase.storage.from('showcase').remove([p]).catch(() => {});
   showToast('🗑 Acara dihapus'); await seLoad(true); sef = null; stGo('#acara', true);
 }
+
+/* ── 💻 DSP SOFTWARE (19 Nov 2026, permintaan pemilik) — Editor menambah / memperbarui installer.
+   Daftar bawaan = DSP_SOFTWARE di js/core.js (dibaca dari teks file); tambahan & versi baru = showcase/software/items.json
+   { items: [{ id, title, brand, platform, version, desc, path, name, mb, at, hidden? }], hide: [<id bawaan disembunyikan>] }.
+   Item ber-id sama dengan bawaan = menggantikan versi bawaan. File: showcase/software/<id>/<versi>-<acak>/<nama file>
+   (≤ SW_MAX_MB, batas unggah Supabase paket gratis 50 MB). Bot GitHub (tools/mirror-media.js) menyalin installer ke media/
+   → unduhan pengunjung dari situs sendiri, bukan kuota Supabase. Portal: loadDspExtra()/dspAll() di js/core.js. ── */
+const SW_MANIFEST = 'software/items.json', SW_MAX_MB = 50, SW_PLATS = ['Windows', 'Mac', 'Android', 'iOS'];
+async function dswLoad() {
+  const [base, man] = await Promise.all([
+    stCache.dspBase || saCoreArr('DSP_SOFTWARE'),
+    fetch(pubUrl(SW_MANIFEST) + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] })),
+  ]);
+  stCache.dspBase = base; stCache.dspMan = { items: man.items || [], hide: man.hide || [] };
+  return stCache.dspMan;
+}
+function dswRows() {
+  const M = stCache.dspMan || { items: [], hide: [] }, ex = new Map(M.items.map(x => [x.id, x]));
+  const rows = (stCache.dspBase || []).map(b => ex.has(b.id) ? { ...b, ...ex.get(b.id), base: b, src: 'up' } : { ...b, src: 'base', hidden: M.hide.includes(b.id) });
+  for (const x of M.items) if (!(stCache.dspBase || []).some(b => b.id === x.id)) rows.push({ ...x, src: 'new' });
+  return rows;
+}
+async function dswSaveManifest(M) {
+  const blob = new Blob([JSON.stringify({ _note: 'DSP Software tambahan dari CAI Hub Studio — jangan diedit manual.', items: M.items, hide: M.hide }, null, 1)], { type: 'application/json' });
+  const { error } = await supabase.storage.from('showcase').upload(SW_MANIFEST, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
+  if (error) throw error;
+}
+async function stDsp() {
+  stPage(`<div class="st-ph"><div><p>Katalog</p><h1>DSP Software</h1></div><div class="st-acts"><button class="st-btn" onclick="stDsp()">↻</button><a class="st-btn" href="/?studio=dsp" target="_blank" rel="noopener">↗ Lihat di CAI Hub</a><a class="st-btn gold" href="#dsp/new">＋ Tambah software</a></div></div>
+    <div id="sw-list"><p class="st-empty">⏳ Memuat…</p></div>
+    <p class="st-note">File installer diunggah ke penyimpanan CAI Hub lalu otomatis disalin bot ke situs (±15 menit) supaya unduhan pengunjung tidak memakai kuota Supabase. Maks. ${SW_MAX_MB} MB per file.</p>`);
+  try { await dswLoad(); } catch (e) { document.getElementById('sw-list').innerHTML = `<p class="st-empty">⚠ ${esc(e.message)}</p>`; return; }
+  const el = document.getElementById('sw-list'); if (!el) return;
+  const pill = s => s.hidden ? '<span class="st-pill mu">Disembunyikan</span>' : s.src === 'base' ? '<span class="st-pill mu">Bawaan</span>' : '<span class="st-pill ok">Diunggah di Studio</span>';
+  el.innerHTML = `<div class="sa-pk">${dswRows().map(s => `<div class="st-card sa-pkc${s.hidden ? ' off' : ''}"><div class="h"><span class="ic">💻</span><div><small>${esc(s.brand || '')} · ${esc((s.platform || ['Windows']).join(', '))}</small><b>${esc(s.title)}</b></div>${pill(s)}</div>
+    <p><b>Versi ${esc(s.version || '—')}</b>${s.mb ? ` · ${esc(String(s.mb).replace('.', ','))} MB` : ''}${s.at ? ` · diunggah ${esc(wibDate(Date.parse(s.at), { day: 'numeric', month: 'short', year: 'numeric' }))}` : ''}</p>
+    <p>${esc(s.desc || '')}</p>
+    <div class="sa-row"><a class="st-btn sm gold" href="#dsp/${esc(s.id)}">⬆ ${s.src === 'new' ? 'Ubah / ganti file' : 'Unggah versi baru'}</a>
+      ${s.path ? `<a class="st-btn sm" href="${esc(pubUrl(s.path))}" target="_blank" rel="noopener" download>⬇ Unduh</a>` : s.file ? `<a class="st-btn sm" href="/${esc(s.file)}" target="_blank" rel="noopener" download>⬇ Unduh</a>` : ''}
+      <button class="st-btn sm" onclick="dswHide('${esc(s.id)}', ${!s.hidden})">${s.hidden ? '👁 Tampilkan' : '🙈 Sembunyikan'}</button>
+      ${s.src === 'up' ? `<button class="st-btn sm" onclick="dswRevert('${esc(s.id)}')">↺ Kembali ke versi bawaan</button>` : ''}
+      ${s.src === 'new' ? `<button class="st-btn sm red" onclick="dswDel('${esc(s.id)}')">🗑</button>` : ''}</div></div>`).join('') || '<p class="st-empty">Belum ada software.</p>'}</div>`;
+}
+let dswf = null;
+async function stDspEdit(id) {
+  try { await dswLoad(); } catch (e) { return stPage(`<p class="st-empty">⚠ ${esc(e.message)}</p>`); }
+  const cur = id ? dswRows().find(s => s.id === id) : null;
+  if (id && !cur) { showToast('Software tidak ditemukan.'); stGo('#dsp'); return; }
+  dswf = { id: cur?.id || null, title: cur?.title || '', brand: cur?.brand || 'STEG', platform: [...(cur?.platform || ['Windows'])], version: cur?.version || '', desc: cur?.desc || '',
+    path: cur?.src !== 'base' ? cur?.path || '' : '', file: null, busy: false, isNew: !cur };
+  const brands = [...new Set(BRANDS.map(b => b.name))];
+  stPage(`<div class="st-ph"><div><p><a href="#dsp">DSP Software</a> › ${cur ? 'Versi baru' : 'Baru'}</p><h1>${cur ? esc(cur.title) : 'Tambah software'}</h1></div>
+      <div class="st-acts"><button class="st-btn pri" id="sw-save" onclick="dswSave()">💾 Simpan &amp; tayangkan</button></div></div>
+    <div class="st-ed"><div class="st-card st-pad">
+      <input class="st-in st-title" placeholder="Nama software — mis. STEG SDP — PC Software" value="${esc(dswf.title)}" oninput="dswf.title=this.value">
+      <div class="sa-g2"><label class="st-fl">Brand<select class="st-in" onchange="dswf.brand=this.value">${brands.map(b => `<option${b === dswf.brand ? ' selected' : ''}>${esc(b)}</option>`).join('')}</select></label>
+        <label class="st-fl">Versi<input class="st-in" value="${esc(dswf.version)}" placeholder="mis. 3.8.30" oninput="dswf.version=this.value"></label></div>
+      <div class="st-fl">Platform<div class="st-glchips">${SW_PLATS.map(p => `<label class="st-ck" style="margin:0 12px 0 0"><input type="checkbox" ${dswf.platform.includes(p) ? 'checked' : ''} onchange="dswPlat('${p}', this.checked)"> ${p}</label>`).join('')}</div></div>
+      <label class="st-fl">Keterangan<textarea class="st-in" rows="4" placeholder="Untuk DSP apa, cara koneksi, fitur utama…" oninput="dswf.desc=this.value">${esc(dswf.desc)}</textarea></label>
+      <div class="st-fl">File installer <small>(.exe / .msi / .zip / .dmg / .apk — maks. ${SW_MAX_MB} MB)</small><div id="sw-file"></div></div>
+    </div>
+    <div class="st-col"><div class="st-card st-pad"><p class="st-note" style="margin:0">${cur && cur.src === 'base' ? 'File baru akan <b>menggantikan versi bawaan</b> di menu DSP Software. Versi bawaan tetap tersimpan dan bisa dikembalikan.' : 'Setelah disimpan, software langsung tampil di menu DSP Software CAI Hub.'}</p>
+      <p class="st-note">Unduhan pengunjung pindah ke salinan di situs setelah bot berjalan (±15 menit). Jangan unggah software berbayar / berlisensi yang tidak boleh disebar.</p></div></div></div>`);
+  dswFilePaint();
+}
+function dswPlat(p, on) { dswf.platform = SW_PLATS.filter(x => x === p ? on : dswf.platform.includes(x)); if (!stDirty) { stDirty = true; stStat(); } }
+function dswFilePaint() {
+  const el = document.getElementById('sw-file'); if (!el || !dswf) return;
+  const f = dswf.file, name = f ? f.name : dswf.path ? dswf.path.split('/').pop() : '';
+  el.innerHTML = `<div class="sa-lgbox"><span style="font-size:30px">💾</span><div class="sa-lgb" style="flex:1;min-width:0">${name ? `<b style="word-break:break-all">${esc(name)}</b><small class="st-mu">${f ? (f.size / 1048576).toFixed(1).replace('.', ',') + ' MB · belum diunggah' : 'file saat ini'}</small>` : '<span class="st-mu">Belum ada file dipilih</span>'}</div>
+    <label class="st-btn sm">${name ? '🔁 Ganti file' : '📂 Pilih file'}<input type="file" accept=".exe,.msi,.zip,.dmg,.apk,.pkg,.rar,.7z" hidden onchange="dswPick(this)"></label></div>`;
+}
+function dswPick(inp) {
+  const f = inp.files?.[0]; inp.value = ''; if (!f) return;
+  if (f.size > SW_MAX_MB * 1048576) return showToast(`⚠ File ${(f.size / 1048576).toFixed(1)} MB — maks. ${SW_MAX_MB} MB. Kompres (zip) dulu.`, 7000);
+  dswf.file = f; dswFilePaint(); if (!stDirty) { stDirty = true; stStat(); }
+  const m = f.name.match(/v?(\d+(?:\.\d+)+(?:[._-]?b\d+)?)/i);   // versi dari nama file, mis. steg-setup-v3.8.30.exe
+  if (m && m[1] !== dswf.version) { dswf.version = m[1]; const v = document.querySelector('[oninput="dswf.version=this.value"]'); if (v) v.value = m[1]; showToast('Versi diisi dari nama file: ' + m[1] + ' — ubah bila keliru.'); }
+}
+const dswSafe = s => String(s || '').normalize('NFKD').replace(/[^\w.\-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'installer';
+async function dswSave() {
+  const f = dswf; if (!f || f.busy) return;
+  if (!f.title.trim()) return showToast('Nama software belum diisi.');
+  if (!f.version.trim()) return showToast('Versi belum diisi.');
+  if (!f.file && !f.path) return showToast('Pilih file installer dulu.');
+  if (!f.platform.length) f.platform = ['Windows'];
+  f.busy = true; const btn = document.getElementById('sw-save'); btn.disabled = true;
+  const id = f.id || 'dsp-' + dswSafe(f.brand + '-' + f.title).toLowerCase().slice(0, 40);
+  let up = null;
+  try {
+    await dswLoad();
+    const M = stCache.dspMan, old = M.items.find(x => x.id === id);
+    let path = f.path, mb = old?.mb, name = old?.name;
+    if (f.file) {
+      btn.textContent = `⏳ Mengunggah ${(f.file.size / 1048576).toFixed(1).replace('.', ',')} MB…`;
+      name = dswSafe(f.file.name); up = `software/${id}/${dswSafe(f.version)}-${Math.random().toString(36).slice(2, 8)}/${name}`;
+      const { error } = await supabase.storage.from('showcase').upload(up, f.file, { contentType: f.file.type || 'application/octet-stream', cacheControl: '31536000', upsert: false });
+      if (error) throw error;
+      path = up; mb = +(f.file.size / 1048576).toFixed(1);
+    }
+    btn.textContent = '⏳ Menyimpan…';
+    const item = { id, title: f.title.trim(), brand: f.brand, platform: f.platform, version: f.version.trim(), desc: f.desc.trim(), path, name, mb, at: new Date().toISOString() };
+    M.items = [...M.items.filter(x => x.id !== id), item]; M.hide = M.hide.filter(x => x !== id);
+    await dswSaveManifest(M);
+    if (up && old?.path && old.path !== up) supabase.storage.from('showcase').remove([old.path]).catch(() => {});
+    showToast('✓ Software tersimpan & tayang di CAI Hub'); dswf = null; stGo('#dsp', true);
+  } catch (e) {
+    if (up) supabase.storage.from('showcase').remove([up]).catch(() => {});
+    f.busy = false; btn.disabled = false; btn.textContent = '💾 Simpan & tayangkan';
+    const m = String(e?.message || e);
+    showToast(/exceeded|too large|413|maximum/i.test(m) ? `⚠ File terlalu besar untuk penyimpanan (maks. ${SW_MAX_MB} MB) — kompres (zip) dulu.` : /row-level|security/i.test(m) ? '⚠ Ditolak izin penyimpanan (RLS): ' + m : '⚠ Gagal menyimpan: ' + m, 9000);
+  }
+}
+async function dswHide(id, on) {
+  try {
+    const M = await dswLoad(), it = M.items.find(x => x.id === id);
+    if (it) it.hidden = on || undefined; else M.hide = on ? [...new Set([...M.hide, id])] : M.hide.filter(x => x !== id);
+    await dswSaveManifest(M); showToast(on ? '🙈 Disembunyikan dari CAI Hub' : '👁 Tampil lagi di CAI Hub'); stDsp();
+  } catch (e) { showToast('⚠ ' + (e.message || e), 7000); }
+}
+async function dswRevert(id) {
+  if (!confirm('Kembalikan ke versi bawaan? File yang diunggah di Studio untuk software ini dihapus.')) return;
+  try {
+    const M = await dswLoad(), it = M.items.find(x => x.id === id);
+    M.items = M.items.filter(x => x.id !== id); await dswSaveManifest(M);
+    if (it?.path) supabase.storage.from('showcase').remove([it.path]).catch(() => {});
+    showToast('↺ Kembali ke versi bawaan'); stDsp();
+  } catch (e) { showToast('⚠ ' + (e.message || e), 7000); }
+}
+async function dswDel(id) {
+  const it = stCache.dspMan?.items.find(x => x.id === id); if (!it || !confirm(`Hapus "${it.title}" dari menu DSP Software?`)) return;
+  try {
+    const M = await dswLoad(); M.items = M.items.filter(x => x.id !== id); await dswSaveManifest(M);
+    if (it.path) supabase.storage.from('showcase').remove([it.path]).catch(() => {});
+    showToast('🗑 Software dihapus'); stDsp();
+  } catch (e) { showToast('⚠ ' + (e.message || e), 7000); }
+}

@@ -447,7 +447,10 @@ async function cardsDispatch(acadAll: Acad[]) {
   ]);
   const gal = (gl.data || []).filter(g => !g.publish_at || g.publish_at <= nowIso);
   const acad = acadAll.filter(a => !a.at || Date.parse(a.at) <= Date.now()).map(a => [a.no, a.title, (a as { img?: string }).img]);
-  const raw = JSON.stringify([nw.data || [], gal, ev.data || [], ad.data || [], acad]);
+  // 💻 DSP Software dari Studio: installer baru → bot menyalinnya ke situs (tools/mirror-media.js) secepatnya
+  let sw: unknown[] = [];
+  try { const r = await fetch(`${PUB_STORAGE}showcase/software/items.json?t=${Date.now()}`); if (r.ok) sw = ((await r.json()).items || []).filter((x: { hidden?: boolean }) => !x.hidden).map((x: { id: string; path?: string }) => [x.id, x.path]); } catch (_) { /* lewati */ }
+  const raw = JSON.stringify([nw.data || [], gal, ev.data || [], ad.data || [], acad, ...(sw.length ? [sw] : [])]);
   const sig = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw)))).slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
   const { data: st, error: stErr } = await db.from('card_dispatch').select('sig, sent_at').eq('id', 1).maybeSingle();
   if (stErr) return 'no-table';
