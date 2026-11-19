@@ -1111,7 +1111,7 @@ body {
 .mobile-nav-item.active { color: var(--accent); }
 .mobile-nav { overflow-x: auto; scrollbar-width: none; }
 .mobile-nav::-webkit-scrollbar { display: none; }
-.mobile-nav-item { min-width: 52px; flex-shrink: 0; }
+.mobile-nav-item { flex: 1 0 auto; min-width: 56px; padding: 0 8px; white-space: nowrap; }
 
 /* ── Responsive: Mobile ── */
 @media (max-width: 720px) {
