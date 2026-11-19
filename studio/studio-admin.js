@@ -1543,3 +1543,205 @@ async function uaDel(id) {
   if (error) return showToast('⚠ ' + error.message, 6000);
   showToast('Pengumuman terjadwal dibatalkan'); uaLoad();
 }
+
+/* ── 📅 KALENDER ACARA (19 Nov 2026, permintaan pemilik) — salinan form js/events.js (openEvForm/saveEv/deleteEv): ubah keduanya.
+   Tabel cai_events (SQL supabase/events.sql), poster di Storage publik showcase/events/ dengan akhiran posisi #x,y,z / #fit. ── */
+const SE_KINDS = { kompetisi: ['🏆', 'Kompetisi'], gathering: ['🤝', 'Gathering'], workshop: ['🎓', 'Workshop / Training'], launching: ['🚀', 'Launching'], partner: ['🏪', 'Acara Partner'] };
+const seWib = (iso, o) => new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', ...o });
+const seYmd = iso => iso ? new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) : '';
+const seHm = iso => iso ? seWib(iso, { hour: '2-digit', minute: '2-digit', hour12: false }).replace('.', ':') : '';
+const seEnd = e => e.end_at ? Date.parse(e.end_at) : Date.parse(e.start_at) + 6 * 3600e3;
+const sePast = e => seEnd(e) < Date.now();
+const sePath = v => String(v || '').split('#')[0];
+function seFr(v) {
+  const m = String(v || '').split('#')[1] || '';
+  if (m === 'fit') return { mode: 'fit', x: 50, y: 50, z: 1 };
+  const [x, y, z] = m ? m.split(',').map(Number) : [];
+  return m ? { mode: 'cover', x: isFinite(x) ? x : 50, y: isFinite(y) ? y : 50, z: isFinite(z) && z >= 1 ? z : 1 } : { mode: 'auto', x: 50, y: 50, z: 1 };
+}
+const seFrSfx = f => !f || f.mode === 'auto' ? '' : f.mode === 'fit' ? '#fit' : `#${f.x},${f.y},${f.z}`;
+const seFrCss = f => f.mode === 'cover' ? `object-position:${f.x}% ${f.y}%;transform-origin:${f.x}% ${f.y}%;scale:${f.z}` : '';
+function seRange(e) {
+  const s = e.start_at, en = e.end_at, sd = seYmd(s), ed = en ? seYmd(en) : sd;
+  const d = iso => seWib(iso, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  return sd === ed ? `${d(s)} · ${seHm(s).replace(':', '.')}${en ? '–' + seHm(en).replace(':', '.') : ''} WIB` : `${d(s)} – ${d(en)}`;
+}
+const sePlace = e => e.online ? 'Online' : [e.venue, e.city].filter(Boolean).join(' · ');
+async function seOnAll() {   // samakan dengan EV_ON_ALL di js/events.js (dibaca dari file situs)
+  if (stCache.evOnAll !== undefined) return stCache.evOnAll;
+  try { const t = await (await fetch('js/events.js?t=' + Date.now(), { cache: 'no-store' })).text(); stCache.evOnAll = /const EV_ON_ALL = true/.test(t); } catch (e) { stCache.evOnAll = false; }
+  return stCache.evOnAll;
+}
+async function seLoad(force) {
+  if (stCache.ev && !force) return stCache.ev;
+  const { data, error } = await supabase.from('cai_events').select('*').order('start_at');
+  if (error) throw error;
+  return (stCache.ev = data || []);
+}
+let seTab = 'next', seQ = '';
+async function stAcara() {
+  stPage(`<div class="st-ph"><div><p>Konten</p><h1>Kalender Acara</h1></div><div class="st-acts"><button class="st-btn" onclick="seLoad(true).then(seRows)">↻</button><a class="st-btn" href="/?acara=1" target="_blank" rel="noopener">↗ Lihat di CAI Hub</a><a class="st-btn gold" href="#acara/new">＋ Tambah acara</a></div></div>
+    <div class="st-card"><div class="st-filters" id="se-f"></div><div id="se-list"><p class="st-empty">⏳ Memuat…</p></div>
+    <div class="st-tfoot" id="se-foot"></div></div>`);
+  try { await seLoad(true); seRows(); } catch (e) {
+    const m = String(e.message || e);
+    document.getElementById('se-list').innerHTML = /does not exist|schema cache|42P01|PGRST205/i.test(m) ? `<p class="st-empty">Tabel Kalender Acara belum ada di database — jalankan <b>supabase/events.sql</b> sekali di Supabase → SQL Editor.</p>` : `<p class="st-empty">⚠ ${esc(m)}</p>`;
+  }
+  const on = await seOnAll(), ft = document.getElementById('se-foot');
+  if (ft) ft.innerHTML = on ? 'Kalender Acara tampil untuk pengunjung. Acara 🔒 khusus partner hanya terlihat partner yang login.' : '🔒 Kalender Acara di CAI Hub saat ini <b>khusus Editor</b> — pengunjung & partner belum melihatnya, notifikasi “Acara baru” tidak dikirim.';
+}
+function seRows() {
+  const f = document.getElementById('se-f'), el = document.getElementById('se-list'); if (!el) return;
+  const A = stCache.ev || [];
+  const T = { next: ['Akan datang', e => e.published && !sePast(e)], arc: ['Arsip', e => e.published && sePast(e)], draft: ['Draf', e => !e.published], all: ['Semua', () => true] };
+  if (f && !f.dataset.done) { f.dataset.done = 1; f.innerHTML = Object.entries(T).map(([k, [t, fn]]) => `<button class="st-chip" data-se="${k}" onclick="seTab='${k}';seRows()">${t} ${A.filter(fn).length}</button>`).join('') +
+    `<label class="st-search sm"><span>🔍</span><input placeholder="Cari judul / kota…" value="${esc(seQ)}" oninput="seQ=this.value;seRows()"></label>`; }
+  f?.querySelectorAll('[data-se]').forEach(b => b.classList.toggle('on', b.dataset.se === seTab));
+  const q = seQ.toLowerCase();
+  let rows = A.filter(T[seTab][1]).filter(e => !q || [e.title, e.city, e.venue].join(' ').toLowerCase().includes(q));
+  rows = seTab === 'arc' ? rows.sort((a, b) => Date.parse(b.start_at) - Date.parse(a.start_at)) : rows;
+  el.innerHTML = rows.map(e => { const k = SE_KINDS[e.kind] || SE_KINDS.kompetisi, p = sePath(e.poster);
+    return `<a class="st-nrow" href="#acara/${e.id}"><span class="st-nth">${p ? `<img src="${esc(pubUrl(p))}" alt="" loading="lazy">` : k[0]}</span>
+      <div class="tx"><b>${esc(e.title)}</b><small>${k[0]} ${esc(k[1])} · ${esc(seRange(e))}${sePlace(e) ? ' · ' + esc(sePlace(e)) : ''}</small></div>
+      ${e.public === false ? '<span class="st-pill mu">🔒 Partner</span>' : ''}${!e.published ? '<span class="st-pill mu">Draf</span>' : sePast(e) ? '<span class="st-pill mu">Selesai</span>' : '<span class="st-pill ok">Tayang</span>'}<span class="st-chev">›</span></a>`; }).join('')
+    || `<p class="st-empty">${seTab === 'next' ? 'Belum ada acara yang akan datang.' : 'Tidak ada acara.'}</p>`;
+}
+let sef = null;
+async function stAcaraEdit(id) {
+  let e = null;
+  if (id) { try { await seLoad(); e = stCache.ev.find(x => x.id === id) || (await seLoad(true)).find(x => x.id === id); } catch (er) {} if (!e) { showToast('Acara tidak ditemukan.'); stGo('#acara'); return; } }
+  saLoadAd().catch(() => {});
+  const tom = new Date(Date.now() + 864e5).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+  sef = e ? { id: e.id, title: e.title, kind: e.kind, sd: seYmd(e.start_at), st: seHm(e.start_at), ed: seYmd(e.end_at), et: seHm(e.end_at), online: !!e.online, city: e.city || '', venue: e.venue || '',
+      map_url: e.map_url || '', partners: [...(e.partners || [])], poster: sePath(e.poster), fr: seFr(e.poster), file: null, prev: '', body: e.body || '', link_url: e.link_url || '', link_label: e.link_label || '',
+      hof_event: e.hof_event || '', public: e.public !== false, published: !!e.published, notify: !!e.notify, pushed: !!e.push_at, busy: false }
+    : { id: null, title: '', kind: 'kompetisi', sd: tom, st: '09:00', ed: '', et: '', online: false, city: '', venue: '', map_url: '', partners: [], poster: '', fr: seFr(''), file: null, prev: '', body: '',
+      link_url: '', link_label: '', hof_event: '', public: true, published: true, notify: true, pushed: false, busy: false };
+  const hofEv = [...new Set((typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME : []).map(x => x.event).filter(Boolean))];
+  const inp = (k, ph = '', type = 'text') => `<input class="st-in" type="${type}" value="${esc(sef[k])}" placeholder="${esc(ph)}" oninput="sef.${k}=this.value;sePrev()">`;
+  stPage(`<div class="st-ph"><div><p><a href="#acara">Kalender Acara</a> › ${e ? 'Edit' : 'Baru'}</p><h1>${e ? 'Edit acara' : 'Tambah acara'}</h1></div>
+      <div class="st-acts">${e ? `<button class="st-btn red" onclick="seDel()">🗑</button><a class="st-btn" href="/?acara=${e.id}" target="_blank" rel="noopener">↗ Lihat</a>` : ''}<button class="st-btn pri" id="se-save" onclick="seSave()">💾 Simpan</button></div></div>
+    <div class="st-ed"><div class="st-card st-pad">
+      <input class="st-in st-title" placeholder="Judul acara — mis. EMMA Indonesia Heat 03" value="${esc(sef.title)}" oninput="sef.title=this.value;sePrev()">
+      <div class="st-fl">Jenis<div class="st-seg" id="se-kind">${Object.entries(SE_KINDS).map(([k, v]) => `<button data-k="${k}" onclick="sef.kind='${k}';seKind(1)">${v[0]} ${v[1]}</button>`).join('')}</div></div>
+      <div class="sa-g2"><div class="st-fl">Mulai (WIB)<div class="sa-g2"><input class="st-in" type="date" value="${sef.sd}" onchange="sef.sd=this.value;sePrev()"><input class="st-in" type="time" value="${sef.st}" onchange="sef.st=this.value;sePrev()"></div></div>
+        <div class="st-fl">Selesai <small>(opsional)</small><div class="sa-g2"><input class="st-in" type="date" value="${sef.ed}" onchange="sef.ed=this.value;sePrev()"><input class="st-in" type="time" value="${sef.et}" onchange="sef.et=this.value;sePrev()"></div></div></div>
+      <label class="st-ck"><input type="checkbox" ${sef.online ? 'checked' : ''} onchange="sef.online=this.checked;sePlaceRow();seDirty()"> Acara online (live / Zoom)</label>
+      <div id="se-place"></div>
+      <div class="st-fl">Partner CAI terkait<div class="st-glchips" id="se-pt"></div>
+        <input class="st-in" list="se-dl-pt" placeholder="ketik / pilih nama partner lalu Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();seAddPt(this)}" onchange="seAddPt(this)"><datalist id="se-dl-pt"></datalist></div>
+      <div class="st-fl">Poster <small>(opsional — JPG/PNG/WebP, diperkecil otomatis)</small><div id="se-img" class="se-imgw"></div></div>
+      <label class="st-fl">Keterangan<textarea class="st-in" rows="5" placeholder="Agenda, siapa yang diundang, apa yang didapat…" oninput="sef.body=this.value">${esc(sef.body)}</textarea></label>
+      <div class="sa-g2"><label class="st-fl">Link info / daftar <small>(wa.me = tombol Daftar via WA)</small>${inp('link_url', 'https://…')}</label><label class="st-fl">Teks tombol${inp('link_label', 'Info & daftar')}</label></div>
+      <label class="st-fl" id="se-hof">Hasil di Hall of Fame <small>(kompetisi · nama event persis, untuk arsip)</small><input class="st-in" list="se-dl-hof" value="${esc(sef.hof_event)}" placeholder="mis. EMMA Heat 02" oninput="sef.hof_event=this.value"><datalist id="se-dl-hof">${hofEv.map(x => `<option value="${esc(x)}">`).join('')}</datalist></label>
+      <div class="st-warn">⚠️ Acara publik bisa dibaca siapa saja — jangan memuat harga dealer, diskon, atau info internal.</div>
+    </div>
+    <div class="st-col"><div class="st-card st-pad">
+      <div class="st-fl" style="margin-top:0">Status<div class="st-seg" id="se-pub"><button onclick="sef.published=false;sePaint();seDirty()">Draf</button><button onclick="sef.published=true;sePaint();seDirty()">Tayang</button></div></div>
+      <div class="st-fl">Untuk siapa<div class="st-seg" id="se-pubx"><button onclick="sef.public=true;sePaint();seDirty()">🌐 Publik</button><button onclick="sef.public=false;sePaint();seDirty()">🔒 Khusus partner</button></div></div>
+      <div id="se-notif"></div>
+    </div>
+    <div class="st-card st-pad"><div class="st-fl" style="margin:0 0 10px">👁 Pratinjau kartu</div><div id="se-prev"></div></div></div></div>`);
+  seKind(); sePlaceRow(); sePt(); seImg(); sePaint();
+  saLoadAd().then(() => { const dl = document.getElementById('se-dl-pt'); if (dl) dl.innerHTML = saAdPub().map(d => `<option value="${esc(d.n)}">`).join(''); }).catch(() => {});
+}
+function seDirty() { if (!stDirty) { stDirty = true; stStat(); } }
+function seKind(u) { document.querySelectorAll('#se-kind button').forEach(b => b.classList.toggle('on', b.dataset.k === sef.kind)); const h = document.getElementById('se-hof'); if (h) h.style.display = sef.kind === 'kompetisi' ? '' : 'none'; if (u) seDirty(); sePrev(); }
+function sePlaceRow() {
+  const el = document.getElementById('se-place'); if (!el) return;
+  el.innerHTML = (sef.online ? '' : `<div class="sa-g2"><label class="st-fl">Kota<input class="st-in" value="${esc(sef.city)}" placeholder="Jakarta" oninput="sef.city=this.value;sePrev()"></label><label class="st-fl">Tempat<input class="st-in" value="${esc(sef.venue)}" placeholder="nama gedung / toko" oninput="sef.venue=this.value;sePrev()"></label></div>`) +
+    `<label class="st-fl">${sef.online ? 'Link live / Zoom <small>(opsional)</small>' : 'Link Google Maps <small>(opsional — kosong = dicari otomatis dari tempat + kota)</small>'}<input class="st-in" value="${esc(sef.map_url)}" placeholder="https://…" oninput="sef.map_url=this.value"></label>`;
+  sePrev();
+}
+function sePt() { const el = document.getElementById('se-pt'); if (el) el.innerHTML = sef.partners.map((p, i) => `<span class="st-glchip">${esc(p)} <button onclick="sef.partners.splice(${i},1);sePt();seDirty()">✕</button></span>`).join(''); }
+function seAddPt(inp) { const v = String(inp.value || '').trim(); inp.value = ''; if (!v || sef.partners.includes(v)) return; sef.partners.push(v); sePt(); seDirty(); }
+function seImg() {
+  const el = document.getElementById('se-img'); if (!el || !sef) return;
+  const src = sef.prev || (sef.poster ? pubUrl(sef.poster) : ''), f = sef.fr, fit = f.mode === 'fit';
+  el.innerHTML = src ? `<div class="sa-cov${fit ? ' se-fit' : ''}"${fit ? '' : ' onpointerdown="seDrag(event)"'}>${fit ? `<img class="se-bg" src="${esc(src)}" alt="" draggable="false"><img class="se-fg" src="${esc(src)}" alt="" draggable="false">` : `<img src="${esc(src)}" alt="" style="${seFrCss(f)}" draggable="false"><span>✥ Geser gambar</span>`}</div>
+      <div class="sa-row"><div class="st-seg sm"><button class="${fit ? '' : 'on'}" onclick="seMode('cover')">▣ Isi bingkai</button><button class="${fit ? 'on' : ''}" onclick="seMode('fit')">▢ Tampilkan utuh</button></div>
+        ${fit ? '' : `<span class="sa-zl">🔍 Zoom <input type="range" min="1" max="2.5" step="0.05" value="${f.z}" oninput="seZoom(this.value)"></span>`}
+        <button class="st-btn sm" onclick="sef.fr=seFr('');seImg();sePrev();seDirty()">⊙ Reset</button><label class="st-btn sm">🖼 Ganti<input type="file" accept="image/*" hidden onchange="sePick(this)"></label><button class="st-link" onclick="seImgDel()">Hapus poster</button></div>
+      <p class="st-note">${fit ? 'Poster tampil utuh; sisi kosong diisi versi buram dari poster yang sama — cocok untuk poster tegak berisi tulisan.' : f.mode === 'auto' ? 'Belum diatur: kartu memotong di tengah, jendela detail menampilkan utuh. Geser / zoom untuk mengatur sendiri.' : 'Posisi ini dipakai di kartu Kalender Acara, jendela detail, headline Dashboard & kartu WA.'}</p>`
+    : `<label class="st-img16 se-empty"><span>🖼 Pilih poster</span><input type="file" accept="image/*" hidden onchange="sePick(this)"></label>`;
+}
+function sePick(inp) { const f = inp.files?.[0]; inp.value = ''; if (!f) return; sef.file = f; if (sef.prev) URL.revokeObjectURL(sef.prev); sef.prev = URL.createObjectURL(f); sef.fr = seFr(''); seImg(); sePrev(); seDirty(); }
+function seImgDel() { sef.file = null; sef.poster = ''; sef.prev = ''; sef.fr = seFr(''); seImg(); sePrev(); seDirty(); }
+function seMode(m) { const f = sef.fr; f.mode = m; if (m !== 'cover') { f.x = 50; f.y = 50; f.z = 1; } seImg(); sePrev(); seDirty(); }
+function seZoom(v) { const f = sef.fr; f.mode = 'cover'; f.z = Math.round(Number(v) * 100) / 100; seFrApply(); }
+function seFrApply() { const i = document.querySelector('#se-img .sa-cov img'); if (i) i.style.cssText = seFrCss(sef.fr); sePrev(); seDirty(); }
+function seDrag(e) {
+  const box = e.currentTarget, f = sef?.fr; if (!f || e.button > 0 || f.mode === 'fit') return;
+  if (f.mode === 'auto') f.mode = 'cover';
+  e.preventDefault(); box.setPointerCapture?.(e.pointerId); box.classList.add('drag');
+  const r = box.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY, fx = f.x, fy = f.y;
+  const mv = ev => { const k = 100 / Math.max(1, f.z - 1 + .6);
+    f.x = Math.round(Math.min(100, Math.max(0, fx - (ev.clientX - x0) / r.width * k))); f.y = Math.round(Math.min(100, Math.max(0, fy - (ev.clientY - y0) / r.height * k))); seFrApply(); };
+  const up = () => { box.classList.remove('drag'); box.removeEventListener('pointermove', mv); box.removeEventListener('pointerup', up); box.removeEventListener('pointercancel', up); seImg(); };
+  box.addEventListener('pointermove', mv); box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+}
+async function sePaint() {
+  document.querySelectorAll('#se-pub button').forEach((b, i) => b.classList.toggle('on', i === (sef.published ? 1 : 0)));
+  document.querySelectorAll('#se-pubx button').forEach((b, i) => b.classList.toggle('on', i === (sef.public ? 0 : 1)));
+  const s = document.getElementById('se-save'); if (s) s.textContent = sef.published ? '💾 Simpan' : '💾 Simpan draf';
+  const n = document.getElementById('se-notif'), on = await seOnAll();
+  if (n) n.innerHTML = !on ? '<p class="st-note">🔒 Kalender Acara di CAI Hub sedang khusus Editor — notifikasi “Acara baru” tidak dikirim.</p>'
+    : sef.pushed ? '<p class="st-note">🔔 Notifikasi “Acara baru” untuk acara ini sudah pernah dikirim.</p>'
+    : `<label class="st-ck"><input type="checkbox" ${sef.notify ? 'checked' : ''} onchange="sef.notify=this.checked"> Kirim notifikasi “📅 Acara baru” ke HP saat tayang${sef.public ? '' : ' <small>(khusus partner: tanpa judul)</small>'}</label>`;
+  sePrev();
+}
+function sePrev() {
+  const el = document.getElementById('se-prev'); if (!el || !sef) return;
+  const k = SE_KINDS[sef.kind] || SE_KINDS.kompetisi, src = sef.prev || (sef.poster ? pubUrl(sef.poster) : ''), f = sef.fr;
+  const st = seIso(sef.sd, sef.st), en = sef.ed ? seIso(sef.ed, sef.et || sef.st) : sef.et ? seIso(sef.sd, sef.et) : null;
+  const fake = { start_at: st, end_at: en, online: sef.online, venue: sef.venue, city: sef.city };
+  el.innerHTML = `<div class="se-card"><div class="se-pst">${src ? (f.mode === 'fit' ? `<img class="se-bg" src="${esc(src)}" alt=""><img class="se-fg" src="${esc(src)}" alt="">` : `<img src="${esc(src)}" alt="" style="${seFrCss(f)}">`) : `<b>${k[0]}</b>`}</div>
+    <div class="se-cb"><div class="se-tg">${k[0]} ${esc(k[1])}${sef.public ? '' : ' · 🔒 Khusus partner'}${sef.published ? '' : ' · DRAF'}</div><h4>${esc(sef.title || 'Judul acara')}</h4>
+    <small>📅 ${st ? esc(seRange(fake)) : '—'}</small>${sePlace(fake) ? `<small>📍 ${esc(sePlace(fake))}</small>` : ''}${sef.partners.length ? `<small>🏪 ${sef.partners.length} partner terkait</small>` : ''}</div></div>`;
+}
+const seIso = (d, t) => d ? new Date(`${d}T${t || '00:00'}:00+07:00`).toISOString() : null;
+async function seSave() {
+  const f = sef; if (!f || f.busy) return;
+  if (!f.title.trim()) return showToast('Judul belum terisi.');
+  if (!f.sd) return showToast('Tanggal mulai belum diisi.');
+  const start = seIso(f.sd, f.st || '00:00'), end = f.ed ? seIso(f.ed, f.et || f.st || '00:00') : (f.et ? seIso(f.sd, f.et) : null);
+  if (end && Date.parse(end) < Date.parse(start)) return showToast('Waktu selesai lebih awal dari waktu mulai.');
+  f.busy = true; const btn = document.getElementById('se-save'); btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
+  const old = f.id ? (stCache.ev || []).find(x => x.id === f.id) : null;
+  let uploaded = null;
+  try {
+    let poster = sePath(f.poster) || null;
+    if (f.file) {
+      const blob = await glResize(f.file, 1600);
+      uploaded = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`;
+      const { error } = await supabase.storage.from('showcase').upload(uploaded, blob, { contentType: blob.type, cacheControl: '3600' });
+      if (error) throw error; poster = uploaded;
+    }
+    if (poster) poster += seFrSfx(f.fr);
+    const row = { title: f.title.trim(), kind: f.kind, start_at: start, end_at: end, online: !!f.online, city: f.online ? null : (f.city.trim() || null), venue: f.online ? null : (f.venue.trim() || null),
+      map_url: f.map_url.trim() || null, partners: f.partners, poster, body: f.body.trim() || null, link_url: f.link_url.trim() || null, link_label: f.link_label.trim() || null,
+      hof_event: f.kind === 'kompetisi' ? (f.hof_event.trim() || null) : null, public: !!f.public, published: !!f.published, notify: !!f.notify, updated_at: new Date().toISOString() };
+    const { data, error } = await (f.id ? supabase.from('cai_events').update(row).eq('id', f.id).select().single() : supabase.from('cai_events').insert(row).select().single());
+    if (error) throw error;
+    if (await seOnAll() && data.published && data.notify && !data.push_at) supabase.functions.invoke('cway-push', { body: { action: 'notify', type: 'event', id: data.id } }).catch(() => {});
+    const oldP = sePath(old?.poster);
+    if (oldP && oldP !== sePath(poster) && /^events\//.test(oldP)) supabase.storage.from('showcase').remove([oldP]).catch(() => {});
+    if (f.prev) URL.revokeObjectURL(f.prev);
+    showToast(f.id ? '✓ Acara diperbarui' : (data.published ? '✓ Acara ditambahkan' : '✓ Disimpan sebagai draf'));
+    seTab = !data.published ? 'draft' : sePast(data) ? 'arc' : 'next';
+    await seLoad(true); sef = null; stGo('#acara', true);
+  } catch (e) {
+    if (uploaded) supabase.storage.from('showcase').remove([uploaded]).catch(() => {});
+    f.busy = false; btn.disabled = false; sePaint();
+    const m = String(e?.message || e);
+    showToast(/does not exist|schema cache|42P01/i.test(m) ? '⚠ Tabel Kalender Acara belum ada — jalankan supabase/events.sql di Supabase.' : /row-level security/i.test(m) ? '⚠ Ditolak izin database/Storage (RLS): ' + m : '⚠ Gagal menyimpan: ' + m, 9000);
+  }
+}
+async function seDel() {
+  const e = (stCache.ev || []).find(x => x.id === sef?.id); if (!e) return;
+  if (!confirm(`Hapus acara "${e.title}"?\n\nPengingat yang sudah dipasang pengunjung ikut terhapus.`)) return;
+  const { error } = await supabase.from('cai_events').delete().eq('id', e.id);
+  if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
+  const p = sePath(e.poster); if (/^events\//.test(p)) supabase.storage.from('showcase').remove([p]).catch(() => {});
+  showToast('🗑 Acara dihapus'); await seLoad(true); sef = null; stGo('#acara', true);
+}

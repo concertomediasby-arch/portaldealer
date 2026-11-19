@@ -50,7 +50,7 @@ const ST_NAV = [
   { id: 'home', i: '◧', t: 'Beranda' }, { id: 'jadwal', i: '⏰', t: 'Jadwal tayang' },
   { g: 'Konten' }, { id: 'news', i: '📰', t: 'News' },
   { id: 'cway', i: '☕', t: 'Concerto Way' }, { id: 'academy', i: '🎓', t: 'Academy' },
-  { id: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { id: 'guides', i: '📘', t: 'Panduan Partner' }, { id: 'sorotan', i: '🎬', t: 'Sorotan Brand' },
+  { id: 'galeri', i: '🚗', t: 'Galeri Instalasi' }, { id: 'guides', i: '📘', t: 'Panduan Partner' }, { id: 'sorotan', i: '🎬', t: 'Sorotan Brand' }, { id: 'acara', i: '📅', t: 'Kalender Acara' },
   { g: 'Katalog' }, { id: 'produk', i: '🔊', t: 'Produk' }, { id: 'umumkan', i: '📣', t: 'Umumkan produk' }, { id: 'paket', i: '📦', t: 'Paket Audio' }, { id: 'stok', i: '📊', t: 'Stok' },
   { g: 'Partner' }, { id: 'partner', i: '🏪', t: 'Enthusiast Partner' }, { id: 'akun', i: '🔑', t: 'Akun & Kode Akses' },
   { g: 'Laporan' }, { id: 'pengunjung', i: '📈', t: 'Pengunjung & Minat' }, { id: 'rapor', i: '🗓', t: 'Rapor Bulanan' }, { id: 'lappartner', i: '📨', t: 'Laporan Partner' },
@@ -66,7 +66,7 @@ function stNewMenu(e) {
   e.stopPropagation();
   const m = document.getElementById('st-newmenu');
   m.innerHTML = `<a href="#news/new">📰 Berita</a><a href="#" onclick="ceOpen(null);return false">🔊 Produk</a>
-    <a href="#cway/new">☕ Concerto Way</a><a href="#academy/new">🎓 Materi Academy</a><a href="#guides/new">📘 PDF Panduan</a><a href="#galeri/new">🚗 Instalasi Galeri</a>`;
+    <a href="#cway/new">☕ Concerto Way</a><a href="#academy/new">🎓 Materi Academy</a><a href="#guides/new">📘 PDF Panduan</a><a href="#galeri/new">🚗 Instalasi Galeri</a><a href="#acara/new">📅 Acara</a>`;
   m.classList.toggle('on');
 }
 addEventListener('click', () => document.getElementById('st-newmenu')?.classList.remove('on'));
@@ -182,14 +182,15 @@ function stRoute() {
   if (cur === 'guides' && arg === 'new') return stGdNew(h.split('/')[2]);
   if (cur === 'stok' && arg === 'import') return stStokImport();
   if (cur === 'umumkan') return stUmumkan(arg || '');
+  if (cur === 'acara' && arg) return stAcaraEdit(arg === 'new' ? null : arg);
   if (cur === 'partner' && arg) return stPartnerEdit(arg === 'new' ? null : arg);
   if (cur === 'pengunjung') return stPengunjung(arg === 'minat' ? 'int' : 'visit');
   if (cur === 'rapor') return stRapor(arg);
   if (cur === 'lappartner') return stLapPartner(arg);
   ({ home: stHome, jadwal: stJadwal, produk: stProduk, news: stNews, cway: stCway, academy: stAcademy, galeri: stGaleri, guides: stGuides,
-    paket: stPaket, stok: stStok, partner: stPartner, akun: stAkun, sorotan: stSorotan, notif: stNotif })[cur]();
+    paket: stPaket, stok: stStok, partner: stPartner, akun: stAkun, sorotan: stSorotan, notif: stNotif, acara: stAcara })[cur]();
 }
-const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'sorotan', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner', 'notif', 'umumkan'];
+const ST_PAGES = ['home', 'jadwal', 'produk', 'news', 'cway', 'academy', 'galeri', 'guides', 'sorotan', 'paket', 'stok', 'partner', 'akun', 'pengunjung', 'rapor', 'lappartner', 'notif', 'umumkan', 'acara'];
 const stPage = html => { const p = document.getElementById('st-page'); p.classList.remove('emb'); p.innerHTML = html; };
 const stCache = {};
 

@@ -36,6 +36,7 @@ function studioGo(hash) {
   wrapTop('openVisitors', () => studioGo('#pengunjung'));
   wrapTop('openRapor', m => studioGo('#rapor' + (m && /^\d{4}-\d{2}$/.test(m) ? '/' + m : '')));
   wrapTop('openPartnerReport', m => studioGo('#lappartner' + (m && /^\d{4}-\d{2}$/.test(m) ? '/' + m : '')));
+  wrapTop('openEvForm', id => studioGo(id ? '#acara/' + id : '#acara/new'));
   wrapTop('openAdmin', () => studioGo('#stok'));
   wrapTop('staffSyncSheet', () => studioGo('#stok'));
 })();
