@@ -5197,3 +5197,15 @@ body.ed-off .main .editor-only:not(#ed-bar):not(.sidebar *){display:none!importa
 html.embed #ed-bar,html.embed .ed-pen,html.embed .ed-penrow{display:none!important}
 @media(max-width:720px){#ed-bar{border-radius:0;margin:-4px -16px 12px;padding:7px 16px}#ed-bar .ed-s{display:none}}
 .media-gallery{position:relative}
+
+/* 🏪 Logo toko partner (19 Nov 2026) */
+.ad-top { align-items: center; }
+.ad-top .ad-name { flex: 1; min-width: 0; }
+.ad-logo { width: 48px; height: 48px; border-radius: 12px; flex: none; display: grid; place-items: center; overflow: hidden; }
+.ad-logo.sm { width: 38px; height: 38px; border-radius: 10px; }
+.ad-logo.ini { background: var(--accent-lo); color: var(--accent); font: 800 16px var(--f-display); }
+.ad-logo.sm.ini { font-size: 13px; }
+.ad-logo.lg, .pf-av.lg { background: #fff; box-shadow: 0 0 0 1px var(--border); }
+.ad-logo.lg.dk, .pf-av.lg.dk { background: #111317; }
+.ad-logo.lg img, .pf-av.lg img { width: 100%; height: 100%; object-fit: contain; padding: 4px; box-sizing: border-box; display: block; }
+.pf-av.lg { overflow: hidden; } .pf-av.lg img { padding: 6px; }

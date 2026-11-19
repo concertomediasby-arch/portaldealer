@@ -211,7 +211,7 @@ function pdNearRender(reshuffle) {
   el.innerHTML = `<div class="pd-near-h"><b>📍 Beli &amp; pasang di partner resmi</b>
       <select onchange="pdSetProv(this.value)" aria-label="Pilih provinsi"><option value="">Pilih provinsi Anda…</option>${provs.map(r => `<option ${r === prov ? 'selected' : ''}>${escHtml(r)}</option>`).join('')}</select></div>
     ${mug ? mugGiftHtml(brand, p, mug) : ''}
-    ${prov ? `<div class="pd-near-l">${show.map(d => `<div class="pd-it"><div><b class="pd-pf" onclick="openPartner('${shareSlug(d.n)}')" title="Lihat profil partner">${escHtml(d.n)} ›</b><small>📍 ${escHtml(d.c || d.r)}</small></div>${d.wa
+    ${prov ? `<div class="pd-near-l">${show.map(d => `<div class="pd-it">${adLogoHtml(d, 'ad-logo sm')}<div><b class="pd-pf" onclick="openPartner('${shareSlug(d.n)}')" title="Lihat profil partner">${escHtml(d.n)} ›</b><small>📍 ${escHtml(d.c || d.r)}</small></div>${d.wa
       ? `<a href="https://wa.me/${d.wa}?text=${encodeURIComponent(msg(d))}" target="_blank" rel="noopener">💬 Tanya</a>` : `<a class="mp" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>`}</div>`).join('')}</div>
     <div class="pd-near-f">${list.length > 3 ? `<button onclick="pdAll()">Lihat semua ${list.length} partner di ${escHtml(prov)} ›</button> · ` : ''}Pesan WA otomatis menyebut produk ini.</div>`
     : `<div class="pd-near-f">Pilih provinsi untuk melihat partner resmi CAI terdekat yang bisa menjual &amp; memasang produk ini.</div>`}`;

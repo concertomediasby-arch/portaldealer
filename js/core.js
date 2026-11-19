@@ -1458,7 +1458,7 @@ function rkSendRender() {
   ov.innerHTML = `<div class="rks" role="dialog" aria-label="Kirim rakitan ke partner"><div class="rks-h"><b>Kirim rakitan ke partner<small>Partner menerima daftar barang &amp; total SRP lewat WhatsApp</small></b><button class="rks-x" onclick="rkSendClose()" aria-label="Tutup">✕</button></div>
     <div class="rks-sum">${items}<div class="t"><span>Total SRP</span><span>${fmtRp(a.total)}</span></div></div>
     <select onchange="rkSendProv(this.value)" aria-label="Pilih provinsi"><option value="">Pilih provinsi Anda…</option>${provs.map(r => `<option ${r === prov ? 'selected' : ''}>${escHtml(r)}</option>`).join('')}</select>
-    ${prov ? `<div class="rks-l">${show.map(d => `<div class="rks-it"><div><b>${escHtml(d.n)}</b><small>📍 ${escHtml(d.c || d.r)}</small></div>${d.wa
+    ${prov ? `<div class="rks-l">${show.map(d => `<div class="rks-it">${adLogoHtml(d, 'ad-logo sm')}<div><b>${escHtml(d.n)}</b><small>📍 ${escHtml(d.c || d.r)}</small></div>${d.wa
       ? `<a href="https://wa.me/${d.wa}?text=${waText(rkSendMsg(d))}" target="_blank" rel="noopener">💬 Kirim</a>` : `<a class="mp" href="${adMaps(d)}" target="_blank" rel="noopener">Maps</a>`}</div>`).join('')}</div>
       ${list.length > show.length ? `<button class="rks-more" onclick="rksAll=true;rkSendRender()">Lihat semua ${list.length} partner di ${escHtml(prov)} ›</button>` : ''}`
     : '<div class="rks-f">Pilih provinsi untuk melihat partner resmi CAI terdekat.</div>'}
@@ -2077,7 +2077,7 @@ function renderAuthDealers() {
   const rows = list.filter(d => (adRegion === 'all' || d.r === adRegion) && (!q || normKey([d.n, d.c, d.r, d.a].join(' ')).includes(q)));
   document.getElementById('ad-count').innerHTML = `<b>${rows.length}</b> partner resmi${adRegion === 'all' && !q ? ` di <b>${regions.length}</b> provinsi` : ''}`;
   const card = d => `<div class="ad-card${d.hidden ? ' ad-hid' : ''}" data-adn="${escHtml(normKey(d.n))}">
-      <div class="ad-top"><div class="ad-name">${escHtml(d.n)}</div>${d.hidden ? '<span class="ad-badge hid">Disembunyikan</span>' : '<span class="ad-badge">✓ Resmi</span>'}</div>
+      <div class="ad-top">${adLogoHtml(d)}<div class="ad-name">${escHtml(d.n)}</div>${d.hidden ? '<span class="ad-badge hid">Disembunyikan</span>' : '<span class="ad-badge">✓ Resmi</span>'}</div>
       <div class="ad-city">📍 ${escHtml(d.c || d.r)}</div>
       ${d.a ? `<div class="ad-addr">${escHtml(d.a)}</div>` : ''}
       <div class="ad-btns">
@@ -2100,7 +2100,14 @@ function renderAuthDealers() {
    (bila tabel belum dibuat / database tak terjangkau) sekaligus isi awal SQL. Dipakai juga Hall of Fame & Galeri. */
 const AD_TABLE = 'auth_dealers';
 let adRows = null, adErr = '', adLoading = null, adTried = false, adEdit = null;
-const adFromRow = r => ({ id: r.id, r: r.region, n: r.name, c: r.city || '', a: r.address || '', wa: r.wa || '', ig: r.ig || '', map: r.map || '', hidden: !!r.hidden, sort: r.sort || 0 });
+const adFromRow = r => ({ id: r.id, r: r.region, n: r.name, c: r.city || '', a: r.address || '', wa: r.wa || '', ig: r.ig || '', map: r.map || '', logo: r.logo || '', hidden: !!r.hidden, sort: r.sort || 0 });
+/* 🏪 Logo toko partner (19 Nov 2026, permintaan pemilik): kolom auth_dealers.logo = path Storage publik showcase/partners/…,
+   akhiran "#dark" = logo terang → ditaruh di kotak gelap. Kosong = inisial nama. Diunggah di CAI Hub Studio → Enthusiast Partner. */
+const adLogoUrl = d => { const p = String(d?.logo || '').split('#')[0]; return p ? (/^https?:/i.test(p) ? p : dashPublicUrl(p)) : ''; };
+function adLogoHtml(d, cls = 'ad-logo') {
+  const u = adLogoUrl(d), ini = typeof pfInit === 'function' ? pfInit(d.n) : String(d.n || '?').slice(0, 2).toUpperCase();
+  return u ? `<span class="${cls} lg${/#dark$/.test(d.logo) ? ' dk' : ''}"><img src="${escHtml(u)}" alt="Logo ${escHtml(d.n)}" loading="lazy"></span>` : `<span class="${cls} ini">${escHtml(ini)}</span>`;
+}
 const adPublic = () => adRows ? adRows.filter(d => !d.hidden) : AUTH_DEALERS;
 const adLit = v => v == null || v === '' ? 'null' : `'${String(v).replace(/'/g, "''")}'`;
 function adSql() {

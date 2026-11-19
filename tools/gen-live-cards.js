@@ -50,8 +50,8 @@ async function loadData() {
   const news = await rest('cai_news?select=*&published=eq.true&order=post_date.desc');
   // RLS publik sudah menyaring draf, kiriman tertunda & yang masih terjadwal
   const gallery = await rest('showcase_installs?select=*&published=eq.true&order=created_at.desc');
-  const partners = (await rest('auth_dealers?select=region,name,city,address,wa,ig,map,sort&order=region,sort,name'))
-    .map(r => Object.fromEntries(Object.entries({ r: r.region, n: r.name, c: r.city, a: r.address, wa: r.wa, ig: r.ig, map: r.map }).filter(([, v]) => v)));
+  const partners = (await rest('auth_dealers?select=region,name,city,address,wa,ig,map,logo,sort&order=region,sort,name'))
+    .map(r => Object.fromEntries(Object.entries({ r: r.region, n: r.name, c: r.city, a: r.address, wa: r.wa, ig: r.ig, map: r.map, logo: r.logo }).filter(([, v]) => v)));
   // 📅 Kalender Acara: hanya acara publik yang tayang (RLS anon); tabel belum dibuat → dilewati
   let events = null; try { events = await rest('cai_events?select=*&order=start_at'); } catch (e) { console.warn('acara dilewati:', e.message); }
   // 🎓 Materi Academy tambahan dari portal (Storage publik showcase/academy/items.json) — hanya yang sudah tayang
@@ -92,6 +92,8 @@ const CSS = `*{box-sizing:border-box}body{margin:0;background:#000}
 .m .img img{width:100%;height:100%;object-fit:cover}.m .img .ic{font-size:210px;opacity:.9}
 .m .img::after,.pp .img::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 45%,#07080a 98%)}
 .pp .img .in{font:800 210px Sora;color:#d8b26a;letter-spacing:-6px}
+.pp .img .lg{position:relative;z-index:1;width:300px;height:300px;border-radius:44px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 60px rgba(0,0,0,.5);margin-right:40px}.pp .img .lg.dk{background:#15171c}
+.pp .img .lg img{max-width:84%;max-height:84%;object-fit:contain}
 .m .l,.pp .l{position:absolute;left:52%;right:56px;top:60px}
 .m .pill,.pp .pill{background:rgba(216,178,106,.16);color:#e9c98a;border:2px solid rgba(216,178,106,.55);font-size:16px}
 .m h1,.pp h1{font:800 60px/1.06 Sora;margin:22px 0 10px}.m h1.sm,.pp h1.sm{font-size:46px}
@@ -160,7 +162,7 @@ function carCard(c, imgSrc) {
     <div class="foot">${LOGO}<span class="u">hub.concerto.id</span></div></div>`;
 }
 function partnerCard(d, x) {
-  return `<div class="c pp" id="c"><div class="img"><span class="in">${esc(initials(d.n))}</span></div>
+  return `<div class="c pp" id="c"><div class="img">${d.logo ? `<span class="lg${/#dark$/.test(d.logo) ? ' dk' : ''}"><img src="${esc(pub(d.logo))}"></span>` : `<span class="in">${esc(initials(d.n))}</span>`}</div>
     <div class="l"><span class="pill">PROFIL PARTNER · CAI HUB</span><h1${d.n.length > 18 ? ' class="sm"' : ''}>${esc(d.n)}</h1><p>${esc([d.c, d.r].filter(Boolean).join(', '))}</p>
       <div class="chips"><span class="ok">✓ Partner resmi CAI</span>${x.hof.length ? `<span>🏆 ${x.hof.length} prestasi${x.j1 ? ' · ' + x.j1 + ' Juara 1' : ''}</span>` : ''}${x.gl.length ? `<span>${x.gl.length} instalasi Galeri</span>` : ''}</div></div>
     <div class="foot">${LOGO}<span class="u">hub.concerto.id</span></div></div>`;
@@ -250,7 +252,7 @@ function videoFrame(url, out, at) {
     const x = partnerData(d), slug = CARS.shareSlug(d.n); if (!slug) continue;
     items.push({ dir: 'pp', id: slug, target: `/?partner=${encodeURIComponent(slug)}`, title: `${d.n} — Partner Resmi CAI${d.c ? ' di ' + d.c : ''}`,
       desc: clip(`Partner resmi Concerto Audio Indonesia${d.c ? ' di ' + d.c : ''}${x.hof.length ? ` · ${x.hof.length} prestasi kompetisi` : ''}${x.gl.length ? ` · ${x.gl.length} instalasi di Galeri` : ''}. Kontak, hasil pemasangan & prestasi di CAI Hub.`, 200),
-      sig: ['pp', d.n, d.c, d.r, x.gl.length, x.hof.length, x.j1], d, x });
+      sig: ['pp', d.n, d.c, d.r, x.gl.length, x.hof.length, x.j1, ...(d.logo ? [d.logo] : [])], d, x });
   }
   // Salinan data publik untuk halaman Google (tools/gen-seo-pages.js) — ditulis hanya bila isinya berubah
   const dataFiles = [

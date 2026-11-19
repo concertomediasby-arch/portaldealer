@@ -84,7 +84,7 @@ function gsRender(el) {
       const msg = R.byCar.has(d.n) ? `Halo ${d.n}, saya lihat contoh pemasangan audio ${carName} di CAI Hub (Concerto Audio Indonesia). Mobil saya juga ${carName}, saya ingin bertanya.`
         : `Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia), saya ingin bertanya.`;
       const wa = d.wa ? `<a class="gs-wa" href="https://wa.me/${d.wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" onmousedown="event.preventDefault()" onclick="event.stopPropagation()">💬 Tanya</a>` : '';
-      return it(act(() => openPartner(shareSlug(d.n))), `<i class="gs-av">${escHtml(typeof pfInit === 'function' ? pfInit(d.n) : d.n.slice(0, 2))}</i>`, escHtml(d.n), escHtml(sub), wa);
+      return it(act(() => openPartner(shareSlug(d.n))), (adLogoUrl(d) ? `<img src="${escHtml(adLogoUrl(d))}" alt=""${/#dark$/.test(d.logo) ? ' style="background:#111317"' : ''}>` : `<i class="gs-av">${escHtml(typeof pfInit === 'function' ? pfInit(d.n) : d.n.slice(0, 2))}</i>`), escHtml(d.n), escHtml(sub), wa);
     }).join('');
   }
   if (R.prods.length) {

@@ -87,7 +87,7 @@ h2 small{font:600 12px Inter;color:#8b92a1;border:1px solid rgba(255,255,255,.12
 .card .pr.no{font:500 12px Inter;color:#8b92a1}.soon{display:inline-block;margin-left:6px;background:#2f6bff;color:#fff;border-radius:5px;padding:1px 6px;font:700 9.5px Inter;letter-spacing:.06em;vertical-align:2px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chips a{border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:6px 12px;font-size:13px;text-decoration:none;color:#cfd3da}.chips a:hover{border-color:#d8b26a;color:#d8b26a}
 .pl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.pt{border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#111317;padding:14px 16px}.pt b{display:block;font:700 16px Sora,sans-serif}
+.pt{border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#111317;padding:14px 16px}.pt .lg{float:right;width:52px;height:52px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;margin:0 0 6px 10px}.pt .lg.dk{background:#1c1f26}.pt .lg img{max-width:88%;max-height:88%;object-fit:contain}.pt b{display:block;font:700 16px Sora,sans-serif}
 .pt .c{color:#8b92a1;font-size:13px;margin:2px 0 6px}.pt .a{font-size:13.5px;color:#cfd3da}.pt .ok{color:#52c38a;font:600 11.5px Inter;margin-left:6px}
 .pt .bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.pt .bt a{border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:6px 11px;font:600 12.5px Inter;text-decoration:none}
 .pt .bt a.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}
@@ -155,8 +155,12 @@ for (const k of KAT) {
     crumbs: [['CAI Hub', '/'], ['Kategori', url], [k.h, url]], open: `/?kat=${k.slug}`, body }) });
 }
 // ── Partner ──
+// 🏪 Logo toko (auth_dealers.logo): salinan repo media/ bila sudah ada (hemat kuota Supabase), selain itu Storage publik
+let MEDIA_MAP = {}; try { MEDIA_MAP = JSON.parse(fs.readFileSync(path.join(ROOT, 'media/map.json'), 'utf8')).files || {}; } catch (e) {}
+const ptLogo = d => { const p = String(d.logo || '').split('#')[0]; if (!p) return ''; const m = MEDIA_MAP[p];
+  return `<span class="lg${/#dark$/.test(d.logo) ? ' dk' : ''}"><img src="${esc(m ? '/' + m.f : SUPA_URL + '/storage/v1/object/public/showcase/' + p)}" alt="Logo ${esc(d.n)}" loading="lazy" width="52" height="52"></span>`; };
 const ptx = d => { const x = CD.partnerData(d); return (x.hof.length || x.gl.length) ? `<div class="x">${x.hof.length ? `🏆 ${x.hof.length} prestasi kompetisi${x.j1 ? ` (${x.j1} Juara 1)` : ''}` : ''}${x.hof.length && x.gl.length ? ' · ' : ''}${x.gl.length ? `${x.gl.length} instalasi di Galeri` : ''}${x.cars.length && CARS.CARS_ON ? `<br>Mobil: ${x.cars.slice(0, 5).map(c => `<a href="/mobil/${c.slug}/">${esc(c.name)}</a>`).join(', ')}` : ''}</div>` : ''; };
-const pt = d => `<div class="pt"><b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}${ptx(d)}
+const pt = d => `<div class="pt">${ptLogo(d)}<b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}${ptx(d)}
   <div class="bt">${d.wa ? `<a class="wa" data-k="wa" data-n="${esc(d.n)}" href="https://wa.me/${esc(d.wa)}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang produk Concerto Audio Indonesia.`)}" rel="nofollow">WhatsApp</a>` : ''}
   ${d.ig ? `<a data-k="ig" data-n="${esc(d.n)}" href="https://www.instagram.com/${encodeURIComponent(d.ig)}/" rel="nofollow">Instagram</a>` : ''}
   <a data-k="maps" data-n="${esc(d.n)}" href="${esc(d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', ')))}" rel="nofollow">Maps</a>
@@ -246,7 +250,7 @@ const INSTALLS = (() => { const seen = new Set(), out = [];
   for (const l of [...GALLERY.map(g => g.products || []), ...HOF.map(e => e.products || [])]) { if (!l.length) continue; const k = [...l].sort().join('|'); if (seen.has(k)) continue; seen.add(k); out.push(l); }
   return out; })();
 const hofForProd = (b, l, p) => HOF.filter(e => (e.products || []).includes(p.id) || (e.brand === b.id && e.line === l.name && !(e.products || []).length));
-const ptP = (d, b, p) => `<div class="pt"><b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}${ptx(d)}
+const ptP = (d, b, p) => `<div class="pt">${ptLogo(d)}<b>${esc(d.n)}<span class="ok">✓ Partner resmi</span></b><div class="c">📍 ${esc([d.c, d.r].filter(Boolean).join(', '))}</div>${d.a ? `<div class="a">${esc(d.a)}</div>` : ''}${ptx(d)}
   <div class="bt">${d.wa ? `<a class="wa" data-k="wa" data-n="${esc(d.n)}" href="https://wa.me/${esc(d.wa)}?text=${encodeURIComponent(`Halo ${d.n}, saya dapat info dari CAI Hub (Concerto Audio Indonesia). Saya ingin bertanya tentang ${b.name} ${p.name}.`)}" rel="nofollow">💬 Tanya ${esc(p.name)} via WhatsApp</a>` : ''}
   <a data-k="maps" data-n="${esc(d.n)}" href="${esc(d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', ')))}" rel="nofollow">Maps</a>
   <a href="/?partner=${CARS.shareSlug(d.n)}">Profil ›</a></div></div>`;

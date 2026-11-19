@@ -36,10 +36,13 @@ async function saLoadAd(force) {
   if (stCache.adRows && !force) return stCache.adRows;
   const { data, error } = await supabase.from('auth_dealers').select('*').order('region').order('sort').order('name');
   if (error) throw error;
-  stCache.adRows = (data || []).map(r => ({ id: r.id, r: r.region, n: r.name, c: r.city || '', a: r.address || '', wa: r.wa || '', ig: r.ig || '', map: r.map || '', hidden: !!r.hidden, sort: r.sort || 0, updated_at: r.updated_at }));
+  stCache.adRows = (data || []).map(r => ({ id: r.id, r: r.region, n: r.name, c: r.city || '', a: r.address || '', wa: r.wa || '', ig: r.ig || '', map: r.map || '', logo: r.logo || '', hidden: !!r.hidden, sort: r.sort || 0, updated_at: r.updated_at }));
   return stCache.adRows;
 }
 const saAdPub = () => (stCache.adRows || []).filter(d => !d.hidden);
+const saLogoUrl = d => d?.logoPrev || (String(d?.logo || '').split('#')[0] ? pubUrl(String(d.logo).split('#')[0]) : '');
+const saLogoBox = (d, cls = 'sa-ini') => { const u = saLogoUrl(d); return u ? `<span class="${cls} sa-lg${d.logoDark ?? /#dark$/.test(d.logo || '') ? ' dk' : ''}"><img src="${esc(u)}" alt=""></span>`
+  : `<span class="${cls}">${esc((d.n.match(/[A-Za-z0-9]/g) || ['?']).slice(0, 2).join('').toUpperCase())}</span>`; };
 const saMaps = d => d.map || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([d.n, d.a, d.c].filter(Boolean).join(', '));
 
 /* ── 🔑 AKUN & KODE AKSES (js/dealers.js) — Edge Function manage-dealers ── */
@@ -189,7 +192,7 @@ function saAdRows() {
   let h = '', reg = '';
   for (const d of A) {
     if (d.r !== reg) { reg = d.r; h += `<div class="sa-grp">${esc(reg)}</div>`; }
-    h += `<a class="st-nrow${d.hidden ? ' sa-off' : ''}" href="#partner/${d.id}"><span class="sa-ini">${esc((d.n.match(/[A-Za-z0-9]/g) || ['?']).slice(0, 2).join('').toUpperCase())}</span>
+    h += `<a class="st-nrow${d.hidden ? ' sa-off' : ''}" href="#partner/${d.id}">${saLogoBox(d)}
       <div class="tx"><b>${esc(d.n)}</b><small>${esc([d.c, d.a].filter(Boolean).join(' · ') || '—')}</small></div>
       <span class="sa-ics">${d.wa ? '<i title="WhatsApp">💬</i>' : ''}${d.ig ? '<i title="Instagram">📷</i>' : ''}${d.map ? '<i title="Link Maps">📍</i>' : ''}</span>
       ${d.hidden ? '<span class="st-pill mu">Disembunyikan</span>' : '<span class="st-pill ok">Tampil</span>'}<span class="st-chev">›</span></a>`;
@@ -201,7 +204,7 @@ async function stPartnerEdit(id) {
   try { await saLoadAd(); } catch (e) { return stPage(`<p class="st-empty">⚠ ${esc(e.message)}</p>`); }
   const d = id ? stCache.adRows.find(x => x.id === id) : null;
   if (id && !d) { showToast('Partner tidak ditemukan.'); stGo('#partner'); return; }
-  saAf = d ? { ...d } : { id: null, r: saAdReg !== 'all' ? saAdReg : '', n: '', c: '', a: '', wa: '', ig: '', map: '', hidden: false, sort: Math.max(0, ...stCache.adRows.map(x => x.sort || 0)) + 10 };
+  saAf = d ? { ...d, logoDark: /#dark$/.test(d.logo || ''), logoFile: null, logoPrev: '' } : { id: null, r: saAdReg !== 'all' ? saAdReg : '', n: '', c: '', a: '', wa: '', ig: '', map: '', logo: '', logoDark: false, logoFile: null, logoPrev: '', hidden: false, sort: Math.max(0, ...stCache.adRows.map(x => x.sort || 0)) + 10 };
   const regs = [...new Set(stCache.adRows.map(x => x.r))].sort();
   const f = (k, label, ph = '', type = 'text', small = '') => `<label class="st-fl">${label}${small ? ` <small>${small}</small>` : ''}<input class="st-in" type="${type}" value="${esc(saAf[k] ?? '')}" placeholder="${esc(ph)}" oninput="saAf.${k}=this.value;saAfPrev()"></label>`;
   stPage(`<div class="st-ph"><div><p><a href="#partner">Enthusiast Partner</a> › ${d ? 'Edit' : 'Baru'}</p><h1>${d ? esc(d.n) : 'Tambah partner'}</h1></div>
@@ -211,6 +214,7 @@ async function stPartnerEdit(id) {
       <div class="sa-g2"><label class="st-fl">Provinsi / wilayah<input class="st-in" list="af-regs" value="${esc(saAf.r)}" placeholder="Pilih / ketik baru" oninput="saAf.r=this.value;saAfPrev()"><datalist id="af-regs">${regs.map(r => `<option value="${esc(r)}">`).join('')}</datalist></label>${f('c', 'Kota', 'mis. Surabaya')}</div>
       <label class="st-fl">Alamat<textarea class="st-in" rows="2" oninput="saAf.a=this.value;saAfPrev()">${esc(saAf.a)}</textarea></label>
       <div class="sa-g2">${f('wa', 'WhatsApp', '0812… atau 62812…', 'tel')}${f('ig', 'Instagram', 'username, tanpa @')}</div>
+      <div class="st-fl">Logo toko <small>(opsional — PNG/JPG/WebP, latar putih / transparan paling bagus)</small><div id="af-logo"></div></div>
       ${f('map', 'Link Google Maps', 'kosong = dicari otomatis dari nama + alamat', 'text', '(opsional — pin persis)')}
     </div>
     <div class="st-col"><div class="st-card st-pad">
@@ -218,12 +222,24 @@ async function stPartnerEdit(id) {
       <label class="st-fl">Urutan <small>(angka kecil tampil lebih dulu dalam provinsinya)</small><input class="st-in" type="number" value="${esc(saAf.sort)}" oninput="saAf.sort=this.value"></label>
       <p class="st-note">Untuk menyembunyikan sementara, pilih <b>Disembunyikan</b> — data tetap tersimpan.</p></div>
       <div class="st-card st-pad"><div class="st-fl" style="margin:0 0 10px">Pratinjau kartu</div><div id="af-prev"></div></div></div></div>`);
-  saAfVis();
+  saAfVis(); saAfLogo();
 }
+function saAfLogo() {
+  const el = document.getElementById('af-logo'); if (!el || !saAf) return; const u = saLogoUrl(saAf);
+  el.innerHTML = `<div class="sa-lgbox"><label class="sa-lgp${saAf.logoDark ? ' dk' : ''}" title="Pilih logo">${u ? `<img src="${esc(u)}" alt="">` : '<span>🖼<br>Pilih logo</span>'}<input type="file" accept="image/*" hidden onchange="saAfLogoPick(this)"></label>
+    <div class="sa-lgb">${u ? `<label class="st-btn sm">🖼 Ganti logo<input type="file" accept="image/*" hidden onchange="saAfLogoPick(this)"></label><button class="st-btn sm" onclick="saAfLogoDel()">🗑 Hapus logo</button>
+      <div class="st-seg sm"><button class="${saAf.logoDark ? '' : 'on'}" onclick="saAfLogoBg(false)">⬜ Latar putih</button><button class="${saAf.logoDark ? 'on' : ''}" onclick="saAfLogoBg(true)">⬛ Latar gelap</button></div>`
+      : '<p class="st-note" style="margin:0">Belum ada logo — tampil inisial nama.</p>'}</div></div>
+    <p class="st-note">Diperkecil otomatis (maks. 600 px). Pakai <b>Latar gelap</b> untuk logo berwarna putih / terang. Pastikan partner setuju logonya dipakai di CAI Hub.</p>`;
+}
+function saAfLogoPick(inp) { const f = inp.files?.[0]; inp.value = ''; if (!f || !saAf) return; if (!/^image\//.test(f.type)) return showToast('⚠ Pilih file gambar.');
+  if (saAf.logoPrev) URL.revokeObjectURL(saAf.logoPrev); saAf.logoFile = f; saAf.logoPrev = URL.createObjectURL(f); saAfLogo(); saAfPrev(); stNfDirty(); }
+function saAfLogoDel() { if (saAf.logoPrev) URL.revokeObjectURL(saAf.logoPrev); Object.assign(saAf, { logo: '', logoFile: null, logoPrev: '', logoDark: false }); saAfLogo(); saAfPrev(); stNfDirty(); }
+function saAfLogoBg(dk) { saAf.logoDark = dk; saAfLogo(); saAfPrev(); stNfDirty(); }
 function saAfVis() { document.querySelectorAll('#af-vis button').forEach((b, i) => b.classList.toggle('on', i === (saAf.hidden ? 1 : 0))); saAfPrev(); }
 function saAfPrev() {
   const el = document.getElementById('af-prev'); if (!el || !saAf) return; const d = saAf;
-  el.innerHTML = `<div class="sa-adc${d.hidden ? ' off' : ''}"><div class="h"><b>${esc(d.n || 'Nama partner')}</b><span>✓ Resmi</span></div><small>📍 ${esc(d.c || 'Kota')}${d.r ? ' · ' + esc(d.r) : ''}</small>${d.a ? `<p>${esc(d.a)}</p>` : ''}
+  el.innerHTML = `<div class="sa-adc${d.hidden ? ' off' : ''}"><div class="h">${saLogoBox(d, 'sa-ini')}<b>${esc(d.n || 'Nama partner')}</b><span>✓ Resmi</span></div><small>📍 ${esc(d.c || 'Kota')}${d.r ? ' · ' + esc(d.r) : ''}</small>${d.a ? `<p>${esc(d.a)}</p>` : ''}
     <div class="b">${adWa(d.wa) ? `<a href="https://wa.me/${adWa(d.wa)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}${adIg(d.ig) ? `<a href="https://instagram.com/${esc(adIg(d.ig))}" target="_blank" rel="noopener">📷 Instagram</a>` : ''}<a href="${esc(saMaps(d))}" target="_blank" rel="noopener">📍 Maps</a></div></div>`;
 }
 async function saAfSave() {
@@ -233,14 +249,29 @@ async function saAfSave() {
   const row = { region, name, city: String(e.c || '').trim() || null, address: String(e.a || '').trim() || null, wa: adWa(e.wa) || null, ig: adIg(e.ig) || null,
     map: String(e.map || '').trim() || null, hidden: !!e.hidden, sort: +e.sort || 0, updated_at: new Date().toISOString() };
   const btn = document.getElementById('af-save'); btn.disabled = true; btn.textContent = '⏳ Menyimpan…';
+  const oldLogo = String((e.id ? stCache.adRows.find(x => x.id === e.id)?.logo : '') || '').split('#')[0];
+  let up = null, logoPath = String(e.logo || '').split('#')[0];
+  try {
+    if (e.logoFile) {
+      const blob = await glResize(e.logoFile, 600);
+      up = `partners/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${blob.type === 'image/webp' ? 'webp' : 'jpg'}`;
+      const r = await supabase.storage.from('showcase').upload(up, blob, { contentType: blob.type, cacheControl: '3600' }); if (r.error) throw r.error;
+      logoPath = up;
+    }
+  } catch (er) { btn.disabled = false; btn.textContent = '💾 Simpan'; return showToast('⚠ Gagal mengunggah logo: ' + (er.message || er), 8000); }
+  row.logo = logoPath ? logoPath + (e.logoDark ? '#dark' : '') : null;
   const { error } = await (e.id ? supabase.from('auth_dealers').update(row).eq('id', e.id) : supabase.from('auth_dealers').insert(row));
-  if (error) { btn.disabled = false; btn.textContent = '💾 Simpan'; return showToast('⚠ Gagal menyimpan: ' + error.message, 7000); }
+  if (error) { if (up) supabase.storage.from('showcase').remove([up]).catch(() => {}); btn.disabled = false; btn.textContent = '💾 Simpan';
+    return showToast(/logo/i.test(error.message) && /column|schema cache/i.test(error.message) ? '⚠ Kolom logo belum ada — jalankan supabase/partner-logo.sql.' : '⚠ Gagal menyimpan: ' + error.message, 8000); }
+  if (oldLogo && oldLogo !== logoPath && /^partners\//.test(oldLogo)) supabase.storage.from('showcase').remove([oldLogo]).catch(() => {});
+  if (e.logoPrev) URL.revokeObjectURL(e.logoPrev);
   showToast('✓ Partner disimpan'); stCache.partners = null; await saLoadAd(true).catch(() => {}); saAf = null; stGo('#partner', true);
 }
 async function saAfDel() {
   const d = saAf; if (!d?.id || !confirm(`Hapus partner "${d.n}" dari daftar Enthusiast Partner?\n\nTips: untuk menyembunyikan sementara, pilih status "Disembunyikan".`)) return;
   const { error } = await supabase.from('auth_dealers').delete().eq('id', d.id);
   if (error) return showToast('⚠ Gagal menghapus: ' + error.message, 7000);
+  const lp = String(d.logo || '').split('#')[0]; if (/^partners\//.test(lp)) supabase.storage.from('showcase').remove([lp]).catch(() => {});
   showToast('🗑 Partner dihapus'); stCache.partners = null; await saLoadAd(true).catch(() => {}); stGo('#partner', true);
 }
 

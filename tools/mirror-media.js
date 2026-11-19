@@ -42,6 +42,7 @@ async function wanted() {
     add(n.image, n.created_at, n.push_at); for (const p of Array.isArray(n.photos) ? n.photos : []) add(p?.path, n.created_at, n.push_at);
   }
   for (const e of await rest('cai_events?select=*', true)) add(e.poster, e.created_at, e.push_at);
+  for (const d of await rest('auth_dealers?select=logo,hidden,updated_at&hidden=eq.false', true)) add(d.logo, d.updated_at);   // 🏪 logo toko partner
   try {
     const r = await fetch(pub('academy/items.json') + '?t=' + Date.now());
     if (r.ok) { const now = Date.now(), today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);

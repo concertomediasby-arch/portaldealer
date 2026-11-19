@@ -395,3 +395,11 @@ button{font:inherit;cursor:pointer}
 .se-tg{font:700 10.5px Inter;letter-spacing:.06em;text-transform:uppercase;color:#8A6A2C}
 #se-kind{flex-wrap:wrap}
 .se-imgw{max-width:560px}.st-img16.se-empty{aspect-ratio:auto;height:96px}
+/* 🏪 Logo toko partner */
+.sa-ini.sa-lg,.sa-adc .h .sa-ini.sa-lg{background:#fff;border-radius:10px;padding:0;overflow:hidden;box-shadow:0 0 0 1px var(--bd)}.sa-ini.sa-lg.dk,.sa-adc .h .sa-ini.sa-lg.dk{background:#111317}
+.sa-ini.sa-lg img{width:100%;height:100%;object-fit:contain;padding:3px;box-sizing:border-box;display:block}
+.sa-adc .h .sa-ini{width:44px;height:44px;border-radius:10px;font:800 14px Sora;color:#d8b26a;background:#1c1f26;padding:0;display:flex}
+.sa-lgbox{display:flex;gap:16px;align-items:center;margin-top:8px;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px}
+.sa-lgp{width:96px;height:96px;border-radius:16px;background:#fff;border:1px dashed #C9C2B0;display:grid;place-items:center;overflow:hidden;cursor:pointer;flex-shrink:0;text-align:center;font:600 12px Inter;color:var(--mu)}
+.sa-lgp.dk{background:#111317}.sa-lgp img{width:100%;height:100%;object-fit:contain;padding:8px;box-sizing:border-box}
+.sa-lgb{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
