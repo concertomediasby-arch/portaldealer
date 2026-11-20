@@ -430,3 +430,6 @@ button{font:inherit;cursor:pointer}
 .em-w .st-in.sm, .em-glp .st-in { border-width: 1px; border-radius: 8px; padding: 7px 9px; }
 .em-card textarea.st-in, .em-grid textarea.st-in { margin-top: 8px; resize: vertical; }
 .em-pb { display: flex; gap: 6px; }
+.em-pub { background: linear-gradient(135deg, #e2c27e, #b8892f); color: #14110a; border-color: #b8892f; font-weight: 700; }
+.em-stbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #fff; border: 1px solid #e3e6ee; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; }
+.em-dr { background: #fff6e3; border: 1px solid #ecd9ae; color: #8a6420; border-radius: 99px; padding: 4px 10px; font-weight: 600; }

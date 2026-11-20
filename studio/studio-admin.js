@@ -1929,27 +1929,40 @@ const emWibInput = iso => { const t = Date.parse(iso || ''); if (!t) return ''; 
 const emWibIso = v => v ? new Date(Date.parse(v + ':00Z') - 7 * 3600e3).toISOString() : '';
 const emImg = (w, k) => emFiles[w._k + k]?.url || (w[k] ? glMediaUrl(w[k]) : '');
 
+// Draf (20 Nov 2026, permintaan pemilik): disimpan di bucket PRIVAT guides `pending/emma-draft.json` (policy restrictive:
+// pending/% hanya Editor) agar daftar juara belum bocor sebelum diumumkan; yang tayang = showcase/landing/emma.json (publik).
+const EM_DRAFT = 'pending/emma-draft.json';
+let emLive = null, emDraftAt = '';
 async function stEmma() {
   stPage(`<div class="st-ph"><div><p>Konten</p><h1>🏆 Landing EMMA</h1></div><div class="st-acts">
       <button class="st-btn" onclick="emPreview('pre')">👁 Pratinjau hitung mundur</button><button class="st-btn" onclick="emPreview('post')">👁 Pratinjau juara</button>
-      <button class="st-btn pri" id="em-save" onclick="emSave(this)">💾 Simpan & tayangkan</button></div></div>
-    <p class="st-note" style="margin-top:-6px">Tampilan khusus halaman pembuka (landing) CAI Hub untuk pengumuman juara EMMA. Sebelum jam pengumuman tampil hitung mundur, sesudahnya kartu juara yang bisa digeser. Data juara harus asli · plat nomor di foto & wiring harus disamarkan · hanya harga SRP.</p>
-    <div id="em-body"><p class="st-empty">⏳ Memuat…</p></div>`);
-  try {
-    const r = await fetch(`${pubUrl(EM_FILE)}?t=${Date.now()}`, { cache: 'no-store' });
-    em = r.ok ? await r.json() : null;
-  } catch (e) { em = null; }
+      <button class="st-btn pri" id="em-draft" onclick="emSave(this, false)">💾 Simpan draf</button>
+      <button class="st-btn em-pub" id="em-save" onclick="emSave(this, true)">🚀 Tayangkan</button></div></div>
+    <p class="st-note" style="margin-top:-6px">Tampilan khusus halaman pembuka (landing) CAI Hub untuk pengumuman juara EMMA. <b>💾 Simpan draf</b> = tersimpan rahasia (hanya Editor), landing tidak berubah · <b>🚀 Tayangkan</b> = langsung tampil di CAI Hub. Data juara harus asli · plat nomor di foto & wiring harus disamarkan · hanya harga SRP.</p>
+    <div id="em-st"></div><div id="em-body"><p class="st-empty">⏳ Memuat…</p></div>`);
+  try { const r = await fetch(`${pubUrl(EM_FILE)}?t=${Date.now()}`, { cache: 'no-store' }); emLive = r.ok ? await r.json() : null; } catch (e) { emLive = null; }
+  let draft = null;
+  try { const { data } = await supabase.storage.from('guides').download(EM_DRAFT); if (data) draft = JSON.parse(await data.text()); } catch (e) { draft = null; }
+  emDraftAt = draft?.updated_at || '';
+  em = draft || (emLive ? JSON.parse(JSON.stringify(emLive)) : null);
   if (!em) em = { v: 1, on: false, reveal: 'auto', event: 'EMMA 2026', tagline: 'Bersama EMMA Indonesia', at: '', place: '', winners: [] };
   em.winners = (em.winners || []).map(w => ({ ...emNew(), ...w, _k: ++emUid }));
   emOrig = JSON.stringify(emClean(em)); emFiles = {};
   saLoadAd().then(() => emPaint()).catch(() => {});
   emPaint();
 }
+const emAgo = iso => { const m = Math.round((Date.now() - Date.parse(iso)) / 60e3); return !iso ? '' : m < 1 ? 'baru saja' : m < 60 ? `${m} menit lalu` : m < 1440 ? `${Math.round(m / 60)} jam lalu` : new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+function emStatus() {
+  const el = document.getElementById('em-st'); if (!el) return;
+  const live = emLive ? (emLive.on ? `🟢 Tayang di CAI Hub (${emLive.winners?.length || 0} juara) · ${emAgo(emLive.updated_at)}` : '⏸ Versi tayang: tidak ditampilkan (landing biasa)') : '⏸ Belum pernah ditayangkan';
+  el.innerHTML = `<div class="em-stbar"><span>${live}</span>${emDraftAt ? `<span class="em-dr">📝 Draf belum tayang · disimpan ${emAgo(emDraftAt)}</span><button class="st-btn sm" onclick="emDiscard()">↺ Buang draf</button>` : ''}</div>`;
+}
 function emClean(o) { return { ...o, winners: (o.winners || []).map(({ _k, ...w }) => w) }; }
 function emSet(k, v) { em[k] = v; stNfDirty(); }
 function emW(k, f, v) { const w = em.winners.find(x => x._k === k); if (!w) return; w[f] = v; stNfDirty();
   if (f === 'partner') { const d = saAdPub().find(x => x.n.toLowerCase() === String(v).trim().toLowerCase()); if (d && !w.city) { w.city = d.c; emPaint(); } } }
 function emPaint() {
+  emStatus();
   const el = document.getElementById('em-body'); if (!el || !em) return;
   const seg = (k, opts) => `<div class="em-seg">${opts.map(([v, t]) => `<button class="${String(em[k]) === String(v) ? 'on' : ''}" onclick="emSet('${k}',${typeof v === 'boolean' ? v : `'${v}'`});emPaint()">${t}</button>`).join('')}</div>`;
   const tt = (k, i, ph) => `<input class="st-in" maxlength="40" placeholder="${esc(ph)}" value="${esc((em[k] || [])[i] || '')}" oninput="em.${k}=em.${k}||['',''];em.${k}[${i}]=this.value;stNfDirty()">`;
@@ -2032,27 +2045,45 @@ function emPreview(s) {
   if (Object.keys(emFiles).length) showToast('Foto/wiring yang baru dipilih tampil setelah disimpan.', 5000);
   window.open(`/?emma=preview&s=${s}`, '_blank', 'noopener');
 }
-async function emSave(btn) {
+async function emSave(btn, publish) {
   if (!em) return;
-  if (em.winners.some(w => !(w.name || w.car))) return showToast('⚠ Setiap juara minimal berisi nama peserta atau mobil.');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan…'; }
-  const up = [], oldPaths = new Set(); const prev = emOrig ? JSON.parse(emOrig) : { winners: [] };
-  (prev.winners || []).forEach(w => ['photo', 'wiring'].forEach(f => { if (String(w[f] || '').startsWith('landing/')) oldPaths.add(w[f]); }));
+  if (publish && em.winners.some(w => !(w.name || w.car))) return showToast('⚠ Setiap juara minimal berisi nama peserta atau mobil.');
+  if (publish && !confirm(em.on ? 'Tayangkan sekarang? Landing EMMA langsung berubah untuk semua pengunjung CAI Hub.' : 'Simpan sebagai versi tayang? (Saat ini "Tidak" dipilih — landing tetap biasa sampai ✅ Tampil dipilih.)')) return;
+  const lbl = btn?.textContent; if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan…'; }
+  const up = [], oldPaths = new Set();
+  [emLive].forEach(o => (o?.winners || []).forEach(w => ['photo', 'wiring'].forEach(f => { if (String(w[f] || '').startsWith('landing/')) oldPaths.add(w[f]); })));
   try {
     for (const w of em.winners) for (const f of ['photo', 'wiring']) {
       const o = emFiles[w._k + f]; if (!o) continue;
       const blob = await glResize(o.file, f === 'photo' ? 1200 : 2200), path = `landing/${f}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`;
       const { error } = await supabase.storage.from('showcase').upload(path, blob, { contentType: 'image/webp', cacheControl: '31536000' });
-      if (error) throw error; up.push(path); w[f] = path;
+      if (error) throw error; up.push(path); w[f] = path; delete emFiles[w._k + f]; URL.revokeObjectURL(o.url);
     }
     const data = emClean(em); data.v = 1; data.updated_at = new Date().toISOString();
-    const { error } = await supabase.storage.from('showcase').upload(EM_FILE, new Blob([JSON.stringify(data)], { type: 'application/json' }), { upsert: true, contentType: 'application/json', cacheControl: '0' });
-    if (error) throw error;
-    const keep = new Set(data.winners.flatMap(w => [w.photo, w.wiring])), gone = [...oldPaths].filter(p => !keep.has(p));
-    if (gone.length) supabase.storage.from('showcase').remove(gone).catch(() => {});
-    Object.values(emFiles).forEach(o => URL.revokeObjectURL(o.url)); emFiles = {}; emOrig = JSON.stringify(data);
-    stDirty = false; stStat(); showToast(data.on ? '✓ Disimpan — landing EMMA tayang di CAI Hub (±1 menit)' : '✓ Disimpan (belum ditampilkan — pilih ✅ Tampil untuk menayangkan)', 5000);
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    if (publish) {
+      const { error } = await supabase.storage.from('showcase').upload(EM_FILE, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
+      if (error) throw error;
+      const keep = new Set(data.winners.flatMap(w => [w.photo, w.wiring])), gone = [...oldPaths].filter(p => !keep.has(p));
+      if (gone.length) supabase.storage.from('showcase').remove(gone).catch(() => {});
+      supabase.storage.from('guides').remove([EM_DRAFT]).catch(() => {});
+      emLive = data; emDraftAt = '';
+      showToast(data.on ? '🚀 Tayang — landing EMMA berubah di CAI Hub (±1 menit)' : '✓ Disimpan (belum ditampilkan — pilih ✅ Tampil lalu Tayangkan)', 5000);
+    } else {
+      const { error } = await supabase.storage.from('guides').upload(EM_DRAFT, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
+      if (error) throw error;
+      emDraftAt = data.updated_at; showToast('💾 Draf tersimpan — belum tampil di CAI Hub. Lanjutkan kapan saja, lalu 🚀 Tayangkan.', 5000);
+    }
+    emOrig = JSON.stringify(data); stDirty = false; stStat();
   } catch (er) { if (up.length) supabase.storage.from('showcase').remove(up).catch(() => {}); srErr(er, 'menyimpan'); }
-  if (btn) { btn.disabled = false; btn.textContent = '💾 Simpan & tayangkan'; }
+  if (btn) { btn.disabled = false; btn.textContent = lbl; }
   emPaint();
+}
+async function emDiscard() {
+  if (!confirm('Buang draf dan kembali ke versi yang sedang tayang? Perubahan di draf akan hilang.')) return;
+  const live = new Set((emLive?.winners || []).flatMap(w => [w.photo, w.wiring]));
+  const orphan = (em?.winners || []).flatMap(w => [w.photo, w.wiring]).filter(p => String(p || '').startsWith('landing/') && !live.has(p));
+  await supabase.storage.from('guides').remove([EM_DRAFT]).catch(() => {});
+  if (orphan.length) supabase.storage.from('showcase').remove(orphan).catch(() => {});
+  stDirty = false; stStat(); showToast('↺ Draf dibuang'); stEmma();
 }
