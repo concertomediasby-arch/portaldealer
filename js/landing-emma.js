@@ -10,7 +10,7 @@
 const EMMA_FILE = 'landing/emma.json', EMMA_KEY = 'cai-emma', EMMA_MD = { 1: '🥇 JUARA 1', 2: '🥈 JUARA 2', 3: '🥉 JUARA 3', 0: '★ PENGHARGAAN' };
 let emmaLay = null, emma = null, emmaPos = 0, emmaAuto = null, emmaTick = null, emmaDrag = null, emmaMoved = false, emmaLastK = -1, emmaMode = '';
 
-const emmaUrl = p => p ? (typeof dashPublicUrl === 'function' ? dashPublicUrl(p) : `${SUPA_URL}/storage/v1/object/public/showcase/${p}`) : '';
+const emmaUrl = p => p ? /^(blob:|https?:)/.test(p) ? p : (typeof dashPublicUrl === 'function' ? dashPublicUrl(p) : `${SUPA_URL}/storage/v1/object/public/showcase/${p}`) : '';
 const emmaEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const emmaGold = s => emmaEsc(s).replace(/\*([^*]+)\*/g, '<span class="lx-gold">$1</span>');
 // urutan: Juara 1 semua kelas → Juara 2 → Juara 3 → penghargaan khusus (pilihan pemilik), urutan isian dipertahankan

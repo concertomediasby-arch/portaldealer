@@ -2041,10 +2041,9 @@ function emGlUse() {
   document.getElementById('em-gl').innerHTML = ''; stNfDirty(); emPaint(); showToast('✓ Ditambahkan — lengkapi peringkat, kelas & nama peserta');
 }
 function emPreview(s) {
-  const d = emClean(em); d.winners = d.winners.map((w, i) => { const x = { ...w }; const ob = em.winners[i]; ['photo', 'wiring', 'signal'].forEach(f => { if (emFiles[ob._k + f]) x[f] = ''; }); return x; });
+  const d = emClean(em); d.winners = d.winners.map((w, i) => { const x = { ...w }; const ob = em.winners[i]; ['photo', 'wiring', 'signal'].forEach(f => { const o = emFiles[ob._k + f]; if (o) x[f] = o.url; }); return x; });   // gambar yang belum disimpan: pakai salinan sementara (blob) di browser ini
   try { localStorage.setItem('cai-emma-draft', JSON.stringify(d)); } catch (e) {}
-  if (Object.keys(emFiles).length) showToast('Foto/wiring yang baru dipilih tampil setelah disimpan.', 5000);
-  window.open(`/?emma=preview&s=${s}`, '_blank', 'noopener');
+  window.open(`/?emma=preview&s=${s}`, '_blank');
 }
 async function emSave(btn, publish) {
   if (!em) return;
