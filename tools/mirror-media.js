@@ -54,6 +54,12 @@ async function wanted() {
     const r = await fetch(pub('landing/emma.json') + '?t=' + Date.now());
     if (r.ok) { const j = await r.json(); if (j?.on) for (const w of j.winners || []) { add(w?.photo, j.updated_at); add(w?.wiring, j.updated_at); add(w?.signal, j.updated_at); } }
   } catch (e) { console.warn('landing EMMA dilewati:', e.message); }
+  // 🗓 Landing Mingguan (landing/weekly.json dari Studio #landing): gambar promo/acara + foto build & berita yang dipakai minggu ini & mendatang
+  try {
+    const r = await fetch(pub('landing/weekly.json') + '?t=' + Date.now());
+    if (r.ok) { const j = await r.json(), t = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10), end = d => new Date(Date.parse(d + 'T00:00:00Z') + 7 * 864e5).toISOString().slice(0, 10);
+      for (const w of j?.weeks || []) if (w && !w.draft && w.start && end(w.start) > t) for (const s of w.slides || []) { add(s?.img, j.updated_at); add(s?.snap?.photo, j.updated_at); add(s?.snap?.img, j.updated_at); } }
+  } catch (e) { console.warn('landing mingguan dilewati:', e.message); }
   try {
     const r = await fetch(pub('academy/items.json') + '?t=' + Date.now());
     if (r.ok) { const now = Date.now(), today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);

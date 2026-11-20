@@ -2087,3 +2087,205 @@ async function emDiscard() {
   if (orphan.length) supabase.storage.from('showcase').remove(orphan).catch(() => {});
   stDirty = false; stStat(); showToast('↺ Draf dibuang'); stEmma();
 }
+
+/* ── 🗓 LANDING MINGGUAN (20 Nov 2026, permintaan pemilik) — halaman pembuka CAI Hub yang berganti tiap minggu.
+   Data: Storage publik showcase/landing/weekly.json { v, weeks:[{ id, start (Senin, YYYY-MM-DD WIB), mode 'one'|'geser', dur, draft?, slides:[…] }] }.
+   Portal: js/landing-weekly.js (lwData() = arti tiap field) — ubah tema di sana → ubah juga di sini. Landing EMMA tetap didahulukan.
+   build/academy/news/partner disimpan beserta salinan (snap) agar landing tidak perlu memuat Galeri/News/partner. Hanya SRP. ── */
+const LWS_FILE = 'landing/weekly.json';
+const LWS_T = [
+  ['produk', '🔊 Produk'], ['soon', '🔵 Coming Soon'], ['build', '🏆 Build juara'], ['academy', '🎓 Academy'], ['news', '📰 Berita'],
+  ['partner', '🏪 Partner'], ['paket', '📦 Paket Audio'], ['brand', '🎬 Sorotan Brand'], ['promo', '🎁 Promo'], ['acara', '📅 Acara'],
+];
+const LWS_TN = Object.fromEntries(LWS_T);
+let lws = null, lwsLive = '', lwsSel = null, lwsUid = 0, lwsFiles = {}, lwsSrc = {};
+const lwsDay = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+const lwsMon = d => { const t = new Date(d + 'T00:00:00Z'), w = (t.getUTCDay() + 6) % 7; return lwsDay(d, -w); };
+const lwsFmt = d => new Date(d + 'T00:00:00Z').toLocaleDateString('id-ID', { timeZone: 'UTC', day: 'numeric', month: 'short' });
+const lwsRange = w => `${lwsFmt(w.start)} – ${lwsFmt(lwsDay(w.start, 6))}`;
+const lwsState = w => { const t = todayWIB(); return w.draft ? 'draft' : t >= lwsDay(w.start, 7) ? 'done' : t >= w.start ? 'live' : 'sch'; };
+const LWS_PILL = { live: ['p-live', '● Tayang'], sch: ['p-sch', '⏰ Terjadwal'], done: ['p-done', 'Selesai'], draft: ['p-dr', '📝 Draf'] };
+const lwsNewSlide = (t = 'produk') => ({ _k: ++lwsUid, t });
+const lwsClean = () => ({ v: 1, weeks: (lws.weeks || []).map(w => ({ ...w, slides: (w.slides || []).map(({ _k, ...s }) => s) })).sort((a, b) => a.start.localeCompare(b.start)) });
+const lwsWeek = () => lws?.weeks.find(w => w.id === lwsSel);
+
+async function stLanding() {
+  stPage(`<div class="st-ph"><div><p>Konten · publik</p><h1>🗓 Landing Mingguan</h1></div><div class="st-acts">
+      <button class="st-btn" onclick="lwsAdd()">＋ Tambah minggu</button><button class="st-btn pri" id="lws-save" onclick="lwsSave(this)">💾 Simpan</button></div></div>
+    <p class="st-note" style="margin-top:-6px">Halaman pembuka (landing) CAI Hub berganti sendiri tiap <b>Senin 00.00 WIB</b> sesuai jadwal di bawah. Minggu yang kosong / draf = landing biasa. Landing EMMA tetap didahulukan bila sedang ✅ Tampil. Hanya harga SRP · foto tanpa plat nomor.</p>
+    <div id="lws-body"><p class="st-empty">⏳ Memuat…</p></div>`);
+  let j = null;
+  try { const r = await fetch(`${pubUrl(LWS_FILE)}?t=${Date.now()}`, { cache: 'no-store' }); j = r.ok ? await r.json() : null; } catch (e) { j = null; }
+  lws = { v: 1, weeks: (j?.weeks || []).map(w => ({ ...w, slides: (w.slides || []).map(s => ({ ...s, _k: ++lwsUid })) })) };
+  lwsLive = JSON.stringify(lwsClean()); lwsFiles = {};
+  const now = lws.weeks.filter(w => lwsState(w) === 'live')[0] || lws.weeks.filter(w => lwsState(w) === 'sch')[0];
+  lwsSel = now?.id || lws.weeks[lws.weeks.length - 1]?.id || null;
+  lwsPaint();
+  lwsLoadSrc().then(lwsPaint).catch(() => {});
+}
+// Sumber pilihan: Galeri, News, partner, Academy, Paket Audio (dimuat sekali)
+async function lwsLoadSrc() {
+  const core = await saCoreTxt(), m = core.match(/const PAKET_AUDIO = (\[[\s\S]*?\n\]);/);
+  try { lwsSrc.paket = m ? Function('return ' + m[1])().filter(p => p.available !== false) : []; } catch (e) { lwsSrc.paket = []; }
+  const [gl, nw] = await Promise.all([
+    supabase.from('showcase_installs').select('id,car_make,car_model,car_year,dealer,city,products,photos,hof_id,published,in_gallery,publish_at').eq('published', true).order('created_at', { ascending: false }),
+    supabase.from('cai_news').select('id,title,summary,image,category,post_date,published').eq('published', true).order('post_date', { ascending: false }).limit(60),
+  ]);
+  lwsSrc.gl = (gl.data || []).filter(g => !g.publish_at || Date.parse(g.publish_at) <= Date.now());
+  lwsSrc.news = nw.data || [];
+  await saLoadAd().catch(() => {});
+  lwsSrc.acad = (await stLoadAcad().catch(() => [])).filter(a => acadDueS(a)).sort((a, b) => b.no - a.no);
+  try { const r = await fetch('tools/data/academy-text.json?t=' + Date.now()); lwsSrc.acadTxt = r.ok ? (await r.json()).items || {} : {}; } catch (e) { lwsSrc.acadTxt = {}; }
+  lwsSrc.ok = true;
+}
+const lwsProds = () => emProdList();
+function lwsTitle(w) {
+  if (!w.slides?.length) return 'Belum ada isi';
+  if (w.mode === 'geser') return `Bergeser otomatis · ${w.slides.length} slide`;
+  return LWS_TN[w.slides[0].t] || '—';
+}
+function lwsSub(s) {
+  if (!s) return '';
+  if (s.t === 'produk' || s.t === 'soon') return emProdLab(s.pid || '') || '';
+  if (s.t === 'build' || s.t === 'news' || s.t === 'academy') return s.snap?.car || s.snap?.title || '';
+  if (s.t === 'partner') return s.snap?.n || '';
+  if (s.t === 'paket') return (lwsSrc.paket || []).find(p => p.id === s.pk)?.title || s.pk || '';
+  if (s.t === 'brand') return BRANDS.find(b => b.id === s.b)?.name || '';
+  return s.title?.replace(/\*/g, '') || '';
+}
+function lwsPaint() {
+  const el = document.getElementById('lws-body'); if (!el || !lws) return;
+  const ws = [...lws.weeks].sort((a, b) => a.start.localeCompare(b.start));
+  const w = lwsWeek();
+  el.innerHTML = `<div class="lws-grid"><div class="st-card st-pad lws-list"><h3 class="em-h">Jadwal halaman depan</h3>
+      ${ws.length ? ws.map(x => { const st = lwsState(x); return `<button class="lws-wk${x.id === lwsSel ? ' on' : ''}${st === 'done' ? ' old' : ''}" onclick="lwsSel='${x.id}';lwsPaint()">
+        <span class="d">${esc(lwsRange(x))}</span><span class="t">${esc(lwsTitle(x))}<small>${esc(x.mode === 'geser' ? x.slides.map(s => LWS_TN[s.t]?.split(' ')[1] || '').join(' · ') : lwsSub(x.slides?.[0]))}</small></span>
+        <span class="lws-pill ${LWS_PILL[st][0]}">${LWS_PILL[st][1]}</span></button>`; }).join('') : '<p class="st-empty">Belum ada jadwal. Klik ＋ Tambah minggu.</p>'}
+      <button class="lws-add" onclick="lwsAdd()">＋ Tambah minggu</button></div>
+    <div class="st-card st-pad">${w ? lwsEditor(w) : '<p class="st-empty">Pilih atau tambah minggu.</p>'}</div></div>
+    <datalist id="lws-dl-pr">${lwsProds().map(x => `<option value="${esc(x.lab)}">`).join('')}</datalist>`;
+}
+function lwsEditor(w) {
+  const slides = w.mode === 'geser' ? w.slides : w.slides.slice(0, 1);
+  return `<div class="lws-eh"><h3 class="em-h" style="margin:0">Minggu ${esc(lwsRange(w))}</h3><span style="flex:1"></span>
+      <button class="st-btn sm" onclick="lwsPreview()">👁 Pratinjau</button><button class="st-btn sm" onclick="lwsDelWeek()">🗑 Hapus minggu</button></div>
+    <div class="em-2" style="margin-top:12px"><label class="st-fl">Mulai (Senin)<input class="st-in" type="date" value="${esc(w.start)}" onchange="lwsSetStart(this.value)"></label>
+      <label class="st-fl">Status<select class="st-in" onchange="lwsW('draft',this.value==='1');lwsPaint()"><option value="0"${w.draft ? '' : ' selected'}>✅ Tayang sesuai jadwal</option><option value="1"${w.draft ? ' selected' : ''}>📝 Draf (belum tayang)</option></select></label></div>
+    <label class="st-fl">Tampilan</label><div class="em-seg"><button class="${w.mode !== 'geser' ? 'on' : ''}" onclick="lwsW('mode','one');lwsPaint()">Satu tema</button><button class="${w.mode === 'geser' ? 'on' : ''}" onclick="lwsW('mode','geser');lwsPaint()">Bergeser otomatis</button></div>
+    ${w.mode === 'geser' ? `<label class="st-fl">Ganti slide tiap<select class="st-in" onchange="lwsW('dur',+this.value)">${[4, 5, 6, 8, 10, 12].map(n => `<option value="${n}"${(+w.dur || 6) === n ? ' selected' : ''}>${n} detik</option>`).join('')}</select></label>
+      <p class="st-hint">Berhenti sendiri saat disentuh / kursor di atasnya · bisa digeser jari di HP.</p>` : ''}
+    ${slides.map((s, i) => lwsSlide(w, s, i, slides.length)).join('')}
+    ${w.mode === 'geser' ? `<button class="lws-add" onclick="lwsAddSlide()">＋ Tambah slide</button>` : ''}
+    ${!lwsSrc.ok ? '<p class="st-hint">⏳ Memuat daftar Galeri, News, partner & Academy…</p>' : ''}`;
+}
+function lwsSlide(w, s, i, n) {
+  const k = s._k, F = (f, ph, max = 120, area) => area
+    ? `<textarea class="st-in" rows="2" maxlength="${max}" placeholder="${esc(ph)}" oninput="lwsS(${k},'${f}',this.value)">${esc(s[f] || '')}</textarea>`
+    : `<input class="st-in" maxlength="${max}" placeholder="${esc(ph)}" value="${esc(s[f] || '')}" oninput="lwsS(${k},'${f}',this.value)">`;
+  const sel = (f, opts, ph) => `<select class="st-in" onchange="lwsPick(${k},'${f}',this.value)"><option value="">${esc(ph)}</option>${opts.map(([v, t]) => `<option value="${esc(v)}"${String(s[f] ?? '') === String(v) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
+  const img = lwsFiles[k]?.url || (s.img ? (/^assets\//.test(s.img) ? s.img : glMediaUrl(s.img)) : '');
+  let body = '';
+  if (s.t === 'produk' || s.t === 'soon') body = `<input class="st-in" list="lws-dl-pr" placeholder="Ketik / pilih produk dari katalog" value="${esc(s.pid ? emProdLab(s.pid) : '')}" onchange="lwsProd(${k},this.value)">
+      <p class="st-hint">Foto, deskripsi, spesifikasi & SRP diambil langsung dari katalog (selalu terbaru).${s.t === 'soon' ? ' Label COMING SOON tampil.' : ''}</p>`;
+  else if (s.t === 'build') body = sel('gl', (lwsSrc.gl || []).map(g => [g.id, `${[g.car_make, g.car_model, g.car_year].filter(Boolean).join(' ')} · ${g.dealer || ''}${g.hof_id ? ' · 🏆' : ''}`]), '— Pilih mobil dari Galeri Instalasi —')
+      + (s.snap ? `<p class="st-hint">${esc([s.snap.award, s.snap.partner, (s.snap.prods || []).length + ' perangkat'].filter(Boolean).join(' · '))}${s.snap.photo ? '' : ' · ⚠ mobil ini belum punya foto'}</p>` : '');
+  else if (s.t === 'academy') body = sel('no', (lwsSrc.acad || []).map(a => [a.no, `#${a.no} · ${a.title}`]), '— Pilih materi Academy —');
+  else if (s.t === 'news') body = sel('id', (lwsSrc.news || []).map(x => [x.id, `${x.post_date || ''} · ${x.title}`]), '— Pilih berita —');
+  else if (s.t === 'partner') body = sel('pn', saAdPub().map(d => [d.n, `${d.n} · ${d.c || d.r}`]), '— Pilih partner resmi —');
+  else if (s.t === 'paket') body = sel('pk', (lwsSrc.paket || []).map(p => [p.id, p.title]), '— Pilih paket —') + '<p class="st-hint">Isi paket dari menu Paket Audio · harga paket tidak ditampilkan.</p>';
+  else if (s.t === 'brand') body = sel('b', BRANDS.map(b => [b.id, b.name]), '— Pilih brand —') + '<p class="st-hint">Memakai video Sorotan Brand (bila ada) + logo & tagline brand.</p>';
+  else if (s.t === 'promo' || s.t === 'acara') body = `${s.t === 'acara' ? `<div class="em-2">${F('kind', 'Jenis (mis. Workshop)', 30)}<input class="st-in" type="datetime-local" value="${emWibInput(s.at)}" onchange="lwsS(${k},'at',emWibIso(this.value))"></div>${F('place', 'Tempat · kota', 60)}` : F('tag', 'Label kecil (bawaan: Promo)', 30)}
+      ${F('title', 'Judul — kata di antara *bintang* tampil emas', 80)}${F('sub', 'Keterangan singkat', 220, true)}
+      <div class="lws-img">${img ? `<img src="${esc(img)}" alt="">` : '<span>Tanpa gambar = teks di tengah</span>'}<div><label class="st-btn sm">${img ? 'Ganti gambar' : '＋ Gambar'}<input type="file" accept="image/*" hidden onchange="lwsImg(${k},this)"></label>${img ? `<button class="st-btn sm" onclick="lwsImgClr(${k})">🗑</button>` : ''}</div></div>
+      <div class="em-2">${F('b1l', 'Teks tombol utama', 30)}${F('b1u', 'Link tombol (mis. /?brand=steg atau https://…)', 300)}</div>
+      ${s.t === 'promo' ? `<div class="em-2">${F('b2l', 'Teks tombol kedua (opsional)', 30)}${F('b2u', 'Link tombol kedua', 300)}</div>` : ''}`;
+  const over = !['promo', 'acara'].includes(s.t) ? `<details class="lws-ov"${s.title || s.sub ? ' open' : ''}><summary>✏️ Ubah judul / kalimat (opsional)</summary>${F('title', 'Judul (kosong = otomatis) — *bintang* = emas', 80)}${F('sub', 'Kalimat pendek (kosong = otomatis)', 220, true)}</details>` : '';
+  return `<div class="lws-sl"><div class="lws-slh">${n > 1 || w.mode === 'geser' ? `<b>${i + 1}</b>` : ''}<select class="st-in sm" onchange="lwsType(${k},this.value)">${LWS_T.map(([v, t]) => `<option value="${v}"${s.t === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+      <span style="flex:1"></span>${w.mode === 'geser' ? `<button class="st-btn sm" onclick="lwsMove(${k},-1)">▲</button><button class="st-btn sm" onclick="lwsMove(${k},1)">▼</button><button class="st-btn sm" onclick="lwsDelSlide(${k})">🗑</button>` : ''}</div>
+    ${body}${over}</div>`;
+}
+function lwsW(f, v) { const w = lwsWeek(); if (!w) return; w[f] = v; if (f === 'mode' && v === 'geser' && !w.dur) w.dur = 6; if (f === 'mode' && !w.slides.length) w.slides.push(lwsNewSlide()); stNfDirty(); }
+function lwsS(k, f, v) { const s = lwsWeek()?.slides.find(x => x._k === k); if (!s) return; if (v === '' || v == null) delete s[f]; else s[f] = v; stNfDirty(); }
+function lwsSetStart(v) {
+  if (!v) return; const m = lwsMon(v), w = lwsWeek();
+  if (lws.weeks.some(x => x !== w && x.start === m)) { showToast('⚠ Minggu ' + lwsFmt(m) + ' sudah ada di jadwal.'); return lwsPaint(); }
+  if (m !== v) showToast('Disesuaikan ke hari Senin, ' + lwsFmt(m));
+  w.start = m; stNfDirty(); lwsPaint();
+}
+function lwsAdd() {
+  if (!lws) return;
+  let d = lwsMon(todayWIB()); const used = new Set(lws.weeks.map(w => w.start));
+  while (used.has(d)) d = lwsDay(d, 7);
+  const w = { id: 'w' + Date.now().toString(36), start: d, mode: 'one', dur: 6, slides: [lwsNewSlide()] };
+  lws.weeks.push(w); lwsSel = w.id; stNfDirty(); lwsPaint();
+}
+function lwsDelWeek() { const w = lwsWeek(); if (!w || !confirm(`Hapus jadwal minggu ${lwsRange(w)}?`)) return; lws.weeks = lws.weeks.filter(x => x !== w); lwsSel = lws.weeks[0]?.id || null; stNfDirty(); lwsPaint(); }
+function lwsAddSlide() { const w = lwsWeek(); if (!w) return; w.slides.push(lwsNewSlide()); stNfDirty(); lwsPaint(); }
+function lwsDelSlide(k) { const w = lwsWeek(); if (!w || w.slides.length < 2) return showToast('Minimal 1 slide.'); w.slides = w.slides.filter(s => s._k !== k); stNfDirty(); lwsPaint(); }
+function lwsMove(k, d) { const a = lwsWeek()?.slides; if (!a) return; const i = a.findIndex(s => s._k === k), j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; stNfDirty(); lwsPaint(); }
+function lwsType(k, t) { const w = lwsWeek(), i = w.slides.findIndex(s => s._k === k); if (i < 0) return; w.slides[i] = { _k: k, t }; stNfDirty(); lwsPaint(); }
+function lwsProd(k, v) { const x = lwsProds().find(o => o.lab.toLowerCase() === v.trim().toLowerCase() || o.p.model?.toLowerCase() === v.trim().toLowerCase());
+  if (!x) { if (v.trim()) showToast('⚠ Produk tidak ditemukan — pilih dari daftar.'); return; } lwsS(k, 'pid', x.id); lwsPaint(); }
+function lwsImg(k, inp) { const f = inp.files?.[0]; inp.value = ''; if (!f || !/^image\//.test(f.type)) return; const o = lwsFiles[k]; if (o?.url) URL.revokeObjectURL(o.url); lwsFiles[k] = { file: f, url: URL.createObjectURL(f) }; stNfDirty(); lwsPaint(); }
+function lwsImgClr(k) { const o = lwsFiles[k]; if (o?.url) URL.revokeObjectURL(o.url); delete lwsFiles[k]; lwsS(k, 'img', ''); lwsPaint(); }
+// pilihan dari daftar → salinan (snap) data yang ditampilkan landing
+function lwsPick(k, f, v) {
+  const s = lwsWeek()?.slides.find(x => x._k === k); if (!s) return;
+  if (!v) { delete s[f]; delete s.snap; stNfDirty(); return lwsPaint(); }
+  if (f === 'gl') {
+    const g = (lwsSrc.gl || []).find(x => x.id === v); if (!g) return;
+    const ph = (g.photos || []).filter(p => p.type !== 'video'), pic = ph.find(p => p.wa) || ph.find(p => p.area === 'Tampak Luar') || ph[0];
+    const h = g.hof_id && typeof HALL_OF_FAME !== 'undefined' ? HALL_OF_FAME.find(x => x.id === g.hof_id) : null;
+    s.gl = v; s.snap = { car: [g.car_make, g.car_model, g.car_year].filter(Boolean).join(' '), partner: g.dealer || '', city: g.city || '',
+      prods: (g.products || []).map(id => { const r = lwsProds().find(o => o.id === id); return r ? `${r.b.name === 'STEG' || r.b.name === 'Zelos' ? r.b.name + ' ' : ''}${r.p.name}` : ''; }).filter(Boolean),
+      photo: pic?.path || '', award: h ? `${h.award || 'Juara ' + h.place} ${h.cls} · ${h.event}` : '' };
+  } else if (f === 'no') {
+    const a = (lwsSrc.acad || []).find(x => String(x.no) === String(v)); if (!a) return;
+    const tx = lwsSrc.acadTxt?.[a.no];
+    s.no = +v; s.snap = { title: a.title, series: a.series || 'Fundamental', intro: tx?.intro || '', img: a.img || `assets/academy/fundamental-${acadPad2(a.no)}.webp` };
+  } else if (f === 'id') {
+    const x = (lwsSrc.news || []).find(n => n.id === v); if (!x) return;
+    s.id = v; s.snap = { title: x.title, summary: x.summary || '', img: String(x.image || '').split('#')[0], cat: x.category || '' };
+  } else if (f === 'pn') {
+    const d = saAdPub().find(x => x.n === v); if (!d) return;
+    s.pn = v; s.snap = { n: d.n, c: d.c, r: d.r, a: d.a, wa: d.wa, ig: d.ig, map: d.map, logo: d.logo };
+  } else s[f] = v;
+  stNfDirty(); lwsPaint();
+}
+function lwsPreview() {
+  const w = lwsWeek(); if (!w) return;
+  const x = { ...w, draft: false, slides: w.slides.map(({ _k, ...s }) => lwsFiles[_k] ? { ...s, img: lwsFiles[_k].url } : s) };
+  try { localStorage.setItem('cai-lw-draft', JSON.stringify(x)); } catch (e) {}
+  window.open('/?landing=preview', '_blank');
+}
+async function lwsSave(btn) {
+  if (!lws) return;
+  const bad = lws.weeks.find(w => !w.draft && w.slides.some(s => lwsEmpty(s)));
+  if (bad && !confirm(`Minggu ${lwsRange(bad)} masih ada slide yang belum diisi (slide itu tidak tampil). Tetap simpan?`)) return;
+  const lbl = btn?.textContent; if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan…'; }
+  const up = [], old = new Set(JSON.parse(lwsLive || '{"weeks":[]}').weeks.flatMap(w => w.slides.map(s => s.img)).filter(p => String(p || '').startsWith('landing/lw-')));
+  try {
+    for (const w of lws.weeks) for (const s of w.slides) {
+      const o = lwsFiles[s._k]; if (!o) continue;
+      const blob = await glResize(o.file, 1600), path = `landing/lw-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`;
+      const { error } = await supabase.storage.from('showcase').upload(path, blob, { contentType: 'image/webp', cacheControl: '31536000' });
+      if (error) throw error; up.push(path); s.img = path; delete lwsFiles[s._k]; URL.revokeObjectURL(o.url);
+    }
+    const data = lwsClean(); data.updated_at = new Date().toISOString();
+    const { error } = await supabase.storage.from('showcase').upload(LWS_FILE, new Blob([JSON.stringify(data)], { type: 'application/json' }), { upsert: true, contentType: 'application/json', cacheControl: '0' });
+    if (error) throw error;
+    const keep = new Set(data.weeks.flatMap(w => w.slides.map(s => s.img))), gone = [...old].filter(p => !keep.has(p));
+    if (gone.length) supabase.storage.from('showcase').remove(gone).catch(() => {});
+    lwsLive = JSON.stringify(lwsClean()); stDirty = false; stStat();
+    const live = lws.weeks.find(w => lwsState(w) === 'live');
+    showToast(live ? `✓ Tersimpan — landing minggu ini: ${lwsTitle(live)} (±1 menit)` : '✓ Tersimpan — tampil sesuai jadwal', 5000);
+  } catch (er) { if (up.length) supabase.storage.from('showcase').remove(up).catch(() => {}); srErr(er, 'menyimpan'); }
+  if (btn) { btn.disabled = false; btn.textContent = lbl; }
+  lwsPaint();
+}
+function lwsEmpty(s) {
+  if (s.t === 'produk' || s.t === 'soon') return !s.pid;
+  if (s.t === 'build') return !s.gl; if (s.t === 'academy') return !s.no; if (s.t === 'news') return !s.id;
+  if (s.t === 'partner') return !s.pn; if (s.t === 'paket') return !s.pk; if (s.t === 'brand') return !s.b;
+  return !s.title && !(s.img || lwsFiles[s._k]);
+}

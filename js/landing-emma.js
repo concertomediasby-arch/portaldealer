@@ -31,6 +31,7 @@ function emmaInit() {
   if (typeof QA_SCREEN_MODE !== 'undefined' && QA_SCREEN_MODE) return;
   // pratinjau dari Studio (/?emma=preview&s=pre|post): pakai draf di localStorage cai-emma-draft, tanpa mengambil data tayang
   const q = new URLSearchParams(location.search);
+  if (q.get('landing') === 'preview') return;   // pratinjau landing mingguan dari Studio
   if (q.get('emma') === 'preview') {
     try { emma = JSON.parse(localStorage.getItem('cai-emma-draft') || 'null'); } catch (e) {}
     if (emma) { emma = { ...emma, on: true, reveal: q.get('s') === 'post' ? 'post' : q.get('s') === 'pre' ? 'pre' : emma.reveal }; emmaApply(true); }
@@ -48,10 +49,10 @@ function emmaInit() {
 function emmaApply(force) {
   const L = document.getElementById('landing'); if (!L) return;
   const st = emmaState();
-  if (!st) { L.classList.remove('emma'); document.getElementById('lx')?.remove(); emmaStop(); emmaLabel(false); emmaMode = ''; return; }
+  if (!st) { L.classList.remove('emma'); document.getElementById('lx')?.remove(); emmaStop(); emmaLabel(false); emmaMode = ''; if (typeof lwApply === 'function') lwApply(true); return; }
   if (st === emmaMode && !force && document.getElementById('lx')) return;
   emmaMode = st; emmaStop(); emmaLastK = -1;
-  L.classList.add('emma');
+  L.classList.add('emma'); if (typeof lwOff === 'function') lwOff();
   let box = document.getElementById('lx');
   if (!box) { box = document.createElement('div'); box.id = 'lx'; box.className = 'lx'; L.querySelector('.landing-hero').after(box);
     const bg = document.createElement('div'); bg.className = 'lx-bg'; bg.id = 'lx-bg'; L.prepend(bg); }
