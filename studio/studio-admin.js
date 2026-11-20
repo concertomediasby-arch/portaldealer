@@ -1946,6 +1946,7 @@ async function stEmma() {
   emDraftAt = draft?.updated_at || '';
   em = draft || (emLive ? JSON.parse(JSON.stringify(emLive)) : null);
   if (!em) em = { v: 1, on: false, reveal: 'auto', event: 'EMMA 2026', tagline: 'Bersama EMMA Indonesia', at: '', place: '', winners: [] };
+  em.release = !!em.release;
   em.winners = (em.winners || []).map(w => ({ ...emNew(), ...w, _k: ++emUid }));
   emOrig = JSON.stringify(emClean(em)); emFiles = {};
   saLoadAd().then(() => emPaint()).catch(() => {});
@@ -1971,10 +1972,13 @@ function emPaint() {
       <h3 class="em-h">⚙️ Pengaturan</h3>
       <label class="st-fl">Tampil di landing CAI Hub</label>${seg('on', [[true, '✅ Tampil'], [false, '⏸ Tidak (landing biasa)']])}
       <label class="st-fl">Yang ditampilkan</label>${seg('reveal', [['auto', '⏱ Otomatis'], ['pre', '⏳ Hitung mundur'], ['post', '🏆 Kartu juara']])}
-      <p class="st-hint">Otomatis = hitung mundur sampai jam pengumuman, lalu kartu juara (bila sudah ada data juara).</p>
+      <p class="st-hint">Otomatis = hitung mundur sampai jam pengumuman; kartu juara baru terbuka setelah waktu habis <b>dan</b> Anda menyetujui di bawah.</p>
+      <label class="st-fl">Kartu juara boleh dibuka setelah hitung mundur selesai</label>${seg('release', [[false, '⏸ Belum disetujui'], [true, '✅ Disetujui']])}
+      <p class="st-hint">Selama belum disetujui, setelah waktu habis landing menampilkan "Juara segera diumumkan". Setelah disetujui &amp; 🚀 Tayangkan, kartu juara muncul dalam ±30 detik (pengunjung yang sedang membuka halaman ikut berganti).</p>
+      ${!em.at ? '<p class="st-hint" style="color:#b4321f;font-weight:600">⚠ Waktu pengumuman belum diisi — hitung mundur tampil "--".</p>' : ''}
       <label class="st-fl">Nama acara<input class="st-in" maxlength="40" value="${esc(em.event || '')}" placeholder="EMMA 2026" oninput="emSet('event',this.value)"></label>
       <label class="st-fl">Tulisan di samping logo EMMA<input class="st-in" maxlength="50" value="${esc(em.tagline ?? '')}" placeholder="Bersama EMMA Indonesia" oninput="emSet('tagline',this.value)"></label>
-      <div class="em-2"><label class="st-fl">Waktu pengumuman (WIB)<input class="st-in" type="datetime-local" value="${emWibInput(em.at)}" onchange="emSet('at',emWibIso(this.value))"></label>
+      <div class="em-2"><label class="st-fl">Waktu pengumuman (WIB)<input class="st-in" type="datetime-local" value="${emWibInput(em.at)}" onchange="emSet('at',emWibIso(this.value));emPaint()"></label>
       <label class="st-fl">Tempat<input class="st-in" maxlength="60" value="${esc(em.place || '')}" placeholder="Nama tempat · kota" oninput="emSet('place',this.value)"></label></div>
       <h3 class="em-h">⏳ Sebelum pengumuman</h3>
       <div class="em-2">${tt('preTitle', 0, 'Malam Juara')}${tt('preTitle', 1, '*' + (em.event || 'EMMA 2026') + '*')}</div>

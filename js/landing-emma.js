@@ -24,7 +24,8 @@ function emmaState() {
   if (emma.reveal === 'pre') return 'pre';
   if (emma.reveal === 'post') return emmaWinners().length ? 'post' : 'pre';
   const at = Date.parse(emma.at || '');
-  return (!at || Date.now() >= at) && emmaWinners().length ? 'post' : 'pre';
+  // 20 Nov 2026 (permintaan pemilik): kartu juara TIDAK tampil selama hitung mundur; setelah waktu habis baru terbuka bila Editor sudah menyetujui (release)
+  return at && Date.now() >= at && emma.release && emmaWinners().length ? 'post' : 'pre';
 }
 
 function emmaInit() {
@@ -38,13 +39,17 @@ function emmaInit() {
     return;
   }
   try { const c = JSON.parse(localStorage.getItem(EMMA_KEY) || 'null'); if (c) { emma = c; emmaApply(); } } catch (e) {}
-  fetch(`${SUPA_URL}/storage/v1/object/public/showcase/${EMMA_FILE}?t=${Date.now()}`, { cache: 'no-store' })
+  emmaFetch();
+}
+function emmaFetch() {
+  return fetch(`${SUPA_URL}/storage/v1/object/public/showcase/${EMMA_FILE}?t=${Date.now()}`, { cache: 'no-store' })
     .then(r => r.ok ? r.json() : null).then(j => {
       const s = JSON.stringify(j || null);
       try { if (j) localStorage.setItem(EMMA_KEY, s); else localStorage.removeItem(EMMA_KEY); } catch (e) {}
       if (s !== JSON.stringify(emma)) { emma = j; emmaApply(true); }
     }).catch(() => {});
 }
+let emmaWaitN = 0;
 
 function emmaApply(force) {
   const L = document.getElementById('landing'); if (!L) return;
@@ -61,8 +66,8 @@ function emmaApply(force) {
     + (st === 'post' ? '<div class="cf">' + Array.from({ length: 30 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-duration:${6 + (i * 7) % 8}s;animation-delay:-${(i * 3) % 10}s;background:${['#e2c27e', '#fff3cf', '#c9a25c'][i % 3]}"></i>`).join('') + '</div>' : '');
   box.innerHTML = st === 'pre' ? emmaPreHtml() : emmaPostHtml();
   emmaLabel(true);
-  if (st === 'pre') { emmaCount(); emmaTick = setInterval(emmaCount, 1000); }
-  else emmaWire();
+  if (document.getElementById('lx-cd')) { emmaCount(); emmaTick = setInterval(emmaCount, 1000); }
+  if (st === 'post') emmaWire();
 }
 function emmaLabel(on) {
   const l = document.querySelector('#landing .landing-brands-label'); if (!l) return;
@@ -84,8 +89,8 @@ function emmaPreHtml() {
   const ev = emma.event || 'EMMA 2026', at = Date.parse(emma.at || '');
   return `${emmaCo()}${emmaTitle(emma.preTitle, ['Malam Juara', `*${ev}*`])}
   <p class="lx-sub">${emmaEsc(emma.preSub || 'Siapa yang membawa pulang gelar champion tahun ini? Para juara dan partner pemasangnya diumumkan di sini.')}</p>
-  ${at ? `<div class="lx-cd" id="lx-cd"><div><b>00</b><span>Hari</span></div><div><b>00</b><span>Jam</span></div><div><b>00</b><span>Menit</span></div><div><b>00</b><span>Detik</span></div></div>` : ''}
-  <div class="lx-when">${emmaEsc([emmaWhen(), emma.place].filter(Boolean).join(' · '))}</div>
+  <div class="lx-cd" id="lx-cd">${['Hari', 'Jam', 'Menit', 'Detik'].map(t => `<div><b>${at ? '00' : '--'}</b><span>${t}</span></div>`).join('')}</div>
+  <div class="lx-when" id="lx-when">${emmaEsc([emmaWhen() || 'Jadwal pengumuman segera diumumkan', emma.place].filter(Boolean).join(' · '))}</div>
   <div class="lx-teaser"><div>?<small>Juara 2</small></div><div class="mid">?<small>Champion</small></div><div>?<small>Juara 3</small></div></div>
   <div class="lx-bt">${at ? '<button class="lx-b1" onclick="emmaIcs()">🔔 Ingatkan saya</button>' : ''}<button class="lx-b2" onclick="enterPortal()">Masuk Portal ▶</button></div>`;
 }
@@ -94,7 +99,11 @@ function emmaCount() {
   let x = Math.max(0, at - Date.now()) / 1000; const f = n => String(Math.floor(n)).padStart(2, '0');
   const v = [f(x / 86400), f(x % 86400 / 3600), f(x % 3600 / 60), f(x % 60)];
   [...el.querySelectorAll('b')].forEach((b, i) => { if (b.textContent !== v[i]) b.textContent = v[i]; });
-  if (x <= 0 && emmaWinners().length && emma.reveal !== 'pre') emmaApply(true);
+  if (x <= 0) {   // waktu habis: buka kartu juara bila sudah disetujui Editor; selama belum, tunggu & cek emma.json tiap 30 dtk
+    const w = document.getElementById('lx-when'); if (w && !w.dataset.wait) { w.dataset.wait = 1; w.textContent = 'Juara segera diumumkan · nantikan di sini'; }
+    if (emmaState() !== emmaMode) return emmaApply(true);
+    if (!new URLSearchParams(location.search).get('emma') && ++emmaWaitN % 30 === 0) emmaFetch();
+  }
 }
 function emmaIcs() {
   const at = Date.parse(emma?.at || ''); if (!at) return;
@@ -134,15 +143,20 @@ function emmaPostHtml() {
 function emmaWire() {
   const cf = document.getElementById('lx-cf'); if (!cf) return;
   const W = emmaWinners(), N = W.length, cards = [...cf.children];
-  const sp = () => innerWidth < 720 ? 150 : 340;
+  // 5 kartu terlihat sekaligus di laptop (tengah + 2 kiri + 2 kanan; 20 Nov 2026, permintaan pemilik), HP tetap 3
+  const sp = () => innerWidth < 720 ? 150 : innerWidth < 1100 ? 260 : 300;
+  const sp2 = () => innerWidth < 720 ? 110 : innerWidth < 1100 ? 190 : 250;
+  const vis = () => innerWidth < 720 ? 1.6 : 2.6;
+  const xOf = d => { const a = Math.abs(d), s = Math.sign(d); return s * (Math.min(a, 1) * sp() + Math.max(0, a - 1) * sp2()); };
   const wrap = d => { d = ((d % N) + N) % N; return d > N / 2 ? d - N : d; };
   const cur = () => ((Math.round(emmaPos) % N) + N) % N;
   const lay = () => {
     cards.forEach((c, i) => { const d = N > 1 ? wrap(i - emmaPos) : 0, a = Math.abs(d);
-      c.style.transform = `translateX(${d * sp()}px) translateZ(${-a * 220}px) rotateY(${-Math.max(-1, Math.min(1, d)) * 24}deg) scale(${a < 1 ? 1.08 - a * .2 : Math.max(.6, .95 - a * .1)})`;
-      c.style.opacity = a > 2.6 ? 0 : a > 1.6 ? .35 : 1; c.style.filter = a < .5 ? 'none' : `brightness(${1 - Math.min(a, 2) * .28})`;
-      c.style.zIndex = 100 - Math.round(a * 10); c.style.pointerEvents = a > 2.6 ? 'none' : ''; c.classList.toggle('on', a < .5);
-      if (a < 2.6) { const im = c.querySelector('img[data-src]'); if (im) { im.src = im.dataset.src; im.removeAttribute('data-src'); } } });   // foto dimuat hanya bila kartu dekat tengah (hemat kuota)
+      const V = vis();
+      c.style.transform = `translateX(${xOf(d)}px) translateZ(${-a * 200}px) rotateY(${-Math.max(-1, Math.min(1, d)) * 24}deg) scale(${a < 1 ? 1.08 - a * .2 : Math.max(.6, .88 - (a - 1) * .12)})`;
+      c.style.opacity = a > V ? 0 : a > 1.6 ? .75 : 1; c.style.filter = a < .5 ? 'none' : `brightness(${1 - Math.min(a, 2) * .24})`;
+      c.style.zIndex = 100 - Math.round(a * 10); c.style.pointerEvents = a > V ? 'none' : ''; c.classList.toggle('on', a < .5);
+      if (a < V) { const im = c.querySelector('img[data-src]'); if (im) { im.src = im.dataset.src; im.removeAttribute('data-src'); } } });   // foto dimuat hanya bila kartu dekat tengah (hemat kuota)
     const k = cur();
     document.querySelectorAll('#lx-dots i').forEach((x, i) => x.classList.toggle('on', i === k));
     const cnt = document.getElementById('lx-cnt'); if (cnt) cnt.textContent = `${String(k + 1).padStart(2, '0')} / ${String(N).padStart(2, '0')} · GESER UNTUK MELIHAT JUARA LAIN`;
