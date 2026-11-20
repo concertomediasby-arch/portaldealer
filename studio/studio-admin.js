@@ -2013,7 +2013,6 @@ function emRow(w, i) {
         <div class="em-chips">${(w.products || []).map(id => `<span>${esc(emProdLab(id))}<button onclick="emPDel(${k},'${esc(id)}')">✕</button></span>`).join('')}
           <input class="st-in sm" list="em-dl-pr" placeholder="＋ Perangkat CAI (ketik lalu Enter)" onkeydown="if(event.key==='Enter'){event.preventDefault();emPAdd(${k},this)}" onchange="emPAdd(${k},this)"></div>
         <input class="st-in" placeholder="Perangkat lain di luar katalog (pisahkan koma)" value="${esc(w.other)}" oninput="emW(${k},'other',this.value)">
-        <div class="em-2"><input class="st-in" placeholder="Sumber audio / head unit" value="${esc(w.head)}" oninput="emW(${k},'head',this.value)"><input class="st-in" placeholder="Jumlah channel (mis. 8)" value="${esc(w.chans)}" oninput="emW(${k},'chans',this.value)"></div>
         ${w.gl ? `<p class="st-hint">📷 Tertaut ke Galeri Instalasi — tombol "Foto & video di Galeri" tampil. <a href="#" onclick="emW(${k},'gl','');emPaint();return false">lepas</a></p>` : ''}
       </div></div></div>`;
 }
