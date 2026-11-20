@@ -49,6 +49,11 @@ async function wanted() {
     const r = await fetch(pub('software/items.json') + '?t=' + Date.now());
     if (r.ok) for (const x of (await r.json()).items || []) if (x && !x.hidden && x.path) add(x.path);
   } catch (e) { console.warn('software dilewati:', e.message); }
+  // 🏆 Landing EMMA (landing/emma.json dari Studio #emma): foto juara & diagram wiring yang diunggah (path Galeri sudah ikut di atas)
+  try {
+    const r = await fetch(pub('landing/emma.json') + '?t=' + Date.now());
+    if (r.ok) { const j = await r.json(); if (j?.on) for (const w of j.winners || []) { add(w?.photo, j.updated_at); add(w?.wiring, j.updated_at); } }
+  } catch (e) { console.warn('landing EMMA dilewati:', e.message); }
   try {
     const r = await fetch(pub('academy/items.json') + '?t=' + Date.now());
     if (r.ok) { const now = Date.now(), today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);

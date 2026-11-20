@@ -108,6 +108,7 @@ function contactGeneral() {
 
 init();
 initQaScreen();
+if (!QA_SCREEN_MODE) emmaInit();   // 🏆 landing EMMA (js/landing-emma.js)
 if (!QA_SCREEN_MODE) openDeepLink();
 updateAcademyStar();
 initSupabase();

@@ -403,3 +403,30 @@ button{font:inherit;cursor:pointer}
 .sa-lgp{width:96px;height:96px;border-radius:16px;background:#fff;border:1px dashed #C9C2B0;display:grid;place-items:center;overflow:hidden;cursor:pointer;flex-shrink:0;text-align:center;font:600 12px Inter;color:var(--mu)}
 .sa-lgp.dk{background:#111317}.sa-lgp img{width:100%;height:100%;object-fit:contain;padding:8px;box-sizing:border-box}
 .sa-lgb{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+
+/* 🏆 Landing EMMA (#emma) */
+.em-grid { display: grid; grid-template-columns: minmax(300px, 400px) 1fr; gap: 16px; align-items: start; }
+.em-h { font: 700 14px var(--f-display, Sora); color: #14213d; margin: 14px 0 8px; } .em-h:first-child { margin-top: 0; }
+.em-seg { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.em-seg button { border: 1px solid #cfd5e2; background: #fff; border-radius: 99px; padding: 7px 12px; font-size: 12.5px; cursor: pointer; }
+.em-seg button.on { background: #14213d; color: #fff; border-color: #14213d; }
+.em-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.em-wh { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.em-w { border: 1px solid #e3e6ee; border-radius: 12px; padding: 12px; margin-top: 12px; background: #fbfbfd; }
+.em-wt { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; } .em-wt select { width: auto; }
+.em-wb { display: grid; grid-template-columns: 170px 1fr; gap: 12px; }
+.em-ph { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.em-img { width: 170px; aspect-ratio: 16/10; border-radius: 9px; background: #eef0f5; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #7b8396; }
+.em-img.wr { aspect-ratio: 4/3; margin-top: 6px; } .em-img img { width: 100%; height: 100%; object-fit: cover; } .em-img.wr img { object-fit: contain; background: #fff; }
+.em-f { display: flex; flex-direction: column; gap: 8px; }
+.em-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.em-chips span { display: inline-flex; gap: 6px; align-items: center; background: #fff6e3; border: 1px solid #ecd9ae; border-radius: 99px; padding: 4px 6px 4px 10px; font-size: 12px; }
+.em-chips span button { border: 0; background: none; cursor: pointer; color: #9a7b3a; }
+.em-chips input { flex: 1; min-width: 200px; }
+.em-glp { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; } .em-glp select { flex: 1; min-width: 220px; }
+@media (max-width: 1000px) { .em-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .em-wb { grid-template-columns: 1fr; } .em-2 { grid-template-columns: 1fr; } }
+.st-hint { font-size: 11.5px; color: var(--mu); margin: 5px 0 0; line-height: 1.45; }
+.em-w .st-in.sm, .em-glp .st-in { border-width: 1px; border-radius: 8px; padding: 7px 9px; }
+.em-card textarea.st-in, .em-grid textarea.st-in { margin-top: 8px; resize: vertical; }
+.em-pb { display: flex; gap: 6px; }

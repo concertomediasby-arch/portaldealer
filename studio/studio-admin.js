@@ -1913,3 +1913,146 @@ async function dswDel(id) {
     showToast('🗑 Software dihapus'); stDsp();
   } catch (e) { showToast('⚠ ' + (e.message || e), 7000); }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   🏆 LANDING EMMA (#emma, 20 Nov 2026, permintaan pemilik) — mengisi showcase/landing/emma.json yang dibaca
+   js/landing-emma.js di halaman pembuka CAI Hub: hitung mundur pengumuman → kartu juara (geser) + jendela
+   Perangkat · Wiring · Alur sinyal. Foto juara/wiring yang diunggah disimpan di showcase/landing/…; foto dari Galeri
+   memakai path Galeri apa adanya (tidak ikut dihapus). Data juara WAJIB asli; plat nomor harus disamarkan.
+   ══════════════════════════════════════════════════════════════════ */
+const EM_FILE = 'landing/emma.json', EM_PLACES = [[1, '🥇 Juara 1'], [2, '🥈 Juara 2'], [3, '🥉 Juara 3'], [0, '★ Penghargaan khusus']];
+let em = null, emOrig = null, emGl = null, emFiles = {}, emUid = 0;
+const emNew = () => ({ _k: ++emUid, place: 1, cls: '', name: '', car: '', partner: '', city: '', products: [], other: '', head: '', chans: '', photo: '', wiring: '', gl: '' });
+const emProdList = () => { const o = []; (typeof BRANDS !== 'undefined' ? BRANDS : []).forEach(b => b.lines.forEach(l => l.products.forEach(p => o.push({ id: p.id, b, p, lab: `${b.name} ${p.name}` })))); return o; };
+const emProdLab = id => emProdList().find(x => x.id === id)?.lab || id;
+const emWibInput = iso => { const t = Date.parse(iso || ''); if (!t) return ''; return new Date(t + 7 * 3600e3).toISOString().slice(0, 16); };
+const emWibIso = v => v ? new Date(Date.parse(v + ':00Z') - 7 * 3600e3).toISOString() : '';
+const emImg = (w, k) => emFiles[w._k + k]?.url || (w[k] ? glMediaUrl(w[k]) : '');
+
+async function stEmma() {
+  stPage(`<div class="st-ph"><div><p>Konten</p><h1>🏆 Landing EMMA</h1></div><div class="st-acts">
+      <button class="st-btn" onclick="emPreview('pre')">👁 Pratinjau hitung mundur</button><button class="st-btn" onclick="emPreview('post')">👁 Pratinjau juara</button>
+      <button class="st-btn pri" id="em-save" onclick="emSave(this)">💾 Simpan & tayangkan</button></div></div>
+    <p class="st-note" style="margin-top:-6px">Tampilan khusus halaman pembuka (landing) CAI Hub untuk pengumuman juara EMMA. Sebelum jam pengumuman tampil hitung mundur, sesudahnya kartu juara yang bisa digeser. Data juara harus asli · plat nomor di foto & wiring harus disamarkan · hanya harga SRP.</p>
+    <div id="em-body"><p class="st-empty">⏳ Memuat…</p></div>`);
+  try {
+    const r = await fetch(`${pubUrl(EM_FILE)}?t=${Date.now()}`, { cache: 'no-store' });
+    em = r.ok ? await r.json() : null;
+  } catch (e) { em = null; }
+  if (!em) em = { v: 1, on: false, reveal: 'auto', event: 'EMMA 2026', tagline: 'Bersama EMMA Indonesia', at: '', place: '', winners: [] };
+  em.winners = (em.winners || []).map(w => ({ ...emNew(), ...w, _k: ++emUid }));
+  emOrig = JSON.stringify(emClean(em)); emFiles = {};
+  saLoadAd().then(() => emPaint()).catch(() => {});
+  emPaint();
+}
+function emClean(o) { return { ...o, winners: (o.winners || []).map(({ _k, ...w }) => w) }; }
+function emSet(k, v) { em[k] = v; stNfDirty(); }
+function emW(k, f, v) { const w = em.winners.find(x => x._k === k); if (!w) return; w[f] = v; stNfDirty();
+  if (f === 'partner') { const d = saAdPub().find(x => x.n.toLowerCase() === String(v).trim().toLowerCase()); if (d && !w.city) { w.city = d.c; emPaint(); } } }
+function emPaint() {
+  const el = document.getElementById('em-body'); if (!el || !em) return;
+  const seg = (k, opts) => `<div class="em-seg">${opts.map(([v, t]) => `<button class="${String(em[k]) === String(v) ? 'on' : ''}" onclick="emSet('${k}',${typeof v === 'boolean' ? v : `'${v}'`});emPaint()">${t}</button>`).join('')}</div>`;
+  const tt = (k, i, ph) => `<input class="st-in" maxlength="40" placeholder="${esc(ph)}" value="${esc((em[k] || [])[i] || '')}" oninput="em.${k}=em.${k}||['',''];em.${k}[${i}]=this.value;stNfDirty()">`;
+  const pl = emProdList();
+  el.innerHTML = `<div class="em-grid"><div class="st-card st-pad">
+      <h3 class="em-h">⚙️ Pengaturan</h3>
+      <label class="st-fl">Tampil di landing CAI Hub</label>${seg('on', [[true, '✅ Tampil'], [false, '⏸ Tidak (landing biasa)']])}
+      <label class="st-fl">Yang ditampilkan</label>${seg('reveal', [['auto', '⏱ Otomatis'], ['pre', '⏳ Hitung mundur'], ['post', '🏆 Kartu juara']])}
+      <p class="st-hint">Otomatis = hitung mundur sampai jam pengumuman, lalu kartu juara (bila sudah ada data juara).</p>
+      <label class="st-fl">Nama acara<input class="st-in" maxlength="40" value="${esc(em.event || '')}" placeholder="EMMA 2026" oninput="emSet('event',this.value)"></label>
+      <label class="st-fl">Tulisan di samping logo EMMA<input class="st-in" maxlength="50" value="${esc(em.tagline ?? '')}" placeholder="Bersama EMMA Indonesia" oninput="emSet('tagline',this.value)"></label>
+      <div class="em-2"><label class="st-fl">Waktu pengumuman (WIB)<input class="st-in" type="datetime-local" value="${emWibInput(em.at)}" onchange="emSet('at',emWibIso(this.value))"></label>
+      <label class="st-fl">Tempat<input class="st-in" maxlength="60" value="${esc(em.place || '')}" placeholder="Nama tempat · kota" oninput="emSet('place',this.value)"></label></div>
+      <h3 class="em-h">⏳ Sebelum pengumuman</h3>
+      <div class="em-2">${tt('preTitle', 0, 'Malam Juara')}${tt('preTitle', 1, '*' + (em.event || 'EMMA 2026') + '*')}</div>
+      <p class="st-hint">Judul 2 baris — kata di antara *bintang* tampil emas. Kosong = bawaan.</p>
+      <textarea class="st-in" rows="2" maxlength="200" placeholder="Siapa yang membawa pulang gelar champion tahun ini? …" oninput="emSet('preSub',this.value)">${esc(em.preSub || '')}</textarea>
+      <h3 class="em-h">🏆 Sesudah pengumuman</h3>
+      <div class="em-2">${tt('postTitle', 0, 'Champions of')}${tt('postTitle', 1, '*' + (em.event || 'EMMA 2026') + '*')}</div>
+      <textarea class="st-in" rows="2" maxlength="200" placeholder="Selamat kepada para juara! …" oninput="emSet('postSub',this.value)">${esc(em.postSub || '')}</textarea>
+    </div>
+    <div><div class="st-card st-pad"><div class="em-wh"><h3 class="em-h" style="margin:0">🏅 Daftar juara (${em.winners.length})</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="st-btn sm" onclick="emFromGl()">📷 Ambil dari Galeri</button><button class="st-btn sm pri" onclick="em.winners.push(emNew());stNfDirty();emPaint()">＋ Tambah juara</button></div></div>
+      <p class="st-hint">Urutan tampil otomatis: semua Juara 1 → Juara 2 → Juara 3 → penghargaan khusus (sesuai urutan di daftar ini).</p>
+      <div id="em-gl"></div>
+      ${em.winners.length ? em.winners.map((w, i) => emRow(w, i)).join('') : '<p class="st-empty">Belum ada data juara — isi setelah juara diumumkan.</p>'}
+    </div></div></div>
+    <datalist id="em-dl-pt">${saAdPub().map(d => `<option value="${esc(d.n)}">`).join('')}</datalist>
+    <datalist id="em-dl-pr">${pl.map(x => `<option value="${esc(x.lab)}">`).join('')}</datalist>`;
+}
+function emRow(w, i) {
+  const k = w._k, ph = emImg(w, 'photo'), wr = emImg(w, 'wiring');
+  return `<div class="em-w"><div class="em-wt"><b>#${i + 1}</b>
+      <select class="st-in sm" onchange="emW(${k},'place',+this.value);emPaint()">${EM_PLACES.map(([v, t]) => `<option value="${v}"${+w.place === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
+      ${+w.place === 0 ? `<input class="st-in sm" maxlength="40" placeholder="Nama penghargaan" value="${esc(w.award || '')}" oninput="emW(${k},'award',this.value)">` : ''}
+      <span style="flex:1"></span><button class="st-btn sm" onclick="emMove(${k},-1)" title="Naik">▲</button><button class="st-btn sm" onclick="emMove(${k},1)" title="Turun">▼</button><button class="st-btn sm" onclick="emDel(${k})" title="Hapus">🗑</button></div>
+    <div class="em-wb"><div class="em-ph">
+        <div class="em-img">${ph ? `<img src="${esc(ph)}" alt="">` : '<span>📷 Foto mobil</span>'}</div>
+        <div class="em-pb"><label class="st-btn sm">${ph ? 'Ganti foto' : '＋ Foto'}<input type="file" accept="image/*" hidden onchange="emPick(${k},'photo',this)"></label>${ph ? `<button class="st-btn sm" onclick="emClr(${k},'photo')">🗑</button>` : ''}</div>
+        <div class="em-img wr">${wr ? `<img src="${esc(wr)}" alt="">` : '<span>📐 Diagram wiring</span>'}</div>
+        <div class="em-pb"><label class="st-btn sm">${wr ? 'Ganti wiring' : '＋ Wiring'}<input type="file" accept="image/*" hidden onchange="emPick(${k},'wiring',this)"></label>${wr ? `<button class="st-btn sm" onclick="emClr(${k},'wiring')">🗑</button>` : ''}</div>
+      </div><div class="em-f">
+        <div class="em-2"><input class="st-in" placeholder="Kelas (mis. SQ Pro)" value="${esc(w.cls)}" oninput="emW(${k},'cls',this.value)"><input class="st-in" placeholder="Nama peserta" value="${esc(w.name)}" oninput="emW(${k},'name',this.value)"></div>
+        <input class="st-in" placeholder="Merek & model mobil" value="${esc(w.car)}" oninput="emW(${k},'car',this.value)">
+        <div class="em-2"><input class="st-in" list="em-dl-pt" placeholder="Partner pemasang" value="${esc(w.partner)}" onchange="emW(${k},'partner',this.value)"><input class="st-in" placeholder="Kota" value="${esc(w.city)}" oninput="emW(${k},'city',this.value)"></div>
+        <div class="em-chips">${(w.products || []).map(id => `<span>${esc(emProdLab(id))}<button onclick="emPDel(${k},'${esc(id)}')">✕</button></span>`).join('')}
+          <input class="st-in sm" list="em-dl-pr" placeholder="＋ Perangkat CAI (ketik lalu Enter)" onkeydown="if(event.key==='Enter'){event.preventDefault();emPAdd(${k},this)}" onchange="emPAdd(${k},this)"></div>
+        <input class="st-in" placeholder="Perangkat lain di luar katalog (pisahkan koma)" value="${esc(w.other)}" oninput="emW(${k},'other',this.value)">
+        <div class="em-2"><input class="st-in" placeholder="Sumber audio / head unit" value="${esc(w.head)}" oninput="emW(${k},'head',this.value)"><input class="st-in" placeholder="Jumlah channel (mis. 8)" value="${esc(w.chans)}" oninput="emW(${k},'chans',this.value)"></div>
+        ${w.gl ? `<p class="st-hint">📷 Tertaut ke Galeri Instalasi — tombol "Foto & video di Galeri" tampil. <a href="#" onclick="emW(${k},'gl','');emPaint();return false">lepas</a></p>` : ''}
+      </div></div></div>`;
+}
+function emMove(k, d) { const a = em.winners, i = a.findIndex(x => x._k === k), j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; stNfDirty(); emPaint(); }
+function emDel(k) { if (!confirm('Hapus juara ini dari daftar?')) return; em.winners = em.winners.filter(x => x._k !== k); stNfDirty(); emPaint(); }
+function emPAdd(k, inp) { const v = inp.value.trim(); if (!v) return; const x = emProdList().find(o => o.lab.toLowerCase() === v.toLowerCase() || o.p.model?.toLowerCase() === v.toLowerCase());
+  if (!x) return showToast('⚠ Produk tidak ditemukan di katalog — pilih dari daftar, atau tulis di "Perangkat lain".');
+  const w = em.winners.find(o => o._k === k); if (!w.products.includes(x.id)) w.products.push(x.id); inp.value = ''; stNfDirty(); emPaint(); }
+function emPDel(k, id) { const w = em.winners.find(o => o._k === k); w.products = w.products.filter(x => x !== id); stNfDirty(); emPaint(); }
+function emPick(k, f, inp) { const file = inp.files?.[0]; inp.value = ''; if (!file || !/^image\//.test(file.type)) return;
+  const o = emFiles[k + f]; if (o?.url) URL.revokeObjectURL(o.url); emFiles[k + f] = { file, url: URL.createObjectURL(file) }; stNfDirty(); emPaint(); }
+function emClr(k, f) { const o = emFiles[k + f]; if (o?.url) URL.revokeObjectURL(o.url); delete emFiles[k + f]; emW(k, f, ''); emPaint(); }
+async function emFromGl() {
+  const box = document.getElementById('em-gl'); if (!box) return;
+  if (!emGl) { box.innerHTML = '<p class="st-hint">⏳ Memuat Galeri…</p>';
+    const { data, error } = await supabase.from('showcase_installs').select('id,car_make,car_model,car_year,dealer,city,products,photos,hof_id,published').eq('published', true).order('created_at', { ascending: false });
+    if (error) { box.innerHTML = ''; return showToast('⚠ Galeri gagal dimuat: ' + error.message); } emGl = data || []; }
+  box.innerHTML = `<div class="em-glp"><select class="st-in" id="em-gls"><option value="">— Pilih mobil di Galeri Instalasi —</option>${emGl.map(g => `<option value="${esc(g.id)}">${esc([g.car_make, g.car_model, g.car_year].filter(Boolean).join(' '))} · ${esc(g.dealer || '')}</option>`).join('')}</select>
+    <button class="st-btn sm pri" onclick="emGlUse()">＋ Jadikan juara</button><button class="st-btn sm" onclick="document.getElementById('em-gl').innerHTML=''">Batal</button></div>
+    <p class="st-hint">Mobil, partner, kota, perangkat & foto pertama diambil dari Galeri — kelas, peringkat & nama peserta tetap diisi.</p>`;
+}
+function emGlUse() {
+  const g = emGl?.find(x => x.id === document.getElementById('em-gls')?.value); if (!g) return showToast('Pilih mobilnya dulu.');
+  const ph = (g.photos || []).find(p => p.type !== 'video' && p.wa) || (g.photos || []).find(p => p.type !== 'video');
+  em.winners.push({ ...emNew(), car: [g.car_make, g.car_model].filter(Boolean).join(' '), partner: g.dealer || '', city: g.city || '', products: [...(g.products || [])], photo: ph?.path || '', gl: g.id });
+  document.getElementById('em-gl').innerHTML = ''; stNfDirty(); emPaint(); showToast('✓ Ditambahkan — lengkapi peringkat, kelas & nama peserta');
+}
+function emPreview(s) {
+  const d = emClean(em); d.winners = d.winners.map((w, i) => { const x = { ...w }; const ob = em.winners[i]; ['photo', 'wiring'].forEach(f => { if (emFiles[ob._k + f]) x[f] = ''; }); return x; });
+  try { localStorage.setItem('cai-emma-draft', JSON.stringify(d)); } catch (e) {}
+  if (Object.keys(emFiles).length) showToast('Foto/wiring yang baru dipilih tampil setelah disimpan.', 5000);
+  window.open(`/?emma=preview&s=${s}`, '_blank', 'noopener');
+}
+async function emSave(btn) {
+  if (!em) return;
+  if (em.winners.some(w => !(w.name || w.car))) return showToast('⚠ Setiap juara minimal berisi nama peserta atau mobil.');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan…'; }
+  const up = [], oldPaths = new Set(); const prev = emOrig ? JSON.parse(emOrig) : { winners: [] };
+  (prev.winners || []).forEach(w => ['photo', 'wiring'].forEach(f => { if (String(w[f] || '').startsWith('landing/')) oldPaths.add(w[f]); }));
+  try {
+    for (const w of em.winners) for (const f of ['photo', 'wiring']) {
+      const o = emFiles[w._k + f]; if (!o) continue;
+      const blob = await glResize(o.file, f === 'photo' ? 1200 : 2200), path = `landing/${f}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`;
+      const { error } = await supabase.storage.from('showcase').upload(path, blob, { contentType: 'image/webp', cacheControl: '31536000' });
+      if (error) throw error; up.push(path); w[f] = path;
+    }
+    const data = emClean(em); data.v = 1; data.updated_at = new Date().toISOString();
+    const { error } = await supabase.storage.from('showcase').upload(EM_FILE, new Blob([JSON.stringify(data)], { type: 'application/json' }), { upsert: true, contentType: 'application/json', cacheControl: '0' });
+    if (error) throw error;
+    const keep = new Set(data.winners.flatMap(w => [w.photo, w.wiring])), gone = [...oldPaths].filter(p => !keep.has(p));
+    if (gone.length) supabase.storage.from('showcase').remove(gone).catch(() => {});
+    Object.values(emFiles).forEach(o => URL.revokeObjectURL(o.url)); emFiles = {}; emOrig = JSON.stringify(data);
+    stDirty = false; stStat(); showToast(data.on ? '✓ Disimpan — landing EMMA tayang di CAI Hub (±1 menit)' : '✓ Disimpan (belum ditampilkan — pilih ✅ Tampil untuk menayangkan)', 5000);
+  } catch (er) { if (up.length) supabase.storage.from('showcase').remove(up).catch(() => {}); srErr(er, 'menyimpan'); }
+  if (btn) { btn.disabled = false; btn.textContent = '💾 Simpan & tayangkan'; }
+  emPaint();
+}
