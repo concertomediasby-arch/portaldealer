@@ -52,7 +52,7 @@ async function wanted() {
   // 🏆 Landing EMMA (landing/emma.json dari Studio #emma): foto juara & diagram wiring yang diunggah (path Galeri sudah ikut di atas)
   try {
     const r = await fetch(pub('landing/emma.json') + '?t=' + Date.now());
-    if (r.ok) { const j = await r.json(); if (j?.on) for (const w of j.winners || []) { add(w?.photo, j.updated_at); add(w?.wiring, j.updated_at); } }
+    if (r.ok) { const j = await r.json(); if (j?.on) for (const w of j.winners || []) { add(w?.photo, j.updated_at); add(w?.wiring, j.updated_at); add(w?.signal, j.updated_at); } }
   } catch (e) { console.warn('landing EMMA dilewati:', e.message); }
   try {
     const r = await fetch(pub('academy/items.json') + '?t=' + Date.now());

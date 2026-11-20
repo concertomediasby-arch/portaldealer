@@ -1922,7 +1922,7 @@ async function dswDel(id) {
    ══════════════════════════════════════════════════════════════════ */
 const EM_FILE = 'landing/emma.json', EM_PLACES = [[1, '🥇 Juara 1'], [2, '🥈 Juara 2'], [3, '🥉 Juara 3'], [0, '★ Penghargaan khusus']];
 let em = null, emOrig = null, emGl = null, emFiles = {}, emUid = 0;
-const emNew = () => ({ _k: ++emUid, place: 1, cls: '', name: '', car: '', partner: '', city: '', products: [], other: '', head: '', chans: '', photo: '', wiring: '', gl: '' });
+const emNew = () => ({ _k: ++emUid, place: 1, cls: '', name: '', car: '', partner: '', city: '', products: [], other: '', head: '', chans: '', photo: '', wiring: '', signal: '', gl: '' });
 const emProdList = () => { const o = []; (typeof BRANDS !== 'undefined' ? BRANDS : []).forEach(b => b.lines.forEach(l => l.products.forEach(p => o.push({ id: p.id, b, p, lab: `${b.name} ${p.name}` })))); return o; };
 const emProdLab = id => emProdList().find(x => x.id === id)?.lab || id;
 const emWibInput = iso => { const t = Date.parse(iso || ''); if (!t) return ''; return new Date(t + 7 * 3600e3).toISOString().slice(0, 16); };
@@ -1994,7 +1994,7 @@ function emPaint() {
     <datalist id="em-dl-pr">${pl.map(x => `<option value="${esc(x.lab)}">`).join('')}</datalist>`;
 }
 function emRow(w, i) {
-  const k = w._k, ph = emImg(w, 'photo'), wr = emImg(w, 'wiring');
+  const k = w._k, ph = emImg(w, 'photo'), wr = emImg(w, 'wiring'), sg = emImg(w, 'signal');
   return `<div class="em-w"><div class="em-wt"><b>#${i + 1}</b>
       <select class="st-in sm" onchange="emW(${k},'place',+this.value);emPaint()">${EM_PLACES.map(([v, t]) => `<option value="${v}"${+w.place === v ? ' selected' : ''}>${t}</option>`).join('')}</select>
       ${+w.place === 0 ? `<input class="st-in sm" maxlength="40" placeholder="Nama penghargaan" value="${esc(w.award || '')}" oninput="emW(${k},'award',this.value)">` : ''}
@@ -2004,6 +2004,8 @@ function emRow(w, i) {
         <div class="em-pb"><label class="st-btn sm">${ph ? 'Ganti foto' : '＋ Foto'}<input type="file" accept="image/*" hidden onchange="emPick(${k},'photo',this)"></label>${ph ? `<button class="st-btn sm" onclick="emClr(${k},'photo')">🗑</button>` : ''}</div>
         <div class="em-img wr">${wr ? `<img src="${esc(wr)}" alt="">` : '<span>📐 Diagram wiring</span>'}</div>
         <div class="em-pb"><label class="st-btn sm">${wr ? 'Ganti wiring' : '＋ Wiring'}<input type="file" accept="image/*" hidden onchange="emPick(${k},'wiring',this)"></label>${wr ? `<button class="st-btn sm" onclick="emClr(${k},'wiring')">🗑</button>` : ''}</div>
+        <div class="em-img wr">${sg ? `<img src="${esc(sg)}" alt="">` : '<span>〰 Gambar alur sinyal</span>'}</div>
+        <div class="em-pb"><label class="st-btn sm">${sg ? 'Ganti alur sinyal' : '＋ Alur sinyal'}<input type="file" accept="image/*" hidden onchange="emPick(${k},'signal',this)"></label>${sg ? `<button class="st-btn sm" onclick="emClr(${k},'signal')">🗑</button>` : ''}</div>
       </div><div class="em-f">
         <div class="em-2"><input class="st-in" placeholder="Kelas (mis. SQ Pro)" value="${esc(w.cls)}" oninput="emW(${k},'cls',this.value)"><input class="st-in" placeholder="Nama peserta" value="${esc(w.name)}" oninput="emW(${k},'name',this.value)"></div>
         <input class="st-in" placeholder="Merek & model mobil" value="${esc(w.car)}" oninput="emW(${k},'car',this.value)">
@@ -2040,7 +2042,7 @@ function emGlUse() {
   document.getElementById('em-gl').innerHTML = ''; stNfDirty(); emPaint(); showToast('✓ Ditambahkan — lengkapi peringkat, kelas & nama peserta');
 }
 function emPreview(s) {
-  const d = emClean(em); d.winners = d.winners.map((w, i) => { const x = { ...w }; const ob = em.winners[i]; ['photo', 'wiring'].forEach(f => { if (emFiles[ob._k + f]) x[f] = ''; }); return x; });
+  const d = emClean(em); d.winners = d.winners.map((w, i) => { const x = { ...w }; const ob = em.winners[i]; ['photo', 'wiring', 'signal'].forEach(f => { if (emFiles[ob._k + f]) x[f] = ''; }); return x; });
   try { localStorage.setItem('cai-emma-draft', JSON.stringify(d)); } catch (e) {}
   if (Object.keys(emFiles).length) showToast('Foto/wiring yang baru dipilih tampil setelah disimpan.', 5000);
   window.open(`/?emma=preview&s=${s}`, '_blank', 'noopener');
@@ -2051,9 +2053,9 @@ async function emSave(btn, publish) {
   if (publish && !confirm(em.on ? 'Tayangkan sekarang? Landing EMMA langsung berubah untuk semua pengunjung CAI Hub.' : 'Simpan sebagai versi tayang? (Saat ini "Tidak" dipilih — landing tetap biasa sampai ✅ Tampil dipilih.)')) return;
   const lbl = btn?.textContent; if (btn) { btn.disabled = true; btn.textContent = '⏳ Menyimpan…'; }
   const up = [], oldPaths = new Set();
-  [emLive].forEach(o => (o?.winners || []).forEach(w => ['photo', 'wiring'].forEach(f => { if (String(w[f] || '').startsWith('landing/')) oldPaths.add(w[f]); })));
+  [emLive].forEach(o => (o?.winners || []).forEach(w => ['photo', 'wiring', 'signal'].forEach(f => { if (String(w[f] || '').startsWith('landing/')) oldPaths.add(w[f]); })));
   try {
-    for (const w of em.winners) for (const f of ['photo', 'wiring']) {
+    for (const w of em.winners) for (const f of ['photo', 'wiring', 'signal']) {
       const o = emFiles[w._k + f]; if (!o) continue;
       const blob = await glResize(o.file, f === 'photo' ? 1200 : 2200), path = `landing/${f}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.webp`;
       const { error } = await supabase.storage.from('showcase').upload(path, blob, { contentType: 'image/webp', cacheControl: '31536000' });
@@ -2064,7 +2066,7 @@ async function emSave(btn, publish) {
     if (publish) {
       const { error } = await supabase.storage.from('showcase').upload(EM_FILE, blob, { upsert: true, contentType: 'application/json', cacheControl: '0' });
       if (error) throw error;
-      const keep = new Set(data.winners.flatMap(w => [w.photo, w.wiring])), gone = [...oldPaths].filter(p => !keep.has(p));
+      const keep = new Set(data.winners.flatMap(w => [w.photo, w.wiring, w.signal])), gone = [...oldPaths].filter(p => !keep.has(p));
       if (gone.length) supabase.storage.from('showcase').remove(gone).catch(() => {});
       supabase.storage.from('guides').remove([EM_DRAFT]).catch(() => {});
       emLive = data; emDraftAt = '';
@@ -2081,8 +2083,8 @@ async function emSave(btn, publish) {
 }
 async function emDiscard() {
   if (!confirm('Buang draf dan kembali ke versi yang sedang tayang? Perubahan di draf akan hilang.')) return;
-  const live = new Set((emLive?.winners || []).flatMap(w => [w.photo, w.wiring]));
-  const orphan = (em?.winners || []).flatMap(w => [w.photo, w.wiring]).filter(p => String(p || '').startsWith('landing/') && !live.has(p));
+  const live = new Set((emLive?.winners || []).flatMap(w => [w.photo, w.wiring, w.signal]));
+  const orphan = (em?.winners || []).flatMap(w => [w.photo, w.wiring, w.signal]).filter(p => String(p || '').startsWith('landing/') && !live.has(p));
   await supabase.storage.from('guides').remove([EM_DRAFT]).catch(() => {});
   if (orphan.length) supabase.storage.from('showcase').remove(orphan).catch(() => {});
   stDirty = false; stStat(); showToast('↺ Draf dibuang'); stEmma();

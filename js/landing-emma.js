@@ -212,7 +212,7 @@ function emmaOpen(k) {
     <div class="lx-tabs" id="lx-tabs"><button class="on" data-t="0">🔧 Perangkat (${P.length + other.length})</button>${w.wiring ? '<button data-t="1">📐 Wiring</button>' : ''}<button data-t="2">〰 Alur sinyal</button></div>
     <div class="lx-tp on" data-t="0">${rows || '<div class="lx-empty">Daftar perangkat belum tersedia.</div>'}</div>
     ${w.wiring ? `<div class="lx-tp" data-t="1"><a class="lx-wire" href="${emmaEsc(emmaUrl(w.wiring))}" target="_blank" rel="noopener"><img src="${emmaEsc(emmaUrl(w.wiring))}" alt="Diagram wiring ${emmaEsc(w.car || '')}" loading="lazy"></a><div class="lx-zoom">⤢ Ketuk gambar untuk memperbesar</div></div>` : ''}
-    <div class="lx-tp" data-t="2">${emmaFlow(w)}</div>
+    <div class="lx-tp" data-t="2">${w.signal ? `<a class="lx-wire" href="${emmaEsc(emmaUrl(w.signal))}" target="_blank" rel="noopener"><img src="${emmaEsc(emmaUrl(w.signal))}" alt="Alur sinyal ${emmaEsc(w.car || '')}" loading="lazy"></a><div class="lx-zoom">⤢ Ketuk gambar untuk memperbesar</div>` : emmaFlow(w)}</div>
     <div class="lx-mbt">${P.length ? `<button class="g" onclick="emmaRakit(${k})">🔧 Rakit sistem seperti ini</button>` : ''}${wa ? `<a href="${emmaEsc(wa)}" target="_blank" rel="noopener">💬 Tanya partner pemasang</a>` : ''}${w.gl ? `<button onclick="emmaGl('${emmaEsc(w.gl)}')">📷 Foto & video di Galeri</button>` : ''}</div></div>`;
   document.getElementById('landing').appendChild(m);
   m.onclick = e => { if (e.target === m) emmaClose(); };

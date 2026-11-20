@@ -451,7 +451,7 @@ async function cardsDispatch(acadAll: Acad[]) {
   let sw: unknown[] = [];
   try { const r = await fetch(`${PUB_STORAGE}showcase/software/items.json?t=${Date.now()}`); if (r.ok) sw = ((await r.json()).items || []).filter((x: { hidden?: boolean }) => !x.hidden).map((x: { id: string; path?: string }) => [x.id, x.path]); } catch (_) { /* lewati */ }
   let lx: unknown[] = [];   // 🏆 landing EMMA: foto juara & wiring → bot menyalin ke media/ (hemat kuota)
-  try { const r = await fetch(`${PUB_STORAGE}showcase/landing/emma.json?t=${Date.now()}`); if (r.ok) { const j = await r.json(); if (j?.on) lx = (j.winners || []).map((w: { photo?: string; wiring?: string }) => [w.photo || '', w.wiring || '']); } } catch (_) { /* lewati */ }
+  try { const r = await fetch(`${PUB_STORAGE}showcase/landing/emma.json?t=${Date.now()}`); if (r.ok) { const j = await r.json(); if (j?.on) lx = (j.winners || []).map((w: { photo?: string; wiring?: string; signal?: string }) => [w.photo || '', w.wiring || '', w.signal || '']); } } catch (_) { /* lewati */ }
   const raw = JSON.stringify([nw.data || [], gal, ev.data || [], ad.data || [], acad, ...(sw.length || lx.length ? [sw] : []), ...(lx.length ? [lx] : [])]);
   const sig = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw)))).slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
   const { data: st, error: stErr } = await db.from('card_dispatch').select('sig, sent_at').eq('id', 1).maybeSingle();
