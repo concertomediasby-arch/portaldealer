@@ -225,6 +225,9 @@ const DSP_SOFTWARE = [
   { id:'dsp-steg-dsps6-fwu', title:'STEG DSP-S6 — Firmware Updater', brand:'STEG', platform:['Windows'],
     icon:'💻', version:'1.3.6', desc:'Program pembaruan firmware untuk DSP STEG DSP-S6. Jalankan di PC Windows, hubungkan DSP-S6, lalu tekan Start untuk memperbarui firmware.',
     file:'assets/software/steg-dsp-s6-fwu-v1.3.6.exe', available:true },
+  { id:'dsp-steg-dsps12-fwu', title:'STEG DSP-S12 — Firmware Updater', brand:'STEG', platform:['Windows'],
+    icon:'💻', version:'2.0.2', desc:'Program pembaruan firmware untuk DSP STEG DSP-S12. Jalankan di PC Windows, hubungkan DSP-S12, lalu perbarui firmware.',
+    file:'assets/software/steg-dsp-s12-fwu-v2.0.2.exe', available:true },
 ];
 
 
